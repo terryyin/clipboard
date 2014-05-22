@@ -1,5 +1,11 @@
 '''
 A croos platform clipboard read/write library.
-'''
 
-VERSION = "0.0.1"
+...well, as I were trying to implement this. I realize that everything is already in the pyperclip module.
+
+'''
+from pyperclip import copy, paste
+
+VERSION = "0.0.2"
+
+

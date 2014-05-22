@@ -36,6 +36,7 @@ It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyc
                      'Programming Language :: Python :: 3.2',
                      'Programming Language :: Python :: 3.3'],
           py_modules = ['clipboard'],
+          install_requires=['pyperclip'],
           author = 'Terry Yin',
           author_email = 'terry@odd-e.com',
           )
