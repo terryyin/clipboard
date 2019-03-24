@@ -1,5 +1,5 @@
 '''
-A croos platform clipboard read/write library.
+A cross platform clipboard read/write library.
 
 ...well, as I were trying to implement this. I realize that everything is already in the pyperclip module.
 
