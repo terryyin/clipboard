@@ -1,7 +1,7 @@
 '''
 A cross platform clipboard read/write library.
 
-...well, as I were trying to implement this. I realize that everything is already in the pyperclip module.
+...well, as I was trying to implement this, I realized that everything was already in the pyperclip module.
 
 '''
 from pyperclip import copy, paste
