@@ -7,5 +7,3 @@ A cross platform clipboard read/write library.
 from pyperclip import copy, paste
 
 VERSION = "0.0.2"
-
-
