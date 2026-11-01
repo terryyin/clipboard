@@ -1,0 +1,2 @@
+include scripts/check_release.py
+include docs/releasing.md

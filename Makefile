@@ -1,20 +1,34 @@
-.PHONY: all tests pep8 pylint deps test-deps publish
+.PHONY: all deps check lint lint-workflows format tests build test-package
 
-all: extensive pylint
-extensive: tests pep8
-
-tests:
-	nosetests test
-
-pep8:
-	pep8 --exclude=mock.py clipboard.py
-
-pylint:
-	pylint --rcfile pylintrc clipboard.py
+all: check
 
 deps:
-	pip install -r dev_requirements.txt
+	uv sync --locked
 
-publish:
-	python setup.py sdist upload
+check: lint tests
+
+lint:
+	uv run --locked ruff check .
+	uv run --locked ruff format --check .
+
+lint-workflows:
+	actionlint
+
+format:
+	uv run --locked ruff check --fix .
+	uv run --locked ruff format .
+
+tests:
+	uv run --locked pytest
+
+build:
+	rm -rf dist
+	uv run --locked python -m build --no-isolation
+	uv run --locked twine check --strict dist/*
+
+test-package: build
+	set -eu; for distribution in dist/*; do \
+		uv run --isolated --no-project --with "$$distribution" python -I -c \
+		'import clipboard, importlib.metadata; assert callable(clipboard.copy); assert callable(clipboard.paste); assert clipboard.VERSION == importlib.metadata.version("clipboard")'; \
+	done
 

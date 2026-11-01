@@ -52,3 +52,11 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Modern development tools
+.venv/
+.pytest_cache/
+.ruff_cache/
+.direnv/
+result
+result-*
+

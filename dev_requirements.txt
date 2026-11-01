@@ -1,4 +1,0 @@
-pyperclip
-pep8
-pylint
-nose
