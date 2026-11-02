@@ -13,10 +13,10 @@ A thin contract layer normalizes platform offers into one absence / value /
 failure model. In-memory fakes prove the contract in CI; native
 interoperability needs independent producers and documented evidence limits.
 
-**Evidence:** SEED-001 Shared Boundaries and SEED-001#read-images refinement
-(2026-11-02); domain research reuse of Pillow `ImageGrab.grabclipboard`;
-product surface today is text-only (`clipboard.py`).
+**Evidence:** SEED-001 Shared Boundaries; delivered `paste_image` /
+`clipboard[images]` contract (2026-11-02); domain research reuse of Pillow
+`ImageGrab.grabclipboard`.
 
-**Affects:** SEED-001#read-images (establishes the pattern); later image write
-and HTML stories should follow the same explicit-API + optional-extra shape
-unless evidence forces a revision.
+**Affects:** Later image write and HTML stories should follow the same
+explicit-API + optional-extra shape unless evidence forces a revision;
+`SEED-001#read-images-native` continues desktop verification under that shape.
