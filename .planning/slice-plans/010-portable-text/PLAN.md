@@ -361,6 +361,33 @@ Postcondition: callers know exactly what is promised and verified where.
   wording, left for wrap-up). `make check` 432 passed / 20 skipped;
   `make build` twine check passed.
 
+## Execution complete
+
+Product advice:
+- Correction planned: SEED-001#bounded-x11-text-write
+  ([plan](../012-bounded-x11-text-write/PLAN.md)). X11 `copy()` can block
+  indefinitely when the X server stalls and the text exceeds the pipe buffer,
+  so commitments 2c / 2d.1 hold for X11 only below about 64 KiB until it
+  lands; it also removes the test-only `os.killpg` fallback and makes the
+  Wayland wrapper fail rather than skip. Queue disposition is wrap-up's.
+- Developer decision: `clipboard/_text.py` delegates to pyperclip whenever
+  `pyperclip.is_available()` is true at call time, so any earlier direct
+  pyperclip use in the process (not only `pyperclip.set_clipboard`) switches
+  an owned desktop back to pyperclip's silent X11 failures and locale-less
+  macOS `pbcopy`. Options: honour only an explicit selection, freeze the
+  choice at first text use (the plan's Current decision), or keep it and
+  amend that decision. Documented in README; low likelihood.
+- North Star: the topic title and opening sentence still call text
+  "re-exports"; the evidence paragraph is updated. Wording is wrap-up's.
+- Later stories: SEED-001#primary-selection can reuse
+  `_text_native_x11.py` / `_text_native_wayland.py` (selection argument,
+  TARGETS-first absence, read-back wait); SEED-001#wait-for-content can reuse
+  the shared bounded deadline. `copy_image` shares the unbounded pipe write
+  and a TARGETS-only readiness wait (the previous owner may already list
+  `image/png`); a bug story there needs separate authorization.
+- Trunk advanced to 44a1abc (SEED-001#clear-clipboard refined and planned)
+  after this branch's last trunk merge.
+
 ## Story obligations
 
 ### G1. Owned macOS, X11 and Wayland text paths are placeholders

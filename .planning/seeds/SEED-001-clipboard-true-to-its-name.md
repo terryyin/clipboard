@@ -391,6 +391,23 @@ No newline translation on either side. `copy("")` promises only that
 
 <a id="clear-clipboard"></a>
 
+### Bound the X11 text write for large text on a stalled display
+
+**Identity:** SEED-001#bounded-x11-text-write
+
+**Goal:** Callers of `copy(text)` on Linux X11 get the documented bounded
+`ClipboardContentError` instead of an indefinite hang when the X server stalls
+and the text is larger than a pipe buffer, so SEED-001#portable-text's "never
+an indefinite wait" holds for every text size.
+
+**Scope:** Correction of SEED-001#portable-text's owned X11 writer only: feed
+`xclip` its input without a blocking unbounded pipe write, keeping the
+background owner, exact-bytes read-back, stderr quoting and owner cleanup;
+remove the test-only `os.killpg` fallback; make the gated Wayland text wrapper
+fail rather than skip on a missing session or helper. Excludes the same
+pattern in `copy_image` and any change to selection rules.
+[Plan](../slice-plans/012-bounded-x11-text-write/PLAN.md)
+
 ### Clear every representation from the current clipboard
 
 **Identity:** SEED-001#clear-clipboard
