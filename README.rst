@@ -33,7 +33,7 @@ clipboard, empty clipboard, or a file-reference / filename-list offer) returns
 ``paste_image`` without the extra raises ``ImportError``.
 
 To publish an HTML fragment with a matching plain-text alternative as one
-clipboard offer, call ``copy_html`` (no ``clipboard[images]`` extra required):
+clipboard offer, call ``copy_html``:
 
 ::
 
@@ -43,10 +43,20 @@ clipboard offer, call ``copy_html`` (no ``clipboard[images]`` extra required):
        'café → https://example.com',
    )
 
-Failures other than a successful dual offer raise
-``clipboard.ClipboardContentError``. On macOS Aqua the default writer uses the
-system pasteboard (``NSPasteboard`` HTML + string types via ``osascript``).
-Linux and Windows native HTML writers are not claimed verified yet.
+``copy_html(html, text)`` requires the caller to supply both a Unicode HTML
+fragment and a matching plain-text alternative; the library does not synthesize
+text from HTML. Invalid arguments are rejected with
+``clipboard.ClipboardContentError`` **before** replacing clipboard contents.
+Success means both representations are published together as one offer: a rich
+consumer can obtain HTML and a text-only consumer can obtain the alternative.
+Inability to offer both together, missing helpers, denied access, transfer
+failure, or an unsupported session raises ``ClipboardContentError`` — never a
+silent text-only "success". Sequential single-format writes are not a dual
+offer.
+
+On macOS Aqua the default writer uses the system pasteboard
+(``NSPasteboard`` HTML + string types via ``osascript``). Linux and Windows
+native HTML writers are not claimed verified yet (see evidence limits below).
 
 Installation
 ------------
@@ -62,13 +72,28 @@ For ``paste_image``, install the optional extra so Pillow is available:
 
    python -m pip install 'clipboard[images]'
 
+``copy_html`` does **not** require the ``clipboard[images]`` extra.
+
 On Linux, image clipboard reads also need a helper on ``PATH``:
 
 * X11: ``xclip``
 * Wayland: ``wl-paste`` (from wl-clipboard)
 
-Windows and macOS need a usable desktop clipboard / pasteboard session; image
-reading is not guaranteed under WSL, SSH, containers, or headless CI.
+For Linux HTML + plain-text **writes**, a helper must be able to offer
+**multiple** MIME types together (not a one-type-only path that drops the
+alternative):
+
+* X11: multi-type-capable ``xclip`` (or equivalent) offering ``text/html`` and
+  ``text/plain`` on CLIPBOARD together
+* Wayland: a multi-type-capable helper (for example ``wl-copy``) on a **named**
+  compositor; do not generalize one compositor's result to all Wayland
+  environments
+
+On Windows, a successful dual offer uses interoperable ``HTML Format`` (UTF-8
+fragment/context byte offsets, including non-ASCII) plus Unicode text in the
+same update. Windows and macOS need a usable desktop clipboard / pasteboard
+session; rich clipboard writes are not guaranteed under WSL, SSH, containers,
+or headless CI.
 
 Evidence / verified platforms:
 

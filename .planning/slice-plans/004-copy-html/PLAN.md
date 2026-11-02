@@ -169,7 +169,7 @@ examples 1–2 (Windows) / example 7 or honest limit.
 
 ### 7. Docs and packaging alignment for HTML write
 Type: Behavior
-Status: planned
+Status: done
 Proof: README (and related install/evidence notes) document `copy_html`, the
 HTML error type, dual-offer contract, Windows `HTML Format` / non-ASCII note,
 Linux multi-type helper requirements, fail/error model, and per-desktop
@@ -240,6 +240,10 @@ envelopes/helpers; evidence wording is honest.
   verification; gated `scripts/probe_windows_native_copy_html.py`.
 - Accepted proof (slice 6): Windows probe exit 2 / evidence_limit /
   verified false / non_ascii_case_required_for_verification true.
+- Slice 7: README documents dual-offer contract, fail-before-replace,
+  ClipboardContentError, multi-type Linux helpers, Windows HTML Format note,
+  per-desktop floors/limits; no new optional extras (DD-001 N/A).
+- Accepted proof (slice 7): `nix develop -c make check` → 48 passed, 2 skipped.
 
 ## Concern evidence
 

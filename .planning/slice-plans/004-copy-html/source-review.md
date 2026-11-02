@@ -17,8 +17,8 @@
 | 5.3 | Failures other than successful dual publication raise an actionable clipboard content error: transfer failure | slice 2 | observed: `test_transfer_failure_raises_actionable_content_error` (`OSError` → `ClipboardContentError`) |
 | 5.4 | Failures other than successful dual publication raise an actionable clipboard content error: unsupported session | slice 3 | observed: `test_unsupported_platform_default_writer_is_content_error` + `test_macos_missing_osascript_is_content_error` → `ClipboardContentError` |
 | 5.5 | Failures other than successful dual publication raise an actionable clipboard content error: inability to offer both representations together | slice 2 | observed: `test_one_type_only_backend_errors_without_partial_success` / `test_text_only_path_is_not_silent_success` |
-| 6.1 | Document platform HTML envelopes and Linux helper dependencies as needed: `xclip` on X11 | slice 7 | |
-| 6.2 | Document platform HTML envelopes and Linux helper dependencies as needed: Wayland helpers that can offer multiple MIME types (not a one-type-only path that drops the alternative) | slice 7 | |
+| 6.1 | Document platform HTML envelopes and Linux helper dependencies as needed: `xclip` on X11 | slice 7 | observed: README Installation multi-type X11 ``xclip`` HTML-write helper note + evidence limit |
+| 6.2 | Document platform HTML envelopes and Linux helper dependencies as needed: Wayland helpers that can offer multiple MIME types (not a one-type-only path that drops the alternative) | slice 7 | observed: README Installation Wayland multi-type helper / named-compositor note |
 | 7 | Keep default automated tests desktop-free via an injectable write backend. | slice 1 | observed: `set_html_clipboard_writer` + `tests/test_copy_html_seam.py` injection/default stub; no desktop required |
 | 8 | Native proof uses independent rich and plain-text consumers (not a same-library round-trip alone) and stays explicitly gated. | slice 3 | observed: `scripts/probe_macos_native_copy_html.py` — AppKit HTML + `pbpaste` after writer subprocess exit; gated `CLIPBOARD_NATIVE_PROBE` |
 | 9 | Successful dual offers remain pasteable after the writing process exits on each claimed desktop. | slice 3 | observed: probe `writer_exited_before_consume: true` + dual consume success (macOS Aqua); other desktops in slices 4–6 |
@@ -31,12 +31,12 @@
 | 13 | Dual publication and writer-exit success are acceptance requirements on each claimed desktop when a session is available. | slice 3 | observed: macOS session available → probe dual+exit success; Linux/Windows later |
 | 14 | When no usable session exists during execution for a claimed desktop, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified — never silent success. | slice 3 | observed: README keeps Windows/Linux HTML writes unverified (no silent success); macOS verified only with probe floors |
 | 15 | Do not generalize one Wayland compositor’s result to all Wayland environments. | slice 5 | observed: README + probe state no compositor generalization / scoped-to-named-compositor wording |
-| 16 | After this work, existing text callers remain compatible (including `VERSION` and text-only callers behaving as before). | slice 7 | |
-| 17 | After this work, delivered image APIs remain compatible / unchanged. | slice 7 | |
-| 18 | After this work, in-memory `copy` / `paste` / `paste_image` contract tests still pass. | slice 7 | |
+| 16 | After this work, existing text callers remain compatible (including `VERSION` and text-only callers behaving as before). | slice 7 | observed: `nix develop -c make check` — `tests/test_clipboard.py` + VERSION 0.0.5 unchanged |
+| 17 | After this work, delivered image APIs remain compatible / unchanged. | slice 7 | observed: `make check` paste_image suites green; no image API changes |
+| 18 | After this work, in-memory `copy` / `paste` / `paste_image` contract tests still pass. | slice 7 | observed: `make check` 48 passed, 2 skipped (gated native only) |
 | Q1 | WSL, SSH, containers, and headless CI are not additional guaranteed desktops. | slice 7 | Q1 |
 | Q2 | Wayland support is scoped to the compositor actually proved when one is available; a single compositor’s result does not imply all Wayland environments. | slice 5 | observed: same README/probe compositor-scoping language; evidence limit (no compositor proved) |
-| Q3 | Platform HTML envelopes and Linux helper dependencies are documented as needed (including the X11/`xclip` and multi-type Wayland helper expectations). | slice 7 | |
+| Q3 | Platform HTML envelopes and Linux helper dependencies are documented as needed (including the X11/`xclip` and multi-type Wayland helper expectations). | slice 7 | observed: README Usage + Installation dual-offer / Windows HTML Format / Linux multi-type helpers |
 | Q4 | Native dual-consumer / writer-exit proof remains explicitly gated; default automated tests stay desktop-free via an injectable write backend. | slice 1 | observed: injectable seam + desktop-free seam tests; native gating deferred to probe slices |
 | Q5 | Unavailability of a usable session during execution yields an explicit evidence limit, not a verified claim and not silent success. | slice 3 | observed: README explicit unverified for Win/Linux HTML write; macOS only after probe |
 | Q6 | The plain-text alternative is caller-supplied; this story does not synthesize it from HTML. | slice 7 | X11 |
@@ -49,7 +49,7 @@
 | E5 | Session or helper cannot offer HTML and plain text together (e.g. one-type-only helper path) → actionable failure; no silent text-only “success”. | slice 2 | observed: `test_one_type_only_backend_errors_without_partial_success` / `test_text_only_path_is_not_silent_success` |
 | E6 | Missing Linux helper or denied/unavailable clipboard access → actionable error; no silent empty success. | slice 4 | observed: default platform error actionable (names helpers); X11 probe exits non-zero with `verified: false` / evidence_limit |
 | E7 | Windows, macOS Aqua, Linux X11, and/or Linux Wayland session available → same dual-consumer + writer-exit success with floors recorded for the named compositor/helper; if a session is unavailable during execution, that desktop keeps an explicit evidence limit instead of a verified claim. | slice 3 | observed: macOS branch verified with floors; Win/Linux evidence limits retained in README (slices 4–6 close or refresh) |
-| E8 | After this work, in-memory `copy` / `paste` / `paste_image` contract tests still pass; `VERSION` and text-only callers behave as before; image APIs remain unchanged. | slice 7 | |
+| E8 | After this work, in-memory `copy` / `paste` / `paste_image` contract tests still pass; `VERSION` and text-only callers behave as before; image APIs remain unchanged. | slice 7 | observed: `make check` green; VERSION 0.0.5; no new optional extras (DD-001 N/A) |
 | X1 | Do not overload `copy()` / `paste()` to accept or return HTML. | slice 1 | observed: `copy`/`paste` remain pyperclip re-exports; HTML write is separate `copy_html` |
 | X2 | Do not treat two sequential text (or text-then-HTML) writes as fulfilling this story. | slice 7 | X2 |
 | X3 | Do not bypass OS pasteboard / clipboard authorization. | slice 7 | X3 |
