@@ -25,8 +25,14 @@ def test_injected_reader_absence_is_none(restore_html_clipboard_reader):
 
 
 def test_reset_reader_restores_default(monkeypatch, restore_html_clipboard_reader):
-    # Non-Darwin so the default reader never touches a real pasteboard.
-    monkeypatch.setattr(clipboard._html_native.sys, "platform", "linux")
+    # A platform with no native reader yet, and no helper may run, so the
+    # default reader never touches a real pasteboard or X11 CLIPBOARD.
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "win32")
+
+    def no_helper(*args, **kwargs):
+        raise AssertionError("default reader must not run a helper here")
+
+    monkeypatch.setattr(clipboard._html_native.subprocess, "run", no_helper)
     clipboard.set_html_clipboard_reader(lambda: _fragment_offer("<i>x</i>"))
     clipboard.set_html_clipboard_reader(None)
     assert (

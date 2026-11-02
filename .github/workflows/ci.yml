@@ -105,6 +105,32 @@ jobs:
           uv run --locked --extra images
           pytest tests/test_copy_image_native_linux_x11.py -v
 
+  native-linux-x11-paste-html:
+    name: Native Linux X11 paste_html (Xvfb)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install X11 clipboard helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xclip xvfb
+      - run: uv sync --locked
+      - name: Gated X11 paste_html probe under Xvfb
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: >
+          xvfb-run -a
+          uv run --locked
+          pytest tests/test_paste_html_native_linux_x11.py -v
+
   native-linux-wayland-copy-image:
     name: Native Linux Wayland copy_image (Sway)
     runs-on: ubuntu-latest
@@ -158,6 +184,7 @@ jobs:
       - quality
       - tests
       - native-linux-x11-copy-image
+      - native-linux-x11-paste-html
       - native-linux-wayland-copy-image
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -167,9 +194,11 @@ jobs:
           QUALITY_RESULT: ${{ needs.quality.result }}
           TEST_RESULT: ${{ needs.tests.result }}
           NATIVE_X11_RESULT: ${{ needs.native-linux-x11-copy-image.result }}
+          NATIVE_X11_PASTE_HTML_RESULT: ${{ needs.native-linux-x11-paste-html.result }}
           NATIVE_WAYLAND_RESULT: ${{ needs.native-linux-wayland-copy-image.result }}
         run: >-
           test "$QUALITY_RESULT" = success
           && test "$TEST_RESULT" = success
           && test "$NATIVE_X11_RESULT" = success
+          && test "$NATIVE_X11_PASTE_HTML_RESULT" = success
           && test "$NATIVE_WAYLAND_RESULT" = success

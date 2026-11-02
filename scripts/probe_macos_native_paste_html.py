@@ -16,14 +16,13 @@ Requires darwin. Overwrites the clipboard. Does not run under default pytest.
 from __future__ import annotations
 
 import json
-import struct
 import subprocess
 import sys
 import tempfile
-import zlib
 from pathlib import Path
 
 from native_probe_common import die, macos_environment
+from stdlib_png import solid_red_png_bytes
 
 LINK = '<a href="https://example.com/caf%C3%A9" style="color:#c00">'
 LABEL = "<b>café → naïve 日本</b>"
@@ -159,22 +158,6 @@ def _probe_html(tmpdir: Path) -> dict:
     }
 
 
-def _png_bytes() -> bytes:
-    def chunk(tag: bytes, data: bytes) -> bytes:
-        body = tag + data
-        crc = struct.pack(">I", zlib.crc32(body))
-        return struct.pack(">I", len(data)) + body + crc
-
-    rows = b"".join(b"\x00" + b"\xff\x00\x00" * 4 for _ in range(4))
-    header = struct.pack(">IIBBBBB", 4, 4, 8, 2, 0, 0, 0)
-    return (
-        b"\x89PNG\r\n\x1a\n"
-        + chunk(b"IHDR", header)
-        + chunk(b"IDAT", zlib.compress(rows))
-        + chunk(b"IEND", b"")
-    )
-
-
 def _probe_absent(case: str, script: str) -> dict:
     import clipboard
 
@@ -203,7 +186,7 @@ def main() -> None:
         try:
             html = _probe_html(tmpdir)
             png = tmpdir / "image.png"
-            png.write_bytes(_png_bytes())
+            png.write_bytes(solid_red_png_bytes())
             read_png = f'read (POSIX file "{png}") as «class PNGf»'
             absent = [
                 _probe_absent("text_only", 'set the clipboard to "plain"'),

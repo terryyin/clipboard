@@ -107,8 +107,10 @@ def paste_html() -> str | None:
     Access, helper, or transfer failures and malformed envelopes raise
     ``ClipboardContentError`` (not ``None``). On macOS Aqua the default reader
     reads the pasteboard's ``public.html`` type (via ``osascript`` / AppKit);
-    other platforms' native readers are not available yet. Tests inject a
-    reader via ``set_html_clipboard_reader``.
+    on Linux X11 it requests CLIPBOARD ``text/html`` via ``xclip -o`` (a
+    missing ``xclip`` raises ``ClipboardContentError``). Other platforms'
+    native readers are not available yet. Tests inject a reader via
+    ``set_html_clipboard_reader``.
     """
     offer = _call_content_backend("HTML read", _html_clipboard_reader)
     return _decode_html_offer(offer)

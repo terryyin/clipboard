@@ -215,6 +215,15 @@ Evidence / verified platforms:
   arm64 Aqua. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
   ``scripts/probe_macos_native_paste_html.py`` to refresh floors on another
   host.
+* Linux X11 HTML **reads** via ``paste_html`` (default reader: ``xclip
+  -selection clipboard -o`` listing ``TARGETS``, then requesting
+  ``text/html``; a missing ``xclip`` or display raises
+  ``ClipboardContentError``) are **pending** native evidence — not yet
+  verified. Gated GitHub Actions job ``native-linux-x11-paste-html`` runs
+  ``scripts/probe_linux_x11_native_paste_html.py`` under Xvfb with an
+  independent ``xclip -t text/html -i`` producer (not a browser or rich
+  editor); until that job is observed passing, treat X11 HTML read as
+  unverified.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the

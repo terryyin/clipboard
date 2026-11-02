@@ -268,3 +268,8 @@ Disposition: proved by slice 2: clipboard/_html_envelope.py::_decode_html_offer;
 Reported: slice 2 — "The fake can only express \"reader reports no HTML\". Telling HTML apart from image-only or file-list offers in real native type lists is left to slices 3–6."
 Story clause: "Do not treat ordinary text, file-list, or image-only offers as HTML success"
 Disposition: interim until slices 3, 4, 5, 6
+
+### G4. Linux X11 native producer is xclip, not a browser or rich editor
+Reported: slice 4 — "The native producer is the helper xclip (`-t text/html -i`), not a browser or rich editor."
+Story clause: "native proof uses an **independent producer** (browser or rich editor — not a same-library `copy_html` round-trip alone)"
+Disposition: interim until slices 5, 6, 7
