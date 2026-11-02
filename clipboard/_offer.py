@@ -3,13 +3,53 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
 from clipboard._errors import ClipboardContentError
 
 ClipboardKind = Literal["text", "image", "html", "files"]
+
+# Known native format identifiers → library kinds. Labels are platform-local
+# (macOS UTIs / pasteboard types, Linux MIME / X11 atoms, Windows format
+# names); unknown identifiers still appear in ``formats`` without a kind.
+_NATIVE_FORMAT_TO_KIND: dict[str, ClipboardKind] = {
+    # text
+    "public.utf8-plain-text": "text",
+    "public.plain-text": "text",
+    "NSPasteboardTypeString": "text",
+    "text/plain": "text",
+    "UTF8_STRING": "text",
+    "STRING": "text",
+    "TEXT": "text",
+    "CF_UNICODETEXT": "text",
+    "CF_TEXT": "text",
+    # html
+    "public.html": "html",
+    "NSPasteboardTypeHTML": "html",
+    "text/html": "html",
+    "HTML Format": "html",
+    # image
+    "public.png": "image",
+    "public.tiff": "image",
+    "public.jpeg": "image",
+    "NSPasteboardTypePNG": "image",
+    "NSPasteboardTypeTIFF": "image",
+    "image/png": "image",
+    "image/jpeg": "image",
+    "image/bmp": "image",
+    "CF_DIB": "image",
+    "CF_DIBV5": "image",
+    "CF_BITMAP": "image",
+    "PNG": "image",
+    # file-list (kind only; paste/copy of files is out of scope)
+    "public.file-url": "files",
+    "NSFilenamesPboardType": "files",
+    "com.apple.pasteboard.promised-file-url": "files",
+    "text/uri-list": "files",
+    "CF_HDROP": "files",
+}
 
 
 @dataclass(frozen=True)
@@ -23,6 +63,32 @@ class ClipboardOfferSnapshot:
 
     kinds: frozenset[ClipboardKind]
     formats: tuple[str, ...]
+
+
+def kinds_from_native_formats(
+    formats: Sequence[str],
+) -> frozenset[ClipboardKind]:
+    """Map enumerated native format ids onto the fixed kind vocabulary.
+
+    Kind membership uses the type list alone — no representation payloads.
+    Unmapped identifiers contribute no kind but remain listable by callers.
+    """
+    kinds: set[ClipboardKind] = set()
+    for fmt in formats:
+        kind = _NATIVE_FORMAT_TO_KIND.get(fmt)
+        if kind is not None:
+            kinds.add(kind)
+    return frozenset(kinds)
+
+
+def snapshot_from_native_formats(
+    formats: Sequence[str],
+) -> ClipboardOfferSnapshot:
+    """Build an offer snapshot from a native type enumeration (no body reads)."""
+    return ClipboardOfferSnapshot(
+        kinds=kinds_from_native_formats(formats),
+        formats=tuple(formats),
+    )
 
 
 def _default_clipboard_inspector() -> ClipboardOfferSnapshot:

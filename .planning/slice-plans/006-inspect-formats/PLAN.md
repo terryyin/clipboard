@@ -104,13 +104,18 @@ modules along content seams (`_offer`, `_html`, `_image_*`, `_errors`).
 
 ### 2. In-memory `inspect` contract
 Type: Behavior
-Status: planned
+Status: done
 Proof: Desktop-free tests show: fake HTML+text offer → kinds include `html`
 and `text` with native ids; image-only → `image` without `text`/`html`; empty
 → empty snapshot (not error); fake file-list native id → `files` kind without
 filesystem access; access/helper/enumeration failure from the fake →
 `ClipboardContentError` (not empty success); inspect does not mutate the fake
 offer model; existing text, `paste_image`, and `copy_html` suites stay green.
+
+Accepted proof (coordinator):
+- `nix develop -c uv run --locked pytest tests/test_inspect_contract.py tests/test_inspect_seam.py -q` → 18 passed
+- `nix develop -c uv run --locked --extra images pytest tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_copy_html_contract.py tests/test_copy_html_seam.py tests/test_inspect_seam.py tests/test_inspect_contract.py -q` → 59 passed
+- Shared `kinds_from_native_formats` / `snapshot_from_native_formats` + `FakeOfferClipboard`
 
 Behavior: Pre-condition: injectable seam from slice 1. Trigger: `inspect`
 against fake offers covering mixed kinds, image-only, empty, undecodable
@@ -219,6 +224,9 @@ guessing empty vs denied; evidence wording is honest.
 - Post-slice-1 refactor: single-module `clipboard.py` exceeded the 250-line
   cohesion limit; library is now a `clipboard` package with explicit content
   seams. Public import path unchanged.
+- Shared `kinds_from_native_formats` / `snapshot_from_native_formats` is the
+  reusable bridge for slices 3–6 enumerators; contract fake proves kinds from
+  the type list alone without payload fetch.
 
 ## Concern evidence
 
