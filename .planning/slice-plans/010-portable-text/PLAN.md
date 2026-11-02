@@ -206,7 +206,7 @@ Postcondition: seed examples 1, 3, 5, 6 on Sway.
 
 ### 6. Windows text proof through pyperclip's backend
 Type: Behavior
-Status: planned
+Status: done
 Proof: gated job `native-windows-text` on `windows-latest`
 (`tests/test_text_native_windows.py`, fails rather than skips): independent
 PowerShell `Set-Clipboard` producer of `"line 1\r\nline 2"` with Unicode and
@@ -351,6 +351,7 @@ Postcondition: callers know exactly what is promised and verified where.
   clamping `_remaining(deadline, bound)` to the bound
   (`tests/test_text_native_linux_bound.py`). macOS jobs again were not
   acquired by a hosted runner.
+  Run 41488138280 on 43ee728 passed every job, macOS included.
 
 ## Story obligations
 
