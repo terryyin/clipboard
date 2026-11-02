@@ -152,7 +152,7 @@ example 6 (Wayland branch) or honest limit.
 
 ### 6. Early probe — Windows desktop HTML Format read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Windows desktop session, gated probe: independent producer
 offers interoperable `HTML Format` (UTF-8 fragment/context byte offsets)
 including a non-ASCII case; `paste_html()` returns the fragment only (not
@@ -277,6 +277,13 @@ envelopes/helpers; evidence wording is honest.
   `native-windows-paste-html` on `windows-latest`, which skips (evidence
   limit) when the runner has no usable clipboard session. README.rst and
   ci.yml were already over 250 lines before this story; not split here.
+- Slice 6 accepted proof: focused 7-file pytest (144 passed); `make check`
+  (216 passed, 10 skipped); `make lint-workflows`; CI run 41427386442 on
+  1796fc5: `native-windows-paste-html` PASSED with `verified: true`
+  (`windows-latest` does have a usable clipboard session; Windows Server
+  2025 10.0.26100, PowerShell 5.1.26100, CLR 4.0.30319.42000). .NET
+  Framework `SetText(Html)` / `Set-Clipboard -AsHtml` write non-ASCII as
+  ANSI, so those envelopes raise `ClipboardContentError` (correct refusal).
 
 ## Concern evidence
 
@@ -291,7 +298,7 @@ envelopes/helpers; evidence wording is honest.
 ### G1. Default reader raises on every desktop
 Reported: slice 1 — "Default reader: on every platform, including Darwin, it raises `ClipboardContentError` saying there is no native HTML reader for this platform yet"
 Story clause: "returns a Unicode HTML fragment string when the current clipboard offer includes an HTML representation"
-Disposition: interim until slices 3, 4, 5, 6
+Disposition: proved by slice 6: default readers for darwin/X11/Wayland/win32 in clipboard/_html_native.py::_default_html_clipboard_reader, observed natively by the macOS probe and CI runs 41422813085, 41424913377, 41427386442
 
 ### G2. Reader value returned without validation or envelope decoding
 Reported: slice 1 — "The return type is unvalidated in this slice: a non-str, non-None value from the reader is returned as-is."
@@ -301,7 +308,7 @@ Disposition: proved by slice 2: clipboard/_html_envelope.py::_decode_html_offer;
 ### G3. Native non-HTML offers distinguished only in the fake
 Reported: slice 2 — "The fake can only express \"reader reports no HTML\". Telling HTML apart from image-only or file-list offers in real native type lists is left to slices 3–6."
 Story clause: "Do not treat ordinary text, file-list, or image-only offers as HTML success"
-Disposition: interim until slices 3, 4, 5, 6
+Disposition: proved by slice 6: native text-only/image-only (and file-list on macOS) offers returned None in scripts/probe_macos_native_paste_html.py and CI native jobs native-linux-x11-paste-html, native-linux-wayland-paste-html, native-windows-paste-html
 
 ### G4. Linux X11 native producer is xclip, not a browser or rich editor
 Reported: slice 4 — "The native producer is the helper xclip (`-t text/html -i`), not a browser or rich editor."
