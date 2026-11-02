@@ -174,25 +174,18 @@ Evidence / verified platforms:
   ``NSPasteboardTypeString``. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
   the probe script to refresh floors on another host.
 * Linux X11 HTML + plain-text dual-offer writes via ``copy_html`` are an
-  explicit **evidence limit** on this execution host: no usable X11 session
-  with a multi-type-capable helper (for example ``xclip`` offering
-  ``text/html`` and ``text/plain`` together) was available (Darwin checkout;
-  ``xclip`` not on ``PATH``). Do not treat X11 HTML write as verified.
-  ``scripts/probe_linux_x11_native_copy_html.py`` records
-  ``evidence_limit`` / ``verified: false`` (exit 2) rather than silent
-  success. Re-run that gated X11 dual-consumer probe on an owner-held X11
-  session to replace this limit.
+  **evidence limit** here: no usable X11 multi-type helper session (Darwin;
+  ``xclip`` absent). Do not treat as verified.
+  ``scripts/probe_linux_x11_native_copy_html.py`` records ``evidence_limit`` /
+  ``verified: false`` (exit 2). Re-run on owner-held X11 to replace this limit.
 * Linux Wayland HTML + plain-text dual-offer writes via ``copy_html`` are an
-  explicit **evidence limit** on this execution host: no usable Wayland
-  session with a multi-type-capable helper on a **named** compositor was
-  available (Darwin checkout; ``wl-copy`` / ``wl-paste`` not on ``PATH``;
-  ``WAYLAND_DISPLAY`` unset). Do not treat Wayland HTML write as verified,
-  and do not generalize any future single-compositor result to all Wayland
-  environments. ``scripts/probe_linux_wayland_native_copy_html.py`` records
+  **evidence limit** here: no usable Wayland multi-type helper on a **named**
+  compositor (Darwin; ``wl-copy`` / ``wl-paste`` absent; ``WAYLAND_DISPLAY``
+  unset). Do not treat as verified or generalize one compositor. Probe
+  ``scripts/probe_linux_wayland_native_copy_html.py`` records
   ``evidence_limit`` / ``verified: false`` /
-  ``compositor_generalization: false`` (exit 2) rather than silent success.
-  Re-run that gated Wayland dual-consumer probe on an owner-held Wayland
-  session to replace this limit for that compositor only.
+  ``compositor_generalization: false`` (exit 2). Re-run on owner-held Wayland
+  for that compositor only.
 * Windows desktop HTML + Unicode text dual-offer writes via ``copy_html``
   (interoperable ``HTML Format`` with UTF-8 fragment/context byte offsets for
   non-ASCII content) are an explicit **evidence limit** on this execution
@@ -205,11 +198,17 @@ Evidence / verified platforms:
   owner-held Windows desktop to replace this limit, including a non-ASCII
   fragment/context case.
 * macOS Aqua ``inspect()`` verified with an independent AppKit producer
-  (HTML+plain-text; image-only PNG when feasible), matching kinds / UTIs, and
-  an independent consumer afterward (non-mutation). Floors via
-  ``scripts/probe_macos_native_inspect.py``: 26.6.2 / 25G83 / arm64,
+  (HTML+plain-text; image-only PNG when feasible), matching kinds / UTIs, then
+  an independent consumer (non-mutation). Floors:
+  ``scripts/probe_macos_native_inspect.py`` 26.6.2 / 25G83 / arm64,
   ``osascript`` ``NSPasteboard`` ``types()`` (no payload fetch; no images
   extra). Refresh with ``CLIPBOARD_NATIVE_PROBE=1``. Other desktops separate.
+* Linux X11 ``inspect()`` (``xclip -selection clipboard -o -t TARGETS``) is an
+  **evidence limit** here: no usable X11 session/helper on this Darwin
+  checkout (``xclip`` absent; ``DISPLAY`` unset). Do not treat as verified.
+  ``scripts/probe_linux_x11_native_inspect.py`` records ``evidence_limit`` /
+  ``verified: false`` (exit 2). Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` on
+  owner-held Linux + ``DISPLAY`` + ``xclip`` to replace this limit.
 
 Default automated tests use an in-memory backend (no real desktop); native
 probes stay gated, outside the default suite. X11/Wayland image-write probes

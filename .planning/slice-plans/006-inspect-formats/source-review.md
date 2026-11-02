@@ -25,11 +25,11 @@ No human amendments.
 | 10 | The snapshot includes the set of library-understood kinds currently present among the fixed vocabulary {text, image, html, files} when native formats map to them. | slice 2 | observed: clipboard/_offer.py snapshot_from_native_formats + contract kind asserts |
 | 11.1 | Native format identifiers include Windows format names/ids. | slice 6 | |
 | 11.2 | Native format identifiers include macOS pasteboard types / UTIs. | slice 3 | observed: probe formats public.html/public.utf8-plain-text/public.png; tests/test_inspect_native_macos.py + scripts/probe_macos_native_inspect.py |
-| 11.3 | Native format identifiers include Linux MIME types. | slice 4 | |
+| 11.3 | Native format identifiers include Linux MIME types. | slice 4 | observed: _offer_x11 TARGETS→snapshot_from_native_formats (MIME/atoms); tests/test_inspect_x11.py; native verification evidence-limited on Darwin |
 | 12 | Native format identifiers include identifiers for types this library cannot yet decode. | slice 2 | observed: undecodable com.example.undecodable retained in formats (HTML+text and file-list tests) |
 | 13 | An empty clipboard yields an empty-kinds / empty-or-documented-empty formats snapshot, not an access error. | slice 2 | observed: tests/test_inspect_contract.py::test_empty_offer_yields_empty_snapshot_not_error |
 | 14.1 | Denied/unavailable access raises ClipboardContentError rather than a fabricated empty snapshot. | slice 2 | observed: tests/test_inspect_contract.py::test_access_denied_raises_clipboard_content_error_not_empty |
-| 14.2 | Missing Linux helper required to enumerate raises ClipboardContentError rather than a fabricated empty snapshot. | slice 4 | |
+| 14.2 | Missing Linux helper required to enumerate raises ClipboardContentError rather than a fabricated empty snapshot. | slice 4 | observed: tests/test_inspect_x11.py missing xclip / no DISPLAY → ClipboardContentError |
 | 14.3 | Transfer failure while enumerating raises ClipboardContentError rather than a fabricated empty snapshot. | slice 2 | observed: tests/test_inspect_contract.py::test_enumeration_transfer_failure_raises_clipboard_content_error |
 | 15 | The call leaves the clipboard unchanged. | slice 2 | observed: tests/test_inspect_contract.py::test_inspect_does_not_mutate_fake_offer_model |
 | 16 | The call must not fetch representation payloads solely to decide kind presence when the platform can enumerate types without a body read. | slice 2 | observed: tests/test_inspect_contract.py::test_kinds_derived_from_type_list_alone_not_payload_presence |
@@ -40,7 +40,7 @@ No human amendments.
 | 21 | No clipboard[images] requirement for this story. | slice 1 | observed: inspect() docstring + tests/test_inspect_seam.py::test_inspect_importable_without_images_extra |
 | 22.1 | Supported desktop: Windows desktop. | slice 6 | |
 | 22.2 | Supported desktop: macOS Aqua. | slice 3 | observed: Aqua session success; README.rst macOS inspect verified floors 26.6.2/25G83 |
-| 22.3 | Supported desktop: Linux X11 + helper able to list CLIPBOARD targets. | slice 4 | |
+| 22.3 | Supported desktop: Linux X11 + helper able to list CLIPBOARD targets. | slice 4 | observed: Linux X11 enumerator wired; README.rst X11 inspect evidence limit (not verified) |
 | 22.4 | Supported desktop: Linux Wayland + helper able to list offered MIME types, scoped to the compositor actually proved when one is available. | slice 5 | |
 | 23 | WSL, SSH, containers, and headless CI are not additional guaranteed desktops. | slice 7 | |
 | 24 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available. | slice 3 | observed: independent-producer HTML+text and image-only inspect success on macOS |
@@ -51,7 +51,7 @@ No human amendments.
 | 29 | Do not bypass OS pasteboard / clipboard authorization. | slice 3 | observed: normal NSPasteboard types() path; no authorization bypass |
 | 30 | Do not replace, clear, or rewrite clipboard contents as part of inspection. | slice 2 | observed: tests/test_inspect_contract.py::test_inspect_does_not_mutate_fake_offer_model |
 | 31 | Do not claim that listing a native format means a successful later paste_* decode. | slice 7 | |
-| 32 | Do not hang the caller indefinitely waiting on a contended clipboard. | slice 3 | observed: clipboard/_offer.py _MACOS_TYPES_TIMEOUT_S on osascript type list |
+| 32 | Do not hang the caller indefinitely waiting on a contended clipboard. | slice 3 | observed: clipboard/_offer_macos.py _MACOS_TYPES_TIMEOUT_S on osascript type list |
 | 33 | Do not conflate “this process cannot access the clipboard” with “the offer has no text/image/html/files.” | slice 2 | observed: tests/test_inspect_contract.py::test_empty_and_access_failure_remain_distinguishable |
 | 34 | Denied/unavailable access must not yield a successful empty snapshot. | slice 2 | observed: tests/test_inspect_contract.py::test_access_denied_raises_clipboard_content_error_not_empty |
 | 35 | A successful inspect must not mutate the offer. | slice 2 | observed: tests/test_inspect_contract.py::test_inspect_does_not_mutate_fake_offer_model |

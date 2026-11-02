@@ -145,7 +145,7 @@ examples 1–2 and 6 (macOS branch) or honest limit.
 
 ### 4. Early probe — Linux X11 + helper format list
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable X11 session with a helper that can list CLIPBOARD targets
 (document the exact tool/flags, e.g. `xclip -o -t TARGETS`), gated probe:
 independent producer → `inspect()` reports kinds + native MIME/target ids;
@@ -153,6 +153,12 @@ clipboard unchanged for a later consumer; deps/floors documented; README marks
 X11 inspect verified. If no usable session or helper path exists, record an
 explicit X11 inspect evidence limit — never claim verified. Probe failure
 stops dependent X11 claims.
+
+Accepted proof (coordinator):
+- Evidence-limit path on Darwin (no DISPLAY / xclip): README X11 inspect limit; probe JSON `evidence_limit: true`, exit 2
+- Desktop-free: `tests/test_inspect_x11.py` missing helper → `ClipboardContentError`; mock TARGETS → MIME kinds
+- Enumerator: `xclip -selection clipboard -o -t TARGETS` via `clipboard/_offer_x11.py`
+- Focused: contract+seam+x11+native skips → 24 passed, 2 skipped
 
 Behavior: Pre-condition: contract; owner-held X11+helper session **or**
 evidence-limit path. Trigger: gated independent-producer inspect.
@@ -235,6 +241,8 @@ guessing empty vs denied; evidence wording is honest.
 - macOS `types()` also returns legacy aliases (`Apple HTML pasteboard type`,
   `NSStringPboardType`); kinds map from known UTIs while aliases remain in
   `formats`.
+- Linux X11 inspect verified claim deferred: Darwin execution host has no
+  usable X11+xclip session; enumerator is wired for owner-held replacement.
 
 ## Concern evidence
 
