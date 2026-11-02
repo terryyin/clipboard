@@ -197,7 +197,7 @@ helpers; evidence wording is honest.
   or slice-2 failure wrapping (tracked as G-interim-stub).
 - Darwin checkout cannot run Linux probes; owner chose GHA over skipping issue #5.
 - Linux xclip write needs `-quiet` under Xvfb; without it the helper waits for a paste and times out.
-- xclip `-quiet` still hangs if stdout/stderr are piped into the parent; redirect them away from the forked owner.
+- Under Xvfb, do not wait for xclip to exit; start it detached as CLIPBOARD owner after a short ingest pause.
 
 ## Accepted proof (slice 1)
 

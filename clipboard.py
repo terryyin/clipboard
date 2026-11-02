@@ -90,49 +90,46 @@ def _write_macos_pngf(image: Image.Image) -> None:
 def _write_linux_xclip(image: Image.Image) -> None:
     """Publish PNG bytes on X11 CLIPBOARD via ``xclip`` (``image/png``).
 
-    ``xclip`` reads the tempfile into memory, then forks a background owner so
-    the foreground helper can exit while the offer remains pasteable. The
-    TemporaryDirectory is removed only after that foreground exit.
+    ``xclip`` is started detached and left running as the CLIPBOARD owner so
+    the writing Python process can exit while the offer remains pasteable
+    (issue #5 writer-exit). Waiting for ``xclip`` to exit hangs under Xvfb.
     """
     import subprocess
+    import time
 
     with _temporary_png_offer(image) as path:
-        # -quiet forks a background CLIPBOARD owner. Do not capture stdout/
-        # stderr on pipes: the child inherits them and communicate() hangs.
-        import tempfile as _tempfile
-
-        with _tempfile.NamedTemporaryFile(
-            mode="w+", prefix="clipboard-xclip-err-", delete=True
-        ) as errfile:
-            try:
-                result = subprocess.run(
-                    [
-                        "xclip",
-                        "-selection",
-                        "clipboard",
-                        "-t",
-                        "image/png",
-                        "-quiet",
-                        "-i",
-                        str(path),
-                    ],
-                    stdin=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,
-                    stderr=errfile,
-                    timeout=30,
-                )
-            except FileNotFoundError as exc:
-                raise OSError(
-                    "xclip is required for clipboard image write on Linux X11; "
-                    "install xclip and ensure it is on PATH"
-                ) from exc
-            except subprocess.TimeoutExpired as exc:
-                raise OSError("xclip clipboard write timed out") from exc
-            if result.returncode != 0:
-                errfile.flush()
-                errfile.seek(0)
-                detail = errfile.read().strip() or f"exit {result.returncode}"
-                raise OSError(f"xclip clipboard write failed: {detail}")
+        # xclip stays alive as CLIPBOARD owner until a paste (or replacement).
+        # Do not wait for it to exit — that hangs under Xvfb. Start detached,
+        # give it a moment to read the tempfile, then return.
+        try:
+            proc = subprocess.Popen(
+                [
+                    "xclip",
+                    "-selection",
+                    "clipboard",
+                    "-t",
+                    "image/png",
+                    "-i",
+                    str(path),
+                ],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                start_new_session=True,
+            )
+        except FileNotFoundError as exc:
+            raise OSError(
+                "xclip is required for clipboard image write on Linux X11; "
+                "install xclip and ensure it is on PATH"
+            ) from exc
+        # Allow xclip to read the PNG before TemporaryDirectory cleanup.
+        time.sleep(0.2)
+        exit_code = proc.poll()
+        if exit_code is not None and exit_code != 0:
+            detail = (proc.stderr.read() or b"").decode("utf-8", errors="replace")
+            detail = detail.strip() or f"exit {exit_code}"
+            raise OSError(f"xclip clipboard write failed: {detail}")
+        # Still running (selection owner) or exited 0 after ingest — both OK.
 
 
 def _default_writeclipboard(image: Image.Image) -> None:
