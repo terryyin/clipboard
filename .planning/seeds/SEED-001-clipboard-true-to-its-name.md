@@ -135,26 +135,109 @@ is a product decision outside this correction. Plan:
 
 **Identity:** SEED-001#copy-files
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/008-copy-files/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"be7e65190bf6bcbc8fb4a3225a3f3ec02fc5ae7c07e6dfce9a69c5e43eac4480","plan":"c89e2108e3fc09c37959d25078326ff0624a58ec107c9c22eb5b96aa556db431"}}
 ```
 
-- **For / why:** Python tools can hand existing output files to a file manager
-  through its normal copy/paste workflow.
-- **Evaluation:** Python offers two existing local file references with Unicode
-  and spaces; a supported independent file manager recognizes a copy offer and
-  can paste copies to a user-selected destination after the Python writer exits.
-- **Value / learning:** Eliminates manual path handling and tests outbound
-  file-list interoperability independently of image content.
-- **Boundary:** Copy semantics for existing local files. No cut/move, deletion,
-  virtual/promised files, remote transfers, or automatic filesystem paste by
-  the library. Invalid input fails before current content is replaced. Spell
-  out behavior if a source is later removed.
-- **Effort hypothesis:** **L**, low confidence; native file-list conventions
-  and file-manager interpretation differ across platforms.
-- **Depends on:** None. File-manager behavior, not the library's file reader,
-  establishes success.
-- **Safe stopping point:** Files can be exported through familiar desktop
-  interaction; the library itself does not modify them or issue move semantics.
+**Goal:** Python tool and automation developers can hand existing local
+output files to a desktop file manager through its ordinary copy/paste
+workflow, so the user pastes copies wherever they choose without the tool
+printing paths or the user handling them manually. This extends `clipboard`
+from reading file lists (`paste_files`) to offering them, tested against file
+managers rather than against the library's own reader.
+
+**Scope:**
+
+- *Required behavior.* A new `copy_files(paths)` (no `clipboard[images]`
+  extra) takes an ordered, non-empty iterable of `str` / `os.PathLike` local
+  paths and replaces the current clipboard with one native file-list offer
+  marked as **copy**, not cut. Relative paths are made absolute against the
+  current directory at call time (symlinks are not resolved); order and
+  duplicates pass through. Each named path must exist when `copy_files` is
+  called; files and directories alike are offered. The offer stays pasteable
+  after the writing Python process exits. Native offers: macOS Aqua
+  `NSPasteboard` file URLs; Windows `CF_HDROP` plus `Preferred DropEffect` =
+  copy; Linux X11 / Wayland a `text/uri-list` (and the GNOME copied-files
+  convention where the helper can offer it) served by a background owner, as
+  `copy_image` does.
+- *Required restrictions.* Invalid input — empty iterable, a bare `str` /
+  `bytes` (which would otherwise iterate characters), a non-path item, or any
+  path that does not exist — raises `ClipboardContentError` naming the problem
+  **before** the current clipboard is replaced (shared fail-before-replace
+  boundary). An empty offer is rejected because it would silently clear the
+  clipboard, which belongs to SEED-001#clear-clipboard. Missing helper,
+  unsupported session, denied access, or transfer failure raises
+  `ClipboardContentError`; never silent success or a text-only fallback.
+- *Removed or changed sources.* The offer is a reference, not a snapshot: the
+  library neither locks nor copies the files. A file manager pasting later
+  copies what exists at paste time; a source removed after `copy_files`
+  returns makes that paste fail or skip in the file manager's own way, and the
+  library promises nothing further and is not involved.
+- *Proof.* Success means an independent file manager pastes copies into a
+  user-selected destination after the Python writer exits, with two sources
+  whose names contain Unicode and spaces, and the sources remain unchanged.
+  Name the file manager, OS/compositor and helper versions per platform; a
+  platform without that observation is an evidence limit in the README, not a
+  verified claim, and one file manager or compositor is not generalized.
+  `paste_files()` returning the same paths is a useful in-memory/native
+  consistency check, not interoperability proof.
+- *Scope limits (deferred, not rejected).* A plain-text or name alternative in
+  the same offer; cut/move semantics; virtual or promised files; remote or
+  non-`file:` URIs; copying, opening, or pasting files by the library itself;
+  PRIMARY selection; WSL, SSH, containers, and headless CI as guaranteed
+  desktops; persistence across logout or reboot.
+- *Plan:* [008-copy-files](../slice-plans/008-copy-files/PLAN.md).
+
+**Key examples:**
+
+1. `out/report final.pdf` and `out/données é.csv` exist →
+   `copy_files(["out/report final.pdf", "out/données é.csv"])` returns `None`
+   and the script exits → in the platform's named file manager the user pastes
+   into a chosen folder and gets copies of both; the originals are unchanged.
+2. The clipboard holds text `keep`; `missing.txt` does not exist →
+   `copy_files(["out/report final.pdf", "missing.txt"])` raises
+   `ClipboardContentError` naming `missing.txt` → `paste()` still returns
+   `keep`.
+3. `copy_files([])` or `copy_files("out/report final.pdf")` → raises
+   `ClipboardContentError`; the previous clipboard is untouched.
+4. Working directory `/home/u/proj`, `copy_files(["out/a.txt"])` →
+   `paste_files()` returns `["/home/u/proj/out/a.txt"]`.
+5. After a successful `copy_files`, the user deletes `out/a.txt` and then
+   pastes in the file manager → the file manager reports or skips the missing
+   item; nothing is raised in Python and no other file is touched.
+6. Linux X11 without `xclip` on `PATH` → `copy_files([...])` raises
+   `ClipboardContentError` with an install hint; the previous clipboard is
+   untouched.
+
+**Considered alternatives.** A documented per-platform recipe
+(`Set-Clipboard -Path`, `osascript`, `xclip -t text/uri-list`) leaves callers
+owning formats, copy-versus-cut markers, quoting and lifetime; Windows
+PowerShell `Set-Clipboard -Path` treats `[` `]` as wildcards and remains only a
+possible implementation aid. Revealing the files in the file manager
+(`open -R`, `explorer /select,`) skips the clipboard and would change the
+story's copy/paste goal, so it is not pursued here. The recommended direction
+reuses the existing file-list format knowledge and the helper and
+writer-lifetime patterns of `paste_files`, `copy_image`, and `copy_html`.
+
+**Architecture.** Adds the first outbound file-list writer: per-platform
+writers beside the existing `_files_native_*` readers, with a
+`set_files_clipboard_writer` injection seam mirroring the HTML and image
+writers so default tests stay in-memory. Validation lives above the writer so
+every platform shares fail-before-replace. Linux session detection and helper
+failure reporting reuse the single private desktop module that
+SEED-001#desktop-helpers introduces when it has landed; otherwise follow the
+current `paste_files` session rule rather than adding another copy. Linux
+writer lifetime relies on a background helper owner (`xclip` / `wl-copy`), as
+`copy_image` does; Windows and macOS hand the data to the system clipboard,
+which keeps it after exit. No ADR store exists in this repository, so no
+Accepted decision was checked.
+
+**Open risk for planning.** `xclip` and `wl-copy` offer one MIME type per
+owner process. Whether named Linux file managers (GNOME Files, Dolphin,
+Thunar) paste a lone `text/uri-list` or need `x-special/gnome-copied-files`
+is unobserved here (Darwin checkout). Planning should settle it with an early
+probe before building the Linux writers; if no single-type offer serves a
+named file manager, the Linux coverage becomes a scope decision for the
+maintainer instead of a silent reduction.
 
 <a id="portable-text"></a>
 
