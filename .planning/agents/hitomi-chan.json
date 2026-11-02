@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Hitomi-chan",
+  "email": "hitomi-chan@example.org",
+  "identity": "SEED-001#portable-text",
+  "mode": "story-branch",
+  "branch": "claude/use-the-text-clipboard-reliably-and-diagnose-una",
+  "host": "claude",
+  "model": "opus"
+}
