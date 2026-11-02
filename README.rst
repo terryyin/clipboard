@@ -42,7 +42,8 @@ uv, Make, and actionlint. ``pyproject.toml`` declares Python dependencies and
 For a single command, use ``nix develop -c make check``. Without Nix, install
 Python 3.13 and uv, then use the same Make targets; actionlint is needed for
 ``make lint-workflows``. Windows contributors can run ``uv sync --locked``,
-``uv run --locked pytest``, and ``uv run --locked ruff check .`` directly.
+``uv run --locked --extra images pytest``, and ``uv run --locked ruff check .``
+directly.
 Do not install project dependencies into the system Python environment.
 
 GitHub Actions checks the Nix environment and tests Python 3.10–3.14, including
