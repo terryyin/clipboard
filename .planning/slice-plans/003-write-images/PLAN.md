@@ -282,3 +282,14 @@ Reported: slice 1 — "Path/bytes overloads and related deferred delivery shapes
 Story clause: "Path/bytes overloads (callers open to `Image` first); animated / multi-frame / screenshot APIs; file-manager copy offers; HTML / rich / multi-item pasteboards; bundling GUI toolkits or `win32clipboard` as a required public dependency; making default pytest / CI require a real desktop; expanding beyond the four-desktop set; inventing rollback/atomicity guarantees beyond fail-before-replace. Using `paste_image` alone as native proof remains deferred (insufficient). Splitting Linux-first vs Win/macOS into separate stories is deferred unless execution evidence forces a resplit — this story keeps the four-desktop outcome with the Linux acceptance floor above."
 Disposition: excluded "Path/bytes overloads (callers open to `Image` first); animated / multi-frame / screenshot APIs; file-manager copy offers; HTML / rich / multi-item pasteboards; bundling GUI toolkits or `win32clipboard` as a required public dependency; making default pytest / CI require a real desktop; expanding beyond the four-desktop set; inventing rollback/atomicity guarantees beyond fail-before-replace. Using `paste_image` alone as native proof remains deferred (insufficient). Splitting Linux-first vs Win/macOS into separate stories is deferred unless execution evidence forces a resplit — this story keeps the four-desktop outcome with the Linux acceptance floor above."
 Commitment: D.1, D.2.1, D.2.2, D.2.3, D.3, D.4.1, D.4.2, D.4.3, D.5, D.6, D.7, D.8, D.9, D.10
+
+## Execution complete
+
+Product advice: SEED-001#write-images met its goal: public `copy_image` /
+injectable write seam, fail-before-replace, Linux X11+Xvfb and Wayland+Sway
+writer-exit proofs under gated GHA (issue #5), macOS Aqua verified, Windows
+honest evidence limit; text/`paste_image`/`VERSION` intact. Next product
+learning is Windows desktop write when a session exists (not a defect of this
+delivery); optionally align README X11 wording with non-`-quiet` ownership
+(leave `xclip` running / TARGETS wait). Keep seed order (`#copy-html` next)
+unless the maintainer elevates Windows write evidence.
