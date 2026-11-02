@@ -118,6 +118,14 @@ split) after implementation was done.
   - Observed effect: One extra refactor round (about 20 minutes reported by the refactor agent) and a mid-slice human question; the split landed with slice 1.
   - Inference: Planning could check the line counts of files the plan will edit and settle split-or-exception before the first slice; impact was modest because the split was cheap.
 
+- Execution: SEED-002#linux-file-offers-ci
+  - Timestamp: unknown
+  - Tool: Codex
+  - Open Dough release: 0.3.82
+  - Evidence: 2026-11-02 before cc6d541; baseline `7a908cc:.github/workflows/ci.yml` has 275 lines, initial Thunar-job addition reached 318; independent refactor return reports the 250-line gate and about four minutes of work; cc6d541 extracts the unchanged Wayland jobs into `native-wayland-copy-image.yml` and `native-wayland-paste-html.yml`.
+  - Observed effect: The bounded file-manager experiment acquired two additional reusable workflow files during post-change refactoring; their command behavior stayed unchanged and required workflow lint and hosted validation.
+  - Inference: The same late discovery as the earlier module occurrence: planning could recognize an already over-limit workflow and include the required cohesive split before implementation. This occurrence needed no cross-subsystem human decision.
+
 ## DD-008 — Prior native-venue findings reused; every gated CI probe passed first run
 Reusing the project's recorded native venues (Xvfb with an owning xclip,
 headless Sway for wl-clipboard) and their findings let three new gated probe
