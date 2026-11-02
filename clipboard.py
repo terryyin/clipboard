@@ -97,35 +97,42 @@ def _write_linux_xclip(image: Image.Image) -> None:
     import subprocess
 
     with _temporary_png_offer(image) as path:
-        try:
-            # -quiet: fork a background CLIPBOARD owner after reading the file so
-            # the foreground helper returns (otherwise xclip waits for a paste).
-            result = subprocess.run(
-                [
-                    "xclip",
-                    "-selection",
-                    "clipboard",
-                    "-t",
-                    "image/png",
-                    "-quiet",
-                    "-i",
-                    str(path),
-                ],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-        except FileNotFoundError as exc:
-            raise OSError(
-                "xclip is required for clipboard image write on Linux X11; "
-                "install xclip and ensure it is on PATH"
-            ) from exc
-        except subprocess.TimeoutExpired as exc:
-            raise OSError("xclip clipboard write timed out") from exc
-        if result.returncode != 0:
-            raise OSError(
-                f"xclip clipboard write failed: {_helper_failure_detail(result)}"
-            )
+        # -quiet forks a background CLIPBOARD owner. Do not capture stdout/
+        # stderr on pipes: the child inherits them and communicate() hangs.
+        import tempfile as _tempfile
+
+        with _tempfile.NamedTemporaryFile(
+            mode="w+", prefix="clipboard-xclip-err-", delete=True
+        ) as errfile:
+            try:
+                result = subprocess.run(
+                    [
+                        "xclip",
+                        "-selection",
+                        "clipboard",
+                        "-t",
+                        "image/png",
+                        "-quiet",
+                        "-i",
+                        str(path),
+                    ],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=errfile,
+                    timeout=30,
+                )
+            except FileNotFoundError as exc:
+                raise OSError(
+                    "xclip is required for clipboard image write on Linux X11; "
+                    "install xclip and ensure it is on PATH"
+                ) from exc
+            except subprocess.TimeoutExpired as exc:
+                raise OSError("xclip clipboard write timed out") from exc
+            if result.returncode != 0:
+                errfile.flush()
+                errfile.seek(0)
+                detail = errfile.read().strip() or f"exit {result.returncode}"
+                raise OSError(f"xclip clipboard write failed: {detail}")
 
 
 def _default_writeclipboard(image: Image.Image) -> None:
