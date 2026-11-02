@@ -54,6 +54,13 @@ On Linux, image clipboard reads also need a helper on ``PATH``:
 Windows and macOS need a usable desktop clipboard / pasteboard session; image
 reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
+Evidence / verified platforms: macOS Aqua pasteboard image reads have been
+verified with an independent producer in this project's native probe work.
+Windows desktop, Linux X11 with ``xclip``, and Linux Wayland with ``wl-paste``
+remain supported targets, unverified pending the SEED-001#read-images native
+follow-up (see plan Learnings slice 6). Default automated tests use an
+in-memory backend and do not exercise a real desktop clipboard.
+
 Development
 -----------
 

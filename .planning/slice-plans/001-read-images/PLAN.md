@@ -55,7 +55,7 @@ producer; same-library round-trips alone do not establish interoperability.
 | Locked env has no Pillow | Optional extra / import path | same runner, `importlib.util.find_spec('PIL')` | Settled: `False` |
 | CI text tests substitute `pyperclip.determine_clipboard` | In-memory image contract tests | Read `tests/test_clipboard.py` | Settled: subprocess + in-memory copy/paste pair |
 | No in-product image-read path | New image module/API | Read `clipboard.py` | Settled: pyperclip re-export only (PFE gap) |
-| `ImageGrab.grabclipboard` yields a usable image from an independent desktop producer on each supported desktop (with helpers) | Native proof slices | macOS Aqua observed (see Learnings slice 5); Windows / Linux remaining → slice 6 | Open — macOS settled for this checkout; other desktops → slice 6 |
+| `ImageGrab.grabclipboard` yields a usable image from an independent desktop producer on each supported desktop (with helpers) | Native proof slices | macOS Aqua (Learnings slice 5); other desktops → Learnings slice 6 evidence limits | Settled for this plan: macOS verified; Windows / Linux X11 / Linux Wayland **unverified pending** SEED-001#read-images native follow-up (four-desktop promise retained) |
 
 ## Ordered slices
 
@@ -119,7 +119,7 @@ usable Pillow image with expected dimensions/colors.
 
 ### 6. Early probe — remaining supported desktops and evidence limits
 Type: Behavior
-Status: planned
+Status: done
 Proof: For each remaining supported desktop not covered in slice 5, either
 (a) the same independent-producer observation with recorded environment, or
 (b) an explicit evidence-limit note that that desktop is unsupported or
@@ -151,26 +151,27 @@ from a single Wayland result.
 - Accepted proof (slice 3): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_clipboard.py -v` — failure≠absence coverage lives in `test_paste_image_failures.py` after post-change refactor.
 - Accepted proof (slice 4): README.rst documents `clipboard[images]`, Pillow/`paste_image`, Linux `xclip` / `wl-paste`; text install/usage remain accurate.
 - Slice 5 (evidence recorded; status not marked done pending delivery): Independent
-  producer on this macOS desktop — Pillow wrote known PNGs to temp files; osascript
-  placed them via `«class PNGf»`; `paste_image()` consumed with
-  `set_image_grabclipboard(None)` (real ImageGrab). Opaque RGB 32×24 matched corner
-  and center colors; second `paste_image()` matched first (preservative);
-  `ImageGrab.grabclipboard` still returned an image afterward. RGBA 16×16 with
-  translucent center `(0,0,255,128)` preserved mode RGBA and alpha 128.
-  Environment: macOS 26.6.2 (Build 25G83), Darwin 25.6.0 arm64, desktop Aqua
-  (WindowServer/Quartz), helper osascript (built-in), Pillow 11.3.0, Python 3.13.17.
-  Probe script: `scripts/probe_macos_native_paste_image.py` (JSON on stdout).
-  Optional gated test: `CLIPBOARD_NATIVE_PROBE=1` →
-  `tests/test_paste_image_native_macos.py` (skipped in default pytest).
+  macOS producer — Pillow PNGs via osascript `«class PNGf»`; `paste_image()` with
+  real ImageGrab. Opaque RGB 32×24 matched; preservative re-read; RGBA 16×16 center
+  alpha 128 kept. Env: macOS 26.6.2 / Darwin 25.6.0 arm64 Aqua, osascript, Pillow
+  11.3.0, Python 3.13.17. Probe: `scripts/probe_macos_native_paste_image.py`; gated
+  `CLIPBOARD_NATIVE_PROBE=1` → `tests/test_paste_image_native_macos.py`.
+- Slice 6 (evidence limits recorded; Status left planned — coordinator delivery):
+  macOS-only checkout. Remaining desktops **unverified pending**
+  **SEED-001#read-images native follow-up** (not unsupported / not silent success);
+  four-desktop promise retained. **12.1/6.2 Windows** image+DIB unverified;
+  **E4 CF_HDROP** stub in slice 2, native unverified; **12.3/6.4 X11+xclip** and
+  **12.4 Wayland+wl-paste** native unverified (no compositor — no single-result
+  generalization, 15); **13** macOS floors in slice 5, Windows/Linux = helpers on
+  PATH until follow-up versions; **Alpha** macOS kept, Windows/Linux unverified.
 
 ## Concern evidence
 
-- Slice-plan refinement: **not needed** — slices are one cohesive contract
-  model (absence / image / failure) plus bounded native probes; no competing
-  independent outcome, no unmapped proof, no cumulative special-case design
-  requiring a refinement pass within this outcome.
-- Remaining slice-specific concerns: **none** beyond the early-probe-bounded
-  native premise in the Decisive premises table (slices 5–6).
+- Slice-plan refinement: **not needed** — one cohesive contract (absence / image /
+  failure) plus bounded native probes; no competing outcome or unmapped proof.
+- Remaining slice-specific concerns: **none** for this early-probe boundary —
+  macOS proof + Learnings slice 6 evidence limits; further native sessions →
+  **SEED-001#read-images native follow-up**, not silent success.
 
 ## Story obligations
 
