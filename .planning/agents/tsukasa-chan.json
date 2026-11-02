@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Tsukasa-chan",
-  "email": "tsukasa-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-001#inspect-formats",
-  "host": "cursor",
-  "model": "auto"
-}
