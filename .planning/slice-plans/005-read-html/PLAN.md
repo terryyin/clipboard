@@ -109,7 +109,7 @@ and 7 hold without a real clipboard.
 
 ### 3. Early probe — macOS Aqua HTML read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On this Darwin checkout (or equivalent Aqua session), gated probe: an
 **independent** producer (browser or rich editor / non-`clipboard` pasteboard
 writer) offers HTML; `paste_html()` returns the selection fragment; a later
@@ -198,6 +198,11 @@ envelopes/helpers; evidence wording is honest.
   exceeded the 250-line refactor limit (510 lines); split it now into a
   `clipboard/` package with cohesive modules and an `__init__` re-exporting the
   unchanged public API, before slice 2 adds envelope decoding.
+- Fragment-only `text/html` bodies (macOS `public.html`, Linux `text/html`)
+  are returned as the producer offered them, including a browser's leading
+  `<meta charset='utf-8'>` (story: "platforms that already offer
+  fragment-only `text/html` return that body directly"); document this
+  per-desktop envelope behavior in slice 7.
 
 ## Learnings
 
@@ -222,6 +227,22 @@ envelopes/helpers; evidence wording is honest.
   tests/test_paste_html_seam.py tests/test_paste_html_contract.py
   tests/test_paste_html_cf_html.py -q` (85 passed); `nix develop -c make
   check` (157 passed, 6 skipped).
+- Slice 3: macOS reader `_macos_html_clipboard_reader` and the platform
+  dispatch `_default_html_clipboard_reader` live in `clipboard/_html_native.py`
+  (osascript JXA `dataForType("public.html")`, tagged `HTML:<base64>` /
+  `NONE` / `UNREADABLE` stdout, 10s timeout, failures → `ClipboardContentError`).
+  Tests that reach the default reader must force a non-target platform via
+  `clipboard._html_native.sys`; rewrite
+  `test_non_darwin_default_reader_is_not_available` as each platform lands.
+  Real-browser producer without Accessibility: Chrome AppleScript
+  `select all` + `copy selection` with `user-select:none` context.
+- Slice 3 accepted proof: focused `nix develop -c uv run --locked pytest
+  tests/test_paste_html_seam.py tests/test_paste_html_contract.py
+  tests/test_paste_html_cf_html.py tests/test_paste_html_macos_reader.py
+  tests/test_copy_html_seam.py tests/test_copy_html_contract.py -q` (121
+  passed); native `CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked
+  pytest tests/test_paste_html_native_macos.py -v` (1 passed: Chrome
+  156.0.8078.74, macOS 26.6.2/25G83 arm64).
 
 ## Concern evidence
 

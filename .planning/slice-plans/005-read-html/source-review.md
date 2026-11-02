@@ -36,14 +36,14 @@ Reviewer-noted ambiguities: "floors recorded" is undefined; "(or equivalent)" he
 | 8.4 | [never] synthesize HTML from plain text | slice 2 | observed: tests/test_paste_html_contract.py::test_non_html_offers_return_none [text-only with markup-like text → None] |
 | 8.5 | [never synthesize HTML from] RTF | slice 2 | observed: tests/test_paste_html_contract.py::test_non_html_offers_return_none [text+rtf → None] |
 | 9 | Default automated tests stay desktop-free via an injectable read backend | slice 1 | observed: clipboard/_html.py set_html_clipboard_reader; tests/test_paste_html_seam.py::test_injected_reader_value_is_returned, test_injected_reader_absence_is_none, test_reset_reader_restores_default |
-| 10 | native proof uses an independent producer (browser or rich editor — not a same-library copy_html round-trip alone) | slice 3 | |
-| 10.q | and stays explicitly gated | slice 3 | |
+| 10 | native proof uses an independent producer (browser or rich editor — not a same-library copy_html round-trip alone) | slice 3 | observed: scripts/probe_macos_native_paste_html.py via tests/test_paste_html_native_macos.py (CLIPBOARD_NATIVE_PROBE=1, macOS 26.6.2/25G83, Chrome 156.0.8078.74): producer kind browser (Chrome select all + copy selection), not copy_html |
+| 10.q | and stays explicitly gated | slice 3 | observed: tests/test_paste_html_native_macos.py skipif darwin + CLIPBOARD_NATIVE_PROBE=1; SKIPPED in make check |
 | 11.1 | Document Linux helper dependencies for HTML reads: xclip on X11 | slice 7 | |
 | 11.2 | Document Linux helper dependencies for HTML reads: wl-paste on Wayland | slice 7 | |
 | 11.3 | Document Linux helper dependencies for HTML reads: and supported desktop setup | slice 7 | |
 | 12 | No clipboard[images] requirement for this story | slice 1 | observed: tests/test_paste_html_seam.py::test_paste_html_works_without_images_extra (PIL blocked, no PIL in sys.modules) |
 | 13.1 | Supported desktop: Windows desktop | slice 6 | |
-| 13.2 | Supported desktop: macOS Aqua | slice 3 | |
+| 13.2 | Supported desktop: macOS Aqua | slice 3 | observed: scripts/probe_macos_native_paste_html.py via tests/test_paste_html_native_macos.py (CLIPBOARD_NATIVE_PROBE=1, macOS 26.6.2/25G83, Chrome 156.0.8078.74) passed on Aqua arm64; README macOS HTML read evidence bullet |
 | 13.3 | Supported desktop: Linux X11 + xclip (or equivalent) able to request text/html on CLIPBOARD | slice 4 | |
 | 13.4 | Supported desktop: Linux Wayland + wl-paste (or equivalent) scoped to the compositor actually proved when one is available | slice 5 | |
 | 14 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available | slice 7 | |
@@ -51,19 +51,19 @@ Reviewer-noted ambiguities: "floors recorded" is undefined; "(or equivalent)" he
 | 15 | Do not generalize one Wayland compositor's result to all Wayland environments | slice 5 | |
 | 16 | Do not overload paste() / copy() to return or accept HTML | slice 1 | observed: clipboard/__init__.py re-exports pyperclip copy/paste unchanged and adds paste_html separately; full suite tests/test_clipboard.py green |
 | 17 | Do not treat ordinary text, file-list, or image-only offers as HTML success | slice 2 | observed: tests/test_paste_html_contract.py::test_non_html_offers_return_none [text-only, image-only, file-list] (fake model); native type lists: G3 |
-| 18 | Do not bypass OS pasteboard / clipboard authorization | slice 3 | |
+| 18 | Do not bypass OS pasteboard / clipboard authorization | slice 3 | observed: clipboard/_html_native.py::_macos_html_clipboard_reader uses plain NSPasteboard.generalPasteboard dataForType via osascript; denial → ClipboardContentError (tests/test_paste_html_macos_reader.py::test_helper_failure_is_content_error) |
 | 19 | Do not replace, clear, or rewrite clipboard contents as part of the read | slice 2 | observed: tests/html_offer.py::paste_unchanged on every fake read |
 | 20 | Do not present envelope headers, full surrounding context HTML, or a synthesized document as the fragment result | slice 2 | observed: tests/test_paste_html_cf_html.py::test_non_ascii_fragment_uses_utf8_byte_offsets (no context, '<html>', '<!--' in result); tests/test_paste_html_cf_html.py::test_byte_offsets_are_authoritative_over_comment_markers |
 | 21 | Do not hang the caller indefinitely waiting on a contended clipboard | slice 4 | |
 | 22 | Corrupt or unparseable native HTML metadata must not yield a bogus successful fragment | slice 2 | observed: tests/test_paste_html_cf_html.py::test_corrupt_metadata_raises_without_fragment_or_mutation; tests/test_paste_html_contract.py::test_bomless_utf16_fragment_raises |
 | 23 | Text-only content must not be turned into HTML by synthesis | slice 2 | observed: tests/test_paste_html_contract.py::test_non_html_offers_return_none [text-only → None, not escaped text] |
-| 24 | A successful read must not mutate the clipboard offer | slice 3 | |
+| 24 | A successful read must not mutate the clipboard offer | slice 3 | observed: scripts/probe_macos_native_paste_html.py via tests/test_paste_html_native_macos.py (CLIPBOARD_NATIVE_PROBE=1, macOS 26.6.2/25G83, Chrome 156.0.8078.74): independent JXA consumer sees same offer, changeCount 119→119; tests/test_paste_html_macos_reader.py::test_reader_script_only_reads_the_pasteboard |
 | 25 | Silent success on an unproved desktop is forbidden | slice 7 | |
 | 26 | platform readers must own native HTML envelope decoding (Windows fragment offsets; macOS HTML pasteboard type; Linux text/html MIME) and map them to one absence / fragment / ClipboardContentError model | slice 6 | |
 | 27 | reuse ClipboardContentError for HTML read failures — do not overload ClipboardImageError | slice 1 | observed: tests/test_paste_html_seam.py::test_reader_failure_surfaces_as_content_error asserts ClipboardContentError and not ClipboardImageError |
 | 28 | platforms that already offer fragment-only text/html return that body directly; fail only when present metadata is unusable; do not invent a mandatory Windows-style envelope on macOS/Linux | slice 2 | observed: tests/test_paste_html_contract.py::test_fragment_offer_without_envelope_is_returned_directly; test_fragment_offer_bom_marked_bytes_decode; test_fragment_offer_invalid_utf8_raises |
 | 29 | document per-desktop envelope behavior | slice 7 | |
-| E1 | Ex. 1: independent browser/rich editor copies Unicode HTML selection on a supported desktop → paste_html() returns fragment markup for that selection; a later independent consumer can still obtain the same offer | slice 3 | |
+| E1 | Ex. 1: independent browser/rich editor copies Unicode HTML selection on a supported desktop → paste_html() returns fragment markup for that selection; a later independent consumer can still obtain the same offer | slice 3 | observed: scripts/probe_macos_native_paste_html.py via tests/test_paste_html_native_macos.py (CLIPBOARD_NATIVE_PROBE=1, macOS 26.6.2/25G83, Chrome 156.0.8078.74): paste_html returns Chrome's public.html selection (café → naïve 日本 link, context excluded); later JXA consumer obtains same offer |
 | E2 | Ex. 2: Windows HTML Format with fragment/context byte offsets (including non-ASCII) → returned string is the fragment between the offsets, not the Version/StartHTML header block or the unselected surrounding context alone | slice 2 | observed: tests/test_paste_html_cf_html.py::test_non_ascii_fragment_uses_utf8_byte_offsets |
 | E3 | Ex. 3: only plain text (or empty / image-only / file-list) → paste_html() returns None; paste() / other readers behave as before | slice 2 | observed: tests/test_paste_html_contract.py::test_non_html_offers_return_none [empty, text-only, image-only, file-list]; make check text/paste_image suites green |
 | E4 | Ex. 4: native HTML metadata corrupt or inconsistent (e.g. invalid Windows fragment offsets) → ClipboardContentError; no fabricated fragment; clipboard contents unchanged | slice 2 | observed: tests/test_paste_html_cf_html.py::test_corrupt_metadata_raises_without_fragment_or_mutation (invalid offsets → ClipboardContentError, paste_unchanged) |
@@ -79,6 +79,6 @@ Reviewer-noted ambiguities: "floors recorded" is undefined; "(or equivalent)" he
 | X7 | Exclusion: bundling GUI toolkits or win32clipboard as a required public dependency | slice 1 | observed: pyproject.toml dependencies unchanged; paste_html imports nothing new |
 | X8 | Exclusion: making default pytest / CI require a real desktop | slice 1 | observed: tests/test_paste_html_seam.py uses only injected readers; default suite runs desktop-free |
 | X9 | Exclusion: expanding beyond the four-desktop set | slice 7 | |
-| X10 | Exclusion: same-library copy_html round-trip as sole native proof | slice 3 | |
+| X10 | Exclusion: same-library copy_html round-trip as sole native proof | slice 3 | observed: scripts/probe_macos_native_paste_html.py via tests/test_paste_html_native_macos.py (CLIPBOARD_NATIVE_PROBE=1, macOS 26.6.2/25G83, Chrome 156.0.8078.74) uses Chrome producer; copy_html not used |
 | X11 | Exclusion: returning raw platform HTML without fragment extraction | slice 2 | observed: tests/test_paste_html_cf_html.py::test_corrupt_metadata_raises_without_fragment_or_mutation [not-an-envelope raw body raises] |
 | X12 | Exclusion: Qt QMimeData / PyClip / GUI toolkit as default stack | slice 1 | observed: no Qt/PyClip import in clipboard/ package |

@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable
 from typing import TypeVar
 
 from ._errors import ClipboardContentError
 from ._html_envelope import _decode_html_offer
-from ._html_native import _default_html_clipboard_writer
+from ._html_native import (
+    _default_html_clipboard_reader,
+    _default_html_clipboard_writer,
+)
 
 _T = TypeVar("_T")
 
@@ -78,15 +80,6 @@ def copy_html(html: str, text: str) -> None:
     _call_content_backend("HTML+text write", _html_clipboard_writer, html, text)
 
 
-def _default_html_clipboard_reader() -> object:
-    """Platform-selected HTML reader; no native readers have landed yet."""
-    raise ClipboardContentError(
-        "paste_html native HTML reader is not available on this platform "
-        f"({sys.platform}) yet; inject a reader with set_html_clipboard_reader "
-        "for tests"
-    )
-
-
 _html_clipboard_reader: Callable[[], object] = _default_html_clipboard_reader
 
 
@@ -112,8 +105,10 @@ def paste_html() -> str | None:
     synthesized from plain text, the markup is never executed or resolved, and
     the clipboard is left unchanged. Does not require ``clipboard[images]``.
     Access, helper, or transfer failures and malformed envelopes raise
-    ``ClipboardContentError`` (not ``None``). Native platform readers are not
-    available yet; tests inject a reader via ``set_html_clipboard_reader``.
+    ``ClipboardContentError`` (not ``None``). On macOS Aqua the default reader
+    reads the pasteboard's ``public.html`` type (via ``osascript`` / AppKit);
+    other platforms' native readers are not available yet. Tests inject a
+    reader via ``set_html_clipboard_reader``.
     """
     offer = _call_content_backend("HTML read", _html_clipboard_reader)
     return _decode_html_offer(offer)

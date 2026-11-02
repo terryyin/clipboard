@@ -204,6 +204,17 @@ Evidence / verified platforms:
   silent success. Re-run that gated Windows dual-consumer probe on an
   owner-held Windows desktop to replace this limit, including a non-ASCII
   fragment/context case.
+* macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
+  pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
+  been verified with an independent producer: Google Chrome 156.0.8078.74
+  copied a Unicode styled-link selection (context left unselected) from a
+  local page, ``paste_html()`` returned that selection's markup, and an
+  independent consumer afterwards saw the same offer with an unchanged
+  ``changeCount``; text-only, image-only and file-list offers returned
+  ``None``. Floors: macOS 26.6.2 (build 25G83) / Darwin 25.6.0, Python 3.13,
+  arm64 Aqua. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
+  ``scripts/probe_macos_native_paste_html.py`` to refresh floors on another
+  host.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the

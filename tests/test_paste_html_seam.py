@@ -24,11 +24,15 @@ def test_injected_reader_absence_is_none(restore_html_clipboard_reader):
     assert clipboard.paste_html() is None
 
 
-def test_reset_reader_restores_default(restore_html_clipboard_reader):
+def test_reset_reader_restores_default(monkeypatch, restore_html_clipboard_reader):
+    # Non-Darwin so the default reader never touches a real pasteboard.
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "linux")
     clipboard.set_html_clipboard_reader(lambda: _fragment_offer("<i>x</i>"))
     clipboard.set_html_clipboard_reader(None)
-    html = clipboard._html
-    assert html._html_clipboard_reader is html._default_html_clipboard_reader
+    assert (
+        clipboard._html._html_clipboard_reader
+        is clipboard._html_native._default_html_clipboard_reader
+    )
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.paste_html()
 
@@ -86,6 +90,7 @@ assert clipboard.paste_html() == "<b>ok</b>"
 clipboard.set_html_clipboard_reader(lambda: None)
 assert clipboard.paste_html() is None
 clipboard.set_html_clipboard_reader(None)
+sys.platform = "linux"  # default reader must not touch a real pasteboard
 try:
     clipboard.paste_html()
 except clipboard.ClipboardContentError:
