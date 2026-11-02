@@ -14,14 +14,21 @@ if TYPE_CHECKING:
 
 VERSION = "0.0.5"
 
-_MISSING_IMAGES_EXTRA = (
-    "paste_image requires the optional images extra "
-    "(Pillow). Install with: pip install 'clipboard[images]'"
-)
-
 
 class ClipboardImageError(Exception):
     """Image clipboard read failed; distinct from ordinary absence (``None``)."""
+
+
+def _pillow_image(operation: str):
+    """Return ``PIL.Image``, or raise ``ImportError`` for the images extra."""
+    try:
+        from PIL import Image
+    except ImportError as exc:
+        raise ImportError(
+            f"{operation} requires the optional images extra "
+            "(Pillow). Install with: pip install 'clipboard[images]'"
+        ) from exc
+    return Image
 
 
 def _default_grabclipboard():
@@ -39,6 +46,22 @@ def set_image_grabclipboard(grabclipboard: Callable | None) -> None:
     _grabclipboard = _default_grabclipboard if grabclipboard is None else grabclipboard
 
 
+def _default_writeclipboard(image: Image.Image) -> None:
+    # Native publication lands in later slices; injectable for desktop-free tests.
+    raise NotImplementedError("clipboard image write is not implemented yet")
+
+
+_writeclipboard: Callable = _default_writeclipboard
+
+
+def set_image_writeclipboard(writeclipboard: Callable | None) -> None:
+    """Inject a clipboard image-write callable (tests / fakes)."""
+    global _writeclipboard
+    _writeclipboard = (
+        _default_writeclipboard if writeclipboard is None else writeclipboard
+    )
+
+
 def _raise_image_failure(exc: BaseException) -> NoReturn:
     raise ClipboardImageError(f"clipboard image read failed: {exc}") from exc
 
@@ -54,10 +77,7 @@ def paste_image() -> Image.Image | None:
     result from ``ImageGrab.grabclipboard`` and URL-only strings — are
     ordinary absence (``None``). Paths from those offers are not opened.
     """
-    try:
-        from PIL import Image
-    except ImportError as exc:
-        raise ImportError(_MISSING_IMAGES_EXTRA) from exc
+    Image = _pillow_image("paste_image")
 
     try:
         result = _grabclipboard()
@@ -79,3 +99,14 @@ def paste_image() -> Image.Image | None:
 
     # list[str], URL strings, None, and other non-image offers → absence.
     return None
+
+
+def copy_image(image: Image.Image) -> None:
+    """Copy a Pillow Image onto the clipboard.
+
+    Requires the optional ``clipboard[images]`` extra (Pillow). Platform-native
+    publication is provided by later writers; tests may inject a fake via
+    ``set_image_writeclipboard``.
+    """
+    _pillow_image("copy_image")
+    _writeclipboard(image)

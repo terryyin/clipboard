@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#write-images
 **Source:** [Copy Python images into desktop applications](../../seeds/SEED-001-clipboard-true-to-its-name.md#write-images)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -77,7 +78,7 @@ consumer; `paste_image` round-trips alone do not establish interoperability.
 
 ### 1. Injectable `copy_image` write seam
 Type: Structure
-Status: planned
+Status: done
 Proof: Public `copy_image` exists under `clipboard[images]`; default path and
 `set_image_*` injection (name aligned with existing grabclipboard seam) allow
 tests to supply a fake writer without a desktop; `copy` / `paste` /
@@ -181,7 +182,17 @@ helpers; evidence wording is honest.
 
 ## Learnings
 
-_(none yet)_
+- Write injection named `set_image_writeclipboard` / `_writeclipboard` to mirror
+  `set_image_grabclipboard` / `_grabclipboard` without shadowing public `copy_image`.
+- Optional-images ImportError gate consolidated as `_pillow_image(operation)` shared
+  by `paste_image` and `copy_image` (message still names the calling operation).
+- Default `_default_writeclipboard` raises `NotImplementedError` until later writers
+  or slice-2 failure wrapping (tracked as G-interim-stub).
+
+## Accepted proof (slice 1)
+
+- Command: `nix develop -c uv run --locked --extra images pytest tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_copy_image.py -q` → 22 passed.
+- Observations: public `copy_image` / `set_image_writeclipboard`; injectable fake receives Image; reset restores stub; ImportError without Pillow; text and `paste_image` suites green.
 
 ## Concern evidence
 
@@ -192,3 +203,22 @@ _(none yet)_
 - Remaining slice-specific concerns: none beyond the authorized early probes
   in slices 3–6 (owner-held native sessions; Linux absence blocks acceptance
   rather than silently succeeding).
+
+## Story obligations
+
+### G-interim-stub. Default write raises NotImplementedError
+Reported: slice 1 — "default `_default_writeclipboard` raises `NotImplementedError` until a real writer or contract wrapper lands"
+Story clause: "Failures other than successful publication (missing helper, denied access, transfer failure, unsupported session) raise `ClipboardImageError` rather than silent no-op."
+Disposition: interim until slices 2, 3
+
+### G-excl-env. Non-desktop environments are not guaranteed desktops
+Reported: slice 1 — "WSL, SSH, containers, and headless CI are not additional guaranteed desktops"
+Story clause: "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Disposition: excluded "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Commitment: S.5, S.6, S.7, S.8
+
+### G-excl-deferred. Deferred APIs and delivery shapes
+Reported: slice 1 — "Path/bytes overloads and related deferred delivery shapes from Scope limits"
+Story clause: "Path/bytes overloads (callers open to `Image` first); animated / multi-frame / screenshot APIs; file-manager copy offers; HTML / rich / multi-item pasteboards; bundling GUI toolkits or `win32clipboard` as a required public dependency; making default pytest / CI require a real desktop; expanding beyond the four-desktop set; inventing rollback/atomicity guarantees beyond fail-before-replace. Using `paste_image` alone as native proof remains deferred (insufficient). Splitting Linux-first vs Win/macOS into separate stories is deferred unless execution evidence forces a resplit — this story keeps the four-desktop outcome with the Linux acceptance floor above."
+Disposition: excluded "Path/bytes overloads (callers open to `Image` first); animated / multi-frame / screenshot APIs; file-manager copy offers; HTML / rich / multi-item pasteboards; bundling GUI toolkits or `win32clipboard` as a required public dependency; making default pytest / CI require a real desktop; expanding beyond the four-desktop set; inventing rollback/atomicity guarantees beyond fail-before-replace. Using `paste_image` alone as native proof remains deferred (insufficient). Splitting Linux-first vs Win/macOS into separate stories is deferred unless execution evidence forces a resplit — this story keeps the four-desktop outcome with the Linux acceptance floor above."
+Commitment: D.1, D.2.1, D.2.2, D.2.3, D.3, D.4.1, D.4.2, D.4.3, D.5, D.6, D.7, D.8, D.9, D.10
