@@ -136,7 +136,7 @@ example 1 (floors name Xvfb/CI honestly).
 
 ### 5. Early probe — Linux Wayland + `wl-copy` image write
 Type: Behavior
-Status: planned
+Status: done
 Proof: Implement Wayland/`wl-copy` writer; gated probe with writer-exit
 independent consumer; GitHub Actions job under a **named** CI compositor
 (e.g. Sway) with `wl-clipboard`; README marks Wayland write verified for
@@ -197,7 +197,7 @@ helpers; evidence wording is honest.
   or slice-2 failure wrapping (tracked as G-interim-stub).
 - Darwin checkout cannot run Linux probes; owner chose GHA over skipping issue #5.
 - Linux xclip under Xvfb: do not wait for exit (CLIPBOARD owner stays up); feed PNG on stdin, leave the process (`start_new_session`), then wait until CLIPBOARD TARGETS lists `image/png` (0.05s alone raced opaque first write).
-- Wayland: Weston headless lacks wlr-data-control so `wl-copy` exits 1; proof venue is gated GHA under named compositor **Sway** (`WLR_BACKENDS=headless`) only (S.4/X.8/C.4). Prefer `wl-copy` when Wayland; leave xclip for X11. S.10 interim: writer + probe + Sway job wired; green CI still required.
+- Wayland: Weston headless lacks wlr-data-control so `wl-copy` exits 1; proof venue is gated GHA under named compositor **Sway** (`WLR_BACKENDS=headless`) only (S.4/X.8/C.4). Prefer `wl-copy` when Wayland; leave xclip for X11.
 
 ## Accepted proof (slice 1)
 
@@ -224,6 +224,13 @@ helpers; evidence wording is honest.
 - Floors: ubuntu-latest + Xvfb + xclip; Python 3.13 / Pillow 11.3.0 (README).
 - Learning: under Xvfb do not wait for xclip exit; leave it as selection owner.
 
+## Accepted proof (slice 5)
+
+- Linux `_write_linux_wl_copy` (wl-copy / image/png); X11 path waits for TARGETS `image/png`.
+- Gated probe + GHA job `native-linux-wayland-copy-image` under **Sway** (`WLR_BACKENDS=headless`); green with X11 on `833bbd3`.
+- Floors: ubuntu-latest + Sway + wl-clipboard; Python 3.13 / Pillow 11.3.0 (README); do not generalize beyond Sway.
+- Learning: Weston lacks wlr-data-control; use Sway (or other wlroots) for wl-clipboard CI.
+
 ## Concern evidence
 
 - Slice-plan refinement: not needed — Behavior/Structure split is one write
@@ -243,8 +250,7 @@ Disposition: proved by slice 4: GitHub Actions run on c6f6585 (job native-linux-
 ### G-wayland-ci. Linux Wayland writer-exit awaits green GHA Sway probe
 Reported: slice 5 — "Wayland writer-exit proof is gated on GitHub Actions job native-linux-wayland-copy-image under Sway; not yet observed green"
 Story clause: "Linux X11 and Wayland writer-exit success are acceptance requirements (issue #5); they are not substitutable by an evidence-limit note."
-Disposition: interim until slices 5
-Commitment: S.10
+Disposition: proved by slice 5: GitHub Actions run on 833bbd3 (job native-linux-wayland-copy-image PASSED under Sway; opaque writer-exit + independent wl-paste consumer; X11 job also PASSED)
 
 ### G-interim-stub. Default write raises NotImplementedError
 Reported: slice 1 — "default `_default_writeclipboard` raises `NotImplementedError` until a real writer or contract wrapper lands"
