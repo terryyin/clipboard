@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#inspect-formats
 **Source:** [Inspect clipboard content kinds and offered formats](../../seeds/SEED-001-clipboard-true-to-its-name.md#inspect-formats)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -83,16 +84,23 @@ producer; same-library round-trips alone do not establish interoperability.
 
 ### 1. Injectable `inspect` enumeration seam
 Type: Structure
-Status: planned
+Status: done
 Proof: Public `inspect` exists; default path and a `set_*` injection hook
 allow tests to supply a fake enumerator without a desktop; failures raise
 `ClipboardContentError` (not `ClipboardImageError`); `copy` / `paste` /
 `paste_image` / `copy_html` import and in-memory tests still pass; calling
 `inspect` does not require `clipboard[images]`.
 
+Accepted proof (coordinator):
+- `nix develop -c uv run --locked --extra images pytest tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_copy_html_contract.py tests/test_copy_html_seam.py tests/test_inspect_seam.py tests/test_copy_image_failures.py -q` → 64 passed, 1 skipped
+- `nix develop -c uv run --locked pytest tests/test_inspect_seam.py::test_inspect_importable_without_images_extra tests/test_inspect_seam.py::test_inspect_public_surface tests/test_inspect_seam.py::test_default_inspect_raises_clipboard_content_error -q` → 3 passed
+- `nix develop -c make check` → 80 passed, 6 skipped
+- Public surface: `clipboard.inspect`, `set_clipboard_inspector`, `ClipboardOfferSnapshot`, `ClipboardKind` via package facade; default stub raises `ClipboardContentError`
+
 Internal: Add the inspect entry point and injection hook beside existing
 content APIs; no native enumeration required yet. Enables slice 2 contract
-Behavior.
+Behavior. Post-change refactor split oversize `clipboard.py` into package
+modules along content seams (`_offer`, `_html`, `_image_*`, `_errors`).
 
 ### 2. In-memory `inspect` contract
 Type: Behavior
@@ -204,7 +212,13 @@ guessing empty vs denied; evidence wording is honest.
 
 ## Learnings
 
-_(none yet)_
+- Default inspect is an always-fail stub until desktop enumerators land;
+  injection is the only green path for desktop-free tests (unlike Darwin-capable
+  `copy_html`).
+- Snapshot shape: frozen `ClipboardOfferSnapshot(kinds: frozenset[ClipboardKind], formats: tuple[str, ...])`.
+- Post-slice-1 refactor: single-module `clipboard.py` exceeded the 250-line
+  cohesion limit; library is now a `clipboard` package with explicit content
+  seams. Public import path unchanged.
 
 ## Concern evidence
 

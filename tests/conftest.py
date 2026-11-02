@@ -20,6 +20,14 @@ def restore_html_clipboard_writer():
 
 
 @pytest.fixture
+def restore_clipboard_inspector():
+    import clipboard
+
+    yield
+    clipboard.set_clipboard_inspector(None)
+
+
+@pytest.fixture
 def restore_image_writeclipboard():
     import clipboard
 
