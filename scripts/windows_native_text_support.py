@@ -2,8 +2,8 @@
 
 Producers / consumers here are not this library: Windows PowerShell 5.1 and
 (when present) PowerShell 7 ``Get-Clipboard``, the ctypes
-``windows_clipboard_consumer.py --text`` reader, the ctypes
-``windows_clipboard_holder.py`` holder, and a child Python that runs
+``windows_clipboard_consumer.py --text`` reader, Notepad driven by
+``windows_notepad_consumer.py``, and a child Python that runs
 ``clipboard.copy`` and exits. Text crosses process boundaries as UTF-8 files,
 JSON with ASCII escapes, or base64, never as raw command-line text.
 """
@@ -19,14 +19,13 @@ import shutil
 import subprocess
 import sys
 import time
-from contextlib import contextmanager
 from pathlib import Path
 
 from windows_powershell_producers import FLOORS, PRODUCERS, powershell
 
 ROOT = Path(__file__).resolve().parents[1]
 CONSUMER = Path(__file__).with_name("windows_clipboard_consumer.py")
-HOLDER = Path(__file__).with_name("windows_clipboard_holder.py")
+NOTEPAD = Path(__file__).with_name("windows_notepad_consumer.py")
 
 # ``-Raw`` string and array form, each line as base64 of its UTF-8 bytes.
 GET_CLIPBOARD = (
@@ -94,20 +93,44 @@ def pwsh() -> str | None:
     return shutil.which("pwsh")
 
 
-def consume() -> dict:
-    """Independent ctypes consumer in a child process (formats + text)."""
+def _json_child(script: Path, *args: str, timeout: float) -> dict | str:
+    """Run ``script`` isolated; its stdout JSON, or its output when not JSON."""
     result = subprocess.run(
-        [sys.executable, "-I", str(CONSUMER), "--text"],
+        [sys.executable, "-I", str(script), *args],
         capture_output=True,
         text=True,
         errors="replace",
-        timeout=60,
+        timeout=timeout,
         check=False,
     )
     try:
         return json.loads(result.stdout)
     except ValueError:
-        return {"consumer_error": (result.stderr or result.stdout).strip()}
+        return (result.stderr or result.stdout).strip()
+
+
+def consume() -> dict:
+    """Independent ctypes consumer in a child process (formats + text)."""
+    report = _json_child(CONSUMER, "--text", timeout=60)
+    return {"consumer_error": report} if isinstance(report, str) else report
+
+
+def notepad() -> dict:
+    """Notepad pastes the clipboard (``WM_PASTE``); line count, text, build.
+
+    ``unavailable`` names why Notepad could not be driven; it is never folded
+    into a line count.
+    """
+    report = _json_child(NOTEPAD, timeout=90)
+    if isinstance(report, str):
+        report = {"unavailable": "notepad consumer gave no JSON"}
+    path = report.get("notepad_path")
+    if path:
+        version = powershell(
+            "(Get-Item ([IO.File]::ReadAllText($in))).VersionInfo.FileVersion", path
+        )
+        report["notepad_version"] = version.stdout.strip() or None
+    return report
 
 
 def set_clipboard(text: str) -> dict:
@@ -147,33 +170,6 @@ def child_copy(text: str) -> dict:
     except ValueError:
         out = {"error": (result.stderr or result.stdout).strip()[-1000:]}
     return {**out, "exit": result.returncode, "exited": True}
-
-
-@contextmanager
-def held(seconds: float):
-    """Hold the clipboard from another process; yields its ready line.
-
-    Readiness is the holder's own stdout line, printed only after its
-    ``OpenClipboard`` succeeded. On exit the holder's release line is added
-    under ``"release"``.
-    """
-    proc = subprocess.Popen(
-        [sys.executable, "-I", str(HOLDER), str(seconds)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    try:
-        line = proc.stdout.readline()
-        ready = json.loads(line) if line.strip() else {"ready": False}
-        yield ready
-        rest, err = proc.communicate(timeout=seconds + 30)
-        ready["release"] = json.loads(rest) if rest.strip() else {"stderr": err}
-        ready["holder_exit"] = proc.returncode
-    finally:
-        if proc.poll() is None:
-            proc.kill()
-            proc.wait()
 
 
 def attempt(operation, *args) -> dict:

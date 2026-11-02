@@ -333,6 +333,15 @@ Postcondition: callers know exactly what is promised and verified where.
   consumer (`scripts/windows_clipboard_consumer.py --text`). pyperclip's
   Windows `CheckedCall` checks ctypes `get_errno()`, so the failure it raises
   reliably is the `OpenClipboard` retry giving up.
+  First CI run 41483294562 (Windows Server 2025 Datacenter 10.0.26100,
+  image win25-vs2026 20261021.278.1, PowerShell 5.1.26100 / pwsh 7.6.7,
+  Python 3.13.16): CRLF paste exact, `copy("")` → `Get-Clipboard` `$null`
+  and `paste()` `""`, image-only → `""` with `inspect()` kinds `["image"]`.
+  An LF-only `copy()` is stored as LF (no CRLF) and both PowerShells'
+  array-form `Get-Clipboard` report it as one line, so the probe now
+  observes Notepad itself for example 9. The first holder used
+  `OpenClipboard(NULL)`, which pyperclip's own NULL open shares and then
+  closes, so the hold never held; the holder now opens with its own window.
 
 ## Story obligations
 

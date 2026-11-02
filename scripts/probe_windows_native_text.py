@@ -6,12 +6,14 @@ backend (``OpenClipboard`` retried about 0.5 s). Producers and consumers that
 are not this library run in other processes (``windows_native_text_support``):
 Windows PowerShell 5.1 ``Set-Clipboard`` / ``Get-Clipboard`` (plus PowerShell
 7 ``Get-Clipboard`` when installed), .NET ``Clipboard.SetImage`` under
-``-STA``, a ctypes reader, a ctypes ``OpenClipboard`` holder that signals
-readiness on stdout, and a child Python whose ``copy`` exits before reading.
+``-STA``, a ctypes reader, Notepad pasting via ``WM_PASTE``, a ctypes
+``OpenClipboard`` holder with its own window that signals readiness on stdout
+(``windows_text_hold``), and a child Python whose ``copy`` exits before reading.
 Every producer is read back by the ctypes reader before ``paste`` is judged.
 
 Prints one JSON object. Exit 0 when every step passed; 1 when a step failed
-or could not be observed (named in ``evidence_limits`` / ``failed_steps``);
+or could not be observed (named in ``evidence_limits`` / ``failed_steps`` /
+``observation_limits``);
 2 when no usable Windows clipboard session or Windows PowerShell exists.
 Overwrites the clipboard. Not run by default pytest.
 """
@@ -21,27 +23,24 @@ from __future__ import annotations
 import json
 import shutil
 import sys
-import time
 
 from windows_native_text_support import (
     attempt,
     child_copy,
     consume,
     get_clipboard,
-    held,
+    notepad,
     pwsh,
     set_clipboard,
     step,
     windows_floors,
 )
 from windows_powershell_producers import PRODUCERS, powershell
+from windows_text_hold import held_clipboard_step, short_hold
 
 TEXT_CRLF = "  héllo 👋 ﾃｽﾄ\r\nline 2 "
 TEXT_LF = "héllo 👋\nline 2"
 KEEP = "keep"
-HELD = "held text ✓"
-HOLD_SECONDS = 4.0
-SHORT_HOLD_SECONDS = 0.1
 
 
 def _crlf_producer(clipboard) -> dict:
@@ -59,12 +58,18 @@ def _crlf_producer(clipboard) -> dict:
 
 
 def _child_copy_lf() -> dict:
+    """Required: exact LF text stored and in ``Get-Clipboard -Raw``.
+
+    Notepad's line count settles seed example 9b (recorded, true or false);
+    ``Get-Clipboard`` array line counts are recorded facts.
+    """
     set_clipboard(KEEP)
     child = child_copy(TEXT_LF)
     stored = consume()
     consumers = [get_clipboard()]
     if pwsh():
         consumers.append(get_clipboard(pwsh()))
+    pad = notepad()
     two_lines = [c["exe"] for c in consumers if c.get("lines") == TEXT_LF.split("\n")]
     stored_text = stored.get("text")
     ok = (
@@ -72,8 +77,8 @@ def _child_copy_lf() -> dict:
         and child["exit"] == 0
         and stored_text == TEXT_LF
         and consumers[0].get("raw") == TEXT_LF
-        and bool(two_lines)
     )
+    unavailable = pad.get("unavailable")
     return step(
         "2_child_copy_lf_exits_to_get_clipboard",
         ok,
@@ -82,7 +87,14 @@ def _child_copy_lf() -> dict:
         stored_has_crlf=stored_text is not None and "\r\n" in stored_text,
         formats=stored.get("formats"),
         get_clipboard=consumers,
+        get_clipboard_raw_exact=[
+            c["exe"] for c in consumers if c.get("raw") == TEXT_LF
+        ],
+        get_clipboard_line_counts={c["exe"]: c.get("count") for c in consumers},
         two_line_consumers=two_lines,
+        notepad=pad,
+        notepad_two_lines=None if unavailable else pad.get("line_count") == 2,
+        notepad_unavailable=unavailable,
     )
 
 
@@ -135,61 +147,6 @@ def _image_only(clipboard) -> dict:
     )
 
 
-def _held_clipboard(clipboard) -> dict:
-    producer = set_clipboard(HELD)
-    with held(HOLD_SECONDS) as holder:
-        if holder.get("ready"):
-            ready_at = time.monotonic()
-            during_paste = attempt(clipboard.paste)
-            during_copy = attempt(clipboard.copy, "must not land")
-            within = time.monotonic() - ready_at < HOLD_SECONDS
-        else:
-            during_paste = during_copy = None
-    if not holder.get("ready"):
-        return step(
-            "5_held_clipboard_raises_then_recovers",
-            False,
-            "holder_could_not_open_clipboard",
-            holder=holder,
-        )
-    stored = consume()
-    after = attempt(clipboard.paste)
-    raised = all(
-        r["value"] is None
-        and r["error"]
-        and r["error"]["type"] == "ClipboardContentError"
-        and r["cause"]
-        and r["cause"]["type"] == "PyperclipWindowsException"
-        for r in (during_paste, during_copy)
-    )
-    ok = raised and stored.get("text") == HELD and after["value"] == HELD
-    return step(
-        "5_held_clipboard_raises_then_recovers",
-        ok,
-        None if producer["producer_exact"] and within else "hold_not_established",
-        hold_seconds=HOLD_SECONDS,
-        holder=holder,
-        during_paste=during_paste,
-        during_copy=during_copy,
-        calls_within_hold=within,
-        after_release_consumer_text=stored.get("text"),
-        after_release_paste=after,
-    )
-
-
-def _short_hold(clipboard) -> dict:
-    """Recorded only: a hold shorter than pyperclip's ~0.5 s retry."""
-    set_clipboard(HELD)
-    with held(SHORT_HOLD_SECONDS) as holder:
-        got = attempt(clipboard.paste) if holder.get("ready") else None
-    return {
-        "hold_seconds": SHORT_HOLD_SECONDS,
-        "holder": holder,
-        "paste": got,
-        "succeeded": bool(got) and got["value"] == HELD,
-    }
-
-
 def evidence_limit(reason: str) -> int:
     report = {"ok": False, "verified": False, "evidence_limit": True}
     report.update(evidence_limits=[reason], desktop="Windows desktop")
@@ -214,17 +171,24 @@ def main() -> int:
         _child_copy_lf(),
         _copy_empty(clipboard),
         _image_only(clipboard),
-        _held_clipboard(clipboard),
+        held_clipboard_step(clipboard),
     ]
-    short = _short_hold(clipboard)
+    short = short_hold(clipboard)
     powershell(PRODUCERS["cleared_empty"])
     limits = [s["evidence_limit"] for s in steps if s["evidence_limit"]]
     failed = [s["step"] for s in steps if not s["ok"]]
+    observation_limits = [
+        f"notepad_unavailable: {s['notepad_unavailable']}"
+        for s in steps
+        if s.get("notepad_unavailable")
+    ]
+    verified = not failed and not observation_limits
     report = {
-        "ok": not failed,
-        "verified": not failed,
+        "ok": verified,
+        "verified": verified,
         "evidence_limit": bool(limits),
         "evidence_limits": limits,
+        "observation_limits": observation_limits,
         "failed_steps": failed,
         "desktop": "Windows desktop",
         "backend": clipboard._text._select_text_backend(),
@@ -233,11 +197,12 @@ def main() -> int:
         "environment": windows_floors(),
         "commitments": "independent processes only: PowerShell 5.1 Set-Clipboard "
         "(UTF-8 file) and .NET SetImage (-STA) producers; ctypes CF_UNICODETEXT "
-        "reader and Get-Clipboard (5.1, pwsh 7 if present) consumers; ctypes "
-        "OpenClipboard holder with a stdout ready line; child copy() exits first",
+        "reader, Get-Clipboard (5.1, pwsh 7 if present) and Notepad WM_PASTE "
+        "consumers; ctypes OpenClipboard(own hidden hwnd) holder with a stdout "
+        "ready line and GetOpenClipboardWindow evidence; child copy() exits first",
     }
     print(json.dumps(report, indent=2, sort_keys=True))
-    return 0 if not failed else 1
+    return 0 if verified else 1
 
 
 if __name__ == "__main__":

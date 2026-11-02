@@ -31,6 +31,7 @@ from windows_native_text_support import decode_get_clipboard  # noqa: E402
 
 TEXT_CRLF = "  héllo 👋 ﾃｽﾄ\r\nline 2 "
 TEXT_LF = "héllo 👋\nline 2"
+HELD = "held text ✓"
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows desktop probe only")
@@ -50,9 +51,14 @@ def test_windows_native_text_probe():
     print(result.stdout)
     print(result.stderr, file=sys.stderr)
     assert result.returncode == 0, result.stderr or result.stdout
-    report = json.loads(result.stdout)
+    assert_windows_text_report(json.loads(result.stdout))
+
+
+def assert_windows_text_report(report: dict) -> None:
+    """The probe report proves slice 6, with Notepad's E9b observation made."""
     assert report["ok"] is True
     assert report["evidence_limits"] == []
+    assert report["observation_limits"] == []
     assert report["failed_steps"] == []
     assert report["backend"] == "pyperclip"
     steps = {step["step"]: step for step in report["steps"]}
@@ -64,18 +70,25 @@ def test_windows_native_text_probe():
     assert lf["child"]["exited"] is True and lf["child"]["exit"] == 0
     assert lf["stored_text"] == TEXT_LF
     assert lf["get_clipboard"][0]["raw"] == TEXT_LF
-    assert lf["two_line_consumers"]
+    assert lf["notepad_unavailable"] is None, lf["notepad"]
+    assert isinstance(lf["notepad_two_lines"], bool), lf["notepad"]
+    assert lf["notepad"]["edit_class"] in ("Edit", "RichEditD2DPT")
     empty = steps["3_copy_empty_to_get_clipboard_and_paste"]
     assert empty["paste"]["value"] == ""
     image = steps["4_image_only_paste_empty"]
     assert image["paste"]["value"] == "" and image["paste"]["error"] is None
     assert "image" in image["inspect_kinds"]
     hold = steps["5_held_clipboard_raises_then_recovers"]
+    holder = hold["holder"]
+    assert holder["holds_at_ready"] is True and hold["probe_saw_holder_window"]
+    assert holder["release"]["holds_before_release"] is True
+    assert holder["release"]["close_ok"] is True
     for during in (hold["during_paste"], hold["during_copy"]):
         assert during["error"]["type"] == "ClipboardContentError"
         assert during["cause"]["type"] == "PyperclipWindowsException"
     assert hold["calls_within_hold"] is True
-    assert hold["after_release_paste"]["value"] == hold["after_release_consumer_text"]
+    assert hold["after_release_consumer_text"] == HELD
+    assert hold["after_release_paste"]["value"] == HELD
     env = report["environment"]
     assert env["os"] == "Windows"
     for floor in ("windows_build", "powershell", "python", "pyperclip"):
@@ -101,6 +114,87 @@ def test_evidence_limit_report_fails_windows_text_wrapper(monkeypatch):
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: fake)
     with pytest.raises(AssertionError):
         test_windows_native_text_probe()
+
+
+def _report(two_lines, unavailable=None) -> dict:
+    """A synthetic passing probe report with the given Notepad observation."""
+    raised = {
+        "value": None,
+        "error": {"type": "ClipboardContentError"},
+        "cause": {"type": "PyperclipWindowsException"},
+    }
+    pad = {"unavailable": unavailable} if unavailable else {"edit_class": "Edit"}
+    steps = [
+        {
+            "step": "1_set_clipboard_crlf_to_paste",
+            "producer": {"readback": TEXT_CRLF},
+            "paste": {"value": TEXT_CRLF},
+        },
+        {
+            "step": "2_child_copy_lf_exits_to_get_clipboard",
+            "child": {"exited": True, "exit": 0},
+            "stored_text": TEXT_LF,
+            "get_clipboard": [{"raw": TEXT_LF}],
+            "notepad": pad,
+            "notepad_two_lines": two_lines,
+            "notepad_unavailable": unavailable,
+        },
+        {"step": "3_copy_empty_to_get_clipboard_and_paste", "paste": {"value": ""}},
+        {
+            "step": "4_image_only_paste_empty",
+            "paste": {"value": "", "error": None},
+            "inspect_kinds": ["image"],
+        },
+        {
+            "step": "5_held_clipboard_raises_then_recovers",
+            "holder": {
+                "holds_at_ready": True,
+                "release": {"holds_before_release": True, "close_ok": True},
+            },
+            "probe_saw_holder_window": True,
+            "during_paste": raised,
+            "during_copy": raised,
+            "calls_within_hold": True,
+            "after_release_consumer_text": HELD,
+            "after_release_paste": {"value": HELD},
+        },
+    ]
+    for one in steps:
+        one["ok"] = True
+    limits = [f"notepad_unavailable: {unavailable}"] if unavailable else []
+    return {
+        "ok": not limits,
+        "evidence_limits": [],
+        "observation_limits": limits,
+        "failed_steps": [],
+        "backend": "pyperclip",
+        "steps": steps,
+        "environment": {
+            "os": "Windows",
+            "windows_build": 26100,
+            "powershell": "5.1",
+            "python": "3.13",
+            "pyperclip": "1.11.0",
+            "pyperclip_paste": "init_windows_clipboard.<locals>.paste_windows",
+            "github_actions": False,
+        },
+    }
+
+
+@pytest.mark.parametrize("two_lines", [True, False])
+def test_wrapper_accepts_either_observed_notepad_line_result(two_lines):
+    """E9b is decided by Notepad: one line or two, the observation is evidence."""
+    assert_windows_text_report(_report(two_lines))
+
+
+def test_wrapper_fails_when_notepad_could_not_be_driven():
+    """An unavailable Notepad is not a one-line result and never passes."""
+    with pytest.raises(AssertionError):
+        assert_windows_text_report(_report(None, "no new Notepad window"))
+    report = _report(None, "no new Notepad window")
+    report["ok"], report["observation_limits"] = True, []
+    with pytest.raises(AssertionError):
+        assert_windows_text_report(report)
 
 
 def _b64(text: str) -> str:
