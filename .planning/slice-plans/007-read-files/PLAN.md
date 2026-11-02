@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#read-files
 **Source:** [Read file references copied by file managers](../../seeds/SEED-001-clipboard-true-to-its-name.md#read-files)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -88,7 +89,7 @@ file manager; same-library round-trips alone do not establish interoperability.
 
 ### 1. Injectable `paste_files` read seam
 Type: Structure
-Status: planned
+Status: done
 Proof: Public `paste_files` exists; default path and a `set_*` injection hook
 allow tests to supply a fake reader without a desktop; failures raise
 `ClipboardContentError` (not `ClipboardImageError`); `copy` / `paste` /
@@ -212,7 +213,15 @@ guessing paths from text; evidence wording is honest.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: public `paste_files` + `set_files_clipboard_reader`; default reader
+  raises `ClipboardContentError` (unavailable stub) rather than `None`, matching
+  `copy_html`'s unavailable-native pattern so unimplemented native is not
+  mistaken for absence.
+- Developer authorized package split at the 250-line refactor gate: root
+  `clipboard.py` → `clipboard/` package (`_errors`, `_files`, `_html`(+native),
+  `_image`(+native)); public `import clipboard` / `VERSION` unchanged.
+- Accepted proof (reuse for later slices):
+  `nix develop -c uv run --locked --extra images pytest tests/test_paste_files_seam.py tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_copy_html_contract.py tests/test_copy_html_seam.py -q` → seam + regression green after package split.
 
 ## Concern evidence
 
@@ -221,3 +230,77 @@ _(none yet)_
   only precedes the contract Behavior, and native session premises are already
   bounded by authorized early probe slices.
 - Remaining slice-specific concerns: none identified in this review.
+
+## Story obligations
+
+### X92. Not additional guaranteed desktops
+Reported: slice 1 — "WSL/SSH/containers/headless CI are not guaranteed desktops"
+Story clause: "WSL, SSH, containers, and headless CI are not additional guaranteed desktops"
+Disposition: excluded "WSL, SSH, containers, and headless CI are not additional guaranteed desktops"
+Commitment: 92
+
+### X104. Deferred: Public exposure of cut vs copy intent / PreferredDropEffect
+Reported: slice 1 — "source review exclusion for commitment 104"
+Story clause: "Public exposure of cut vs copy intent / PreferredDropEffect / GNOME–KDE cut verbs as structured return metadata (parse/ignore markers only as needed for the non-move safety rule)"
+Disposition: excluded "Public exposure of cut vs copy intent / PreferredDropEffect / GNOME–KDE cut verbs as structured return metadata (parse/ignore markers only as needed for the non-move safety rule)"
+Commitment: 104
+
+### X105. Deferred: returning `pathlib.Path` objects or richer reference types
+Reported: slice 1 — "source review exclusion for commitment 105"
+Story clause: "returning `pathlib.Path` objects or richer reference types"
+Disposition: excluded "returning `pathlib.Path` objects or richer reference types"
+Commitment: 105
+
+### X106. Deferred: remote / non-local URI references
+Reported: slice 1 — "source review exclusion for commitment 106"
+Story clause: "remote / non-local URI references"
+Disposition: excluded "remote / non-local URI references"
+Commitment: 106
+
+### X107. Deferred: virtual or promised files
+Reported: slice 1 — "source review exclusion for commitment 107"
+Story clause: "virtual or promised files"
+Disposition: excluded "virtual or promised files"
+Commitment: 107
+
+### X108. Deferred: directory-expansion semantics beyond what the native offer a
+Reported: slice 1 — "source review exclusion for commitment 108"
+Story clause: "directory-expansion semantics beyond what the native offer already lists"
+Disposition: excluded "directory-expansion semantics beyond what the native offer already lists"
+Commitment: 108
+
+### X109. Deferred: outbound file-list write (`SEED-001#copy-files`)
+Reported: slice 1 — "source review exclusion for commitment 109"
+Story clause: "outbound file-list write (`SEED-001#copy-files`)"
+Disposition: excluded "outbound file-list write (`SEED-001#copy-files`)"
+Commitment: 109
+
+### X110. Deferred: format inspection (`SEED-001#inspect-formats`)
+Reported: slice 1 — "source review exclusion for commitment 110"
+Story clause: "format inspection (`SEED-001#inspect-formats`)"
+Disposition: excluded "format inspection (`SEED-001#inspect-formats`)"
+Commitment: 110
+
+### X111. Deferred: bundling GUI toolkits or `win32clipboard` as a required publ
+Reported: slice 1 — "source review exclusion for commitment 111"
+Story clause: "bundling GUI toolkits or `win32clipboard` as a required public dependency"
+Disposition: excluded "bundling GUI toolkits or `win32clipboard` as a required public dependency"
+Commitment: 111
+
+### X112. Deferred: making default pytest / CI require a real desktop
+Reported: slice 1 — "source review exclusion for commitment 112"
+Story clause: "making default pytest / CI require a real desktop"
+Disposition: excluded "making default pytest / CI require a real desktop"
+Commitment: 112
+
+### X113. Deferred: expanding beyond the four-desktop set
+Reported: slice 1 — "source review exclusion for commitment 113"
+Story clause: "expanding beyond the four-desktop set"
+Disposition: excluded "expanding beyond the four-desktop set"
+Commitment: 113
+
+### X114. Deferred: same-library `copy_files` round-trip as sole native proof
+Reported: slice 1 — "source review exclusion for commitment 114"
+Story clause: "same-library `copy_files` round-trip as sole native proof"
+Disposition: excluded "same-library `copy_files` round-trip as sole native proof"
+Commitment: 114

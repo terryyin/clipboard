@@ -45,7 +45,7 @@ dev = [
 ]
 
 [tool.setuptools]
-py-modules = ["clipboard"]
+packages = ["clipboard"]
 
 [tool.setuptools.dynamic]
 version = { attr = "clipboard.VERSION" }

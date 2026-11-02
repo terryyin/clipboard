@@ -208,8 +208,8 @@ def test_macos_denied_pasteboard_write_is_content_error(
             stderr="osascript: pasteboard access denied",
         )
 
-    monkeypatch.setattr(clipboard.sys, "platform", "darwin")
-    monkeypatch.setattr(clipboard.subprocess, "run", fake_run)
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "darwin")
+    monkeypatch.setattr(clipboard._html_native.subprocess, "run", fake_run)
     clipboard.set_html_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.copy_html("<b>x</b>", "x")
@@ -222,8 +222,8 @@ def test_macos_missing_osascript_is_content_error(
     def boom(*args, **kwargs):
         raise FileNotFoundError("osascript")
 
-    monkeypatch.setattr(clipboard.sys, "platform", "darwin")
-    monkeypatch.setattr(clipboard.subprocess, "run", boom)
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "darwin")
+    monkeypatch.setattr(clipboard._html_native.subprocess, "run", boom)
     clipboard.set_html_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.copy_html("<b>x</b>", "x")
@@ -233,7 +233,7 @@ def test_macos_missing_osascript_is_content_error(
 def test_unsupported_platform_default_writer_is_content_error(
     restore_html_clipboard_writer, monkeypatch
 ):
-    monkeypatch.setattr(clipboard.sys, "platform", "linux")
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "linux")
     clipboard.set_html_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.copy_html("<b>x</b>", "x")
