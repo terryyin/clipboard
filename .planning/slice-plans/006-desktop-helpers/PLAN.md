@@ -209,3 +209,16 @@ Reported: slice 1 — "source review 31 — shared error base class"
 Story clause: "Public API, results, error messages, and install hints stay unchanged."
 Disposition: no user cost "Public API, results, error messages, and install hints stay unchanged": a shared error base class is correction out-of-scope and public error types/messages stay as they are
 Commitment: 31
+
+## Execution complete
+
+Product advice:
+1. Keep SEED-001#copy-files next; its plan already reuses `_desktop` — do not
+   re-copy session/listing/helper-detail.
+2. Do not queue excluded leftovers as backlog churn: Wayland-rule unification,
+   older image/`copy_html` evidence-limit retirement, Sway bootstrap dedup,
+   shared error base — still human product decisions.
+3. North Star unchanged: explicit APIs + contract + desktop-free default +
+   gated native proof.
+4. Image-write session selection remains native-CI-only in default pytest
+   (accepted premise) unless maintainers want a desktop-free predicate check.
