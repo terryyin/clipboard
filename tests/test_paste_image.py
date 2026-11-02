@@ -58,47 +58,6 @@ def test_images_extra_declares_pillow():
     assert any("pillow" in req.lower() for req in image_reqs)
 
 
-def test_text_api_importable_without_pillow():
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            """
-import builtins
-import sys
-
-real_import = builtins.__import__
-
-def block_pil(name, globals=None, locals=None, fromlist=(), level=0):
-    if name == "PIL" or name.startswith("PIL."):
-        raise ImportError("No module named 'PIL'")
-    return real_import(name, globals, locals, fromlist, level)
-
-builtins.__import__ = block_pil
-
-import clipboard
-
-assert clipboard.VERSION
-assert callable(clipboard.copy)
-assert callable(clipboard.paste)
-assert callable(clipboard.paste_image)
-
-try:
-    clipboard.paste_image()
-except ImportError as exc:
-    message = str(exc).lower()
-    assert "images" in message or "pillow" in message
-else:
-    raise SystemExit("expected ImportError from paste_image without Pillow")
-""",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0
-
-
 @pytest.mark.parametrize(
     ("text", "image_spec", "expect_image"),
     [

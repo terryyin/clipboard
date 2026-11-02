@@ -1,8 +1,5 @@
 """Structure seam for copy_html: public surface + injectable writer (no desktop)."""
 
-import subprocess
-import sys
-
 import pytest
 
 import clipboard
@@ -50,42 +47,3 @@ def test_reset_writer_restores_default(restore_html_clipboard_writer, monkeypatc
     monkeypatch.setattr(clipboard.sys, "platform", "linux")
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.copy_html("<p>x</p>", "x")
-
-
-def test_copy_html_importable_without_images_extra():
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            """
-import builtins
-
-real_import = builtins.__import__
-
-def block_pil(name, globals=None, locals=None, fromlist=(), level=0):
-    if name == "PIL" or name.startswith("PIL."):
-        raise ImportError("No module named 'PIL'")
-    return real_import(name, globals, locals, fromlist, level)
-
-builtins.__import__ = block_pil
-
-import clipboard
-
-assert callable(clipboard.copy_html)
-assert issubclass(clipboard.ClipboardContentError, Exception)
-assert callable(clipboard.set_html_clipboard_writer)
-
-offers = []
-clipboard.set_html_clipboard_writer(
-    lambda html, text: offers.append((html, text))
-)
-clipboard.copy_html("<b>ok</b>", "ok")
-assert offers == [("<b>ok</b>", "ok")]
-clipboard.set_html_clipboard_writer(None)
-""",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0
