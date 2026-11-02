@@ -6,8 +6,10 @@
 
 ## Provenance
 
-Retrospective correction of SEED-001#portable-text (plan
-`slice-plans/010-portable-text/PLAN.md`, commits 9c55992..0402674 on branch
+Retrospective correction of SEED-001#portable-text (story and plan recoverable
+at before-cleanup commit ae8e7a2:
+`.planning/seeds/SEED-001-clipboard-true-to-its-name.md#portable-text` and
+`.planning/slice-plans/010-portable-text/PLAN.md`; commits 9c55992..0402674 on branch
 `claude/use-the-text-clipboard-reliably-and-diagnose-una`, excluding trunk
 merge 42c0a6f). The X11 writer came from slice 4 (8a816be, c086e20,
 43ee728); the Wayland wrapper from slice 5 (823dcce).
