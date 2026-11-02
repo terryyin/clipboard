@@ -56,10 +56,14 @@ reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
 Evidence / verified platforms: macOS Aqua pasteboard image reads have been
 verified with an independent producer in this project's native probe work.
-Windows desktop, Linux X11 with ``xclip``, and Linux Wayland with ``wl-paste``
-remain supported targets, unverified pending
-``SEED-001#read-images-native``. Default automated tests use an in-memory
-backend and do not exercise a real desktop clipboard.
+Windows desktop image reads remain a supported target but are
+evidence-limited (unverified / unsupported for native proof) because no
+usable Windows desktop clipboard session was available during this
+verification — never treat Windows as natively verified from this work.
+Linux X11 with ``xclip`` and Linux Wayland with ``wl-paste`` remain
+supported targets, unverified pending ``SEED-001#read-images-native``.
+Default automated tests use an in-memory backend and do not exercise a
+real desktop clipboard.
 
 Development
 -----------

@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#read-images-native
 **Source:** [Native image-read verification on Windows and Linux](../../seeds/SEED-001-clipboard-true-to-its-name.md#read-images-native)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -67,7 +68,7 @@ producer; same-library round-trips alone do not establish interoperability.
 
 ### 1. Early probe — Windows desktop native image read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Windows desktop session, a gated probe with an independent
 producer (not `clipboard` round-trip) places a known opaque PNG; `paste_image()`
 returns matching size/colors; second read is preservative; alpha case recorded
@@ -83,6 +84,10 @@ Behavior: Pre-condition: delivered `paste_image`; Windows session **or**
 documented unavailability. Trigger: run gated Windows probe / CF_HDROP case, or
 write evidence limit. Postcondition: Windows is either natively proved with
 floors in docs, or explicitly evidence-limited; default pytest stays desktop-free.
+
+Accepted: Darwin checkout; no Windows session. README.rst Evidence marks
+Windows evidence-limited (unverified/unsupported for native proof). Focused
+desktop-free pytest 18 passed, 1 skipped.
 
 ### 2. Early probe — Linux X11 + `xclip` native image read
 Type: Behavior
@@ -142,11 +147,46 @@ and text behavior already proved in-memory / macOS.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: This Darwin execution checkout cannot run a Windows desktop clipboard
+  session; Windows closed via explicit README evidence limit, not native proof.
 
 ## Story obligations
 
-_(none yet)_
+### G24. Image writing deferred
+Reported: slice 1 — "Image writing out of scope / deferred."
+Story clause: "Image writing"
+Disposition: excluded "Image writing"
+Commitment: 24
+
+### G25. New public image APIs deferred
+Reported: slice 1 — "New public image APIs or return shapes out of scope / deferred."
+Story clause: "new public image APIs or return shapes"
+Disposition: excluded "new public image APIs or return shapes"
+Commitment: 25
+
+### G26. Desktop CI matrix deferred
+Reported: slice 1 — "Default pytest / CI real-desktop matrix out of scope / deferred."
+Story clause: "making default pytest / CI require a real desktop or a continuous native desktop matrix"
+Disposition: excluded "making default pytest / CI require a real desktop or a continuous native desktop matrix"
+Commitment: 26
+
+### G27. Four-desktop set expansion deferred
+Reported: slice 1 — "Expanding the four-desktop set out of scope / deferred."
+Story clause: "expanding the four-desktop set"
+Disposition: excluded "expanding the four-desktop set"
+Commitment: 27
+
+### G28. Other content kinds deferred
+Reported: slice 1 — "HTML, files, inspection, clear, waits, or PRIMARY out of scope / deferred."
+Story clause: "HTML, files, inspection, clear, waits, or PRIMARY"
+Disposition: excluded "HTML, files, inspection, clear, waits, or PRIMARY"
+Commitment: 28
+
+### G30. Mandatory Win/Linux success deferred
+Reported: slice 1 — "Requiring at least one successful Windows or Linux verification is deferred."
+Story clause: "Requiring at least one successful Windows or Linux verification (rather than honest limits) is a deferred stronger promise, not this story's acceptance bar."
+Disposition: excluded "Requiring at least one successful Windows or Linux verification (rather than honest limits) is a deferred stronger promise, not this story's acceptance bar."
+Commitment: 30
 
 ## Concern evidence
 
