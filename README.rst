@@ -55,8 +55,11 @@ silent text-only "success". Sequential single-format writes are not a dual
 offer.
 
 On macOS Aqua the default writer uses the system pasteboard
-(``NSPasteboard`` HTML + string types via ``osascript``). Linux and Windows
-native HTML writers are not claimed verified yet (see evidence limits below).
+(``NSPasteboard`` HTML + string types via ``osascript``). On other platforms
+the default path raises ``ClipboardContentError`` until a dual-offer writer is
+available; Linux and Windows HTML writes remain evidence-limited rather than
+verified (see below) — do not read an evidence limit as proof that a native
+writer is already present for that desktop.
 
 Installation
 ------------
