@@ -25,7 +25,11 @@ limited on Darwin (2026-11-02); domain research reuse of
 Pillow `ImageGrab.grabclipboard`; macOS Aqua image reads independently
 verified; Windows, X11+`xclip`, and Wayland+`wl-paste` image reads documented
 with explicit evidence limits when no usable native session was available
-(README Evidence).
+(README Evidence); delivered `paste_html` fragment reads (no extra) with
+macOS Aqua verified by a real browser producer and Linux X11 (Xvfb CI),
+Wayland (Sway CI) and Windows (`windows-latest` CI) verified with named
+independent helper producers, browser interoperability there unobserved
+(2026-11-02).
 
 **Affects:** Later file and further rich-content stories should follow the same
 explicit-API + optional-extra shape unless evidence forces a revision.

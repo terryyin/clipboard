@@ -3,11 +3,13 @@
 A small Python library exposing `copy`, `paste`, and `VERSION` through
 pyperclip, plus optional image read/write via `paste_image` / `copy_image`
 when the `clipboard[images]` extra (Pillow) is installed, HTML dual-offer
-writes via `copy_html`, and non-mutating offer inspection via `inspect`
-(kinds + native formats; no images extra). Image access/helper/transfer or
-malformed-image failures raise `ClipboardImageError` rather than returning
-`None` (or silently succeeding on write). HTML and inspect access/helper or
-enumeration failures raise `ClipboardContentError`.
+writes and fragment reads via `copy_html` / `paste_html`, and non-mutating
+offer inspection via `inspect` (kinds + native formats; no images extra).
+Image access/helper/transfer or malformed-image failures raise
+`ClipboardImageError` rather than returning `None` (or silently succeeding on
+write). HTML and inspect access, helper, transfer, enumeration, or
+malformed-envelope failures raise `ClipboardContentError` (`paste_html`
+returns `None` only when no HTML is offered).
 
 Use Nix for development tools, as in the neighboring Lizard project. Run tools
 with `nix develop -c <command>`; Git commands can run directly. Nix pins the

@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 6
+- Highest allocated local number: 9
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -101,3 +101,50 @@ silently weakening the bar.
   - Evidence: transcript ed9de93f… DEVELOPER ATTENTION on slices 4–5; user reply “skip… or use github actions”; plan Current decisions updated to gated GHA; skip rejected
   - Observed effect: Plan venue revised under approval; Linux acceptance preserved via gated jobs rather than skip or unauthorized limits.
   - Inference: Useful practice — mandatory native proof that the checkout cannot run is a human venue decision, not an agent-chosen evidence-limit substitute.
+
+## DD-007 — Pre-existing over-limit module surfaced only at the first refactor stop
+A module already over the refactor file-size limit before the story (470 of
+250 lines) was not named as a premise during planning, so the first slice's
+post-change refactor stopped for a structural developer decision (package
+split) after implementation was done.
+
+### Occurrences
+- Execution: SEED-001#read-html
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.79
+  - Evidence: 2026-11-02, before commit 0d3e238 (16:11:50+07:00); `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md` Decisive premises name no file-size premise; slice 1 refactor return `## REFACTOR JIDOKA STOP` (clipboard.py 510 lines); developer answer "Split now"; same PLAN.md Current decisions "Developer decision (2026-11-02, slice 1 refactor stop)"
+  - Observed effect: One extra refactor round (about 20 minutes reported by the refactor agent) and a mid-slice human question; the split landed with slice 1.
+  - Inference: Planning could check the line counts of files the plan will edit and settle split-or-exception before the first slice; impact was modest because the split was cheap.
+
+## DD-008 — Prior native-venue findings reused; every gated CI probe passed first run
+Reusing the project's recorded native venues (Xvfb with an owning xclip,
+headless Sway for wl-clipboard) and their findings let three new gated probe
+jobs pass on their first published run, with no CI repair cycle.
+
+### Occurrences
+- Execution: SEED-001#read-html
+  - Timestamp: 2026-11-02T16:41:56+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.79
+  - Evidence: slice 4–6 delegation briefs cite the `native-linux-x11-copy-image` / `native-linux-wayland-copy-image` precedent; CI runs 41422813085 (X11), 41424913377 (Wayland), 41427386442 (Windows) succeeded on first attempt; contrast DD-003 / DD-004 repair loops
+  - Observed effect: No CI repair commits in this execution; each native slice published a progress increment, then a records-only done commit after observing CI.
+  - Inference: Useful practice — carry earlier DearDough helper/compositor findings into native-probe delegation briefs. The `windows-latest` runner also proved to have a usable clipboard session, contrary to an earlier README judgment.
+
+## DD-009 — Producer-kind gap carried three slices before developer decision
+The story's "browser or rich editor" producer wording could not be met by the
+authorized CI venues; the gap was recorded at slice 4 as an interim obligation
+and only put to the developer before slice 7, after Wayland and Windows used
+the same helper-producer pattern.
+
+### Occurrences
+- Execution: SEED-001#read-html
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.79
+  - Evidence: 2026-11-02, between commits 8659430 (17:18:38+07:00) and 1a5b92d (17:36:04+07:00); `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md` Story obligations G4 (reported slice 4, interim until slices 5, 6, 7, then owner changed); developer answer "Verified, helper-labelled"; `9d3ceda:.planning/seeds/SEED-001-clipboard-true-to-its-name.md` "Developer amendment (2026-11-02, during execution)"; `9d3ceda:.planning/slice-plans/005-read-html/source-review.md` replaced after the amendment
+  - Observed effect: Slices 5–6 proceeded on an unresolved acceptance question; the amendment then required a fresh source review and re-allocation of 77 commitment ids.
+  - Inference: Asking at the first occurrence (slice 4) would have settled README wording earlier and avoided carrying the interim; the late ask still preceded any false claim.

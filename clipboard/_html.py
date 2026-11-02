@@ -1,4 +1,4 @@
-"""HTML + plain-text dual-offer clipboard write."""
+"""HTML clipboard: dual-offer write (copy_html) and fragment read (paste_html)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,13 @@ import sys
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
+from typing import TypeVar
 
 from clipboard._errors import ClipboardContentError
+from clipboard._html_envelope import _decode_html_offer
+from clipboard._html_native import _default_html_clipboard_reader
+
+_T = TypeVar("_T")
 
 
 def _macos_html_clipboard_writer(html: str, text: str) -> None:
@@ -117,6 +122,18 @@ def set_html_clipboard_writer(
     )
 
 
+def _call_content_backend(operation: str, backend: Callable[..., _T], *args) -> _T:
+    """Run an HTML/rich clipboard backend; non-content failures become
+    ``ClipboardContentError`` while backend ``ClipboardContentError`` passes as is.
+    """
+    try:
+        return backend(*args)
+    except ClipboardContentError:
+        raise
+    except Exception as exc:
+        raise ClipboardContentError(f"clipboard {operation} failed: {exc}") from exc
+
+
 def _validate_copy_html_args(html: object, text: object) -> tuple[str, str]:
     """Reject invalid HTML/text before any clipboard replace (fail-before-replace).
 
@@ -154,9 +171,42 @@ def copy_html(html: str, text: str) -> None:
     ``ClipboardContentError`` (not silent text-only success).
     """
     html, text = _validate_copy_html_args(html, text)
-    try:
-        _html_clipboard_writer(html, text)
-    except ClipboardContentError:
-        raise
-    except Exception as exc:
-        raise ClipboardContentError(f"clipboard HTML+text write failed: {exc}") from exc
+    _call_content_backend("HTML+text write", _html_clipboard_writer, html, text)
+
+
+_html_clipboard_reader: Callable[[], object] = _default_html_clipboard_reader
+
+
+def set_html_clipboard_reader(reader: Callable[[], object] | None) -> None:
+    """Inject an HTML clipboard reader (tests / fakes); ``None`` restores default.
+
+    The reader takes no arguments and returns ``None`` when no HTML is offered,
+    or a package-private offer from ``clipboard._html_envelope``
+    (``_cf_html_offer(bytes)`` / ``_fragment_offer(str | bytes)``).
+    """
+    global _html_clipboard_reader
+    _html_clipboard_reader = (
+        _default_html_clipboard_reader if reader is None else reader
+    )
+
+
+def paste_html() -> str | None:
+    """Return the HTML fragment offered on the clipboard, or ``None`` if none.
+
+    Only the selected fragment is returned: a Windows ``HTML Format`` envelope
+    is cut at its UTF-8 ``StartFragment`` / ``EndFragment`` byte offsets, and a
+    fragment-only ``text/html`` body is returned as is. HTML is never
+    synthesized from plain text, the markup is never executed or resolved, and
+    the clipboard is left unchanged. Does not require ``clipboard[images]``.
+    Access, helper, or transfer failures and malformed envelopes raise
+    ``ClipboardContentError`` (not ``None``). On macOS Aqua the default reader
+    reads the pasteboard's ``public.html`` type (via ``osascript`` / AppKit);
+    on Linux X11 it requests CLIPBOARD ``text/html`` via ``xclip -o`` (a
+    missing ``xclip`` raises ``ClipboardContentError``); on Linux Wayland via
+    ``wl-paste``; on Windows it reads the registered ``HTML Format`` through
+    user32 (``ctypes``), retrying briefly (about 1 s) while another process
+    holds the clipboard before raising ``ClipboardContentError``. Tests inject
+    a reader via ``set_html_clipboard_reader``.
+    """
+    offer = _call_content_backend("HTML read", _html_clipboard_reader)
+    return _decode_html_offer(offer)

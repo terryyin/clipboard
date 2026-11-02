@@ -10,7 +10,12 @@ from pyperclip import paste as paste
 
 from clipboard import _html, _offer
 from clipboard._errors import ClipboardContentError, ClipboardImageError
-from clipboard._html import copy_html, set_html_clipboard_writer
+from clipboard._html import (
+    copy_html,
+    paste_html,
+    set_html_clipboard_reader,
+    set_html_clipboard_writer,
+)
 from clipboard._image_read import paste_image, set_image_grabclipboard
 from clipboard._image_write import copy_image, set_image_writeclipboard
 from clipboard._offer import (
@@ -33,8 +38,10 @@ __all__ = [
     "copy_image",
     "inspect",
     "paste",
+    "paste_html",
     "paste_image",
     "set_clipboard_inspector",
+    "set_html_clipboard_reader",
     "set_html_clipboard_writer",
     "set_image_grabclipboard",
     "set_image_writeclipboard",
@@ -51,4 +58,8 @@ def __getattr__(name: str):
         return _html._html_clipboard_writer
     if name == "_default_html_clipboard_writer":
         return _html._default_html_clipboard_writer
+    if name == "_html_clipboard_reader":
+        return _html._html_clipboard_reader
+    if name == "_default_html_clipboard_reader":
+        return _html._default_html_clipboard_reader
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

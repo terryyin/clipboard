@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#read-html",
+  "title": "Read HTML fragments copied by desktop applications",
+  "completedAt": "2026-11-02T10:48:21.126Z",
+  "developer": "Terry Yin",
+  "agent": "Julia-chan",
+  "host": "claude",
+  "model": "opus"
+}
