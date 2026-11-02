@@ -162,7 +162,7 @@ Trigger: gated write + independent consumer after exit. Postcondition: example
 
 ### 7. Docs and packaging alignment for image write
 Type: Behavior
-Status: planned
+Status: done
 Proof: README (and related install/evidence notes) document `copy_image`,
 `clipboard[images]`, Linux write helpers (`xclip`, `wl-copy`), fail/error
 model, and per-desktop verified floors or Win/macOS limits from slices 3–6;
@@ -199,6 +199,7 @@ helpers; evidence wording is honest.
 - Linux xclip under Xvfb: do not wait for exit (CLIPBOARD owner stays up); feed PNG on stdin, leave the process (`start_new_session`), then wait until CLIPBOARD TARGETS lists `image/png` (0.05s alone raced opaque first write).
 - Wayland: Weston headless lacks wlr-data-control so `wl-copy` exits 1; proof venue is gated GHA under named compositor **Sway** (`WLR_BACKENDS=headless`) only (S.4/X.8/C.4). Prefer `wl-copy` when Wayland; leave xclip for X11.
 - Slice 6 Windows: no usable desktop session on Darwin checkout; `windows-latest` GHA is headless pytest only — took evidence-limit path (README explicit unverified; keep default writer `NotImplementedError` → `ClipboardImageError`; no pywin32).
+- Slice 7 docs: Installation/Evidence already had write helpers + floors; gap was Usage (`copy_image` + fail/conversion model) and C.3 wording that Linux acceptance is proved (not Windows-only). Makefile/CI `--extra images` already covered write tests (DD-001).
 
 ## Accepted proof (slice 1)
 
@@ -237,6 +238,12 @@ helpers; evidence wording is honest.
 - No usable Windows desktop session (Darwin checkout; `windows-latest` headless pytest only).
 - README Evidence: explicit Windows write evidence limit — never claimed verified.
 - Default Windows write remains `NotImplementedError` → `ClipboardImageError` (no silent success; no pywin32).
+
+## Accepted proof (slice 7)
+
+- README Usage/Installation/Evidence document `copy_image`, `clipboard[images]`, xclip/wl-copy, fail model, floors/limits (incl. C.3 not Windows-only).
+- Makefile/CI already use `--extra images` for write tests (DD-001); no packaging gap.
+- Desktop-free `make check` green; Windows stub assertion aligned with platform NotImplemented message.
 
 ## Concern evidence
 

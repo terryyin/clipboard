@@ -128,7 +128,7 @@ def test_default_write_stub_wrapped_as_clipboard_image_error(
     with pytest.raises(clipboard.ClipboardImageError) as raised:
         clipboard.copy_image(Image.new("RGB", (1, 1)))
     assert isinstance(raised.value.__cause__, NotImplementedError)
-    assert "not implemented yet" in str(raised.value.__cause__)
+    assert "not implemented for this platform" in str(raised.value.__cause__)
 
 
 def test_missing_xclip_raises_clipboard_image_error(

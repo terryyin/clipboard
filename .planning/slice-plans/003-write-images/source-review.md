@@ -12,15 +12,15 @@ the isolated review). Allocation precedes slice-1 acceptance.
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| G.1 | Hand a generated static raster to an ordinary desktop app through `clipboard` without a temporary-file re-import | slice 7 | |
-| G.2 | After writer exit, an independent image/document app pastes recognizable pixels with correct dimensions and supported transparency | slice 7 | |
-| G.3 | G.2 holds on each supported desktop this story claims | slice 7 | |
+| G.1 | Hand a generated static raster to an ordinary desktop app through `clipboard` without a temporary-file re-import | slice 7 | observed: README Usage documents `copy_image(Image)` under `clipboard[images]` (no path/bytes re-import); public API is Pillow Image only |
+| G.2 | After writer exit, an independent image/document app pastes recognizable pixels with correct dimensions and supported transparency | slice 7 | observed: README Evidence documents writer-exit + independent-consumer floors for macOS Aqua, Linux X11 (Xvfb CI), Linux Wayland (Sway CI); alpha preserve-or-drop recorded per desktop |
+| G.3 | G.2 holds on each supported desktop this story claims | slice 7 | observed: README marks macOS / Linux X11 / Linux Wayland write verified at named floors; Windows write explicit evidence limit (S.13) — not claimed verified |
 | G.4 | Text callers stay compatible | slice 1 | observed: tests/test_clipboard.py in-memory copy/paste suite still passes under focused regression |
 | G.5 | Delivered `paste_image` stays compatible | slice 1 | observed: tests/test_paste_image.py and tests/test_paste_image_failures.py still pass under focused regression |
 | R.1 | Add an explicit public write API (proposed spelling `copy_image`) | slice 1 | observed: clipboard.copy_image is public and callable (tests/test_copy_image.py::test_copy_image_is_public_and_callable) |
 | R.2 | The API accepts a Pillow `Image` | slice 1 | observed: copy_image(image) forwards the same Pillow Image to the injectable writer (tests/test_copy_image.py::test_injected_writeclipboard_receives_image) |
 | R.3 | The API requires the existing optional `clipboard[images]` extra | slice 1 | observed: without Pillow, copy_image raises ImportError naming images/pillow (tests/test_copy_image.py::test_copy_image_without_pillow_raises_import_error) |
-| R.4 | A successful call publishes one static raster offer the desktop can paste | slice 7 | |
+| R.4 | A successful call publishes one static raster offer the desktop can paste | slice 7 | observed: README Usage states successful `copy_image` publishes one static raster offer and replaces prior text/image representations |
 | R.5 | Invalid or unloadable input is rejected with `ClipboardImageError` before replacing current clipboard contents | slice 2 | observed: tests/test_copy_image_failures.py::test_invalid_input_raises_before_replace; test_empty_image_raises_before_replace; test_unloadable_image_raises_before_replace |
 | R.6 | A successful write replaces prior text representations so a later paste does not see a stale text offer | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster (offer text cleared on success) |
 | R.7 | A successful write replaces prior image representations so a later paste does not see a stale image offer | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster (prior image replaced on success) |
@@ -29,17 +29,17 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | R.8b | Denied access → `ClipboardImageError` (not silent no-op) | slice 3 | observed: clipboard._write_macos_pngf raises OSError on osascript failure; copy_image wraps as ClipboardImageError (clipboard.py; failures suite) |
 | R.8c | Transfer failure → `ClipboardImageError` (not silent no-op) | slice 2 | observed: tests/test_copy_image_failures.py::test_backend_failure_raises_clipboard_image_error |
 | R.8d | Unsupported session → `ClipboardImageError` (not silent no-op) | slice 3 | observed: non-Darwin default still NotImplementedError → ClipboardImageError; Darwin osascript failure → OSError → ClipboardImageError (clipboard.py) |
-| R.9 | Document Linux helper dependencies: `xclip` on X11 | slice 7 | |
-| R.10 | Document Linux helper dependencies: `wl-copy` on Wayland | slice 7 | |
-| R.11 | Document supported desktop setup | slice 7 | |
+| R.9 | Document Linux helper dependencies: `xclip` on X11 | slice 7 | observed: README Installation lists X11 `xclip` for `copy_image` writes |
+| R.10 | Document Linux helper dependencies: `wl-copy` on Wayland | slice 7 | observed: README Installation lists Wayland `wl-copy` (wl-clipboard) for `copy_image` writes |
+| R.11 | Document supported desktop setup | slice 7 | observed: README Installation + Evidence cover Win/macOS session need, Linux helpers, WSL/SSH/containers/headless CI not guaranteed, and per-desktop write floors/limits |
 | R.12 | Default automated tests stay desktop-free via an injectable write backend | slice 1 | observed: set_image_writeclipboard injects a fake writer; tests receive the Image with no pasteboard (tests/test_copy_image.py::test_injected_writeclipboard_receives_image; clipboard.set_image_writeclipboard) |
 | R.13 | Native proof uses an independent consumer (not a same-library `paste_image` round-trip alone) | slice 3 | observed: scripts/probe_macos_native_copy_image.py uses ImageGrab.grabclipboard after writer exit; not_paste_image_alone true |
 | R.14 | Native proof stays explicitly gated | slice 3 | observed: tests/test_copy_image_native_macos.py requires CLIPBOARD_NATIVE_PROBE=1 |
-| R.15 | Successful writes remain pasteable after the writing process exits on each claimed desktop | slice 7 | |
+| R.15 | Successful writes remain pasteable after the writing process exits on each claimed desktop | slice 7 | observed: README Installation notes Linux helpers may keep a background owner after writer exit; Evidence floors cite independent consumer after writer exit on verified desktops |
 | R.16 | Opaque rasters are required | slice 3 | observed: probe opaque case size/colors match after writer exit (scripts/probe_macos_native_copy_image.py; tests/test_copy_image_native_macos.py) |
 | R.17 | When the native offer carries alpha, preserve it or document a platform drop | slice 3 | observed: alpha_preserved true RGBA translucent pixel (probe JSON; README floors) |
 | R.18 | Convert non-RGB(A) modes to a transferable RGB/RGBA raster before offering | slice 2 | observed: tests/test_copy_image.py::test_non_rgba_modes_convert_before_offer; test_palette_with_transparency_converts_to_rgba |
-| R.19 | Document conversion limits | slice 7 | |
+| R.19 | Document conversion limits | slice 7 | observed: README Usage documents non-RGB(A) → RGB/RGBA conversion; Image-only input; animated/multi-frame/path overloads out of scope |
 | R.20 | Calling without the images extra raises `ImportError` consistent with `paste_image` | slice 1 | observed: tests/test_copy_image.py::test_copy_image_without_pillow_raises_import_error |
 | S.1 | Windows desktop is a supported desktop for this story | slice 6 | observed: README Evidence retains Windows as a supported write target; write remains unverified via explicit evidence limit (no session) |
 | S.2 | macOS Aqua is a supported desktop for this story | slice 3 | observed: README Evidence marks macOS Aqua write verified; probe environment desktop Aqua |
@@ -79,7 +79,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | D.10 | Splitting Linux-first vs Win/macOS into separate stories is deferred unless execution evidence forces a resplit |  | G-excl-deferred |
 | C.1 | Invalid image input must not replace current content | slice 2 | observed: tests/test_copy_image_failures.py::test_invalid_input_raises_before_replace (replace_calls stays 0; prior offer intact) |
 | C.2 | Silent success on an unproved desktop is forbidden | slice 3 | observed: macOS write verified with probe+README floors; Linux X11/Wayland write verified in gated CI; Windows write evidence-limited (default writer NotImplementedError → ClipboardImageError; no silent success) |
-| C.3 | Windows-only delivery is forbidden as story completion (issue #5) | slice 7 | |
+| C.3 | Windows-only delivery is forbidden as story completion (issue #5) | slice 7 | observed: README Evidence states image-write acceptance is not Windows-only; Linux X11 (Xvfb CI) and Wayland (Sway CI) writer-exit proofs required and observed (issue #5); Windows remains evidence-limited beside them — docs do not present Windows-only delivery as complete |
 | C.4 | Wayland compositor generalization is forbidden | slice 5 | observed: verification wording scoped to Sway (CI) in README Evidence |
 | E8.1 | In-memory `copy` contract tests still pass | slice 1 | observed: tests/test_clipboard.py under focused regression |
 | E8.2 | In-memory `paste` contract tests still pass | slice 1 | observed: tests/test_clipboard.py under focused regression |

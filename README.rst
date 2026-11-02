@@ -18,19 +18,32 @@ Text copy and paste (no optional extras required):
    clipboard.copy("abc")  # now the clipboard content will be string "abc"
    text = clipboard.paste()  # text will have the content of clipboard
 
-To read a static raster image from the clipboard as a Pillow ``Image``, install
-the optional ``images`` extra (Pillow) and call ``paste_image``:
+To read or write a static raster image on the clipboard as a Pillow ``Image``,
+install the optional ``images`` extra (Pillow) and call ``paste_image`` /
+``copy_image``:
 
 ::
 
    import clipboard
+   from PIL import Image
+
    image = clipboard.paste_image()  # Pillow Image, or None when none is offered
+   clipboard.copy_image(Image.new("RGB", (8, 8), (255, 0, 0)))
 
 ``paste_image`` leaves clipboard contents unchanged. Ordinary absence (text-only
 clipboard, empty clipboard, or a file-reference / filename-list offer) returns
 ``None``. Access, missing-helper, transfer, or malformed-image failures raise
-``clipboard.ClipboardImageError`` instead of returning ``None``. Calling
-``paste_image`` without the extra raises ``ImportError``.
+``clipboard.ClipboardImageError`` instead of returning ``None``.
+
+``copy_image`` publishes one static raster offer (Pillow ``Image`` only; open
+path/bytes yourself first). Non-RGB(A) modes are converted to a transferable
+RGB or RGBA raster before the offer; animated / multi-frame / path overloads
+are out of scope. Invalid or unloadable input raises
+``clipboard.ClipboardImageError`` **before** replacing current clipboard
+contents. Missing helper, denied access, transfer failure, or an unsupported
+session raise ``ClipboardImageError`` (no silent success). A successful write
+replaces prior text and image representations for that clipboard. Calling
+``paste_image`` or ``copy_image`` without the extra raises ``ImportError``.
 
 Installation
 ------------
@@ -40,13 +53,14 @@ supports Python 3.10 and newer. Text ``copy`` / ``paste`` need a working desktop
 clipboard backend on Linux; see the
 `pyperclip documentation <https://pyperclip.readthedocs.io/>`_.
 
-For ``paste_image``, install the optional extra so Pillow is available:
+For ``paste_image`` and ``copy_image``, install the optional extra so Pillow is
+available:
 
 ::
 
    python -m pip install 'clipboard[images]'
 
-On Linux, image clipboard reads also need a helper on ``PATH``:
+On Linux, image clipboard **reads** also need a helper on ``PATH``:
 
 * X11: ``xclip``
 * Wayland: ``wl-paste`` (from wl-clipboard)
@@ -61,7 +75,7 @@ Image **writes** via ``copy_image`` on Linux need:
   exits)
 
 Windows and macOS need a usable desktop clipboard / pasteboard session; image
-reading is not guaranteed under WSL, SSH, containers, or headless CI.
+read/write is not guaranteed under WSL, SSH, containers, or headless CI.
 
 Evidence / verified platforms: macOS Aqua pasteboard image **reads** have been
 verified with an independent producer in this project's native probe work.
@@ -88,7 +102,10 @@ target for this story, but image **writes** via ``copy_image`` are
 ``SEED-001#write-images`` execution (developer checkout is Darwin; GitHub
 Actions ``windows-latest`` matrix jobs are headless pytest only and are not a
 desktop clipboard probe venue). This is an explicit evidence limit — not a
-verified claim. Windows and Linux image **reads** remain unverified pending
+verified claim. Image-write story acceptance is **not** Windows-only: Linux
+X11 (Xvfb CI) and Wayland (Sway CI) writer-exit proofs above are required and
+already observed (issue #5); Windows remains evidence-limited beside them.
+Windows and Linux image **reads** remain unverified pending
 ``SEED-001#read-images-native``. Default automated tests use an in-memory
 backend and do not exercise a real desktop clipboard; the X11 and Wayland
 write probes are separate gated jobs, not part of the default matrix pytest.
