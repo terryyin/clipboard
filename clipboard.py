@@ -93,15 +93,45 @@ def _write_macos_pngf(image: Image.Image) -> None:
             )
 
 
+def _xclip_clipboard_targets() -> bytes:
+    """Return CLIPBOARD TARGETS bytes, or empty on helper failure."""
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"],
+            capture_output=True,
+            timeout=2,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return b""
+    if result.returncode != 0:
+        return b""
+    return result.stdout or b""
+
+
+def _wait_xclip_image_png_offer(*, timeout_s: float = 5.0) -> None:
+    """Block until CLIPBOARD advertises ``image/png``, or raise."""
+    import time
+
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        if b"image/png" in _xclip_clipboard_targets():
+            return
+        time.sleep(0.05)
+    raise OSError("xclip clipboard write did not publish image/png in time")
+
+
 def _write_linux_xclip(image: Image.Image) -> None:
     """Publish PNG bytes on X11 CLIPBOARD via ``xclip`` (``image/png``).
 
     Feeds PNG on stdin and leaves ``xclip`` running as the CLIPBOARD owner so
     the writing Python process can exit while the offer stays pasteable
-    (issue #5 writer-exit). Waiting for ``xclip`` to exit hangs under Xvfb.
+    (issue #5 writer-exit). Waiting for ``xclip`` to exit hangs under Xvfb;
+    instead wait until TARGETS includes ``image/png``.
     """
     import subprocess
-    import time
 
     png_bytes = _png_bytes(image)
     try:
@@ -130,10 +160,10 @@ def _write_linux_xclip(image: Image.Image) -> None:
         proc.stdin.close()
     except BrokenPipeError as exc:
         raise OSError("xclip clipboard write failed: broken pipe") from exc
-    time.sleep(0.05)
     exit_code = proc.poll()
     if exit_code not in (None, 0):
         raise OSError(f"xclip clipboard write failed: exit {exit_code}")
+    _wait_xclip_image_png_offer()
 
 
 def _is_linux_wayland() -> bool:
