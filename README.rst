@@ -218,12 +218,15 @@ Evidence / verified platforms:
 * Linux X11 HTML **reads** via ``paste_html`` (default reader: ``xclip
   -selection clipboard -o`` listing ``TARGETS``, then requesting
   ``text/html``; a missing ``xclip`` or display raises
-  ``ClipboardContentError``) are **pending** native evidence — not yet
-  verified. Gated GitHub Actions job ``native-linux-x11-paste-html`` runs
-  ``scripts/probe_linux_x11_native_paste_html.py`` under Xvfb with an
-  independent ``xclip -t text/html -i`` producer (not a browser or rich
-  editor); until that job is observed passing, treat X11 HTML read as
-  unverified.
+  ``ClipboardContentError``) have been verified under gated GitHub Actions
+  job ``native-linux-x11-paste-html`` on ``ubuntu-latest`` (Ubuntu 26.04
+  image 20261025.179) with Xvfb + ``xclip`` 0.13: an independent
+  ``xclip -t text/html -i`` producer offered a non-ASCII fragment,
+  ``paste_html()`` returned it exactly, a later independent ``xclip -o``
+  consumer saw the same bytes, and text-only, image-only and unowned
+  clipboards returned ``None``. Floors: Python 3.13, xclip 0.13. The producer
+  is an independent helper, **not** a browser or rich editor, and the venue
+  is headless CI with Xvfb, not an owner-held desktop.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the

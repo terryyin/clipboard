@@ -44,7 +44,7 @@ Reviewer-noted ambiguities: "floors recorded" is undefined; "(or equivalent)" he
 | 12 | No clipboard[images] requirement for this story | slice 1 | observed: tests/test_paste_html_seam.py::test_paste_html_works_without_images_extra (PIL blocked, no PIL in sys.modules) |
 | 13.1 | Supported desktop: Windows desktop | slice 6 | |
 | 13.2 | Supported desktop: macOS Aqua | slice 3 | observed: scripts/probe_macos_native_paste_html.py via tests/test_paste_html_native_macos.py (CLIPBOARD_NATIVE_PROBE=1, macOS 26.6.2/25G83, Chrome 156.0.8078.74) passed on Aqua arm64; README macOS HTML read evidence bullet |
-| 13.3 | Supported desktop: Linux X11 + xclip (or equivalent) able to request text/html on CLIPBOARD | slice 4 | |
+| 13.3 | Supported desktop: Linux X11 + xclip (or equivalent) able to request text/html on CLIPBOARD | slice 4 | observed: CI run 41422813085 job native-linux-x11-paste-html (Xvfb, xclip 0.13, Ubuntu 26.04, Python 3.13.14): tests/test_paste_html_native_linux_x11.py::test_linux_x11_independent_producer_paste_html_probe PASSED (exact fragment, same bytes for later consumer, text/image/unowned → None, missing helper/display → ClipboardContentError naming xclip) |
 | 13.4 | Supported desktop: Linux Wayland + wl-paste (or equivalent) scoped to the compositor actually proved when one is available | slice 5 | |
 | 14 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available | slice 7 | |
 | 14.alt | when no usable session exists during execution, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified — never silent success | slice 7 | |

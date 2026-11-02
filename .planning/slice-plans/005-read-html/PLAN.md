@@ -124,7 +124,7 @@ examples 1 and 6 (macOS branch) or honest limit.
 
 ### 4. Early probe — Linux X11 + `xclip` HTML read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable X11 session with a helper that can request `text/html`
 (document the exact tool/flags), gated probe: independent producer →
 `paste_html()` returns fragment; clipboard unchanged for a later consumer;
@@ -243,6 +243,17 @@ envelopes/helpers; evidence wording is honest.
   passed); native `CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked
   pytest tests/test_paste_html_native_macos.py -v` (1 passed: Chrome
   156.0.8078.74, macOS 26.6.2/25G83 arm64).
+- Slice 4: X11 reader `_linux_x11_html_clipboard_reader` in
+  `clipboard/_html_native_linux.py` (TARGETS then `text/html`; xclip
+  "target TARGETS not available" ⇒ unowned ⇒ `None`; owner change between the
+  two reads is a strict `ClipboardContentError`). Probes share
+  `scripts/stdlib_png.py`. Native proof venue: gated CI job
+  `native-linux-x11-paste-html` (Xvfb); delivered with `progress: true`, then
+  marked done after observing the run.
+- Slice 4 accepted proof: focused 5-file pytest (113 passed); `make check`
+  (185 passed, 8 skipped); `make lint-workflows`; CI run 41422813085 job
+  `native-linux-x11-paste-html` PASSED on e424146 (Ubuntu 26.04, xclip 0.13,
+  Python 3.13.14).
 
 ## Concern evidence
 
