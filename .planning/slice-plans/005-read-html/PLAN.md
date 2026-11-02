@@ -138,7 +138,7 @@ key example 1 (X11) / example 6 or honest limit.
 
 ### 5. Early probe — Linux Wayland + `wl-paste` HTML read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Wayland session with `wl-paste` (or equivalent) on a
 **named** compositor, same independent-producer fragment success and
 non-mutation; document compositor and helper scope; README marks Wayland HTML
@@ -263,6 +263,11 @@ envelopes/helpers; evidence wording is honest.
   `native-linux-wayland-paste-html` (headless Sway), delivered with
   `progress: true`. Slice 6 must move the "not available" test cases off
   win32 (e.g. `sunos5`).
+- Slice 5 accepted proof: focused 6-file pytest (131 passed); `make check`
+  (203 passed, 9 skipped); `make lint-workflows`; CI run 41424913377 on
+  a9539fa: `native-linux-wayland-paste-html` PASSED (Sway 1.11,
+  wl-clipboard 2.2.1 printing "Nothing is copied" when empty) and
+  `native-linux-x11-paste-html` PASSED again after the probe refactor.
 
 ## Concern evidence
 

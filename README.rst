@@ -231,14 +231,17 @@ Evidence / verified platforms:
   Wayland session: ``wl-paste --list-types``, then ``wl-paste --no-newline
   --type text/html``; an empty clipboard returns ``None``, while a missing
   ``wl-paste`` or no reachable compositor raises ``ClipboardContentError``)
-  are **pending** native evidence — not yet verified. Gated GitHub Actions job
-  ``native-linux-wayland-paste-html`` runs
-  ``scripts/probe_linux_wayland_native_paste_html.py`` under the named
-  compositor **Sway** (``WLR_BACKENDS=headless``) with an independent
-  ``wl-copy --type text/html`` producer (a helper, **not** a browser or rich
-  editor); until that job is observed passing, treat Wayland HTML read as
-  unverified. Any result covers Sway only and does not generalize to other
-  Wayland compositors.
+  have been verified **only** under gated GitHub Actions job
+  ``native-linux-wayland-paste-html`` on ``ubuntu-latest`` (Ubuntu 26.04)
+  with the named compositor **Sway** 1.11 (``WLR_BACKENDS=headless``) and
+  ``wl-clipboard`` 2.2.1: an independent ``wl-copy --type text/html``
+  producer offered a non-ASCII fragment, ``paste_html()`` returned it
+  exactly, a later independent ``wl-paste`` consumer saw the same bytes, and
+  text-only, image-only and cleared clipboards returned ``None`` (``wl-paste``
+  reports "Nothing is copied"). Floors: Python 3.13, Sway 1.11,
+  wl-clipboard 2.2.1. The producer is an independent helper, **not** a
+  browser or rich editor; the venue is headless CI; the result covers Sway
+  only and does not generalize to other Wayland compositors.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the
