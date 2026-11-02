@@ -11,14 +11,6 @@ from pathlib import Path
 import pytest
 
 
-@pytest.fixture
-def restore_image_grabclipboard():
-    import clipboard
-
-    yield
-    clipboard.set_image_grabclipboard(None)
-
-
 def _install_offered_path_open_spies(monkeypatch, paths: list[str]) -> list[str]:
     """Spy common open/read entry points; record hits that name an offered path."""
     from PIL import Image

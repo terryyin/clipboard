@@ -85,7 +85,7 @@ Behavior: Pre-condition: clipboard offer is file-list only. Trigger:
 
 ### 3. Failures stay distinct from absence
 Type: Behavior
-Status: planned
+Status: done
 Proof: Stub raises/returns malformed image bytes and unavailable-access /
 missing-helper conditions; caller sees exceptions (or typed failures)
 distinguishable from `None`; text-only still yields `None` without exception.
@@ -147,6 +147,8 @@ from a single Wayland result.
 - Accepted proof (slice 1): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_clipboard.py -v` — pass; also `nix develop -c make check` — pass (16 tests).
 - CI repair: matrix `tests` job must `uv sync/run --locked --extra images` (same as Makefile); without it preservative subprocesses fail importing Pillow.
 - Accepted proof (slice 2): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_clipboard.py -v` — pass; file-list/URL stubs → `None` with open/path spy `path_hits == []`.
+- Slice 3: `ClipboardImageError` wraps grab/decode failures (OSError/NotImplementedError); text-only still `None`.
+- Accepted proof (slice 3): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_clipboard.py -v` — failure≠absence coverage lives in `test_paste_image_failures.py` after post-change refactor.
 
 ## Concern evidence
 
