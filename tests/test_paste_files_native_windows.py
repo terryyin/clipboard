@@ -41,9 +41,9 @@ def test_windows_paste_files_probe_records_evidence_limit():
     assert "52" in report["commitments"]
 
 
-def test_windows_reader_non_windows_raises_content_error():
-    """Direct Windows entry raises on this Darwin host (unavailable stub)."""
-    assert sys.platform != "win32"
+def test_windows_reader_non_windows_raises_content_error(monkeypatch):
+    """Non-win32 platform forces the unavailable stub (desktop-free)."""
+    monkeypatch.setattr(clipboard._files_native_windows.sys, "platform", "darwin")
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard._files_native_windows._windows_files_clipboard_reader()
 
