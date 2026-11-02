@@ -197,7 +197,8 @@ helpers; evidence wording is honest.
   or slice-2 failure wrapping (tracked as G-interim-stub).
 - Darwin checkout cannot run Linux probes; owner chose GHA over skipping issue #5.
 - Linux xclip write needs `-quiet` under Xvfb; without it the helper waits for a paste and times out.
-- Under Xvfb, do not wait for xclip to exit; start it detached as CLIPBOARD owner after a short ingest pause.
+- X11 flake (docs commit after slice 4): tempfile deleted before detached xclip finished reading (0.2s race → `target image/png not available`). Fix: feed PNG on stdin with `xclip -quiet` + `communicate(input=png_bytes)` so foreground exits after ingest/fork; no TemporaryDirectory dependency after return.
+- Wayland prefer `wl-copy` when `XDG_SESSION_TYPE=wayland` or `WAYLAND_DISPLAY` is set; leave xclip for X11. Slice 5 proof venue = gated GHA under named compositor Weston only (do not generalize; S.4/X.8/C.4). S.10 interim: writer + probe + job wired; green CI still required for acceptance.
 
 ## Accepted proof (slice 1)
 
@@ -239,6 +240,12 @@ helpers; evidence wording is honest.
 Reported: slice 4 — "X11 writer-exit proof is gated on GitHub Actions job native-linux-x11-copy-image under Xvfb; not yet observed green"
 Story clause: "Linux X11 and Wayland writer-exit success are acceptance requirements (issue #5); they are not substitutable by an evidence-limit note."
 Disposition: proved by slice 4: GitHub Actions run on c6f6585 (job native-linux-x11-copy-image PASSED; opaque writer-exit + independent xclip -o consumer)
+
+### G-wayland-ci. Linux Wayland writer-exit awaits green GHA Weston probe
+Reported: slice 5 — "Wayland writer-exit proof is gated on GitHub Actions job native-linux-wayland-copy-image under Weston; not yet observed green"
+Story clause: "Linux X11 and Wayland writer-exit success are acceptance requirements (issue #5); they are not substitutable by an evidence-limit note."
+Disposition: interim until slices 5
+Commitment: S.10
 
 ### G-interim-stub. Default write raises NotImplementedError
 Reported: slice 1 — "default `_default_writeclipboard` raises `NotImplementedError` until a real writer or contract wrapper lands"

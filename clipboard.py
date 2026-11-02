@@ -63,6 +63,12 @@ def _helper_failure_detail(result) -> str:
     return (result.stderr or result.stdout or "").strip() or "unknown error"
 
 
+def _png_bytes(image: Image.Image) -> bytes:
+    buf = BytesIO()
+    image.save(buf, format="PNG")
+    return buf.getvalue()
+
+
 def _write_macos_pngf(image: Image.Image) -> None:
     """Publish a transferable PNG via osascript «class PNGf» (no pyobjc)."""
     import subprocess
@@ -90,57 +96,98 @@ def _write_macos_pngf(image: Image.Image) -> None:
 def _write_linux_xclip(image: Image.Image) -> None:
     """Publish PNG bytes on X11 CLIPBOARD via ``xclip`` (``image/png``).
 
-    ``xclip`` is started detached and left running as the CLIPBOARD owner so
-    the writing Python process can exit while the offer remains pasteable
-    (issue #5 writer-exit). Waiting for ``xclip`` to exit hangs under Xvfb.
+    Feeds PNG on stdin with ``-quiet`` so the foreground helper exits after
+    ingest/fork while a background owner keeps the offer pasteable after the
+    writing Python process exits (issue #5 writer-exit). Does not depend on a
+    tempfile still existing after return.
     """
     import subprocess
-    import time
 
-    with _temporary_png_offer(image) as path:
-        # xclip stays alive as CLIPBOARD owner until a paste (or replacement).
-        # Do not wait for it to exit — that hangs under Xvfb. Start detached,
-        # give it a moment to read the tempfile, then return.
-        try:
-            proc = subprocess.Popen(
-                [
-                    "xclip",
-                    "-selection",
-                    "clipboard",
-                    "-t",
-                    "image/png",
-                    "-i",
-                    str(path),
-                ],
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-                start_new_session=True,
-            )
-        except FileNotFoundError as exc:
-            raise OSError(
-                "xclip is required for clipboard image write on Linux X11; "
-                "install xclip and ensure it is on PATH"
-            ) from exc
-        # Allow xclip to read the PNG before TemporaryDirectory cleanup.
-        time.sleep(0.2)
-        exit_code = proc.poll()
-        if exit_code is not None and exit_code != 0:
-            detail = (proc.stderr.read() or b"").decode("utf-8", errors="replace")
-            detail = detail.strip() or f"exit {exit_code}"
-            raise OSError(f"xclip clipboard write failed: {detail}")
-        # Still running (selection owner) or exited 0 after ingest — both OK.
+    png_bytes = _png_bytes(image)
+    # stderr must not be a pipe: -quiet forks a child that would keep it open
+    # and hang communicate(). Errors from a failed foreground exit are rare.
+    try:
+        proc = subprocess.Popen(
+            [
+                "xclip",
+                "-selection",
+                "clipboard",
+                "-t",
+                "image/png",
+                "-i",
+                "-quiet",
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except FileNotFoundError as exc:
+        raise OSError(
+            "xclip is required for clipboard image write on Linux X11; "
+            "install xclip and ensure it is on PATH"
+        ) from exc
+    try:
+        proc.communicate(input=png_bytes, timeout=30)
+    except subprocess.TimeoutExpired as exc:
+        proc.kill()
+        proc.wait(timeout=5)
+        raise OSError("xclip clipboard write timed out") from exc
+    if proc.returncode != 0:
+        raise OSError(f"xclip clipboard write failed: exit {proc.returncode}")
+
+
+def _is_linux_wayland() -> bool:
+    import os
+
+    session = (os.environ.get("XDG_SESSION_TYPE") or "").strip().lower()
+    return session == "wayland" or bool(os.environ.get("WAYLAND_DISPLAY"))
+
+
+def _write_linux_wl_copy(image: Image.Image) -> None:
+    """Publish PNG bytes on Wayland via ``wl-copy`` (``image/png``).
+
+    ``wl-copy`` reads stdin, then the foreground helper exits while a
+    background owner keeps the offer pasteable after the writing Python
+    process exits (issue #5 writer-exit).
+    """
+    import subprocess
+
+    png_bytes = _png_bytes(image)
+    # Same pipe rule as xclip -quiet: wl-copy may background a server process.
+    try:
+        proc = subprocess.Popen(
+            ["wl-copy", "--type", "image/png"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except FileNotFoundError as exc:
+        raise OSError(
+            "wl-copy is required for clipboard image write on Linux Wayland; "
+            "install wl-clipboard and ensure wl-copy is on PATH"
+        ) from exc
+    try:
+        proc.communicate(input=png_bytes, timeout=30)
+    except subprocess.TimeoutExpired as exc:
+        proc.kill()
+        proc.wait(timeout=5)
+        raise OSError("wl-copy clipboard write timed out") from exc
+    if proc.returncode != 0:
+        raise OSError(f"wl-copy clipboard write failed: exit {proc.returncode}")
 
 
 def _default_writeclipboard(image: Image.Image) -> None:
-    """Platform default image write; Windows / Wayland remain later slices."""
+    """Platform default image write; Windows remains a later slice."""
     import sys
 
     if sys.platform == "darwin":
         _write_macos_pngf(image)
         return
     if sys.platform.startswith("linux"):
-        _write_linux_xclip(image)
+        if _is_linux_wayland():
+            _write_linux_wl_copy(image)
+        else:
+            _write_linux_xclip(image)
         return
     raise NotImplementedError("clipboard image write is not implemented yet")
 

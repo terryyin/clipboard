@@ -1,4 +1,4 @@
-"""Shared helpers for gated native clipboard probes (macOS Aqua, Linux X11)."""
+"""Shared helpers for gated native clipboard probes (macOS, Linux X11/Wayland)."""
 
 from __future__ import annotations
 
@@ -93,6 +93,40 @@ def linux_x11_environment(**extra: object) -> dict:
     return env
 
 
+def wl_clipboard_version() -> str | None:
+    try:
+        out = subprocess.check_output(
+            ["wl-copy", "--version"],
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    first = (out or "").strip().splitlines()
+    return first[0].strip() if first else None
+
+
+def linux_wayland_environment(**extra: object) -> dict:
+    env = {
+        "os": platform.system(),
+        "os_release": platform.release(),
+        "machine": platform.machine(),
+        "desktop": "Weston (CI headless) or local Wayland",
+        "compositor": "Weston",
+        "wayland_display": os.environ.get("WAYLAND_DISPLAY"),
+        "xdg_session_type": os.environ.get("XDG_SESSION_TYPE"),
+        "helper": "wl-copy",
+        "wl_clipboard_version": wl_clipboard_version(),
+        "pillow_version": _pillow_version(),
+        "python": sys.version.split()[0],
+        "ci": os.environ.get("CI"),
+        "runner_os": os.environ.get("RUNNER_OS"),
+        "image_os": os.environ.get("ImageOS"),
+    }
+    env.update(extra)
+    return env
+
+
 def require_darwin_and_images() -> None:
     if sys.platform != "darwin":
         die(f"probe requires macOS (darwin); got {sys.platform!r}")
@@ -111,6 +145,21 @@ def require_linux_x11_and_images() -> None:
         die("probe requires DISPLAY (run under Xvfb / xvfb-run -a)")
     if shutil.which("xclip") is None:
         die("xclip not found on PATH")
+    try:
+        from PIL import Image  # noqa: F401
+
+        import clipboard  # noqa: F401
+    except ImportError as exc:
+        die(f"missing dependency (install clipboard[images]): {exc}")
+
+
+def require_linux_wayland_and_images() -> None:
+    if not sys.platform.startswith("linux"):
+        die(f"probe requires Linux; got {sys.platform!r}")
+    if not os.environ.get("WAYLAND_DISPLAY"):
+        die("probe requires WAYLAND_DISPLAY (run under Weston / named compositor)")
+    if shutil.which("wl-copy") is None or shutil.which("wl-paste") is None:
+        die("wl-copy/wl-paste not found on PATH (install wl-clipboard)")
     try:
         from PIL import Image  # noqa: F401
 

@@ -145,3 +145,19 @@ def test_missing_xclip_raises_clipboard_image_error(
 
     assert isinstance(raised.value.__cause__, OSError)
     assert "xclip" in str(raised.value.__cause__).lower()
+
+
+def test_missing_wl_copy_raises_clipboard_image_error(
+    monkeypatch, tmp_path, restore_image_writeclipboard
+):
+    """Missing wl-copy helper → ClipboardImageError (R.8a), not silent success."""
+    import clipboard
+
+    monkeypatch.setenv("PATH", str(tmp_path))
+    clipboard.set_image_writeclipboard(clipboard._write_linux_wl_copy)
+
+    with pytest.raises(clipboard.ClipboardImageError) as raised:
+        clipboard.copy_image(Image.new("RGB", (1, 1), color="red"))
+
+    assert isinstance(raised.value.__cause__, OSError)
+    assert "wl-copy" in str(raised.value.__cause__).lower()

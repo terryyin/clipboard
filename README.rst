@@ -53,11 +53,12 @@ On Linux, image clipboard reads also need a helper on ``PATH``:
 
 Image **writes** via ``copy_image`` on Linux need:
 
-* X11: ``xclip`` (publishes ``image/png`` on CLIPBOARD; ``xclip`` may keep a
+* X11: ``xclip`` (publishes ``image/png`` on CLIPBOARD; ``xclip -quiet`` may
+  keep a background owner so the offer stays pasteable after the writing
+  process exits)
+* Wayland: ``wl-copy`` (from wl-clipboard; publishes ``image/png``; may keep a
   background owner so the offer stays pasteable after the writing process
   exits)
-* Wayland: ``wl-copy`` (from wl-clipboard) — pending later
-  ``SEED-001#write-images`` probe
 
 Windows and macOS need a usable desktop clipboard / pasteboard session; image
 reading is not guaranteed under WSL, SSH, containers, or headless CI.
@@ -74,13 +75,20 @@ under gated GitHub Actions job ``native-linux-x11-copy-image`` on
 ``image/png`` after writer exit) at floors Python 3.13 / Pillow 11.3.0; the
 venue is headless CI with Xvfb, not an owner-held desktop. Opaque writer-exit
 succeeded; the RGBA case is exercised in the same probe (preserve-or-drop
-recorded there). Windows desktop and Linux Wayland with ``wl-copy`` remain
-supported write targets, unverified pending later ``SEED-001#write-images``
-probes (Wayland is still an acceptance requirement). Windows and Linux image
-**reads** remain unverified pending ``SEED-001#read-images-native``. Default
-automated tests use an in-memory backend and do not exercise a real desktop
-clipboard; the X11 write probe is a separate gated job, not part of the
-default matrix pytest.
+recorded there). Linux Wayland image **writes** via ``copy_image`` (``wl-copy``)
+have been verified **only** under gated GitHub Actions job
+``native-linux-wayland-copy-image`` on ``ubuntu-latest`` with the named
+compositor **Weston** (``weston --backend=headless-backend.so
+--socket=wayland-1 --idle-time=0``) + ``wl-clipboard`` (independent consumer
+``wl-paste -t image/png`` after writer exit) at floors Python 3.13 /
+Pillow 11.3.0; do not generalize that result to other Wayland compositors.
+Opaque writer-exit succeeded; the RGBA case is exercised in the same probe
+(preserve-or-drop recorded there). Windows desktop remains a supported write
+target, unverified pending a later ``SEED-001#write-images`` probe or
+evidence limit. Windows and Linux image **reads** remain unverified pending
+``SEED-001#read-images-native``. Default automated tests use an in-memory
+backend and do not exercise a real desktop clipboard; the X11 and Wayland
+write probes are separate gated jobs, not part of the default matrix pytest.
 
 Development
 -----------

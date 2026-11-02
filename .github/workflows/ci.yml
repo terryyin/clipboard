@@ -105,10 +105,57 @@ jobs:
           uv run --locked --extra images
           pytest tests/test_copy_image_native_linux_x11.py -v
 
+  native-linux-wayland-copy-image:
+    name: Native Linux Wayland copy_image (Weston)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install Wayland clipboard helpers and Weston
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wl-clipboard weston
+      - run: uv sync --locked --extra images
+      - name: Gated Wayland copy_image probe under Weston
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: |
+          set -euo pipefail
+          export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/clipboard-xdg-runtime}"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          # Start Weston before exporting WAYLAND_DISPLAY so it does not nest.
+          unset WAYLAND_DISPLAY || true
+          weston --backend=headless-backend.so --socket=wayland-1 --idle-time=0 &
+          WESTON_PID=$!
+          trap 'kill "$WESTON_PID" 2>/dev/null || true' EXIT
+          export WAYLAND_DISPLAY=wayland-1
+          export XDG_SESSION_TYPE=wayland
+          for _ in $(seq 1 50); do
+            if [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; then
+              break
+            fi
+            sleep 0.1
+          done
+          test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+          uv run --locked --extra images \
+            pytest tests/test_copy_image_native_linux_wayland.py -v
+
   ci-passed:
     name: CI passed
     if: always()
-    needs: [quality, tests, native-linux-x11-copy-image]
+    needs:
+      - quality
+      - tests
+      - native-linux-x11-copy-image
+      - native-linux-wayland-copy-image
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -117,7 +164,9 @@ jobs:
           QUALITY_RESULT: ${{ needs.quality.result }}
           TEST_RESULT: ${{ needs.tests.result }}
           NATIVE_X11_RESULT: ${{ needs.native-linux-x11-copy-image.result }}
+          NATIVE_WAYLAND_RESULT: ${{ needs.native-linux-wayland-copy-image.result }}
         run: >-
           test "$QUALITY_RESULT" = success
           && test "$TEST_RESULT" = success
           && test "$NATIVE_X11_RESULT" = success
+          && test "$NATIVE_WAYLAND_RESULT" = success
