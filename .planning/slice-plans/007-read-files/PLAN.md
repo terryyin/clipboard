@@ -151,7 +151,7 @@ examples 1–2 and 4 (X11) / example 7 or honest limit.
 
 ### 5. Early probe — Linux Wayland + helper `text/uri-list`
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Wayland session with `wl-paste -t text/uri-list` (or
 equivalent) on a **named** compositor and named file manager, same
 independent-FM local-path success, non-mutation, and cut-marker non-side-
@@ -237,13 +237,19 @@ guessing paths from text; evidence wording is honest.
   ``NSFilenamesPboardType`` independent producer (gated
   ``scripts/probe_macos_native_paste_files.py``); floors macOS 26.6.2 /
   Darwin 25.6.0; README Evidence updated. Default Darwin reader in
-  ``clipboard/_files_native.py``.
+  ``clipboard/_files_native_macos.py`` (dispatch ``clipboard/_files_native.py``).
 
 
 - Slice 4: Linux X11 ``paste_files`` explicit evidence limit on this Darwin
   host (no ``xclip``/DISPLAY); thin ``xclip -o -selection clipboard -t
   text/uri-list`` reader wired for later owner-held verification; probe
   ``file_manager_generalization: false``.
+
+
+- Slice 5: Linux Wayland ``paste_files`` explicit evidence limit (no
+  ``wl-paste``/WAYLAND_DISPLAY); thin ``wl-paste -t text/uri-list`` reader;
+  ``compositor_generalization: false``. Native readers split to
+  ``_files_native_{macos,linux}.py`` + dispatch.
 
 ## Concern evidence
 

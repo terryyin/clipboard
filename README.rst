@@ -195,17 +195,14 @@ Evidence / verified platforms:
   session to replace this limit for that compositor only.
 * Windows desktop HTML + Unicode text dual-offer writes via ``copy_html``
   (interoperable ``HTML Format`` with UTF-8 fragment/context byte offsets for
-  non-ASCII content) are an explicit **evidence limit** on this execution
-  host: no usable Windows desktop session was available (Darwin checkout).
-  Do not treat Windows HTML write as verified.
-  ``scripts/probe_windows_native_copy_html.py`` records
+  non-ASCII) are an **evidence limit** here (Darwin; no Windows desktop). Not
+  verified. ``scripts/probe_windows_native_copy_html.py``:
   ``evidence_limit`` / ``verified: false`` /
-  ``non_ascii_case_required_for_verification: true`` (exit 2) rather than
-  silent success. Re-run that gated Windows dual-consumer probe on an
-  owner-held Windows desktop to replace this limit, including a non-ASCII
-  fragment/context case.
-* macOS Aqua ``paste_files`` verified with independent ``osascript`` / ``NSFilenamesPboardType`` producer (Unicode+spaces; not library round-trip), AppKit re-read non-mutation, files untouched; floors macOS 26.6.2 (25G83) / Darwin 25.6.0 / arm64 (``scripts/probe_macos_native_paste_files.py``; ``CLIPBOARD_NATIVE_PROBE=1`` / ``tests/test_paste_files_native_macos.py``).
-* Linux X11 ``paste_files`` (helper ``xclip -o -selection clipboard -t text/uri-list`` after a **named** file manager copies local files) is an explicit **evidence limit** on this execution host: no usable X11 session with ``xclip`` on ``PATH`` was available (Darwin checkout). Do not treat X11 ``paste_files`` as verified, and do not generalize one Linux file manager's result to all environments. ``scripts/probe_linux_x11_native_paste_files.py`` records ``evidence_limit`` / ``verified: false`` / ``file_manager_generalization: false`` (exit 2) rather than silent success. Re-run that gated X11 independent-FM probe on an owner-held X11 session with a named file manager to replace this limit for that file manager only.
+  ``non_ascii_case_required_for_verification: true`` (exit 2). Re-run on an
+  owner-held Windows desktop, including a non-ASCII fragment/context case.
+* macOS Aqua ``paste_files`` verified (independent ``osascript`` / ``NSFilenamesPboardType``; Unicode+spaces; non-mutation; floors macOS 26.6.2 / Darwin 25.6.0 / arm64; ``scripts/probe_macos_native_paste_files.py``).
+* Linux X11 ``paste_files`` (``xclip -o -selection clipboard -t text/uri-list`` after a **named** FM) is an **evidence limit** here (Darwin; no ``xclip``/DISPLAY). Not verified; ``file_manager_generalization: false``. ``scripts/probe_linux_x11_native_paste_files.py`` exits 2.
+* Linux Wayland ``paste_files`` (``wl-paste -t text/uri-list`` on a **named** compositor after a **named** FM) is an **evidence limit** here (Darwin; no ``wl-paste``/``WAYLAND_DISPLAY``). Never verified; do not generalize one compositor. ``scripts/probe_linux_wayland_native_paste_files.py``: ``evidence_limit`` / ``verified: false`` / ``compositor_generalization: false`` (exit 2).
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the

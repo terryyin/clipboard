@@ -47,7 +47,9 @@ def test_linux_x11_reader_missing_helper_raises_content_error(
     monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
-    monkeypatch.setattr(clipboard._files_native.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(
+        clipboard._files_native_linux.shutil, "which", lambda _name: None
+    )
     clipboard.set_files_clipboard_reader(None)
 
     with pytest.raises(clipboard.ClipboardContentError) as raised:
@@ -67,7 +69,7 @@ def test_linux_x11_reader_uri_list_uses_contract_normalize(
     monkeypatch.setenv("DISPLAY", ":99")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setattr(
-        clipboard._files_native.shutil, "which", lambda name: "/usr/bin/xclip"
+        clipboard._files_native_linux.shutil, "which", lambda name: "/usr/bin/xclip"
     )
     uri_list = "file:///tmp/plain.txt\r\nfile:///tmp/caf%C3%A9%20space.txt\r\n"
     completed = MagicMock(
@@ -76,7 +78,7 @@ def test_linux_x11_reader_uri_list_uses_contract_normalize(
         stderr="",
     )
     monkeypatch.setattr(
-        clipboard._files_native.subprocess,
+        clipboard._files_native_linux.subprocess,
         "run",
         lambda *args, **kwargs: completed,
     )
@@ -95,7 +97,7 @@ def test_linux_x11_reader_missing_uri_list_target_is_absence(
     monkeypatch.setenv("DISPLAY", ":99")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setattr(
-        clipboard._files_native.shutil, "which", lambda name: "/usr/bin/xclip"
+        clipboard._files_native_linux.shutil, "which", lambda name: "/usr/bin/xclip"
     )
     completed = MagicMock(
         returncode=1,
@@ -103,7 +105,7 @@ def test_linux_x11_reader_missing_uri_list_target_is_absence(
         stderr="Error: target text/uri-list not available\n",
     )
     monkeypatch.setattr(
-        clipboard._files_native.subprocess,
+        clipboard._files_native_linux.subprocess,
         "run",
         lambda *args, **kwargs: completed,
     )

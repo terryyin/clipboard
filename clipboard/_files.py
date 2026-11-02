@@ -21,7 +21,8 @@ def set_files_clipboard_reader(reader: Callable[[], object] | None) -> None:
     ``ClipboardContentError``. On macOS Aqua the default reader recovers
     Finder-equivalent ``NSFilenamesPboardType`` / file-URL offers via
     ``osascript`` / AppKit. On Linux X11 it requests ``text/uri-list`` via
-    ``xclip -o -selection clipboard -t text/uri-list`` (missing session/helper
+    ``xclip -o -selection clipboard -t text/uri-list``; on Linux Wayland via
+    ``wl-paste -t text/uri-list`` on a named compositor (missing session/helper
     → ``ClipboardContentError``, not silent ``None``). Other platforms raise
     until their adapters land, or tests inject a fake. Cut/move companion
     fields on structured offers are ignored.
@@ -169,9 +170,10 @@ def paste_files() -> list[str] | None:
     ``ClipboardContentError`` (not ``ClipboardImageError``). On macOS Aqua the
     default reader uses ``osascript`` / AppKit for file-URL / filename
     pasteboard types (read-only; no filesystem open/move/delete). On Linux X11
-    the default reader uses ``xclip`` ``text/uri-list`` (same uri-list
-    normalization as injected offers). Other platforms raise until their
-    adapters land; tests may inject a fake via ``set_files_clipboard_reader``.
+    the default reader uses ``xclip`` ``text/uri-list``; on Linux Wayland,
+    ``wl-paste`` ``text/uri-list`` (same uri-list normalization as injected
+    offers). Other platforms raise until their adapters land; tests may inject
+    a fake via ``set_files_clipboard_reader``.
 
     Injected readers may return path lists, structured ``uri-list`` / ``paths``
     offers (optional ignored cut markers), or absence kinds; ``paste_files``

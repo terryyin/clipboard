@@ -74,7 +74,9 @@ def test_reset_reader_restores_default(restore_files_clipboard_reader, monkeypat
     monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
-    monkeypatch.setattr(clipboard._files_native.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(
+        clipboard._files_native_linux.shutil, "which", lambda _name: None
+    )
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.paste_files()
 

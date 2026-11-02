@@ -43,7 +43,7 @@
 | 30 | Normalize platform payloads to local path strings. | slice 2 | observed: clipboard/_files.py _local_path_from_file_uri / _paths_from_path_list |
 | 31 | Normalization includes decoding `file://` URIs including percent-encoding and Unicode / spaces. | slice 2 | observed: test_uri_list_file_uris_decode_to_local_paths (percent-encoding Unicode spaces) |
 | 32 | Normalization includes reading Windows `CF_HDROP` path lists. | slice 6 |  |
-| 33 | Normalization includes reading macOS file-URL / filename pasteboard types. | slice 3 | observed: clipboard/_files_native.py macOS file-URL/filename pasteboard read; tests/test_paste_files_native_macos.py gated |
+| 33 | Normalization includes reading macOS file-URL / filename pasteboard types. | slice 3 | observed: clipboard/_files_native_macos.py macOS file-URL/filename pasteboard read; tests/test_paste_files_native_macos.py gated |
 | 34 | Preserve offer order. | slice 2 | observed: test_ordered_two_file_path_list_unicode_and_spaces; uri-list line order preserved |
 | 35 | If a cut/move marker is present beside the references, ignore it for all library behavior. | slice 2 | observed: tests/test_paste_files_failures.py::test_cut_marker_ignored_still_returns_paths; cut fields present but unused in clipboard/_files.py normalize |
 | 36 | Cut/move markers in scope include `PreferredDropEffect`. | slice 2 | observed: tests/test_paste_files_failures.py PreferredDropEffect cut field ignored via omission in normalize |
@@ -63,20 +63,20 @@
 | 50 | Document supported desktop setup. | slice 7 |  |
 | 51 | No `clipboard[images]` requirement for this story. | slice 1 | observed: tests/test_paste_files_seam.py::test_paste_files_importable_without_images_extra |
 | 52 | Supported desktop: Windows desktop with Explorer (or equivalent) producing `CF_HDROP`. | slice 6 |  |
-| 53 | Supported desktop: macOS Aqua with Finder (or equivalent) producing file-URL / filename pasteboard types. | slice 3 | observed: README.rst macOS Aqua paste_files verified floors; clipboard/_files_native.py |
-| 54 | Supported desktop: Linux X11 + helper able to request `text/uri-list` on CLIPBOARD from a named file manager. | slice 4 | observed: README.rst X11 paste_files evidence limit; clipboard/_files_native.py xclip text/uri-list reader; scripts/probe_linux_x11_native_paste_files.py verified:false |
-| 55 | Supported desktop: Linux Wayland + helper able to request `text/uri-list` (or equivalent) from a named file manager, scoped to the compositor actually proved when one is available. | slice 5 |  |
+| 53 | Supported desktop: macOS Aqua with Finder (or equivalent) producing file-URL / filename pasteboard types. | slice 3 | observed: README.rst macOS Aqua paste_files verified floors; clipboard/_files_native_macos.py |
+| 54 | Supported desktop: Linux X11 + helper able to request `text/uri-list` on CLIPBOARD from a named file manager. | slice 4 | observed: README.rst X11 paste_files evidence limit; clipboard/_files_native_linux.py xclip text/uri-list; scripts/probe_linux_x11_native_paste_files.py verified:false |
+| 55 | Supported desktop: Linux Wayland + helper able to request `text/uri-list` (or equivalent) from a named file manager, scoped to the compositor actually proved when one is available. | slice 5 | observed: README.rst Wayland paste_files evidence limit; clipboard/_files_native_linux.py wl-paste -t text/uri-list; probe verified:false |
 | 56 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available. | slice 7 |  |
 | 57 | When no usable session exists during execution, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified. | slice 7 |  |
 | 58 | Never silent success for an unproved desktop. | slice 7 |  |
-| 59 | Do not generalize one Wayland compositor’s result to all environments. | slice 5 |  |
+| 59 | Do not generalize one Wayland compositor’s result to all environments. | slice 5 | observed: README + probe compositor_generalization:false |
 | 60 | Do not generalize one Linux file manager’s result to all environments. | slice 4 | observed: README.rst + probe file_manager_generalization:false — do not generalize one Linux FM |
 | 61 | Do not overload `paste()` to return or accept file lists. | slice 1 | observed: clipboard/__init__.py re-exports pyperclip paste separately from paste_files |
 | 62 | Do not overload `copy()` to return or accept file lists. | slice 1 | observed: clipboard/__init__.py re-exports pyperclip copy separately from paste_files |
 | 63 | Do not treat ordinary text offers as file-list success. | slice 2 | observed: test_absence_kinds_return_none text |
 | 64 | Do not treat HTML offers as file-list success. | slice 2 | observed: test_absence_kinds_return_none html |
 | 65 | Do not treat image-only offers as file-list success. | slice 2 | observed: test_absence_kinds_return_none image |
-| 66 | Do not bypass OS pasteboard / clipboard authorization. | slice 3 | observed: clipboard/_files_native.py uses normal AppKit pasteboard APIs (no entitlement bypass) |
+| 66 | Do not bypass OS pasteboard / clipboard authorization. | slice 3 | observed: clipboard/_files_native_macos.py uses normal AppKit pasteboard APIs (no entitlement bypass) |
 | 67 | Do not replace clipboard contents as part of the read. | slice 2 | observed: tests/test_paste_files_failures.py::test_read_does_not_mutate_uri_list_offer |
 | 68 | Do not clear clipboard contents as part of the read. | slice 2 | observed: tests/test_paste_files_failures.py::test_read_does_not_mutate_uri_list_offer |
 | 69 | Do not rewrite clipboard contents as part of the read. | slice 2 | observed: tests/test_paste_files_failures.py::test_read_does_not_mutate_uri_list_offer |
@@ -88,7 +88,7 @@
 | 75 | Do not promise that returned paths still exist. | slice 7 |  |
 | 76 | Do not promise that returned paths are readable. | slice 7 |  |
 | 77 | Do not fetch remote / non-`file` URIs. | slice 2 | observed: test_remote_only_uri_list_is_ordinary_absence; test_mixed_uri_list_keeps_local_skips_remote_without_fetch |
-| 78 | Do not hang the caller indefinitely waiting on a contended clipboard. | slice 3 | observed: clipboard/_files_native.py osascript timeout 30s |
+| 78 | Do not hang the caller indefinitely waiting on a contended clipboard. | slice 3 | observed: clipboard/_files_native_macos.py / _files_native_linux.py timeout 30s |
 | 79 | Do not silently reissue a cut/move marker as a move offer. | slice 2 | observed: tests/test_paste_files_failures.py no cut reissue |
 | 80 | Corrupt or unparseable native file-list metadata must not yield fabricated successful paths. | slice 2 | observed: tests/test_paste_files_failures.py::test_corrupt_metadata_raises_content_error_not_none_or_paths |
 | 81 | Plain text that resembles paths must not be treated as a file-list success. | slice 2 | observed: test_absence_kinds_return_none path-looking plain text |
@@ -101,7 +101,7 @@
 | 88 | Ordinary absence is reported as `None`. | slice 2 | observed: test_absence_kinds_return_none returns None |
 | 89 | Non-absence failures raise `ClipboardContentError` with actionable messaging (where failure messaging is stated). | slice 2 | observed: tests/test_paste_files_failures.py actionable ClipboardContentError on corrupt/access |
 | 90 | Cut/move markers are ignored for library behavior; they are not treated as structured success metadata in this story. | slice 2 | observed: tests/test_paste_files_failures.py cut not structured success metadata |
-| 91 | Linux Wayland support is scoped to the compositor actually proved when one is available. | slice 5 |  |
+| 91 | Linux Wayland support is scoped to the compositor actually proved when one is available. | slice 5 | observed: README Wayland scoped to compositor proved when available; evidence-limited here |
 | 92 | WSL, SSH, containers, and headless CI are not additional guaranteed desktops. |  | X92 |
 | 93 | Evidence for a desktop without a usable session during execution is an explicit unverified/unsupported limit, not a verified claim. | slice 7 |  |
 | 94 | Default automated tests remain desktop-free; native proof is gated and uses an independent file manager. | slice 7 |  |
