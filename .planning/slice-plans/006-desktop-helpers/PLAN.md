@@ -5,9 +5,9 @@
 
 ## Correction input
 
-**Provenance:** execution retrospective of
-[SEED-001#read-html](../../seeds/SEED-001-clipboard-true-to-its-name.md#read-html)
-(plan `slice-plans/005-read-html/PLAN.md`, removed at its wrap-up); reviewed net
+**Provenance:** execution retrospective of SEED-001#read-html (story
+`9d3ceda:.planning/seeds/SEED-001-clipboard-true-to-its-name.md#read-html`,
+plan `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md`); reviewed net
 diff `50d7677..1a5b92d` (commits 0d3e238, a894a15, 60d5967, e424146, 2e66857,
 a9539fa, c541d77, 1796fc5, 8659430, 1a5b92d).
 

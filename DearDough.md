@@ -107,7 +107,7 @@ split) after implementation was done.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.79
-  - Evidence: 2026-11-02, before commit 0d3e238 (16:11:50+07:00); PLAN.md (005-read-html) Decisive premises name no file-size premise; slice 1 refactor return `## REFACTOR JIDOKA STOP` (clipboard.py 510 lines); developer answer "Split now"; PLAN.md Current decisions "Developer decision (2026-11-02, slice 1 refactor stop)"
+  - Evidence: 2026-11-02, before commit 0d3e238 (16:11:50+07:00); `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md` Decisive premises name no file-size premise; slice 1 refactor return `## REFACTOR JIDOKA STOP` (clipboard.py 510 lines); developer answer "Split now"; same PLAN.md Current decisions "Developer decision (2026-11-02, slice 1 refactor stop)"
   - Observed effect: One extra refactor round (about 20 minutes reported by the refactor agent) and a mid-slice human question; the split landed with slice 1.
   - Inference: Planning could check the line counts of files the plan will edit and settle split-or-exception before the first slice; impact was modest because the split was cheap.
 
@@ -138,6 +138,6 @@ the same helper-producer pattern.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.79
-  - Evidence: 2026-11-02, between commits 8659430 (17:18:38+07:00) and 1a5b92d (17:36:04+07:00); PLAN.md Story obligations G4 (reported slice 4, interim until slices 5, 6, 7, then owner changed); developer answer "Verified, helper-labelled"; SEED-001 "Developer amendment (2026-11-02, during execution)"; source-review.md replaced after the amendment
+  - Evidence: 2026-11-02, between commits 8659430 (17:18:38+07:00) and 1a5b92d (17:36:04+07:00); `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md` Story obligations G4 (reported slice 4, interim until slices 5, 6, 7, then owner changed); developer answer "Verified, helper-labelled"; `9d3ceda:.planning/seeds/SEED-001-clipboard-true-to-its-name.md` "Developer amendment (2026-11-02, during execution)"; `9d3ceda:.planning/slice-plans/005-read-html/source-review.md` replaced after the amendment
   - Observed effect: Slices 5–6 proceeded on an unresolved acceptance question; the amendment then required a fresh source review and re-allocation of 77 commitment ids.
   - Inference: Asking at the first occurrence (slice 4) would have settled README wording earlier and avoided carrying the interim; the late ask still preceded any false claim.
