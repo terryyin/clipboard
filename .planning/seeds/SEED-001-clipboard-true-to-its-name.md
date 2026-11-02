@@ -199,6 +199,9 @@ maintainer instead of a silent reduction.
 ### Bound the X11 text write for large text on a stalled display
 
 **Identity:** SEED-001#bounded-x11-text-write
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/012-bounded-x11-text-write/PLAN.md"}
+```
 
 **Goal:** Callers of `copy(text)` on Linux X11 get the documented bounded
 `ClipboardContentError` instead of an indefinite hang when the X server stalls
