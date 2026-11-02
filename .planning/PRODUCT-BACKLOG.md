@@ -8,7 +8,6 @@ Make the clipboard project true to its name.
 
 - [Read HTML fragments copied by desktop applications](seeds/SEED-001-clipboard-true-to-its-name.md#read-html) — SEED-001#read-html ([plan](slice-plans/005-read-html/PLAN.md))
 - [Inspect clipboard content kinds and offered formats](seeds/SEED-001-clipboard-true-to-its-name.md#inspect-formats) — SEED-001#inspect-formats ([plan](slice-plans/006-inspect-formats/PLAN.md))
-- [Read file references copied by file managers](seeds/SEED-001-clipboard-true-to-its-name.md#read-files) — SEED-001#read-files ([plan](slice-plans/007-read-files/PLAN.md))
 
 ## Backlog list
 
