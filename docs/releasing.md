@@ -39,10 +39,8 @@ The environment name must agree between PyPI and the workflow.
 ## Prepare a release
 
 1. Choose an unused version newer than the latest version on
-   [PyPI](https://pypi.org/project/clipboard/#history). As of November 1, 2026,
-   PyPI has `0.0.4`, but this checkout declares `0.0.2`. Resolve that discrepancy
-   deliberately; do not tag the checkout's existing version. `0.0.5` is an
-   example next version, not an already approved release.
+   [PyPI](https://pypi.org/project/clipboard/#history). Do not reuse a published
+   version: PyPI does not allow replacing uploaded distribution filenames.
 2. Update only `VERSION` in `clipboard.py`. Refresh the project entry in the
    lockfile with `nix develop -c uv lock` and commit both changes.
 3. Run `nix develop -c make check lint-workflows build`, review the changes, and
