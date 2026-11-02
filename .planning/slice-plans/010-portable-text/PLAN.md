@@ -123,7 +123,7 @@ with no change to which mechanism pyperclip picks until slices 2–5.
 
 ### 2. Session dispatch and no-session diagnosis
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests patching platform, environment, `shutil.which`, and
 a fake pyperclip: WSL (`/proc/version` containing `microsoft`) and an already
 resolved pyperclip delegate; Windows uses pyperclip's Windows backend; Linux
@@ -266,6 +266,30 @@ Postcondition: callers know exactly what is promised and verified where.
   lazy-pyperclip subprocess tests; `nix develop -c make check` 335 passed /
   16 skipped; `nix develop -c make test-package` pass. README line 5 and
   AGENTS.md still say text re-exports pyperclip (slice 7).
+- Slice 2: trunk (with SEED-001#desktop-helpers' `clipboard/_desktop.py`)
+  was merged into the story branch first. pyperclip 1.11.0
+  `determine_clipboard` (lines 497–565) tries Cygwin, Windows, WSL, macOS
+  (pyobjc, else pbcopy), Wayland (`WAYLAND_DISPLAY` + `wl-copy` + `wl-paste`),
+  then under `DISPLAY` xclip before xsel, klipper+qdbus, qtpy, PyQt5. The text
+  rule lives in `clipboard/_desktop_text.py` (`_text_session_owner`), a
+  sibling of `_desktop.py` kept separate for the file-size limit;
+  `clipboard/_text.py` `_select_text_backend` prefers an already resolved
+  pyperclip and is evaluated per call. Owned paths raise via
+  `_owned_text_path_pending` until slices 3–5 (G1); the story branch must not
+  land before then. Proof: `tests/test_text_session.py`,
+  `tests/test_text_dispatch.py`; `make check` 355 passed / 16 skipped.
+
+## Story obligations
+
+### G1. Owned macOS, X11 and Wayland text paths are placeholders
+Reported: slice 2 — "with the placeholders, default `copy` / `paste` raise `ClipboardContentError` on real macOS, on Linux X11 with xclip, and on Linux Wayland with wl-clipboard. This must not reach trunk until slices 3–5 fill those paths."
+Story clause: "`copy(text)` replaces the clipboard with exactly `text`, and `paste()` returns exactly the text the clipboard offers"
+Disposition: interim until slices 3, 4, 5
+
+### G2. macOS pyobjc users move from pyperclip's AppKit path to the owned pbcopy path
+Reported: slice 2 — "pyperclip prefers pyobjc there (lines 524–530), but the owned macOS path (plan: pbcopy, no pyobjc text path) will change their mechanism."
+Story clause: "Session selection for text keeps pyperclip's order so no working user changes mechanism"
+Disposition: excluded "a macOS AppKit (`pyobjc`) text path"
 
 ## Plan review
 

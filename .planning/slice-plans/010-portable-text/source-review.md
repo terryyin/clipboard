@@ -24,14 +24,14 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 1h | Native line endings pass through untranslated: Windows app text comes back with `\r\n` | slice 6 | |
 | 1i | `paste().splitlines()` is the portable way to split lines (guidance) | slice 7 | |
 | 2a.1 | A missing helper raises `ClipboardContentError` | slice 5 | |
-| 2a.2 | No visible desktop session raises `ClipboardContentError` | slice 2 | |
+| 2a.2 | No visible desktop session raises `ClipboardContentError` | slice 2 | observed: observed: tests/test_text_dispatch.py test_no_desktop_session_is_diagnosed_not_empty (Linux, no DISPLAY/WAYLAND_DISPLAY → ClipboardContentError for copy and paste) |
 | 2a.3 | A display or compositor that no longer answers raises `ClipboardContentError` | slice 5 | |
 | 2a.4 | Denied access raises `ClipboardContentError` (macOS Paste-from-Other-Apps denial unverified; may stay an evidence limit) | slice 7 | |
 | 2a.5 | A stalled clipboard owner raises `ClipboardContentError` | slice 6 | |
 | 2a.6 | Helper or transfer failure raises `ClipboardContentError` | slice 5 | |
 | 2b | The error names the cause, and the fix where one is known | slice 5 | |
-| 2b.1 | Known fix: install hint naming `xclip` / `wl-clipboard` | slice 2 | |
-| 2b.2 | Known cause message: no `DISPLAY` or `WAYLAND_DISPLAY` | slice 2 | |
+| 2b.1 | Known fix: install hint naming `xclip` / `wl-clipboard` | slice 2 | observed: observed: tests/test_text_dispatch.py test_display_without_any_helper_names_install_hints, test_wayland_without_wl_clipboard_names_install_hints (xclip and wl-clipboard apt-get hints) |
+| 2b.2 | Known cause message: no `DISPLAY` or `WAYLAND_DISPLAY` | slice 2 | observed: observed: tests/test_text_dispatch.py test_no_desktop_session_is_diagnosed_not_empty (message names DISPLAY and WAYLAND_DISPLAY) |
 | 2b.3 | Known cause message: the failing helper's own message | slice 5 | |
 | 2c | Failure arrives within a documented bound of seconds | slice 7 | |
 | 2d.1 | Never an indefinite wait | slice 6 | |
@@ -50,12 +50,12 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 4a.2 | `copy` / `paste` keep their positional signatures | slice 1 | observed: observed: clipboard/_text.py copy(text), paste(); tests/test_clipboard.py test_copy_paste_round_trip_through_text_seam calls positionally |
 | 4a.3 | `copy` / `paste` keep their `str` results | slice 1 | observed: observed: tests/test_clipboard.py test_copy_paste_round_trip_through_text_seam asserts type(result) is str |
 | 4b | `pyperclip` stays a dependency | slice 1 | observed: observed: pyproject.toml pyperclip dependency unchanged; clipboard/_text.py default backend imports pyperclip |
-| 4c | Working text access this story does not own keeps working through pyperclip with only failure translation | slice 2 | |
-| 4c.1 | WSL (`clip.exe` / PowerShell bridge) | slice 2 | |
-| 4c.2 | A mechanism the caller selected with `pyperclip.set_clipboard` | slice 2 | |
-| 4c.3 | X11 desktops with only `xsel` | slice 2 | |
-| 4c.4 | X11 desktops with only Klipper | slice 2 | |
-| 4c.5 | X11 desktops with only Qt | slice 2 | |
+| 4c | Working text access this story does not own keeps working through pyperclip with only failure translation | slice 2 | observed: observed: tests/test_text_dispatch.py test_delegated_sessions_round_trip_through_pyperclip, test_wsl_bridge_failures_become_content_errors (delegated paths round-trip via pyperclip, failures translated) |
+| 4c.1 | WSL (`clip.exe` / PowerShell bridge) | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[wsl-before-desktop]; tests/test_text_dispatch.py test_delegated_sessions_round_trip_through_pyperclip (WSL1/WSL2) |
+| 4c.2 | A mechanism the caller selected with `pyperclip.set_clipboard` | slice 2 | observed: observed: tests/test_text_dispatch.py test_already_resolved_pyperclip_mechanism_wins |
+| 4c.3 | X11 desktops with only `xsel` | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[x11-xsel] |
+| 4c.4 | X11 desktops with only Klipper | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[x11-klipper], test_klipper_without_qdbus_is_not_a_fallback |
+| 4c.5 | X11 desktops with only Qt | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[x11-qt], test_qt_discovery_does_not_import_qt |
 | 4d | The 4c paths carry no new bounded-failure or lifetime promise and are documented as unverified | slice 7 | |
 | 4e | Non-`str` arguments keep pyperclip's `str()` coercion (`copy(42)` copies `"42"`) | slice 1 | observed: observed: tests/test_clipboard.py test_copy_coerces_non_str_like_pyperclip (42 → writer gets "42") |
 | 4f | README notes that a caller catching `pyperclip.PyperclipException` now sees a change | slice 7 | |
@@ -63,10 +63,10 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 5a.2 | Owned default path: macOS Aqua (`pbcopy` / `pbpaste` with a UTF-8 locale) | slice 3 | |
 | 5a.3 | Owned default path: Linux X11 (`xclip`, `UTF8_STRING` first) | slice 4 | |
 | 5a.4 | Owned default path: Linux Wayland (`wl-copy` / `wl-paste`, background owner), named compositor only | slice 5 | |
-| 5b | Session selection keeps pyperclip's order so no working user changes mechanism | slice 2 | |
-| 5b.1 | WSL first | slice 2 | |
-| 5b.2 | Then Wayland when `WAYLAND_DISPLAY` is set and both `wl-copy` and `wl-paste` are on `PATH` | slice 2 | |
-| 5b.3 | Otherwise X11 when `DISPLAY` is set | slice 2 | |
+| 5b | Session selection keeps pyperclip's order so no working user changes mechanism | slice 2 | observed: observed: clipboard/_desktop_text.py _text_session_owner mirrors pyperclip 1.11.0 determine_clipboard lines 497–565; tests/test_text_session.py test_session_selects_pyperclip_order_owner |
+| 5b.1 | WSL first | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[wsl-before-desktop] |
+| 5b.2 | Then Wayland when `WAYLAND_DISPLAY` is set and both `wl-copy` and `wl-paste` are on `PATH` | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[wayland, wayland-before-x11, wayland-needs-both-helpers] |
+| 5b.3 | Otherwise X11 when `DISPLAY` is set | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[x11-xclip-before-xsel] |
 | 6a | X11 and Wayland proven with independent producers/consumers under gated Xvfb + `xclip` and Sway + `wl-clipboard` jobs | slice 5 | |
 | 6a.1 | Round trip after the writer exits | slice 5 | |
 | 6a.2 | Dead `DISPLAY` / stale `WAYLAND_DISPLAY` | slice 5 | |
@@ -89,7 +89,7 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | E5a | Linux `DISPLAY=:99` with no server, `xclip` installed → `paste()` raises quoting xclip's display failure within the bound | slice 4 | |
 | E5b | Same setup → `copy("x")` raises instead of returning as if written | slice 4 | |
 | E5c | Same with `WAYLAND_DISPLAY` naming a socket whose compositor is gone | slice 5 | |
-| E6a | Neither `DISPLAY` nor `WAYLAND_DISPLAY` → `paste()` raises saying no desktop session is visible | slice 2 | |
+| E6a | Neither `DISPLAY` nor `WAYLAND_DISPLAY` → `paste()` raises saying no desktop session is visible | slice 2 | observed: observed: tests/test_text_dispatch.py test_no_desktop_session_is_diagnosed_not_empty (paste() raises "no desktop session is visible", never "") |
 | E6b | `DISPLAY` set and no `xclip` on `PATH` → error names `xclip` and its install hint | slice 4 | |
 | E7a | X11 CLIPBOARD owner that never answers → `paste()` raises after the documented bound | slice 4 | |
 | E7b | Windows clipboard held open past the bound → raises | slice 6 | |
@@ -97,8 +97,8 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | E8 | Image-only clipboard → `paste()` returns `""` and `inspect()` reports the image kind; no exception | slice 6 | |
 | E9a | Windows Notepad copies two lines → `paste()` returns `"line 1\r\nline 2"` | slice 6 | |
 | E9b | `copy("line 1\nline 2")` pastes into Notepad as two lines (hypothesis to settle in Windows job) | slice 6 | |
-| E10a | WSL → `copy` / `paste` keep using the existing Windows bridge | slice 2 | |
-| E10b | WSL with failing `powershell.exe` → raises `ClipboardContentError` rather than `""` | slice 2 | |
+| E10a | WSL → `copy` / `paste` keep using the existing Windows bridge | slice 2 | observed: observed: tests/test_text_dispatch.py test_delegated_sessions_round_trip_through_pyperclip (WSL shape delegates to pyperclip bridge) |
+| E10b | WSL with failing `powershell.exe` → raises `ClipboardContentError` rather than `""` | slice 2 | observed: observed: tests/test_text_dispatch.py test_wsl_bridge_failures_become_content_errors (PyperclipException/FileNotFoundError → ClipboardContentError), test_wsl_bridge_returning_none_pastes_empty_string |
 | D1 | Text failures use `ClipboardContentError`; its meaning grows from rich content to clipboard content including text | slice 1 | observed: observed: clipboard/_errors.py ClipboardContentError docstring names text; tests/test_clipboard.py test_backend_failures_become_content_errors |
 | D2 | Non-`str` arguments keep pyperclip's coercion | slice 1 | observed: observed: tests/test_clipboard.py test_copy_coerces_non_str_like_pyperclip |
 | D3 | No newline translation on either side | slice 6 | |

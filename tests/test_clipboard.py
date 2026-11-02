@@ -127,6 +127,12 @@ import sys
 import pyperclip
 
 contents = None
+def as_wsl_session():
+    # A delegated session shape on every CI host (Linux without DISPLAY,
+    # macOS, Windows): WSL keeps pyperclip's bridge.
+    from clipboard import _desktop_text
+    sys.platform = "linux"
+    _desktop_text._read_proc_version = lambda: "Linux 5.15-microsoft-standard-WSL2"
 def copy(value):
     global contents
     contents = value
@@ -168,6 +174,7 @@ def test_default_backend_delegates_to_lazily_resolved_pyperclip(value):
 pyperclip.determine_clipboard = lambda: (copy, paste)
 
 import clipboard
+as_wsl_session()
 assert not pyperclip.is_available()
 clipboard.copy(json.loads(sys.argv[1]))
 print(json.dumps([clipboard.paste(), pyperclip.is_available()]))
@@ -179,9 +186,8 @@ print(json.dumps([clipboard.paste(), pyperclip.is_available()]))
 
 def test_default_backend_translates_pyperclip_failure():
     observed = _run(
-        """
-import json
-import pyperclip
+        _SUBPROCESS_PRELUDE
+        + """
 
 def fail(*args):
     raise pyperclip.PyperclipException("no copy/paste mechanism")
@@ -189,6 +195,7 @@ def fail(*args):
 pyperclip.determine_clipboard = lambda: (fail, fail)
 
 import clipboard
+as_wsl_session()
 out = []
 for call in (lambda: clipboard.copy("x"), clipboard.paste):
     try:

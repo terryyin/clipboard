@@ -66,7 +66,7 @@ def test_images_extra_declares_pillow():
     ],
 )
 def test_paste_image_absence_and_raster_preservative(text, image_spec, expect_image):
-    # Subprocess mirrors text tests: first-import + injectable grabclipboard stub.
+    # Subprocess: first-import + injected text seam and grabclipboard stub.
     result = subprocess.run(
         [
             sys.executable,
@@ -75,7 +75,6 @@ def test_paste_image_absence_and_raster_preservative(text, image_spec, expect_im
 import json
 import sys
 
-import pyperclip
 from PIL import Image
 
 payload = json.loads(sys.argv[1])
@@ -94,10 +93,10 @@ def copy(value):
 def paste():
     return contents["text"]
 
-pyperclip.determine_clipboard = lambda: (copy, paste)
-
 import clipboard
 
+clipboard.set_text_clipboard_writer(copy)
+clipboard.set_text_clipboard_reader(paste)
 clipboard.set_image_grabclipboard(lambda: contents["image"])
 
 before_text = clipboard.paste()
