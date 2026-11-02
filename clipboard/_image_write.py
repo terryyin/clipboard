@@ -11,7 +11,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from clipboard._desktop import _helper_failure_detail, _is_linux_wayland
+from clipboard._desktop import (
+    _helper_failure_detail,
+    _is_linux_wayland,
+    _xclip_targets_lenient,
+)
 from clipboard._errors import ClipboardImageError
 from clipboard._image_read import _pillow_image, _raise_image_failure
 
@@ -57,29 +61,16 @@ def _write_macos_pngf(image: Image.Image) -> None:
             )
 
 
-def _xclip_clipboard_targets() -> bytes:
-    """Return CLIPBOARD TARGETS bytes, or empty on helper failure."""
-    try:
-        result = subprocess.run(
-            ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"],
-            capture_output=True,
-            timeout=2,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return b""
-    if result.returncode != 0:
-        return b""
-    return result.stdout or b""
-
-
 def _wait_xclip_image_png_offer(*, timeout_s: float = 5.0) -> None:
-    """Block until CLIPBOARD advertises ``image/png``, or raise."""
+    """Block until CLIPBOARD advertises ``image/png``, or raise.
+
+    Listing failures are lenient (empty TARGETS): treat as not yet offered.
+    """
     import time
 
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
-        if b"image/png" in _xclip_clipboard_targets():
+        if b"image/png" in _xclip_targets_lenient():
             return
         time.sleep(0.05)
     raise OSError("xclip clipboard write did not publish image/png in time")

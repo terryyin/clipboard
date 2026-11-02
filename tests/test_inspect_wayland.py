@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 import clipboard
-from clipboard import _offer, _offer_wayland
+from clipboard import _desktop, _offer
 
 
 def test_missing_wl_paste_raises_clipboard_content_error_not_empty(
@@ -19,7 +19,7 @@ def test_missing_wl_paste_raises_clipboard_content_error_not_empty(
     def boom(*_args, **_kwargs):
         raise FileNotFoundError(2, "No such file or directory", "wl-paste")
 
-    monkeypatch.setattr(_offer_wayland.subprocess, "run", boom)
+    monkeypatch.setattr(_desktop.subprocess, "run", boom)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
@@ -65,7 +65,7 @@ def test_wl_paste_helper_failure_raises_clipboard_content_error_not_empty(
             stderr="Failed to connect to a Wayland server\n",
         )
 
-    monkeypatch.setattr(_offer_wayland.subprocess, "run", fake_run)
+    monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
@@ -92,7 +92,7 @@ def test_wl_paste_mime_list_maps_to_kinds_via_snapshot(
             stderr="",
         )
 
-    monkeypatch.setattr(_offer_wayland.subprocess, "run", fake_run)
+    monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
@@ -111,7 +111,7 @@ def test_wl_paste_timeout_raises_clipboard_content_error(
     def boom(*_args, **_kwargs):
         raise subprocess.TimeoutExpired(cmd="wl-paste", timeout=15)
 
-    monkeypatch.setattr(_offer_wayland.subprocess, "run", boom)
+    monkeypatch.setattr(_desktop.subprocess, "run", boom)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     clipboard.set_clipboard_inspector(None)

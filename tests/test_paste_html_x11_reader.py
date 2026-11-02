@@ -9,7 +9,7 @@ import subprocess
 import pytest
 
 import clipboard
-from clipboard import _html_native, _html_native_linux
+from clipboard import _desktop, _html_native, _html_native_linux
 from clipboard._html_envelope import _fragment_offer
 
 FRAGMENT = '<a href="https://example.com/caf%C3%A9"><b>café → naïve 日本</b></a>'
@@ -56,6 +56,8 @@ def x11_xclip(monkeypatch, restore_html_clipboard_reader):
 
     def install(**kwargs):
         helper = _Xclip(**kwargs)
+        # TARGETS listing lives in ``_desktop``; text/html read stays local.
+        monkeypatch.setattr(_desktop.subprocess, "run", helper)
         monkeypatch.setattr(_html_native_linux.subprocess, "run", helper)
         return helper
 

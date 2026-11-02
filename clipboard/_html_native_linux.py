@@ -4,19 +4,20 @@ from __future__ import annotations
 
 import subprocess
 
-from clipboard._desktop import _helper_stderr_detail
+from clipboard._desktop import (
+    _HTML_LISTING_TIMEOUT_S,
+    _helper_stderr_detail,
+    _wl_paste_list_types_html,
+    _xclip_targets_html,
+)
 from clipboard._errors import ClipboardContentError
 from clipboard._html_envelope import _fragment_offer, _HtmlOffer
 
 # Bounded so a contended or wedged CLIPBOARD owner never hangs the caller:
 # xclip otherwise waits for the owner's SelectionNotify indefinitely.
-_X11_HTML_READ_TIMEOUT_SECONDS = 10.0
+# Listing uses the same bound via ``_desktop._HTML_LISTING_TIMEOUT_S``.
+_X11_HTML_READ_TIMEOUT_SECONDS = _HTML_LISTING_TIMEOUT_S
 _LINUX_HTML_TYPE = "text/html"
-# xclip's stderr (``Error: target TARGETS not available``, exit 1) when the
-# TARGETS conversion yields no property. That happens when CLIPBOARD has no
-# owner (ICCCM owners must answer TARGETS), i.e. an empty clipboard. A missing
-# display reports ``Can't open display`` instead and stays an error.
-_XCLIP_NO_TARGETS = "target TARGETS not available"
 
 
 def _x11_html_read_error(detail: str) -> ClipboardContentError:
@@ -68,6 +69,22 @@ def _exit_error(
     return _x11_html_read_error(_exit_detail(f"xclip -t {target}", result))
 
 
+def _list_xclip_targets_for_html() -> subprocess.CompletedProcess[bytes] | None:
+    """TARGETS via desktop; wrap helper faults with X11 HTML read errors."""
+    try:
+        return _xclip_targets_html()
+    except subprocess.TimeoutExpired as exc:
+        raise _x11_html_read_error(
+            f"xclip did not answer TARGETS within "
+            f"{_X11_HTML_READ_TIMEOUT_SECONDS:g}s (CLIPBOARD owner contended "
+            "or stalled)"
+        ) from exc
+    except FileNotFoundError as exc:
+        raise _x11_html_read_error("xclip was not found on PATH") from exc
+    except OSError as exc:
+        raise _x11_html_read_error(f"could not run xclip ({exc})") from exc
+
+
 def _linux_x11_html_clipboard_reader() -> _HtmlOffer | None:
     """Read CLIPBOARD's ``text/html`` via ``xclip -o`` without taking ownership.
 
@@ -76,10 +93,10 @@ def _linux_x11_html_clipboard_reader() -> _HtmlOffer | None:
     Otherwise returns the raw ``text/html`` bytes as a fragment offer, left
     for ``clipboard._html_envelope`` to decode.
     """
-    targets = _run_xclip_output("TARGETS")
+    targets = _list_xclip_targets_for_html()
+    if targets is None:
+        return None
     if targets.returncode != 0:
-        if _XCLIP_NO_TARGETS in _helper_stderr_detail(targets):
-            return None
         raise _exit_error("TARGETS", targets)
     if not _offers_html(targets):
         return None
@@ -93,13 +110,8 @@ def _linux_x11_html_clipboard_reader() -> _HtmlOffer | None:
 # --- Linux Wayland: ``wl-paste`` (wl-clipboard) requesting ``text/html`` ---
 
 # Bounded so a stalled source client or compositor never hangs the caller.
-_WAYLAND_HTML_READ_TIMEOUT_SECONDS = 10.0
-# wl-paste's whole stderr (exit 1) when the selection has no offer at all:
-# wl-clipboard 2.2.x/2.3.x ``bail("Nothing is copied")``; 2.0/2.1 ``bail("No
-# selection")``. Both versions bail before ``--list-types`` prints anything,
-# so the type listing reports an empty clipboard the same way. Compositor,
-# connection and data-control failures print other messages and stay errors.
-_WL_PASTE_NOTHING_COPIED = frozenset({"Nothing is copied", "No selection"})
+# Listing uses the same bound via ``_desktop._HTML_LISTING_TIMEOUT_S``.
+_WAYLAND_HTML_READ_TIMEOUT_SECONDS = _HTML_LISTING_TIMEOUT_S
 
 
 def _wayland_html_read_error(detail: str) -> ClipboardContentError:
@@ -139,6 +151,22 @@ def _wl_paste_exit_error(
     return _wayland_html_read_error(_exit_detail(f"wl-paste {what}", result))
 
 
+def _list_wl_paste_types_for_html() -> subprocess.CompletedProcess[bytes] | None:
+    """``--list-types`` via desktop; wrap helper faults with Wayland HTML errors."""
+    try:
+        return _wl_paste_list_types_html()
+    except subprocess.TimeoutExpired as exc:
+        raise _wayland_html_read_error(
+            f"wl-paste did not answer --list-types within "
+            f"{_WAYLAND_HTML_READ_TIMEOUT_SECONDS:g}s (selection source or "
+            "compositor stalled)"
+        ) from exc
+    except FileNotFoundError as exc:
+        raise _wayland_html_read_error("wl-paste was not found on PATH") from exc
+    except OSError as exc:
+        raise _wayland_html_read_error(f"could not run wl-paste ({exc})") from exc
+
+
 def _linux_wayland_html_clipboard_reader() -> _HtmlOffer | None:
     """Read the Wayland clipboard's ``text/html`` via ``wl-paste`` (read only).
 
@@ -148,10 +176,10 @@ def _linux_wayland_html_clipboard_reader() -> _HtmlOffer | None:
     is appended) as a fragment offer, left for ``clipboard._html_envelope``.
     Never runs wl-copy, so the selection is never taken or replaced.
     """
-    types = _run_wl_paste(["--list-types"], "--list-types")
+    types = _list_wl_paste_types_for_html()
+    if types is None:
+        return None
     if types.returncode != 0:
-        if _helper_stderr_detail(types) in _WL_PASTE_NOTHING_COPIED:
-            return None
         raise _wl_paste_exit_error("--list-types", types)
     if not _offers_html(types):
         return None

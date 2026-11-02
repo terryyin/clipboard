@@ -105,7 +105,7 @@ SEED-001 stories (copy-files, portable-text, clear) would otherwise copy again.
 
 ### 3. Single-home CLIPBOARD type listing with per-caller failure modes
 Type: Structure
-Status: planned
+Status: done
 Proof: `clipboard/_desktop.py` owns the xclip `TARGETS` and
 `wl-paste --list-types` invocations with an explicit failure mode per caller:
 image polling lenient (failure → empty), HTML read strict with unowned
@@ -161,6 +161,10 @@ Correction: removes F3's duplicated cost without losing a behavior.
   helper-failure detail; `_html_native_macos.py` co-locates writer+reader;
   `_html_native.py` dispatch-only. `make check` 310/15; `lint-workflows` clean.
   Listing relocation deferred to slice 3.
+- Slice 3: `_desktop.py` owns xclip TARGETS / wl-paste list-types with
+  lenient (image), HTML-strict (unowned → None), and inspect-bounded modes.
+  Accepted proof: `make check` 310/15; `test_unowned_clipboard_is_none` and
+  image lenient polling preserved. Native five-job confirmation deferred to CI.
 
 ## Concern evidence
 
