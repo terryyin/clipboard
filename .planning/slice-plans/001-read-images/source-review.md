@@ -23,7 +23,7 @@ told to read no other project files and change nothing.
 | 6.4 | Native encodings convert behind that Pillow contract: Linux image MIME. | slice 6 | |
 | 7 | The image-read leaves clipboard contents unchanged. | slice 1 | observed: tests/test_paste_image.py::test_paste_image_absence_and_raster_preservative (before_text/after_text; same_object) |
 | 8 | Text-only or empty clipboard is ordinary absence (`None`). | slice 1 | observed: tests/test_paste_image.py::test_paste_image_absence_and_raster_preservative[hello text-None-False] |
-| 9 | A file-reference / filename-list offer alone is absence of image (not opened or decoded from disk). | slice 2 | |
+| 9 | A file-reference / filename-list offer alone is absence of image (not opened or decoded from disk). | slice 2 | observed: tests/test_paste_image.py::test_file_list_offer_is_absence_without_filesystem_open |
 | 10 | Malformed image bytes are a distinguishable failure. | slice 3 | |
 | 11.1 | Access denied, unavailable desktop, missing required helper, contention, or transfer failure are distinguishable from absence. | slice 3 | |
 | 11.2 | Access denied, unavailable desktop, missing required helper, contention, or transfer failure must not collapse to an empty success. | slice 3 | |
@@ -36,7 +36,7 @@ told to read no other project files and change nothing.
 | 15 | Wayland support is not inferred from one compositor. | slice 6 | |
 | 16 | Do not change `paste()` to return images. | slice 1 | observed: clipboard.py still re-exports pyperclip `paste`; tests/test_paste_image.py absence case keeps `paste()` text |
 | 17 | Do not bypass OS pasteboard authorization. | slice 5 | |
-| 18 | Do not treat URL-only or file-reference offers as images. | slice 2 | |
+| 18 | Do not treat URL-only or file-reference offers as images. | slice 2 | observed: tests/test_paste_image.py::test_url_only_offer_is_absence; test_file_list_offer_is_absence_without_filesystem_open |
 | 19.1 | Out of scope / deferred: Animation. | | X19.1 |
 | 19.2 | Out of scope / deferred: Screenshot capture. | | X19.2 |
 | 19.3 | Out of scope / deferred: Image writing. | | X19.3 |
@@ -49,13 +49,13 @@ told to read no other project files and change nothing.
 | 19.10 | Out of scope / deferred: PNG-bytes-only APIs. | | X19.10 |
 | 19.11 | Out of scope / deferred: Library-owned non-Pillow buffers. | | X19.11 |
 | 20 | Narrowing first delivery to a subset of the supported desktops is out of scope for this story. | slice 6 | |
-| 21 | File-reference-only → no image (independent need: do not perform filesystem reads from clipboard offers). | slice 2 | |
+| 21 | File-reference-only → no image (independent need: do not perform filesystem reads from clipboard offers). | slice 2 | observed: tests/test_paste_image.py::test_file_list_offer_is_absence_without_filesystem_open (path_hits == []) |
 | 22 | Access / helper / malformed failures → not absence (independent need: actionable diagnosis per Shared Boundaries). | slice 3 | |
 | 23 | API spelling (settled): `paste_image() → Image \| None`; failures via exceptions. | slice 1 | observed: clipboard.py `paste_image` signature and return; ImportError without extra |
 | 24 | Keep the four-desktop promise with helper docs and evidence limits (settled with Pillow via `clipboard[images]`). | slice 6 | |
 | E1 | Independent screenshot app has copied a static PNG-capable raster → image-read → Pillow Image with matching width, height, expected opaque colors; clipboard still offers that image. | slice 5 | |
 | E2 | Desktop app copied an image with alpha → image-read → alpha preserved when native offer includes it; when a supported desktop drops alpha, docs/tests state that limit. | slice 5 | |
 | E3 | Clipboard holds only Unicode text → image-read → `None`; `paste()` still returns the text; clipboard unchanged. | slice 1 | observed: tests/test_paste_image.py::test_paste_image_absence_and_raster_preservative[hello text-None-False] |
-| E4 | Windows (or other) clipboard holds only a filename / file-list offer → image-read → `None` (no file open); not an image success. | slice 2 | |
+| E4 | Windows (or other) clipboard holds only a filename / file-list offer → image-read → `None` (no file open); not an image success. | slice 2 | observed: tests/test_paste_image.py::test_file_list_offer_is_absence_without_filesystem_open |
 | E5 | Clipboard holds corrupted image bytes under an image type → image-read → distinguishable failure, not absence and not a partial fake image. | slice 3 | |
 | E6 | No usable desktop clipboard / denied pasteboard access / required Linux helper missing → image-read → actionable failure distinct from absence. | slice 3 | |

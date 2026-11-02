@@ -76,7 +76,7 @@ preserved; no desktop required for this proof.
 
 ### 2. File-reference offers are not images
 Type: Behavior
-Status: planned
+Status: done
 Proof: Stub/backend returns a filename list (Windows-shaped); `paste_image()`
 is `None`; no filesystem open of those paths (spy/mock on open/path reads).
 
@@ -145,6 +145,8 @@ from a single Wayland result.
   so CI never needs a pasteboard. Non-`Image` backend results currently normalize
   to `None` (prepares slice 2; not yet proved with a filename-list open spy).
 - Accepted proof (slice 1): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_clipboard.py -v` — pass; also `nix develop -c make check` — pass (16 tests).
+- CI repair: matrix `tests` job must `uv sync/run --locked --extra images` (same as Makefile); without it preservative subprocesses fail importing Pillow.
+- Accepted proof (slice 2): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_clipboard.py -v` — pass; file-list/URL stubs → `None` with open/path spy `path_hits == []`.
 
 ## Concern evidence
 

@@ -39,6 +39,10 @@ def paste_image() -> Image.Image | None:
 
     Requires the optional ``clipboard[images]`` extra (Pillow). The read does
     not modify clipboard contents. Failures other than ordinary absence raise.
+
+    Non-image clipboard offers — including a Windows filename / file-list
+    result from ``ImageGrab.grabclipboard`` and URL-only strings — are
+    ordinary absence (``None``). Paths from those offers are not opened.
     """
     try:
         from PIL import Image
@@ -46,6 +50,7 @@ def paste_image() -> Image.Image | None:
         raise ImportError(_MISSING_IMAGES_EXTRA) from exc
 
     result = _grabclipboard()
+    # ImageGrab may return list[str] (Windows CF_HDROP) or other non-Image offers.
     if isinstance(result, Image.Image):
         return result
     return None

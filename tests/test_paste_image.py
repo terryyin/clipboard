@@ -1,11 +1,59 @@
 """Contract tests for paste_image via an injectable image backend (no desktop)."""
 
+import builtins
 import json
+import os
 import subprocess
 import sys
 from importlib.metadata import metadata, requires
+from pathlib import Path
 
 import pytest
+
+
+@pytest.fixture
+def restore_image_grabclipboard():
+    import clipboard
+
+    yield
+    clipboard.set_image_grabclipboard(None)
+
+
+def _install_offered_path_open_spies(monkeypatch, paths: list[str]) -> list[str]:
+    """Spy common open/read entry points; record hits that name an offered path."""
+    from PIL import Image
+
+    path_hits: list[str] = []
+
+    def record_if_offered(target) -> None:
+        try:
+            as_str = os.fspath(target)
+        except TypeError:
+            return
+        for path in paths:
+            if path == as_str or path in as_str or as_str in path:
+                path_hits.append(as_str)
+
+    def wrap(real):
+        def tracking(first, *args, **kwargs):
+            record_if_offered(first)
+            return real(first, *args, **kwargs)
+
+        return tracking
+
+    def wrap_method(real):
+        def tracking(self, *args, **kwargs):
+            record_if_offered(self)
+            return real(self, *args, **kwargs)
+
+        return tracking
+
+    monkeypatch.setattr(builtins, "open", wrap(builtins.open))
+    monkeypatch.setattr(os, "open", wrap(os.open))
+    monkeypatch.setattr(Image, "open", wrap(Image.open))
+    monkeypatch.setattr(Path, "open", wrap_method(Path.open))
+    monkeypatch.setattr(Path, "read_bytes", wrap_method(Path.read_bytes))
+    return path_hits
 
 
 def test_images_extra_declares_pillow():
@@ -139,3 +187,30 @@ print(
     else:
         assert observed["first"] is None
         assert observed["second"] is None
+
+
+def test_file_list_offer_is_absence_without_filesystem_open(
+    monkeypatch, restore_image_grabclipboard
+):
+    """Windows-shaped filename list → None; offered paths are never opened."""
+    import clipboard
+
+    paths = [
+        r"C:\Users\example\Desktop\photo.png",
+        r"C:\Users\example\Pictures\scan.jpg",
+    ]
+    path_hits = _install_offered_path_open_spies(monkeypatch, paths)
+
+    clipboard.set_image_grabclipboard(lambda: list(paths))
+    result = clipboard.paste_image()
+
+    assert result is None
+    assert path_hits == []
+
+
+def test_url_only_offer_is_absence(restore_image_grabclipboard):
+    """URL-only grabclipboard result is absence, not an image success."""
+    import clipboard
+
+    clipboard.set_image_grabclipboard(lambda: "https://example.com/photo.png")
+    assert clipboard.paste_image() is None
