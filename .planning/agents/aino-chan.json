@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Aino-chan",
+  "email": "aino-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-001#copy-files",
+  "host": "claude",
+  "model": "opus"
+}
