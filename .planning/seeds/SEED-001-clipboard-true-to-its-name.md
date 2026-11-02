@@ -85,7 +85,6 @@ platform distinctions, reuse candidates, and uncertainty.
 
 ## Story Decomposition
 
-
 <a id="read-html"></a>
 
 ### Read HTML fragments copied by desktop applications
@@ -265,212 +264,193 @@ require the `clipboard[images]` extra.
 
 <a id="inspect-formats"></a>
 
-<a id="read-files"></a>
+### Inspect clipboard content kinds and offered formats
 
-### Read file references copied by file managers
-
-**Identity:** SEED-001#read-files
+**Identity:** SEED-001#inspect-formats
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/007-read-files/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"19533af6bdae4591160a23bd2d1b30b430d77c0f388076b74fa62c403755a527","plan":"7c3faccd4ece9b575a4b37088fcca2b0db8df7a431e1f71bb3f3e9e09b60dfa7"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/006-inspect-formats/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"ccbbe972fe85b0b17d3998fa84d96c41f0909dee115c908f97845241066badcc","plan":"8b51c0bf686d43c9eba3b1016df8891a5df70b92cecb657e2f46c7609ddf1191"}}
 ```
 
-**Goal:** Python desktop tools and automation developers can recover an
-**ordered list of local file references** from an independent file manager's
-clipboard offer through `clipboard`, instead of asking users to transcribe
-paths or parsing plain text that happens to look like paths: when a native
-file-list representation offers local files, the call returns those local
-paths in offer order; when no local file-list is offered, the call reports
-ordinary files absence; corrupt native file-list metadata or transfer/access
-failure reports an actionable error — and the read never opens, copies, moves,
-or deletes those files, never mutates the clipboard, and never treats a
-cut/move marker as authority to move or as a move offer to reissue.
+**Goal:** Python application and automation developers can learn what the
+current clipboard **offer** contains — which library-understood content
+**kinds** are present and which **native format identifiers** are offered —
+through an explicit non-mutating inspect API, instead of inferring availability
+from an empty `paste()` string or by retrieving every payload. Mixed offers
+(for example HTML + text) report each present kind and the corresponding native
+identifiers; empty offer, content present without a given kind, and
+unavailable/denied access remain distinguishable where the native platform
+permits that distinction. Inspection does not replace, clear, or reserve the
+offer, and does not claim that every listed format can be decoded.
 
 **Scope:**
 
-- **Required behavior:** Add an explicit public read API (proposed spelling
-  `paste_files()`) that returns an ordered `list[str]` of **local filesystem
-  paths** when the current clipboard offer includes a native file-list
-  representation that yields at least one local reference, or ordinary
-  absence (`None`) when no local file-list is offered (including empty
-  clipboard, text-only, image-only, HTML-only, and file-list payloads that
-  contain only non-local / remote URIs). Failures other than ordinary absence
-  (denied/unavailable access, missing Linux helper required to read the
-  file-list target, transfer failure, malformed native file-list metadata that
-  cannot yield trustworthy local references) raise `ClipboardContentError`
-  rather than returning `None` or fabricated paths. The read leaves the
-  clipboard unchanged and performs **no** filesystem open, copy, move, delete,
-  or existence check on the referenced paths. Normalize platform payloads to
-  local path strings (decode `file://` URIs including percent-encoding and
-  Unicode / spaces; read Windows `CF_HDROP` path lists; read macOS file-URL /
-  filename pasteboard types). Preserve offer order. If a cut/move marker is
-  present beside the references (`PreferredDropEffect`,
-  `x-special/gnome-copied-files` “cut”, `application/x-kde-cutselection`, or
-  equivalent), **ignore it for all library behavior**: still return the local
-  path list when references are offered, do not move or delete anything, and
-  do not write or reissue cut/move semantics. Never interpret ordinary
-  `paste()` plain text (or newline-separated path-looking text) as a file-list
-  success. Default automated tests stay desktop-free via an injectable read
-  backend; native proof uses an **independent file manager** (not a
-  same-library `copy_files` round-trip alone) and stays explicitly gated.
-  Document Linux helper dependencies for file-list reads (`xclip` /
-  `wl-paste` requesting `text/uri-list` or equivalent) and supported desktop
-  setup. No `clipboard[images]` requirement for this story.
-- **Supported desktops (this story):** Windows desktop with Explorer (or
-  equivalent) producing `CF_HDROP`; macOS Aqua with Finder (or equivalent)
-  producing file-URL / filename pasteboard types; Linux X11 + helper able to
-  request `text/uri-list` on CLIPBOARD from a named file manager; Linux
-  Wayland + helper able to request `text/uri-list` (or equivalent) from a
-  named file manager, scoped to the compositor actually proved when one is
+- **Required behavior:** Add an explicit public inspect API (proposed spelling
+  `inspect()`) that returns a structured **snapshot** of the current clipboard
+  offer: (1) the set of library-understood **kinds** currently present among a
+  fixed vocabulary `{text, image, html, files}` when native formats map to
+  them, and (2) the list of **native format identifiers** the platform reports
+  for this offer (Windows format names/ids, macOS pasteboard types / UTIs,
+  Linux MIME types), including identifiers for types this library cannot yet
+  decode. An empty clipboard yields an empty-kinds / empty-or-documented-empty
+  formats snapshot, not an access error. Failures other than ordinary empty or
+  kind-absence (denied/unavailable access, missing Linux helper required to
+  enumerate, transfer failure while enumerating) raise `ClipboardContentError`
+  rather than returning a fabricated “empty” snapshot. The call leaves the
+  clipboard unchanged and must not fetch representation payloads solely to
+  decide kind presence when the platform can enumerate types without a body
+  read. Document that the result is a **snapshot** subject to races: another
+  application may replace the offer before a later read. Default automated
+  tests stay desktop-free via an injectable inspect backend; native proof uses
+  an **independent producer** and stays explicitly gated. Document Linux
+  helper dependencies for enumeration (`xclip` / `wl-paste -l` or equivalent)
+  and supported desktop setup. No `clipboard[images]` requirement for this
+  story.
+- **Supported desktops (this story):** Windows desktop; macOS Aqua; Linux X11
+  + helper able to list CLIPBOARD targets; Linux Wayland + helper able to list
+  offered MIME types, scoped to the compositor actually proved when one is
   available. WSL, SSH, containers, and headless CI are not additional
   guaranteed desktops. Independent-producer success is an acceptance
   requirement on each claimed desktop when a session is available; when no
   usable session exists during execution, record an explicit
   unverified/unsupported evidence limit for that desktop rather than claiming
   verified — never silent success. Do not generalize one Wayland compositor's
-  or one Linux file manager's result to all environments.
-- **Required restrictions:** Do not overload `paste()` / `copy()` to return or
-  accept file lists. Do not treat ordinary text, HTML, or image-only offers as
-  file-list success. Do not bypass OS pasteboard / clipboard authorization.
-  Do not replace, clear, or rewrite clipboard contents as part of the read.
-  Do not open, hash, copy, move, or delete referenced files as part of the
-  read. Do not promise that returned paths still exist or are readable. Do not
-  fetch remote / non-`file` URIs. Do not hang the caller indefinitely waiting
-  on a contended clipboard. Do not silently reissue a cut/move marker as a
-  move offer.
-- **Scope limits / deferred:** Public exposure of cut vs copy intent /
-  PreferredDropEffect / GNOME–KDE cut verbs as structured return metadata
-  (parse/ignore markers only as needed for the non-move safety rule);
-  returning `pathlib.Path` objects or richer reference types; remote /
-  non-local URI references; virtual or promised files; directory-expansion
-  semantics beyond what the native offer already lists; outbound file-list
-  write (`SEED-001#copy-files`); format inspection (`SEED-001#inspect-formats`);
+  result to all Wayland environments.
+- **Required restrictions:** Do not overload `paste()` / `copy()` to return
+  format metadata. Do not treat access failure as an empty clipboard. Do not
+  bypass OS pasteboard / clipboard authorization. Do not replace, clear, or
+  rewrite clipboard contents as part of inspection. Do not claim that listing a
+  native format means a successful later `paste_*` decode. Do not hang the
+  caller indefinitely waiting on a contended clipboard. Do not conflate
+  “this process cannot access the clipboard” with “the offer has no text/image/
+  html/files.”
+- **Scope limits / deferred:** Public arbitrary-format binary read/write;
+  watching / waiting for offer changes (`SEED-001#wait-for-content`); a
+  separate long-lived “platform capability” probe API beyond documenting that
+  access failure is distinct from empty content; RTF / attributed-string as
+  first-class kinds; promising cross-platform identity of native format strings;
   bundling GUI toolkits or `win32clipboard` as a required public dependency;
   making default pytest / CI require a real desktop; expanding beyond the
-  four-desktop set; same-library `copy_files` round-trip as sole native proof.
-- **Rejection constraints:** Corrupt or unparseable native file-list metadata
-  must not yield fabricated successful paths (independent need: Shared
-  Boundaries malformed-data honesty). Plain text that resembles paths must not
-  be treated as a file-list success. A successful read must not mutate the
-  clipboard or perform filesystem side effects on the referenced paths. A cut
-  marker must not cause library-side move/delete or be reissued as move.
-  Silent success on an unproved desktop is forbidden.
+  four-desktop set; implementing file paste/copy (`SEED-001#read-files` /
+  `#copy-files`) — reporting the `files` kind when native file-list formats are
+  offered is enough here; PRIMARY selection (`SEED-001#primary-selection`).
+- **Rejection constraints:** Denied/unavailable access must not yield a
+  successful empty snapshot (independent need: Shared Boundaries
+  missing-access honesty). A successful inspect must not mutate the offer.
+  Silent success on an unproved desktop is forbidden. Kind membership must not
+  require fetching full payloads when type enumeration alone is sufficient.
 
 **Key examples:**
 
-1. Independent file manager (Explorer / Finder / named Linux FM) copies two
-   existing local files, including a Unicode name and spaces → `paste_files()`
-   returns an ordered `list[str]` of the corresponding local paths; a later
-   independent consumer can still obtain the same offer; no file was opened or
-   modified by the read.
-2. Same pattern where the native offer is Linux `text/uri-list` of `file://`
-   URIs (percent-encoded spaces / Unicode) or Windows `CF_HDROP` → returned
-   strings are decoded local filesystem paths, not raw URI text and not
-   `paste()` plain text alone.
-3. Clipboard holds only plain text that looks like paths (or is empty /
-   image-only / HTML-only) → `paste_files()` returns `None` (ordinary files
-   absence); `paste()` / other readers behave as before for their kinds.
-4. Offer includes a cut/move marker beside local file references →
-   `paste_files()` still returns the local path list; the library does not
-   move, delete, or rewrite the offer as a cut/move.
-5. Native file-list metadata is present but corrupt or inconsistent →
-   `ClipboardContentError`; no fabricated paths; clipboard contents remain
-   unchanged.
-6. Missing Linux file-list helper or denied/unavailable clipboard access →
-   `ClipboardContentError` with an actionable message; not silent `None`
-   success.
-7. Windows, macOS Aqua, Linux X11, and/or Linux Wayland session available →
-   independent file-manager success with floors recorded for the named
-   compositor/helper/file manager; if a session is unavailable during
-   execution, that desktop keeps an explicit evidence limit instead of a
-   verified claim.
-8. After this work, in-memory `copy` / `paste` / `paste_image` / `copy_html` /
-   (when present) `paste_html` / `inspect` contract tests still pass; `VERSION`
-   and text-only callers behave as before; `paste_files` does not require
+1. Independent browser or rich editor copies a selection that offers both HTML
+   and plain text → `inspect()` reports kinds including `html` and `text`, plus
+   the platform’s native HTML and text format identifiers; a later independent
+   consumer can still obtain the same offer; payloads were not required solely
+   for this report when the platform enumerates types.
+2. Clipboard holds only an image (no text/HTML) → kinds include `image` and not
+   `text`/`html`; native image format identifier(s) appear; `paste()` emptiness
+   is not the sole signal used to decide image availability for UI enabling.
+3. Clipboard is empty (no offered representations) → snapshot with no kinds and
+   no native formats (or the documented empty equivalent); not
+   `ClipboardContentError`.
+4. Offer includes a native file-list representation the library cannot yet
+   paste → kinds include `files` and the native file-list identifier(s) appear
+   among formats the library cannot decode; no filesystem read occurs.
+5. Missing Linux enumeration helper or denied/unavailable clipboard access →
+   `ClipboardContentError` with an actionable message; not a successful empty
+   snapshot.
+6. Windows, macOS Aqua, Linux X11, and/or Linux Wayland session available →
+   independent-producer inspect success with floors recorded for the named
+   compositor/helper; if a session is unavailable during execution, that
+   desktop keeps an explicit evidence limit instead of a verified claim.
+7. After this work, in-memory `copy` / `paste` / `paste_image` / `copy_html` /
+   (when present) `paste_html` contract tests still pass; `VERSION` and
+   text-only callers behave as before; `inspect` does not require
    `clipboard[images]`.
 
 **Direction (explored):** Compare credible ways to reach the goal against
 Shared Boundaries, North Star, and delivered image / HTML shapes.
 
-1. **Explicit `paste_files()` → `list[str] | None` with `ClipboardContentError`
-   on failure (recommended).** Mirror delivered `paste_image` /
-   planned `paste_html` absence/value/failure: thin public contract,
-   injectable reader for CI, platform readers that decode native file-list
-   offers to ordered local path strings, document helpers rather than bundling
-   them. Ignore cut/move markers for library behavior. No Pillow /
-   `clipboard[images]` requirement unless evidence forces a shared stack.
-2. **Docs-only recipes (`wl-paste -t text/uri-list`, `xclip -t text/uri-list`,
-   Windows `CF_HDROP` / `DragQueryFile`, macOS pasteboard file URLs).**
-   Strongest smaller / existing-tool path; leaves each consumer owning
-   URI decoding, plain-text vs file-list distinction, cut-marker safety, and
-   absence vs error — insufficient for the cohesive library promise.
-3. **Structured public return (`paths`, optional `operation: copy|cut`).**
-   Useful later for honest cut-aware UIs, but expands the minimal
-   reference-ingest outcome; defer public cut/copy metadata and keep
-   marker handling internal (ignore for side effects).
-4. **Reuse Pillow `ImageGrab.grabclipboard()` filename-list branch on Windows
-   plus ad-hoc helpers elsewhere.** May accelerate Windows reads, but couples
-   file reading to the images extra and still needs a uniform
-   absence/failure model and macOS/Linux readers — acceptable as an internal
-   Windows tactic only if it does not force `clipboard[images]` on this story;
-   not the default public stack.
-5. **Parse `paste()` plain text / newline path lists.** Meets a narrow “get
-   paths” wording but violates the story’s plain-text boundary and Shared
-   Boundaries content-kind honesty — rejected.
+1. **Explicit `inspect()` → structured snapshot (kinds + native format ids)
+   with `ClipboardContentError` on access/enumeration failure (recommended).**
+   Mirror delivered explicit content APIs: thin public contract, injectable
+   backend for CI, platform enumerators that map known native types onto the
+   fixed kind vocabulary while still listing unknown identifiers, document
+   helpers rather than bundling them. No Pillow / `clipboard[images]`
+   requirement unless evidence forces a shared stack.
+2. **Docs-only recipes (`wl-paste -l`, `xclip -t TARGETS`, Windows
+   `EnumClipboardFormats`, macOS pasteboard type listing).** Strongest
+   smaller / existing-tool path; leaves each consumer owning kind mapping,
+   empty vs denied, and snapshot/race semantics — insufficient for the
+   cohesive library promise.
+3. **Boolean helpers only (`has_text()`, `has_image()`, …).** Simpler call
+   sites for UI enablement, but the evaluation requires **native format
+   identifiers** and mixed-offer visibility; booleans alone drop that
+   diagnostic surface — reject as the sole public contract (may appear later
+   as convenience wrappers over the snapshot).
+4. **Probe by calling each `paste_*` / try-decode.** Meets a narrow “what can
+   I read” wording but retrieves payloads, can conflate absence with failure,
+   and may trigger heavier access paths — rejected for the non-mutating,
+   enumeration-first purpose.
+5. **Depend on Qt `QMimeData.formats()` / PyClip / a GUI toolkit.** May list
+   MIME types sooner, but adds heavy or divergent dependencies and still needs
+   this project’s empty / kind / failure model — deferred as default stack.
 
-Borrowed mechanism: **URI / bookmark references without retrieving the
-resource body** (as with `Content-Location` or a link list). Roles map as:
-native file-list offer → reference list; `file://` / `CF_HDROP` / pasteboard
-filenames → local reference identifiers; HTTP GET / open of the body →
-filesystem open of the file (forbidden here); cache that returns locations
-without downloading → non-mutating clipboard read of references only;
-`Content-Disposition` / method override that would delete the origin →
-cut/move markers that must not become library-side moves. Adapt by making the
-public success meaning an ordered local path list decoded from native
-file-list formats, with no open/existence check and with cut markers ignored
-for side effects. Limit of the analogy: unlike HTTP, clipboard references have
-no validators — a successful read does not promise the paths still exist, and
-platforms disagree on cut markers and URI encoding; document per-desktop
-floors rather than inventing freshness or move semantics.
+Borrowed mechanism: **HTTP `HEAD` / content negotiation without fetching the
+body.** Roles map as: resource → current clipboard offer; `HEAD` /
+`Accept`-style discovery → non-mutating inspect; `Content-Type` / available
+representations → native format identifiers; application media vocabulary →
+library kinds mapped from those identifiers; `404` empty resource vs `403`
+forbidden vs `200` with types → empty offer vs denied access vs present kinds;
+caches that answer from headers without downloading the entity → enumerate
+types without payload retrieval. Adapt by making the public success meaning a
+type/kind snapshot, with payload reads remaining separate content operations.
+Limit of the analogy: unlike HTTP caching, clipboard offers have **no**
+stable validators — a successful inspect does not reserve or freshen the offer
+for a later `paste_*`, and some platforms may require a privileged path or
+helper to list types at all; document races and per-desktop enumeration floors
+rather than inventing HTTP-like freshness guarantees.
 
-Challenge: the purpose is **accepting a user’s copied local files as
-structured references** with honest absence/failure and zero filesystem side
-effects — not a path-from-text parser, not a cut/move agent, and not a remote
-URI fetcher. Meeting the wording by scanning `paste()` text, opening paths to
-“verify” them, or reissuing cut as move misses that purpose. Strongest
-consequential doubt: “local file reference” spans divergent native shapes
-(Windows `CF_HDROP`, macOS file URLs / filename arrays, Linux `text/uri-list`
-plus optional GNOME/KDE cut companions), so interoperability floors and
-evidence limits are required — accepted as an execution risk bounded by early
-native probes and documented decoding rules, not a rewrite of the
-local-reference-read goal. Deferring public cut/copy metadata does not shrink
-the purpose: callers still get ordered local paths, and the library still
-refuses move side effects.
+Challenge: the purpose is **paste-UI and diagnostic decisions from the current
+offer** with honest empty vs access-failure outcomes — not a universal type
+system, arbitrary binary exchange, or a promise that every listed format
+decodes. Meeting the wording with payload-probing `paste_*` loops, docs-only
+shell recipes, or boolean-only helpers misses native-format visibility or
+conflates environment failure with emptiness. Strongest consequential doubt:
+the library kind vocabulary is a **mapping** over divergent native labels
+(Windows formats, macOS UTIs, Linux MIME), so “reports `html`” may need
+per-desktop floors when a producer uses an unexpected type name — accepted as
+an execution risk bounded by documented kind↔native maps, early native
+enumeration probes, and evidence limits, not a rewrite of the inspect goal.
+Deferring a separate capability API does not shrink the purpose: access failure
+must still remain distinct from an empty offer.
 
 **Architecture:** ADR store is undefined in this repository; no Accepted ADR
 constrains this story (architecture check: store missing — no Accepted-ADR
 citation completed). North Star
 [Rich clipboard content beside text re-exports](../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 already directs explicit APIs beside `copy`/`paste`, thin normalization, and
-in-memory vs native proof — follow it for file-list read. Consequential system
-effects: (1) add a rich-read responsibility for **file references** beside
-delivered `paste_image` / `copy_html` (and planned `paste_html` / `inspect`)
-without overloading text entry points; (2) platform readers must own native
-file-list decoding (Windows `CF_HDROP`; macOS file-URL / filename types;
-Linux `text/uri-list`) and map them to one absence / path-list /
-`ClipboardContentError` model — qualities pyperclip `paste` does not provide;
-(3) non-mutation of the clipboard, refusal to parse plain text as files, and
-refusal to honor cut markers as moves are part of the public contract;
-(4) reuse `ClipboardContentError` for file-list read failures — do not
-overload `ClipboardImageError`; (5) do not require the `clipboard[images]`
-extra for this story even if an internal Windows tactic reuses a
-filename-list helper. No new North Star topic is required unless execution
-evidence overturns the explicit path-list API shape.
+in-memory vs native proof — follow it for inspect. Consequential system
+effects: (1) add a non-mutating **offer introspection** responsibility beside
+delivered content read/write APIs without overloading text entry points;
+(2) platform enumerators must own native type listing and map known types onto
+one empty / kinds+formats / `ClipboardContentError` model — qualities
+pyperclip `paste` does not provide; (3) snapshot/race documentation and
+refusal to treat access failure as empty are part of the public contract;
+(4) reuse `ClipboardContentError` for inspect failures — do not overload
+`ClipboardImageError`; (5) kind mapping is library policy documented per
+desktop, not a claim that native identifiers are portable strings. No new
+North Star topic is required unless execution evidence overturns the explicit
+snapshot API shape. Inspect does not require the `clipboard[images]` extra.
 
-- **Effort hypothesis:** **M**, medium-low confidence; assumes a bounded set of
-  native file-manager conventions rather than every desktop's custom format.
-- **Depends on:** None. The source is an independent file manager.
-- **Safe stopping point:** Users can select inputs by copying files; merely
-  reading the clipboard never opens, copies, moves, or deletes those files.
+- **Effort hypothesis:** **M**, medium confidence; assumes native enumeration
+  is accessible on each claimed desktop, with permission and empty-state
+  differences settled by probes and evidence limits.
+- **Depends on:** None. Inspect external offers without requiring new content
+  writers, `paste_html`, or a generic binary exchange feature. Delivered
+  `copy_html` / `copy_image` may help local fakes and regression only.
+- **Safe stopping point:** Paste UIs gain useful decisions and diagnostics;
+  inspection avoids unnecessary payload retrieval and preserves native access
+  prompts and restrictions; later file read/write stories remain independent.
 
 <a id="copy-files"></a>
 
