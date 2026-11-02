@@ -8,9 +8,9 @@ Make the clipboard project true to its name.
 
 - [Native image-read verification on Windows and Linux](seeds/SEED-001-clipboard-true-to-its-name.md#read-images-native) — SEED-001#read-images-native ([plan](slice-plans/002-read-images-native/PLAN.md))
 - [Copy Python images into desktop applications](seeds/SEED-001-clipboard-true-to-its-name.md#write-images) — SEED-001#write-images ([plan](slice-plans/003-write-images/PLAN.md))
+- [Copy HTML with a matching plain-text alternative](seeds/SEED-001-clipboard-true-to-its-name.md#copy-html) — SEED-001#copy-html ([plan](slice-plans/004-copy-html/PLAN.md))
 
 ## Backlog list
-- [Copy HTML with a matching plain-text alternative](seeds/SEED-001-clipboard-true-to-its-name.md#copy-html) — SEED-001#copy-html
 - [Read HTML fragments copied by desktop applications](seeds/SEED-001-clipboard-true-to-its-name.md#read-html) — SEED-001#read-html
 - [Inspect clipboard content kinds and offered formats](seeds/SEED-001-clipboard-true-to-its-name.md#inspect-formats) — SEED-001#inspect-formats
 - [Read file references copied by file managers](seeds/SEED-001-clipboard-true-to-its-name.md#read-files) — SEED-001#read-files
