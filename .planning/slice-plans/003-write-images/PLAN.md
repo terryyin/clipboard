@@ -196,6 +196,7 @@ helpers; evidence wording is honest.
 - Default `_default_writeclipboard` raises `NotImplementedError` until later writers
   or slice-2 failure wrapping (tracked as G-interim-stub).
 - Darwin checkout cannot run Linux probes; owner chose GHA over skipping issue #5.
+- Linux xclip write needs `-quiet` under Xvfb; without it the helper waits for a paste and times out.
 
 ## Accepted proof (slice 1)
 

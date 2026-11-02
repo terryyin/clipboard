@@ -98,6 +98,8 @@ def _write_linux_xclip(image: Image.Image) -> None:
 
     with _temporary_png_offer(image) as path:
         try:
+            # -quiet: fork a background CLIPBOARD owner after reading the file so
+            # the foreground helper returns (otherwise xclip waits for a paste).
             result = subprocess.run(
                 [
                     "xclip",
@@ -105,6 +107,7 @@ def _write_linux_xclip(image: Image.Image) -> None:
                     "clipboard",
                     "-t",
                     "image/png",
+                    "-quiet",
                     "-i",
                     str(path),
                 ],
