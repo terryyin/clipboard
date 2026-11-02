@@ -28,6 +28,14 @@ def restore_files_clipboard_reader():
 
 
 @pytest.fixture
+def restore_files_clipboard_writer():
+    import clipboard
+
+    yield
+    clipboard.set_files_clipboard_writer(None)
+
+
+@pytest.fixture
 def restore_clipboard_inspector():
     import clipboard
 

@@ -1,4 +1,4 @@
-"""Platform dispatch for native file-list clipboard readers."""
+"""Platform dispatch for native file-list clipboard readers and writers."""
 
 from __future__ import annotations
 
@@ -35,3 +35,21 @@ def _default_files_clipboard_reader() -> object:
     if sys.platform == "win32":
         return _windows_files_clipboard_reader()
     raise ClipboardContentError(_unavailable_native_reader_message())
+
+
+def _unavailable_native_writer_message() -> str:
+    return (
+        "copy_files native file-list writer is not available on this platform "
+        f"({sys.platform}); no file-list copy offer adapter exists here yet, "
+        "so inject a writer with set_files_clipboard_writer for tests"
+    )
+
+
+def _default_files_clipboard_writer(paths: list[str]) -> None:
+    """Platform-selected file-list copy writer.
+
+    No native writer has landed yet, so every platform raises
+    ``ClipboardContentError`` naming the platform; per-platform writers
+    replace this dispatch as they land.
+    """
+    raise ClipboardContentError(_unavailable_native_writer_message())

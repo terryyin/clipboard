@@ -10,7 +10,12 @@ from pyperclip import paste as paste
 
 from clipboard import _html, _offer
 from clipboard._errors import ClipboardContentError, ClipboardImageError
-from clipboard._files import paste_files, set_files_clipboard_reader
+from clipboard._files import (
+    copy_files,
+    paste_files,
+    set_files_clipboard_reader,
+    set_files_clipboard_writer,
+)
 from clipboard._html import (
     copy_html,
     paste_html,
@@ -35,6 +40,7 @@ __all__ = [
     "ClipboardKind",
     "ClipboardOfferSnapshot",
     "copy",
+    "copy_files",
     "copy_html",
     "copy_image",
     "inspect",
@@ -44,6 +50,7 @@ __all__ = [
     "paste_image",
     "set_clipboard_inspector",
     "set_files_clipboard_reader",
+    "set_files_clipboard_writer",
     "set_html_clipboard_reader",
     "set_html_clipboard_writer",
     "set_image_grabclipboard",
@@ -65,6 +72,14 @@ def __getattr__(name: str):
         from clipboard import _files
 
         return _files._default_files_clipboard_reader
+    if name == "_files_clipboard_writer":
+        from clipboard import _files
+
+        return _files._files_clipboard_writer
+    if name == "_default_files_clipboard_writer":
+        from clipboard import _files
+
+        return _files._default_files_clipboard_writer
     if name == "_html_clipboard_writer":
         return _html._html_clipboard_writer
     if name == "_default_html_clipboard_writer":

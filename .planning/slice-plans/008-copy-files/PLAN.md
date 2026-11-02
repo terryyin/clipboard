@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#copy-files
 **Source:** [Copy local file references into file managers](../../seeds/SEED-001-clipboard-true-to-its-name.md#copy-files)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -77,7 +78,7 @@ an independent consumer, and file-manager paste for the example 1 claim.
 
 ### 1. In-memory `copy_files` contract
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests through public `clipboard.copy_files` with a fake
 writer injected by `clipboard.set_files_clipboard_writer`: two Unicode+space
 paths (one relative, one a directory) reach the writer as absolute paths in
@@ -206,9 +207,16 @@ Postcondition: callers know exactly what is verified where.
   claims require a file-manager paste. `paste_files()` agreement alone is not
   proof.
 
+## Story obligations
+
+### G1. Default writer raises on every platform until native writers land
+Reported: slice 1 — "No native writer exists yet. On Darwin, the default `copy_files` raises; slices 3–6 replace it per platform."
+Story clause: "replaces the current clipboard with one native file-list offer"
+Disposition: interim until slices 3, 4, 5, 6
+
 ## Learnings
 
-_(none yet)_
+- Slice 1: validation lives in `clipboard/_files.py` `_validate_copy_files_paths`; the default writer dispatch is `clipboard/_files_native.py` `_default_files_clipboard_writer`, where slices 3–6 add per-platform branches. A dangling symlink is rejected as missing (`os.path.exists`), matching "each named path must exist".
 
 ## Plan review
 
