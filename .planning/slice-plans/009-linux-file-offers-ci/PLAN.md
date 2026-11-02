@@ -2,6 +2,7 @@
 
 **Identity:** SEED-002#linux-file-offers-ci
 **Source:** [Verify Linux file offers in CI](../../seeds/SEED-002-linux-file-offers-ci.md#linux-file-offers-ci)
+**Source review:** [Independent source commitments](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -58,9 +59,41 @@ or an actionable CI/harness failure is reported; no unobserved platform claim.
 ## Current decisions
 
 - Keep the experiment independent of the unimplemented `copy_files` API.
-- Keep the implementation branch reviewable; no trunk implementation landing
-  is authorized by this verification request.
+- Keep the experiment reviewable on its branch until the actual Actions result
+  is known; delivery and closure cover this verification only, not `copy_files`.
 - Desktop-free default tests remain isolated and skip the native experiment.
+
+## Execution identity
+
+Story Branch Mode; owned worktree created for SEED-002#linux-file-offers-ci at
+`/Users/terryyin/git/clipboard/.worktrees/verify-linux-file-offers-ci`, branch
+`codex/verify-linux-file-offers-ci`. Integration checkout
+`/Users/terryyin/git/clipboard`; remote `origin`, trunk `master`.
+Starting revision `2cf3ce57848067b64c1d35bbb3e10b48d55b65f2`;
+published admission `7a908cc154369ed7552826f30181513eb76119e8`.
+Checkout-bound setup and baseline: `nix develop -c make deps check
+lint-workflows` passed (309 tests, 15 expected native skips). Hosted desktop
+proof is owned by the coordinator after progress publication.
+
+## Accepted local proof
+
+- `nix develop -c uv run --locked pytest
+  tests/test_file_manager_offer_assertions.py
+  tests/test_file_manager_offers_native_linux_x11.py -v`: 4 passed, 1 gated
+  skip. The copy oracle rejects missing copies, corrupt destination bytes,
+  and changed originals. The real GUI test has not run locally.
+- Inspected `probe_linux_x11_file_manager_offers.py`: `_offer` waits for
+  the helper command's exit, checks the sole advertised payload MIME and
+  independently reads its exact bytes; `_round` focuses a named Thunar
+  destination and sends Paste only after the no-paste control fails the
+  same copying assertions. `main` brackets the URI experiment with two
+  successful GNOME-copy-format controls and records bounded outcomes.
+- Consumer trace at `7a908cc154369ed7552826f30181513eb76119e8` with terms
+  `native-linux-x11-file-manager-offers`,
+  `probe_linux_x11_file_manager_offers`, `_assert_copies`: new probe/oracle
+  observations own the script boundary; workflow lint and hosted CI own the
+  required aggregate and reusable-release consumer. Unchanged gates and
+  generic dictionary matches do not change product behavior.
 
 ## Learnings
 
@@ -70,3 +103,17 @@ None yet; the real GUI round is an early probe, not a settled premise.
 
 Refinement not needed: one cohesive experiment and proof loop.
 Remaining concerns: none outside the explicitly bounded early probe.
+
+
+## Story obligations
+
+### G1. Hosted GUI evidence awaits first progress publication
+Reported: slice 1 — "Actual Thunar GUI evidence requires the new workflow to be published and run in GitHub Actions."
+Story clause: "Publish the workflow on a reviewable branch and run it in GitHub Actions."
+Disposition: return
+
+
+### G2. Record measured MIME findings in the copy-files plan
+Reported: slice 1 — "The existing copy-files plan still awaits the actual Actions MIME outcomes."
+Story clause: "Record the result where the existing copy-files plan can consume it."
+Disposition: return
