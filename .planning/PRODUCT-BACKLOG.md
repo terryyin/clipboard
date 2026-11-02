@@ -7,6 +7,7 @@ Make the clipboard project true to its name.
 ## Taken
 
 - [Keep native HTML-read proof strict and desktop helper knowledge single-homed](seeds/SEED-001-clipboard-true-to-its-name.md#desktop-helpers) — SEED-001#desktop-helpers ([plan](slice-plans/006-desktop-helpers/PLAN.md))
+- [Verify Linux file offers in CI](seeds/SEED-002-linux-file-offers-ci.md#linux-file-offers-ci) — SEED-002#linux-file-offers-ci ([plan](slice-plans/009-linux-file-offers-ci/PLAN.md))
 
 ## Backlog list
 
