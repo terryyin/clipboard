@@ -57,6 +57,7 @@ docs/_build/
 .pytest_cache/
 .ruff_cache/
 .direnv/
+.worktrees/
 result
 result-*
 
