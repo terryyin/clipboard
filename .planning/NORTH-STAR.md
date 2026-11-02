@@ -18,7 +18,10 @@ interoperability needs independent producers and documented evidence limits.
 with macOS Aqua verified, Linux X11 (Xvfb CI) and Wayland (Sway CI) writer-exit
 proofs, Windows write evidence-limited (2026-11-02); delivered `copy_html`
 HTML+plain-text dual-offer with macOS Aqua verified and Windows / Linux X11 /
-Wayland HTML writes evidence-limited (2026-11-02); domain research reuse of
+Wayland HTML writes evidence-limited (2026-11-02); delivered `inspect()`
+kinds+formats offer snapshot with injectable backend, macOS Aqua independent-
+producer verification, and Windows / Linux X11 / Wayland inspect evidence-
+limited on Darwin (2026-11-02); domain research reuse of
 Pillow `ImageGrab.grabclipboard`; macOS Aqua image reads independently
 verified; Windows, X11+`xclip`, and Wayland+`wl-paste` image reads documented
 with explicit evidence limits when no usable native session was available

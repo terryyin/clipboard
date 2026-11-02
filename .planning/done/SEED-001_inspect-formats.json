@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#inspect-formats",
+  "title": "Inspect clipboard content kinds and offered formats",
+  "completedAt": "2026-11-02T10:20:06.365Z",
+  "developer": "Terry Yin",
+  "agent": "Kaoru-chan",
+  "host": "cursor",
+  "model": "auto"
+}

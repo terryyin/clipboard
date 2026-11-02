@@ -34,6 +34,13 @@ before the consolidation Structure slice, without new native measurement.
   - Evidence: PLAN.md Decisive premises (Darwin cannot run Win/Linux probes); slices 1–3 Accepted notes all Darwin/no-session evidence limits; published SHAs d08fb4c, 47e5b9c, 0501e6a (near-identical README evidence-limit increments) then fcd18a0 consolidation; coordinator transcript d2b3e3b5… (three Behavior deliver cycles after settled uname Darwin)
   - Observed effect: Three docs-only Behavior publishes plus refactor agents authorized to fill Accepted notes; no Win/Linux probe scripts delivered; slice 4 rewrote the same Evidence paragraph into one consolidated limit statement.
   - Inference: Once session absence is settled for the executing checkout, one evidence-limit write covering the remaining desktops (or collapsing early-probe Behavior slices) would preserve per-desktop honesty with less deliver/refactor overhead; independent desktop loops remain justified only when a session may still appear.
+- Execution: SEED-001#inspect-formats
+  - Timestamp: 2026-11-02T16:52:28+07:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.79
+  - Evidence: PLAN.md Decisive premises (Darwin; xclip/wl-paste absent — Win/Linux cannot probe here); coordinator 8888689d… after slice 3: “Slices 4–6 are evidence-limit paths on this Darwin host”; published 629513f (X11), ee446c2 (Wayland), 0c9741a (Windows) each with full deliver→source-review→refactor→publish; README/probe `evidence_limit` paths only for those desktops
+  - Observed effect: Three more Behavior publish cycles after session absence was settled; unlike the read-images-native occurrence, each slice also wired a real enumerator + desktop-free tests (not docs-only), but native verification remained predetermined evidence-limit with no new desktop measurement on this host.
+  - Inference: Settled no-session still does not justify three early-probe Behavior cycles for the verification claim; enumerator wiring for remaining desktops can share one Structure/Behavior slice with a single honest multi-desktop evidence-limit write.
 
 ## DD-003 — Linux X11 clipboard ownership learned through gated-CI repair loops
 For Linux image write under Xvfb, successive published repairs rediscovered that
