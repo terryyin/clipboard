@@ -1,5 +1,7 @@
 """The native experiment's oracle must reject missing and damaged copies."""
 
+import subprocess
+import sys
 from pathlib import Path
 from runpy import run_path
 
@@ -34,3 +36,20 @@ def test_copy_oracle_requires_exact_destination_and_unchanged_source(tmp_path, d
             assert_copies(source, destination, expected)
     else:
         assert_copies(source, destination, expected)
+
+
+def test_failed_file_manager_launch_reports_exit_before_searching_windows(
+    tmp_path, monkeypatch
+):
+    launched = subprocess.Popen([sys.executable, "-c", "raise SystemExit(2)"])
+    launched.wait(timeout=5)
+    round_ = assert_copies.__globals__["_round"]
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: launched)
+    monkeypatch.setitem(round_.__globals__, "_run", lambda *args, **kwargs: None)
+
+    def search_after_failed_launch(*args, **kwargs):
+        pytest.fail("window search ran after the file-manager launch failed")
+
+    monkeypatch.setattr(subprocess, "run", search_after_failed_launch)
+    with pytest.raises(RuntimeError, match="Thunar exited with status 2"):
+        round_(tmp_path, "failed-launch", "text/uri-list", None)

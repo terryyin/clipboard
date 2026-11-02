@@ -42,9 +42,14 @@ def _assert_copies(source: Path, destination: Path, expected: dict[str, bytes]) 
         assert (source / name).read_bytes() == content, f"source changed: {name}"
 
 
-def _wait_window(destination: Path) -> str:
+def _wait_window(destination: Path, launched: subprocess.Popen) -> str:
     deadline = time.monotonic() + 15
     while time.monotonic() < deadline:
+        status = launched.poll()
+        if status not in (None, 0):
+            raise RuntimeError(
+                f"Thunar exited with status {status}; inspect thunar.log"
+            )
         result = subprocess.run(
             ["xdotool", "search", "--onlyvisible", "--class", "Thunar"],
             capture_output=True,
@@ -121,12 +126,12 @@ def _round(root: Path, label: str, mime: str, log) -> dict:
         (source / name).write_bytes(content)
 
     launched = subprocess.Popen(
-        ["thunar", "--new-window", str(destination)],
+        ["thunar", str(destination)],
         stdout=log,
         stderr=log,
     )
     try:
-        window = _wait_window(destination)
+        window = _wait_window(destination, launched)
         _run("xdotool", "windowactivate", "--sync", window)
         _run("xdotool", "windowfocus", "--sync", window)
         report = _offer(mime, source, expected, log)

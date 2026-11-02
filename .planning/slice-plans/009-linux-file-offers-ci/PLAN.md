@@ -97,7 +97,15 @@ proof is owned by the coordinator after progress publication.
 
 ## Learnings
 
-None yet; the real GUI round is an early probe, not a settled premise.
+The first hosted run at `cc6d541ee3934929367c249532759e35be22e71a`
+failed before any clipboard offer: Thunar 4.18.8 rejects `--new-window`.
+Run `41459762923`, job `125325506651`, artifact `thunar.log` identifies the
+unsupported option; the aggregate failed solely because this job failed.
+Use the supported `thunar DEST` launch and report nonzero process exit
+before attempting window discovery. A real child-process exit regression
+test failed before this repair and passed afterwards (focused proof:
+5 passed, 1 gated skip). No MIME compatibility conclusion follows from the
+failed run; actual GUI proof remains owned by G1.
 
 ## Plan review
 
