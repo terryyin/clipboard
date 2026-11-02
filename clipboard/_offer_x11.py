@@ -5,17 +5,12 @@ from __future__ import annotations
 import os
 import subprocess
 
+from clipboard._desktop import _helper_failure_detail
 from clipboard._errors import ClipboardContentError
 from clipboard._offer import ClipboardOfferSnapshot, snapshot_from_native_formats
 
 # Bound xclip TARGETS reads so a contended CLIPBOARD cannot hang forever.
 _X11_TARGETS_TIMEOUT_S = 15.0
-
-
-def _is_linux_wayland() -> bool:
-    """Match image-write session detection: Wayland when session or display says so."""
-    session = (os.environ.get("XDG_SESSION_TYPE") or "").strip().lower()
-    return session == "wayland" or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
 def _enumerate_x11_clipboard_targets() -> tuple[str, ...]:
@@ -53,7 +48,7 @@ def _enumerate_x11_clipboard_targets() -> tuple[str, ...]:
             "(xclip -selection clipboard -o -t TARGETS)"
         ) from exc
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout or "").strip()
+        detail = _helper_failure_detail(result)
         raise ClipboardContentError(
             "Linux X11 CLIPBOARD TARGETS enumeration failed"
             + (f": {detail}" if detail else "")

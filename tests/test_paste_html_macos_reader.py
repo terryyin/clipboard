@@ -1,7 +1,7 @@
 """Desktop-free tests for the macOS ``public.html`` reader behind paste_html.
 
-``subprocess.run`` in ``clipboard._html_native`` is replaced, so no test here
-touches the real pasteboard or needs an Aqua session.
+``subprocess.run`` in ``clipboard._html_native_macos`` is replaced, so no test
+here touches the real pasteboard or needs an Aqua session.
 """
 
 import base64
@@ -10,7 +10,7 @@ import subprocess
 import pytest
 
 import clipboard
-from clipboard import _html_native
+from clipboard import _html_native, _html_native_macos
 from clipboard._html_envelope import _fragment_offer
 
 FRAGMENT = '<a href="https://example.com/caf%C3%A9"><b>café → 日本</b></a>'
@@ -40,7 +40,7 @@ def darwin_helper(monkeypatch, restore_html_clipboard_reader):
 
     def install(**kwargs):
         helper = _Helper(**kwargs)
-        monkeypatch.setattr(_html_native.subprocess, "run", helper)
+        monkeypatch.setattr(_html_native_macos.subprocess, "run", helper)
         return helper
 
     return install
@@ -56,13 +56,13 @@ def test_darwin_default_reader_returns_fragment(darwin_helper):
     (args, kwargs), *_ = helper.calls
     assert args[:3] == ["osascript", "-l", "JavaScript"]
     assert "public.html" in args[-1]
-    assert kwargs["timeout"] == _html_native._MACOS_HTML_READ_TIMEOUT_SECONDS
+    assert kwargs["timeout"] == _html_native_macos._MACOS_HTML_READ_TIMEOUT_SECONDS
 
 
 def test_reader_passes_raw_bytes_through_undecoded(darwin_helper):
     raw = FRAGMENT.encode("utf-8")
     darwin_helper(stdout=_html_answer(raw))
-    assert _html_native._macos_html_clipboard_reader() == _fragment_offer(raw)
+    assert _html_native_macos._macos_html_clipboard_reader() == _fragment_offer(raw)
 
 
 def test_reader_script_only_reads_the_pasteboard(darwin_helper):
@@ -121,7 +121,7 @@ def test_non_darwin_default_reader_is_not_available(
     def no_helper(*args, **kwargs):
         raise AssertionError("default reader must not run a helper here")
 
-    monkeypatch.setattr(_html_native.subprocess, "run", no_helper)
+    monkeypatch.setattr(_html_native_macos.subprocess, "run", no_helper)
     clipboard.set_html_clipboard_reader(None)
     with pytest.raises(clipboard.ClipboardContentError, match="not available"):
         clipboard.paste_html()

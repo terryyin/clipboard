@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 
+from clipboard._desktop import _helper_stderr_detail
 from clipboard._errors import ClipboardContentError
 from clipboard._html_envelope import _fragment_offer, _HtmlOffer
 
@@ -47,13 +48,9 @@ def _run_xclip_output(target: str) -> subprocess.CompletedProcess[bytes]:
         raise _x11_html_read_error(f"could not run xclip ({exc})") from exc
 
 
-def _stderr_text(result: subprocess.CompletedProcess[bytes]) -> str:
-    return (result.stderr or b"").decode("utf-8", "replace").strip()
-
-
 def _exit_detail(command: str, result: subprocess.CompletedProcess[bytes]) -> str:
     """``<command> exited with status N[: stderr]`` for a failed helper run."""
-    detail = _stderr_text(result)
+    detail = _helper_stderr_detail(result)
     return f"{command} exited with status {result.returncode}" + (
         f": {detail}" if detail else ""
     )
@@ -81,7 +78,7 @@ def _linux_x11_html_clipboard_reader() -> _HtmlOffer | None:
     """
     targets = _run_xclip_output("TARGETS")
     if targets.returncode != 0:
-        if _XCLIP_NO_TARGETS in _stderr_text(targets):
+        if _XCLIP_NO_TARGETS in _helper_stderr_detail(targets):
             return None
         raise _exit_error("TARGETS", targets)
     if not _offers_html(targets):
@@ -153,7 +150,7 @@ def _linux_wayland_html_clipboard_reader() -> _HtmlOffer | None:
     """
     types = _run_wl_paste(["--list-types"], "--list-types")
     if types.returncode != 0:
-        if _stderr_text(types) in _WL_PASTE_NOTHING_COPIED:
+        if _helper_stderr_detail(types) in _WL_PASTE_NOTHING_COPIED:
             return None
         raise _wl_paste_exit_error("--list-types", types)
     if not _offers_html(types):

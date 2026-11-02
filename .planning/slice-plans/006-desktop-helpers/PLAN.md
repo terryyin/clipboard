@@ -87,7 +87,7 @@ the job. Postcondition: an evidence limit makes the job and `ci-passed` fail.
 
 ### 2. Single-home session detection and helper failure detail
 Type: Structure
-Status: planned
+Status: done
 Proof: a private `clipboard/_desktop.py` owns both Linux session predicates
 (named for their distinct rules) and helper-failure detail formatting, each
 caller keeping its current fallback (`"unknown error"`, `""`, stderr-only
@@ -154,6 +154,13 @@ Correction: removes F3's duplicated cost without losing a behavior.
   skipped. Live `native-windows-paste-html` with `verified: true` remains
   observation on the published revision (settled premise: master run
   41433380766).
+- Slice 2: macOS reader/seam tests needed submodule retargets for
+  `_html_native_macos.subprocess` once dispatch dropped its own `subprocess`
+  import; `sys.platform` patches on `_html_native` still drive selection.
+  Accepted proof: `clipboard/_desktop.py` owns both session predicates and
+  helper-failure detail; `_html_native_macos.py` co-locates writer+reader;
+  `_html_native.py` dispatch-only. `make check` 310/15; `lint-workflows` clean.
+  Listing relocation deferred to slice 3.
 
 ## Concern evidence
 

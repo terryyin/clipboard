@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import sys
 
+from ._desktop import _linux_wayland_without_x11
 from ._errors import ClipboardContentError
 from ._files_native_linux import (
     _linux_wayland_files_clipboard_reader,
-    _linux_wayland_without_x11,
     _linux_x11_files_clipboard_reader,
 )
 from ._files_native_macos import _macos_files_clipboard_reader

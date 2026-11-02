@@ -11,6 +11,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from clipboard._desktop import _helper_failure_detail, _is_linux_wayland
 from clipboard._errors import ClipboardImageError
 from clipboard._image_read import _pillow_image, _raise_image_failure
 
@@ -25,10 +26,6 @@ def _temporary_png_offer(image: Image.Image) -> Iterator:
         path = Path(raw) / "offer.png"
         image.save(path, format="PNG")
         yield path
-
-
-def _helper_failure_detail(result) -> str:
-    return (result.stderr or result.stdout or "").strip() or "unknown error"
 
 
 def _png_bytes(image: Image.Image) -> bytes:
@@ -55,7 +52,8 @@ def _write_macos_pngf(image: Image.Image) -> None:
             raise OSError("osascript clipboard write timed out") from exc
         if result.returncode != 0:
             raise OSError(
-                f"osascript clipboard write failed: {_helper_failure_detail(result)}"
+                "osascript clipboard write failed: "
+                f"{_helper_failure_detail(result, fallback='unknown error')}"
             )
 
 
@@ -126,13 +124,6 @@ def _write_linux_xclip(image: Image.Image) -> None:
     if exit_code not in (None, 0):
         raise OSError(f"xclip clipboard write failed: exit {exit_code}")
     _wait_xclip_image_png_offer()
-
-
-def _is_linux_wayland() -> bool:
-    import os
-
-    session = (os.environ.get("XDG_SESSION_TYPE") or "").strip().lower()
-    return session == "wayland" or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
 def _write_linux_wl_copy(image: Image.Image) -> None:

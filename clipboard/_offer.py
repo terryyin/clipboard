@@ -98,10 +98,8 @@ def _default_clipboard_inspector() -> ClipboardOfferSnapshot:
 
         return _macos_clipboard_inspector()
     if sys.platform.startswith("linux"):
-        from clipboard._offer_x11 import (
-            _is_linux_wayland,
-            _linux_x11_clipboard_inspector,
-        )
+        from clipboard._desktop import _is_linux_wayland
+        from clipboard._offer_x11 import _linux_x11_clipboard_inspector
 
         if _is_linux_wayland():
             from clipboard._offer_wayland import (
