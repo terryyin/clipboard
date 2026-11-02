@@ -269,6 +269,31 @@ require the `clipboard[images]` extra.
   successful fragment or a clipboard write; text and image callers remain
   compatible.
 
+<a id="desktop-helpers"></a>
+
+### Keep native HTML-read proof strict and desktop helper knowledge single-homed
+
+**Identity:** SEED-001#desktop-helpers
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/006-desktop-helpers/PLAN.md"}
+```
+
+**Goal:** Python developers relying on the README's verified desktop claims
+keep a CI signal that fails when a verified native HTML-read probe stops
+proving anything, and maintainers of the remaining SEED-001 stories reuse one
+home for desktop session detection and helper handling instead of copying it
+per content kind (correction of
+[SEED-001#read-html](#read-html)).
+
+**Scope:** Make the gated Windows `paste_html` probe fail rather than skip when
+it cannot verify; move Linux session detection, helper-failure detail
+formatting, and the xclip `TARGETS` listing out of the image/HTML content-kind
+modules into one private desktop module with each caller's current semantics;
+leave `_html_native.py` as dispatch only; fold duplicated seam and structural
+`paste_html` tests into the behavioral contract. Public API, results, error
+messages, and install hints stay unchanged. Plan:
+[006-desktop-helpers](../slice-plans/006-desktop-helpers/PLAN.md).
+
 <a id="inspect-formats"></a>
 
 ### Inspect clipboard content kinds and offered formats

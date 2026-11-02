@@ -322,3 +322,21 @@ Disposition: proved by slice 6: native text-only/image-only (and file-list on ma
 Reported: slice 4 — "The native producer is the helper xclip (`-t text/html -i`), not a browser or rich editor."
 Story clause: "native proof uses an **independent producer** (browser or rich editor — not a same-library `copy_html` round-trip alone)"
 Disposition: owner changed "an independent helper producer (for example `xclip`, `wl-copy`, or a PowerShell/.NET writer) counts as native verification on Linux X11, Linux Wayland, and Windows when the evidence names the helper and states that it is not a browser or rich editor"
+
+## Execution complete
+
+Product advice:
+- Correction [SEED-001#desktop-helpers](../../seeds/SEED-001-clipboard-true-to-its-name.md#desktop-helpers)
+  ([plan](../006-desktop-helpers/PLAN.md)) is written but not queued: the
+  Windows native probe can skip green on an evidence limit, and desktop
+  session/helper knowledge is split across the image and HTML modules.
+  Landing it before `SEED-001#inspect-formats` gives that story (and
+  read-files, copy-files, clear, primary-selection) one desktop-helper home.
+- `ubuntu-latest` with Xvfb or Sway and `windows-latest` proved usable native
+  venues; under the helper-producer amendment, the older evidence limits for
+  `paste_image` (X11/Wayland/Windows), `copy_image` (Windows), and
+  `copy_html` (X11/Wayland/Windows) are cheap to retire. Candidate story.
+- Browser interoperability on Linux and Windows remains unobserved (for
+  example a browser's `<meta charset>` prefix or UTF-16 `text/html`).
+- `ClipboardContentError` and `ClipboardImageError` share no base class;
+  decide the error type before the file-reference and inspection APIs.
