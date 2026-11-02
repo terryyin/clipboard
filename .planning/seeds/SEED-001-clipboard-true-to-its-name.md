@@ -91,25 +91,87 @@ platform distinctions, reuse candidates, and uncertainty.
 
 **Identity:** SEED-001#read-images-native
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/002-read-images-native/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"2d5b5cb340ca09ddd1f0364c6687c7f4e8bc3967cfec7d1ff55b9fc042674540","plan":"faf369166fb5cb268d37135b424723b77b1bcca4bebd8223b23f1f7b2768e631"}}
 ```
 
-- **For / why:** Close the SEED-001#read-images four-desktop promise with
-  independent-producer native proof (or updated evidence limits) on Windows,
-  Linux X11+`xclip`, and Linux Wayland+`wl-paste`, including helper/OS floors,
-  alpha behavior, and native Windows CF_HDROP filename-list absence.
-- **Evaluation:** On each remaining desktop, either record a matching native
-  probe like the macOS Aqua result, or keep an explicit unverified/unsupported
-  note — never silent success. Do not generalize one Wayland compositor.
-- **Value / learning:** Turns documented evidence limits into verified floors
-  before image writing expands the same desktop set.
-- **Boundary:** Native verification and docs/floors for image **read** only.
-  No image writing. Reuse `paste_image` / `clipboard[images]` as delivered.
+**Plan:** [slice-plans/002-read-images-native/PLAN.md](../slice-plans/002-read-images-native/PLAN.md)
+
+**Goal:** Python automation developers and maintainers can trust the
+documented Windows and Linux image-read floors for delivered `paste_image`:
+each remaining supported desktop either has independent-producer native proof
+comparable to the macOS Aqua probe, or an explicit unverified/unsupported
+evidence limit — never a silent success — while text callers and the verified
+macOS path stay compatible.
+
+**Scope:**
+
+- **Required behavior:** For Windows desktop, Linux X11 with `xclip`, and
+  Linux Wayland with `wl-paste`, either (a) record a gated native probe with
+  an independent producer (opaque raster size/colors, preservative read, and
+  alpha when the native offer carries it — or a documented alpha drop), naming
+  OS, desktop/compositor, helper, and Pillow floors; or (b) keep an explicit
+  unverified/unsupported evidence-limit note for that desktop. When a Windows
+  session is available, also prove a native CF_HDROP / filename-list offer
+  yields ordinary absence (`None`) without opening offered paths. Update
+  README (and related install/evidence docs) so verified floors replace, or
+  honest limits retain, the current "unverified pending
+  SEED-001#read-images-native" wording. Default automated tests stay
+  desktop-free; native probes remain explicitly gated (same spirit as
+  `CLIPBOARD_NATIVE_PROBE` / `scripts/probe_macos_native_paste_image.py`).
+  Reuse `paste_image` / `clipboard[images]` as delivered.
+- **Supported desktops (this story):** Windows desktop; Linux X11 + `xclip`;
+  Linux Wayland + `wl-paste` scoped to the compositor actually probed when
+  one is available. macOS Aqua remains already verified and must stay
+  compatible, but re-proving macOS is not this story's outcome. WSL, SSH,
+  containers, and headless CI are not additional guaranteed desktops.
+- **Required restrictions:** Do not claim a desktop verified without an
+  independent-producer observation. Do not generalize one Wayland
+  compositor's result to all Wayland environments. Do not bypass OS
+  pasteboard / clipboard authorization. Do not change `paste()` or treat
+  file-list / URL-only offers as images.
+- **Scope limits / deferred:** Image writing; new public image APIs or return
+  shapes; making default pytest / CI require a real desktop; expanding the
+  four-desktop set; HTML, files, inspection, clear, waits, or PRIMARY.
+  Contract changes beyond what a failed native probe forces for honesty of
+  evidence limits belong to a separate decision, not silent scope growth.
+- **Rejection constraints:** Silent success on an unprobed desktop is
+  forbidden (independent need: honest four-desktop promise and Shared
+  Boundaries). Wayland compositor generalization is forbidden (independent
+  need: compositor-specific clipboard behavior).
+
+**Key examples:**
+
+1. Windows desktop session available → independent producer places a known
+   opaque PNG on the clipboard → `paste_image()` returns matching width,
+   height, and colors; a second read is preservative; environment floors are
+   recorded; README marks Windows verified at those floors.
+2. Windows clipboard holds only a CF_HDROP / filename-list offer →
+   `paste_image()` returns `None` and does not open offered paths.
+3. Linux X11 session with `xclip` on `PATH` → same independent-producer
+   opaque (and alpha-when-offered) success; helper/OS floors recorded; README
+   marks X11+`xclip` verified at those floors.
+4. Linux Wayland session with `wl-paste` on a named compositor → success is
+   documented for that compositor only; other compositors remain
+   evidence-limited rather than implied.
+5. A remaining supported desktop has no usable session during execution →
+   docs keep or refresh an explicit unverified/unsupported note for that
+   desktop; it is never documented as verified.
+6. After this work, in-memory `paste_image` contract tests and the existing
+   gated macOS probe still pass; `copy` / `paste` / `VERSION` and text-only
+   callers behave as before.
+
+**Settled from prior delivery (SEED-001#read-images):** Public contract is
+`paste_image()` → Pillow `Image | None` with `ClipboardImageError` for
+failures; optional `clipboard[images]`; Pillow `ImageGrab.grabclipboard`
+normalization; file-list / URL offers → absence; macOS Aqua independently
+verified. This story closes remaining native evidence, not redesign.
+
 - **Effort hypothesis:** **M**, medium confidence; depends on available
-  desktop sessions and compositor coverage.
+  desktop sessions and which Wayland compositor can be observed.
 - **Depends on:** None for scheduling; builds on delivered `paste_image`.
-- **Safe stopping point:** Each desktop has either native proof or an honest
-  evidence limit; text and macOS image-read callers remain compatible.
+- **Safe stopping point:** Each remaining desktop has either native proof or
+  an honest evidence limit; text and macOS image-read callers remain
+  compatible.
 
 <a id="write-images"></a>
 
