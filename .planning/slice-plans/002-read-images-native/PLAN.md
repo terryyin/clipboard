@@ -150,6 +150,14 @@ gated probe named (`CLIPBOARD_NATIVE_PROBE` /
 `scripts/probe_macos_native_paste_image.py`) in README.rst and AGENTS.md.
 Focused desktop-free pytest 18 passed, 1 skipped.
 
+## Execution complete
+
+Product advice: No backlog change — leave `SEED-001#write-images` first. This
+story's acceptance bar was met via honest per-desktop evidence limits with no
+`paste_image` redesign; elevating mandatory Win/Linux native proof is the
+story's deferred stronger promise and needs an explicit maintainer decision,
+not an invented queue entry from this review.
+
 ## Current decisions
 
 - Reuse delivered `paste_image` / North Star explicit-API shape; no redesign.
