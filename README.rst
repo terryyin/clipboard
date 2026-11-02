@@ -91,9 +91,20 @@ Evidence / verified platforms:
   ``evidence_limit`` / ``verified: false`` (exit 2) rather than silent
   success. Re-run that gated X11 dual-consumer probe on an owner-held X11
   session to replace this limit.
-* Linux Wayland and Windows desktop HTML writes also remain unverified for
-  now (see later probe notes). Image reads on those desktops remain
-  supported targets, unverified pending ``SEED-001#read-images-native``.
+* Linux Wayland HTML + plain-text dual-offer writes via ``copy_html`` are an
+  explicit **evidence limit** on this execution host: no usable Wayland
+  session with a multi-type-capable helper on a **named** compositor was
+  available (Darwin checkout; ``wl-copy`` / ``wl-paste`` not on ``PATH``;
+  ``WAYLAND_DISPLAY`` unset). Do not treat Wayland HTML write as verified,
+  and do not generalize any future single-compositor result to all Wayland
+  environments. ``scripts/probe_linux_wayland_native_copy_html.py`` records
+  ``evidence_limit`` / ``verified: false`` /
+  ``compositor_generalization: false`` (exit 2) rather than silent success.
+  Re-run that gated Wayland dual-consumer probe on an owner-held Wayland
+  session to replace this limit for that compositor only.
+* Windows desktop HTML writes also remain unverified for now (see later
+  probe notes). Image reads on remaining desktops remain supported targets,
+  unverified pending ``SEED-001#read-images-native``.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard.

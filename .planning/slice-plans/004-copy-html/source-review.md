@@ -27,15 +27,15 @@
 | 12.1 | Claim support for Windows desktop | slice 6 | |
 | 12.2 | Claim support for macOS Aqua | slice 3 | observed: README floors + probe ok on macOS 26.6.2 / 25G83 arm64 |
 | 12.3 | Claim support for Linux X11 + a multi-type-capable helper | slice 4 | observed: README explicit X11 HTML-write **evidence limit** (no session/helper here); `scripts/probe_linux_x11_native_copy_html.py` refuses verified |
-| 12.4 | Claim support for Linux Wayland + a multi-type-capable helper scoped to the compositor actually proved when one is available | slice 5 | |
+| 12.4 | Claim support for Linux Wayland + a multi-type-capable helper scoped to the compositor actually proved when one is available | slice 5 | observed: README Wayland HTML-write evidence limit; probe refuses verified; no compositor named as verified |
 | 13 | Dual publication and writer-exit success are acceptance requirements on each claimed desktop when a session is available. | slice 3 | observed: macOS session available → probe dual+exit success; Linux/Windows later |
 | 14 | When no usable session exists during execution for a claimed desktop, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified — never silent success. | slice 3 | observed: README keeps Windows/Linux HTML writes unverified (no silent success); macOS verified only with probe floors |
-| 15 | Do not generalize one Wayland compositor’s result to all Wayland environments. | slice 5 | |
+| 15 | Do not generalize one Wayland compositor’s result to all Wayland environments. | slice 5 | observed: README + probe state no compositor generalization / scoped-to-named-compositor wording |
 | 16 | After this work, existing text callers remain compatible (including `VERSION` and text-only callers behaving as before). | slice 7 | |
 | 17 | After this work, delivered image APIs remain compatible / unchanged. | slice 7 | |
 | 18 | After this work, in-memory `copy` / `paste` / `paste_image` contract tests still pass. | slice 7 | |
 | Q1 | WSL, SSH, containers, and headless CI are not additional guaranteed desktops. | slice 7 | Q1 |
-| Q2 | Wayland support is scoped to the compositor actually proved when one is available; a single compositor’s result does not imply all Wayland environments. | slice 5 | |
+| Q2 | Wayland support is scoped to the compositor actually proved when one is available; a single compositor’s result does not imply all Wayland environments. | slice 5 | observed: same README/probe compositor-scoping language; evidence limit (no compositor proved) |
 | Q3 | Platform HTML envelopes and Linux helper dependencies are documented as needed (including the X11/`xclip` and multi-type Wayland helper expectations). | slice 7 | |
 | Q4 | Native dual-consumer / writer-exit proof remains explicitly gated; default automated tests stay desktop-free via an injectable write backend. | slice 1 | observed: injectable seam + desktop-free seam tests; native gating deferred to probe slices |
 | Q5 | Unavailability of a usable session during execution yields an explicit evidence limit, not a verified claim and not silent success. | slice 3 | observed: README explicit unverified for Win/Linux HTML write; macOS only after probe |

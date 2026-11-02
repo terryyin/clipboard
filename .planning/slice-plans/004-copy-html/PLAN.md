@@ -139,7 +139,7 @@ after exit. Postcondition: key example 1 (X11) or honest limit.
 
 ### 5. Early probe — Linux Wayland multi-type HTML + text write
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Wayland session with a multi-type-capable helper on a
 **named** compositor, same writer-exit independent dual-consumer success;
 document compositor and helper scope; README marks Wayland HTML write verified
@@ -230,6 +230,11 @@ envelopes/helpers; evidence wording is honest.
   Non-Darwin default error names multi-type helper expectations.
 - Accepted proof (slice 4): contract+seam 23 passed; X11 probe exit 2 /
   evidence_limit; paste_image suites reused.
+- Slice 5: No Wayland session/helper → explicit Wayland HTML-write evidence
+  limit; compositor non-generalization stated; gated
+  `scripts/probe_linux_wayland_native_copy_html.py` refuses verified.
+- Accepted proof (slice 5): Wayland probe exit 2 / evidence_limit /
+  compositor_generalization false.
 
 ## Concern evidence
 
