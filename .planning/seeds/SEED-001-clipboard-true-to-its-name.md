@@ -389,7 +389,7 @@ break working call sites; rejecting `bytes` / `None` is a deferred proposal.
 No newline translation on either side. `copy("")` promises only that
 `paste()` then returns `""`.
 
-<a id="clear-clipboard"></a>
+<a id="bounded-x11-text-write"></a>
 
 ### Bound the X11 text write for large text on a stalled display
 
@@ -407,6 +407,8 @@ remove the test-only `os.killpg` fallback; make the gated Wayland text wrapper
 fail rather than skip on a missing session or helper. Excludes the same
 pattern in `copy_image` and any change to selection rules.
 [Plan](../slice-plans/012-bounded-x11-text-write/PLAN.md)
+
+<a id="clear-clipboard"></a>
 
 ### Clear every representation from the current clipboard
 

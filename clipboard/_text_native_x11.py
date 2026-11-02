@@ -4,7 +4,9 @@ Reading lists ``TARGETS`` first, so absence never depends on parsing the
 wording of a failed text conversion: an unowned CLIPBOARD (xclip's
 ``target TARGETS not available``) or an owner offering neither
 ``UTF8_STRING`` nor ``STRING`` reads ``""``. ``UTF8_STRING`` is decoded as
-UTF-8 and ``STRING`` as Latin-1 (ICCCM). xclip exits 1 both for "no owner"
+UTF-8 and ``STRING`` as Latin-1 (ICCCM); the listing decides which, because
+a ``STRING``-only owner answers a ``UTF8_STRING`` request with exit 0 and its
+raw Latin-1 bytes (xclip 0.13). xclip exits 1 both for "no owner"
 and for "Can't open display", so any other non-zero exit, timeout, or
 missing helper raises ``ClipboardContentError`` quoting xclip's stderr.
 
