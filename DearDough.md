@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 6
+- Highest allocated local number: 8
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -34,6 +34,15 @@ before the consolidation Structure slice, without new native measurement.
   - Evidence: PLAN.md Decisive premises (Darwin cannot run Win/Linux probes); slices 1–3 Accepted notes all Darwin/no-session evidence limits; published SHAs d08fb4c, 47e5b9c, 0501e6a (near-identical README evidence-limit increments) then fcd18a0 consolidation; coordinator transcript d2b3e3b5… (three Behavior deliver cycles after settled uname Darwin)
   - Observed effect: Three docs-only Behavior publishes plus refactor agents authorized to fill Accepted notes; no Win/Linux probe scripts delivered; slice 4 rewrote the same Evidence paragraph into one consolidated limit statement.
   - Inference: Once session absence is settled for the executing checkout, one evidence-limit write covering the remaining desktops (or collapsing early-probe Behavior slices) would preserve per-desktop honesty with less deliver/refactor overhead; independent desktop loops remain justified only when a session may still appear.
+
+- Execution: SEED-001#read-files
+  - Timestamp: 2026-11-02T17:29:32+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: PLAN.md Decisive premises (Darwin cannot run Win/Linux probes; settled before slices 4–6); Learnings slices 4–6 evidence limits + thin readers; published SHAs fd62820 (X11), 60d4c8d (Wayland), 23ff505 (Windows); coordinator transcript eb2ce85d… sequential deliver of slices 4 then 5 then 6 after settled uname Darwin / missing helpers
+  - Observed effect: Three full Behavior deliver cycles (implement → obligations/source-review → refactor → publish) after the no-session premise was already settled; each added evidence-limit probe/docs plus a thin platform reader (xclip / wl-paste / ctypes CF_HDROP), not native measurement on this host
+  - Inference: Recurrence of the settled-no-session multi-slice pattern; thin readers could share one Structure (or early Behavior) with a single multi-desktop evidence-limit write, preserving honesty without three deliver loops once session absence is settled
 
 ## DD-003 — Linux X11 clipboard ownership learned through gated-CI repair loops
 For Linux image write under Xvfb, successive published repairs rediscovered that
@@ -94,3 +103,27 @@ silently weakening the bar.
   - Evidence: transcript ed9de93f… DEVELOPER ATTENTION on slices 4–5; user reply “skip… or use github actions”; plan Current decisions updated to gated GHA; skip rejected
   - Observed effect: Plan venue revised under approval; Linux acceptance preserved via gated jobs rather than skip or unauthorized limits.
   - Inference: Useful practice — mandatory native proof that the checkout cannot run is a human venue decision, not an agent-chosen evidence-limit substitute.
+## DD-007 — Desktop-free unavailable-path test asserted host OS
+A desktop-free test for the Windows unavailable stub used `assert sys.platform != "win32"` so the path was only exercised off Windows; the windows-latest matrix failed until the assertion was replaced with a platform monkeypatch.
+
+### Occurrences
+- Execution: SEED-001#read-files
+  - Timestamp: 2026-11-02T17:45:49+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: CI failures on 23ff505 (run https://github.com/terryyin/clipboard/actions/runs/41430900179, Python 3.10/3.14 windows-latest); repair commit b00d9ab (`monkeypatch…platform` to `"darwin"`); observer `/tmp/dough-ci-501/watch-8h3joP` events 1–3; coordinator transcript eb2ce85d… stash slice-7 docs then CI repair
+  - Observed effect: Extra story-branch CI repair between slice-6 Windows evidence-limit publish and tip green; desktop-free suite had encoded a Darwin/non-Windows host assumption
+  - Inference: Unavailable-stub / platform-branch tests must force the non-target platform via monkeypatch (or assert exception type only), never require the CI host OS; distinct from stub-message substring coupling (DD-005)
+## DD-008 — Stop for authorization before cross-subsystem package split
+When the 250-line refactor check required splitting an oversize module into a package that also moved delivered sibling seams, execution stopped for an explicit developer choice instead of splitting without authority or deferring silently.
+
+### Occurrences
+- Execution: SEED-001#read-files
+  - Timestamp: 2026-11-02T17:02:13+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: coordinator transcript eb2ce85d… DEVELOPER ATTENTION on clipboard.py 517 lines / 250-line gate; user authorized option 1 package split; commit acb5e62 (injectable seam + `clipboard/` package); PLAN.md Learnings slice 1
+  - Observed effect: Slice-1 delivery paused until human authorization; authorized split preserved public `import clipboard` / `VERSION` and unblocked later slices
+  - Inference: Useful practice — file-size fixes that cross delivered subsystem seams are human-owned packaging decisions, parallel to venue stops for mandatory native proof (DD-006)

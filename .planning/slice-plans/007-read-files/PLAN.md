@@ -194,6 +194,17 @@ Behavior: Pre-condition: outcomes from slices 2–6. Trigger: docs + packaging
 updates. Postcondition: callers can ingest file-manager copies without
 guessing paths from text; evidence wording is honest.
 
+## Execution complete
+
+Product advice: `paste_files` lands as a peer of `paste_image` / `copy_html`:
+explicit API, `ClipboardContentError` vs `None`, injectable CI, independent-FM
+native proof where a session existed. Keep the backlog order —
+`SEED-001#copy-files` is the natural outbound sibling; do not invent a separate
+"verify X11/Wayland/Windows paste_files" story unless the owner wants those
+evidence limits cleared on real desktops (thin readers and probes are already
+in place). Leave Taken `read-html` / `inspect-formats` alone. Assimilate README
+Evidence floors into North Star on wrap-up; no priority change.
+
 ## Current decisions
 
 - Reuse North Star explicit-API shape and `ClipboardContentError`; implement
