@@ -91,7 +91,7 @@ platform distinctions, reuse candidates, and uncertainty.
 
 **Identity:** SEED-001#read-images-native
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/002-read-images-native/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"2d5b5cb340ca09ddd1f0364c6687c7f4e8bc3967cfec7d1ff55b9fc042674540","plan":"faf369166fb5cb268d37135b424723b77b1bcca4bebd8223b23f1f7b2768e631"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/002-read-images-native/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"ec3228e56c755eff850a5c8ba0a1d5bc68605a0248b6aa62bf00d318a9dbc723","plan":"d879ec34bb0db0dca679de2182006ab0837f1c610c81875890b260b729abac91"}}
 ```
 
 **Plan:** [slice-plans/002-read-images-native/PLAN.md](../slice-plans/002-read-images-native/PLAN.md)
@@ -118,7 +118,9 @@ macOS path stay compatible.
   SEED-001#read-images-native" wording. Default automated tests stay
   desktop-free; native probes remain explicitly gated (same spirit as
   `CLIPBOARD_NATIVE_PROBE` / `scripts/probe_macos_native_paste_image.py`).
-  Reuse `paste_image` / `clipboard[images]` as delivered.
+  Reuse `paste_image` / `clipboard[images]` as delivered. An outcome where
+  every remaining desktop is only evidence-limited still fulfills this story
+  when each limit is explicit and none is silently claimed verified.
 - **Supported desktops (this story):** Windows desktop; Linux X11 + `xclip`;
   Linux Wayland + `wl-paste` scoped to the compositor actually probed when
   one is available. macOS Aqua remains already verified and must stay
@@ -130,10 +132,13 @@ macOS path stay compatible.
   pasteboard / clipboard authorization. Do not change `paste()` or treat
   file-list / URL-only offers as images.
 - **Scope limits / deferred:** Image writing; new public image APIs or return
-  shapes; making default pytest / CI require a real desktop; expanding the
-  four-desktop set; HTML, files, inspection, clear, waits, or PRIMARY.
-  Contract changes beyond what a failed native probe forces for honesty of
-  evidence limits belong to a separate decision, not silent scope growth.
+  shapes; making default pytest / CI require a real desktop or a continuous
+  native desktop matrix; expanding the four-desktop set; HTML, files,
+  inspection, clear, waits, or PRIMARY. Contract changes beyond what a failed
+  native probe forces for honesty of evidence limits belong to a separate
+  decision, not silent scope growth. Requiring at least one successful
+  Windows or Linux verification (rather than honest limits) is a deferred
+  stronger promise, not this story's acceptance bar.
 - **Rejection constraints:** Silent success on an unprobed desktop is
   forbidden (independent need: honest four-desktop promise and Shared
   Boundaries). Wayland compositor generalization is forbidden (independent
@@ -155,10 +160,43 @@ macOS path stay compatible.
    evidence-limited rather than implied.
 5. A remaining supported desktop has no usable session during execution →
    docs keep or refresh an explicit unverified/unsupported note for that
-   desktop; it is never documented as verified.
+   desktop; it is never documented as verified. If all three remaining
+   desktops land this way, the story still completes once each note is
+   honest and the uniform "unverified pending this story" placeholder is gone.
 6. After this work, in-memory `paste_image` contract tests and the existing
    gated macOS probe still pass; `copy` / `paste` / `VERSION` and text-only
    callers behave as before.
+
+**Direction (explored):** Compare credible ways to close the Win/Linux floors
+against the same goal and Shared Boundaries.
+
+1. **Per-desktop gated probes with evidence-limit fallback (recommended).**
+   Mirror the macOS Aqua probe: independent producer → `paste_image` → recorded
+   floors, or an explicit limit when no session exists. Reuses delivered
+   contract and keeps default CI desktop-free.
+2. **Docs-only blanket unverified note.** Simpler existing path, but it does
+   not add measurement when a session is available and collapses per-desktop
+   honesty into one label — acceptable only as the no-session branch of (1).
+3. **CI desktop matrix (Windows + Linux GUI runners).** Stronger continuous
+   attestation, but makes default verification require real desktops — excluded
+   here and deferred.
+4. **Per-platform `paste_image` rewrite instead of verifying ImageGrab.** A
+   different capability (redesign), not this evidence story.
+
+Borrowed framing: treat each desktop floor like a **compliance attestation** —
+claim only what a named measurement supports (probe script + floors), and
+publish an explicit non-claim (evidence limit) otherwise. Roles map as:
+measurement → gated independent-producer probe; attested claim → README
+verified floors; non-claim → evidence-limit note. Limit of the analogy: one
+attestation pass does not create continuous CI proof or invent a missing
+desktop session.
+
+Challenge: the purpose is trustworthy documentation of floors, not mandatory
+Win/Linux success. Probes are one way to reach that purpose; honest limits are
+the other. Meeting the wording with three evidence limits still meets the
+purpose when none is a silent success. Strongest consequential doubt — that
+all-limits completion barely improves trust beyond today's placeholder — is
+accepted as the known cost of owner-held sessions, not a rewrite of the goal.
 
 **Settled from prior delivery (SEED-001#read-images):** Public contract is
 `paste_image()` → Pillow `Image | None` with `ClipboardImageError` for

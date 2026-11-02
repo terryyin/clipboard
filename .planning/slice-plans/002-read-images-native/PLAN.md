@@ -10,7 +10,9 @@ Close the four-desktop `paste_image` promise for the remaining unverified
 targets: Windows desktop, Linux X11 + `xclip`, and Linux Wayland + `wl-paste`.
 Each gets independent-producer native proof comparable to the macOS Aqua probe,
 or an explicit unverified/unsupported evidence limit — never silent success.
-Text callers and the verified macOS path stay compatible.
+All three remaining desktops may end evidence-limited when no usable session
+exists; that still closes the story once each limit is explicit. Text callers
+and the verified macOS path stay compatible.
 
 **Included:** gated native probes (scripts + optional pytest, same spirit as
 `CLIPBOARD_NATIVE_PROBE` / `scripts/probe_macos_native_paste_image.py`); opaque
@@ -128,10 +130,15 @@ and text behavior already proved in-memory / macOS.
 ## Current decisions
 
 - Reuse delivered `paste_image` / North Star explicit-API shape; no redesign.
+- Direction: per-desktop gated probes with evidence-limit fallback (not
+  docs-only blanket, CI desktop matrix, or ImageGrab rewrite).
 - Mirror macOS gated probe pattern per desktop; independent producers only.
-- Missing desktop session → evidence limit, not plan blockage.
+- Missing desktop session → evidence limit, not plan blockage; three limits
+  still complete the story.
 - Wayland proof is compositor-scoped.
 - Follow [.planning/NORTH-STAR.md](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports).
+- ADR store is undefined in this repo; architecture follows North Star only
+  (no Accepted ADR check completed).
 
 ## Learnings
 
