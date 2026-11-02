@@ -64,13 +64,13 @@
 | 51 | No `clipboard[images]` requirement for this story. | slice 1 | observed: tests/test_paste_files_seam.py::test_paste_files_importable_without_images_extra |
 | 52 | Supported desktop: Windows desktop with Explorer (or equivalent) producing `CF_HDROP`. | slice 6 |  |
 | 53 | Supported desktop: macOS Aqua with Finder (or equivalent) producing file-URL / filename pasteboard types. | slice 3 | observed: README.rst macOS Aqua paste_files verified floors; clipboard/_files_native.py |
-| 54 | Supported desktop: Linux X11 + helper able to request `text/uri-list` on CLIPBOARD from a named file manager. | slice 4 |  |
+| 54 | Supported desktop: Linux X11 + helper able to request `text/uri-list` on CLIPBOARD from a named file manager. | slice 4 | observed: README.rst X11 paste_files evidence limit; clipboard/_files_native.py xclip text/uri-list reader; scripts/probe_linux_x11_native_paste_files.py verified:false |
 | 55 | Supported desktop: Linux Wayland + helper able to request `text/uri-list` (or equivalent) from a named file manager, scoped to the compositor actually proved when one is available. | slice 5 |  |
 | 56 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available. | slice 7 |  |
 | 57 | When no usable session exists during execution, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified. | slice 7 |  |
 | 58 | Never silent success for an unproved desktop. | slice 7 |  |
 | 59 | Do not generalize one Wayland compositor’s result to all environments. | slice 5 |  |
-| 60 | Do not generalize one Linux file manager’s result to all environments. | slice 4 |  |
+| 60 | Do not generalize one Linux file manager’s result to all environments. | slice 4 | observed: README.rst + probe file_manager_generalization:false — do not generalize one Linux FM |
 | 61 | Do not overload `paste()` to return or accept file lists. | slice 1 | observed: clipboard/__init__.py re-exports pyperclip paste separately from paste_files |
 | 62 | Do not overload `copy()` to return or accept file lists. | slice 1 | observed: clipboard/__init__.py re-exports pyperclip copy separately from paste_files |
 | 63 | Do not treat ordinary text offers as file-list success. | slice 2 | observed: test_absence_kinds_return_none text |

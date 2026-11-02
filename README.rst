@@ -205,6 +205,7 @@ Evidence / verified platforms:
   owner-held Windows desktop to replace this limit, including a non-ASCII
   fragment/context case.
 * macOS Aqua ``paste_files`` verified with independent ``osascript`` / ``NSFilenamesPboardType`` producer (Unicode+spaces; not library round-trip), AppKit re-read non-mutation, files untouched; floors macOS 26.6.2 (25G83) / Darwin 25.6.0 / arm64 (``scripts/probe_macos_native_paste_files.py``; ``CLIPBOARD_NATIVE_PROBE=1`` / ``tests/test_paste_files_native_macos.py``).
+* Linux X11 ``paste_files`` (helper ``xclip -o -selection clipboard -t text/uri-list`` after a **named** file manager copies local files) is an explicit **evidence limit** on this execution host: no usable X11 session with ``xclip`` on ``PATH`` was available (Darwin checkout). Do not treat X11 ``paste_files`` as verified, and do not generalize one Linux file manager's result to all environments. ``scripts/probe_linux_x11_native_paste_files.py`` records ``evidence_limit`` / ``verified: false`` / ``file_manager_generalization: false`` (exit 2) rather than silent success. Re-run that gated X11 independent-FM probe on an owner-held X11 session with a named file manager to replace this limit for that file manager only.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the
@@ -232,8 +233,7 @@ For a single command, use ``nix develop -c make check``. Without Nix, install
 Python 3.13 and uv, then use the same Make targets; actionlint is needed for
 ``make lint-workflows``. Windows contributors can run ``uv sync --locked``,
 ``uv run --locked --extra images pytest``, and ``uv run --locked ruff check .``
-directly.
-Do not install project dependencies into the system Python environment.
+directly. Do not install project dependencies into the system Python environment.
 
 GitHub Actions checks the Nix environment and tests Python 3.10–3.14, including
 Windows and macOS at the supported version boundaries. Package checks install

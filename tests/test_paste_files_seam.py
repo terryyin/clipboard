@@ -15,15 +15,11 @@ def test_paste_files_public_surface():
     assert callable(clipboard.set_files_clipboard_reader)
 
 
-def test_default_reader_raises_on_non_darwin(
+def test_default_reader_raises_on_windows_stub(
     restore_files_clipboard_reader, monkeypatch
 ):
-    """Non-Darwin default raises until later platform readers land.
-
-    Force a non-Darwin platform so default pytest never touches the pasteboard;
-    Darwin's native file-list path stays gated to the native probe.
-    """
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
+    """Windows / other platforms stay unavailable until their adapters land."""
+    monkeypatch.setattr(clipboard._files_native.sys, "platform", "win32")
     clipboard.set_files_clipboard_reader(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.paste_files()
@@ -76,6 +72,9 @@ def test_reset_reader_restores_default(restore_files_clipboard_reader, monkeypat
         is clipboard._files_native._default_files_clipboard_reader
     )
     monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
+    monkeypatch.delenv("DISPLAY", raising=False)
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    monkeypatch.setattr(clipboard._files_native.shutil, "which", lambda _name: None)
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.paste_files()
 

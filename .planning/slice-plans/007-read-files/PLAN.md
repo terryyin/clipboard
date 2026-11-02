@@ -135,7 +135,7 @@ examples 1 and 7 (macOS branch) or honest limit.
 
 ### 4. Early probe — Linux X11 + helper `text/uri-list`
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable X11 session with a helper that can request `text/uri-list`
 on CLIPBOARD (document the exact tool/flags, e.g. `xclip -o -t text/uri-list`)
 and a **named** file manager, gated probe: independent FM → `paste_files()`
@@ -238,6 +238,12 @@ guessing paths from text; evidence wording is honest.
   ``scripts/probe_macos_native_paste_files.py``); floors macOS 26.6.2 /
   Darwin 25.6.0; README Evidence updated. Default Darwin reader in
   ``clipboard/_files_native.py``.
+
+
+- Slice 4: Linux X11 ``paste_files`` explicit evidence limit on this Darwin
+  host (no ``xclip``/DISPLAY); thin ``xclip -o -selection clipboard -t
+  text/uri-list`` reader wired for later owner-held verification; probe
+  ``file_manager_generalization: false``.
 
 ## Concern evidence
 
