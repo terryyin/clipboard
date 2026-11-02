@@ -271,3 +271,12 @@ guessing empty vs denied; evidence wording is honest.
   precedes the contract Behavior, and native session premises are already
   bounded by authorized early probe slices.
 - Remaining slice-specific concerns: none identified in this review.
+
+## Execution complete
+
+Product advice: no change — inspect outcome met the story; residual
+Windows / Linux X11 / Wayland native verification remains intentional
+evidence-limit debt for owner-held sessions, not a defect versus the plan.
+Low-impact `_is_linux_wayland` duplication across offer and image-write seams
+is residue only. Process finding DD-002 recorded (settled no-session premise
+still drove three Behavior publish cycles).
