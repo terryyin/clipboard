@@ -192,6 +192,32 @@ evidence limits.
 - **Safe stopping point:** Image ingestion works even if every later story is
   cancelled; reads preserve content and text callers remain compatible.
 
+<a id="read-images-native"></a>
+
+### Native image-read verification on Windows and Linux
+
+**Identity:** SEED-001#read-images-native
+```json dough-story-state
+{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+```
+
+- **For / why:** Close the SEED-001#read-images four-desktop promise with
+  independent-producer native proof (or updated evidence limits) on Windows,
+  Linux X11+`xclip`, and Linux Wayland+`wl-paste`, including helper/OS floors,
+  alpha behavior, and native Windows CF_HDROP filename-list absence.
+- **Evaluation:** On each remaining desktop, either record a matching native
+  probe like the macOS Aqua result, or keep an explicit unverified/unsupported
+  note — never silent success. Do not generalize one Wayland compositor.
+- **Value / learning:** Turns documented evidence limits into verified floors
+  before image writing expands the same desktop set.
+- **Boundary:** Native verification and docs/floors for image **read** only.
+  No image writing. Reuse `paste_image` / `clipboard[images]` as delivered.
+- **Effort hypothesis:** **M**, medium confidence; depends on available
+  desktop sessions and compositor coverage.
+- **Depends on:** None for scheduling; builds on delivered `paste_image`.
+- **Safe stopping point:** Each desktop has either native proof or an honest
+  evidence limit; text and macOS image-read callers remain compatible.
+
 <a id="write-images"></a>
 
 ### Copy Python images into desktop applications

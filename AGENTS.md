@@ -1,6 +1,10 @@
 # Clipboard
 
-A small Python library exposing `copy`, `paste`, and `VERSION` through pyperclip.
+A small Python library exposing `copy`, `paste`, and `VERSION` through
+pyperclip, plus optional image reading via `paste_image` when the
+`clipboard[images]` extra (Pillow) is installed. Access, helper, transfer, or
+malformed-image failures raise `ClipboardImageError` rather than returning
+`None`.
 
 Use Nix for development tools, as in the neighboring Lizard project. Run tools
 with `nix develop -c <command>`; Git commands can run directly. Nix pins the
@@ -14,6 +18,7 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 - Format Python: `nix develop -c make format`
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
-Tests use an in-memory clipboard backend so CI needs no desktop session.
+Default tests use an in-memory clipboard backend so CI needs no desktop
+session; optional native pasteboard probes stay gated (see README).
 Release setup and maintainer steps are documented in `docs/releasing.md`.
 Never create or push a release tag unless the maintainer explicitly requests it.
