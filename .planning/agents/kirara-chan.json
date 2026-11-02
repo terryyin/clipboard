@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Kirara-chan",
+  "email": "kirara-chan@example.org",
+  "identity": "SEED-001#write-images",
+  "mode": "story-branch",
+  "branch": "cursor/copy-python-images-into-desktop-applications",
+  "host": "cursor",
+  "model": "auto"
+}
