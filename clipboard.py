@@ -16,7 +16,7 @@ VERSION = "0.0.5"
 
 
 class ClipboardImageError(Exception):
-    """Image clipboard read failed; distinct from ordinary absence (``None``)."""
+    """Image clipboard read or write failed; not ordinary absence (``None``)."""
 
 
 def _pillow_image(operation: str):
@@ -62,8 +62,26 @@ def set_image_writeclipboard(writeclipboard: Callable | None) -> None:
     )
 
 
-def _raise_image_failure(exc: BaseException) -> NoReturn:
-    raise ClipboardImageError(f"clipboard image read failed: {exc}") from exc
+def _raise_image_failure(exc: BaseException, *, operation: str) -> NoReturn:
+    raise ClipboardImageError(f"clipboard image {operation} failed: {exc}") from exc
+
+
+def _transferable_raster(Image, image: Image.Image) -> Image.Image:
+    """Return an RGB/RGBA raster ready to offer, or raise before replace."""
+    if not isinstance(image, Image.Image):
+        raise TypeError(
+            f"copy_image requires a Pillow Image, got {type(image).__name__}"
+        )
+    image.load()
+    if image.width <= 0 or image.height <= 0:
+        raise ValueError("copy_image requires a non-empty raster")
+    if image.mode in ("RGB", "RGBA"):
+        return image
+    if image.mode in ("LA", "PA") or (
+        image.mode == "P" and "transparency" in image.info
+    ):
+        return image.convert("RGBA")
+    return image.convert("RGB")
 
 
 def paste_image() -> Image.Image | None:
@@ -83,7 +101,7 @@ def paste_image() -> Image.Image | None:
         result = _grabclipboard()
     except (OSError, NotImplementedError) as exc:
         # Includes PermissionError, ChildProcessError, UnidentifiedImageError.
-        _raise_image_failure(exc)
+        _raise_image_failure(exc, operation="read")
 
     if isinstance(result, Image.Image):
         return result
@@ -94,7 +112,7 @@ def paste_image() -> Image.Image | None:
             image = Image.open(BytesIO(bytes(result)))
             image.load()
         except OSError as exc:
-            _raise_image_failure(exc)
+            _raise_image_failure(exc, operation="read")
         return image
 
     # list[str], URL strings, None, and other non-image offers → absence.
@@ -104,9 +122,22 @@ def paste_image() -> Image.Image | None:
 def copy_image(image: Image.Image) -> None:
     """Copy a Pillow Image onto the clipboard.
 
-    Requires the optional ``clipboard[images]`` extra (Pillow). Platform-native
-    publication is provided by later writers; tests may inject a fake via
-    ``set_image_writeclipboard``.
+    Requires the optional ``clipboard[images]`` extra (Pillow). Invalid or
+    unloadable input raises ``ClipboardImageError`` before any replace.
+    Non-RGB(A) modes are converted to a transferable RGB/RGBA raster. Backend
+    / transfer failures raise ``ClipboardImageError``. Tests may inject a fake
+    via ``set_image_writeclipboard``.
     """
-    _pillow_image("copy_image")
-    _writeclipboard(image)
+    Image = _pillow_image("copy_image")
+    try:
+        raster = _transferable_raster(Image, image)
+    except (TypeError, ValueError, OSError) as exc:
+        _raise_image_failure(exc, operation="write")
+
+    try:
+        _writeclipboard(raster)
+    except ClipboardImageError:
+        raise
+    except (OSError, NotImplementedError) as exc:
+        # Includes PermissionError, ChildProcessError, default stub.
+        _raise_image_failure(exc, operation="write")

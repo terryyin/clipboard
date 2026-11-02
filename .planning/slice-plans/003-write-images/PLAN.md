@@ -90,7 +90,7 @@ no native publication required yet. Enables slice 2 contract Behavior.
 
 ### 2. In-memory `copy_image` contract
 Type: Behavior
-Status: planned
+Status: done
 Proof: Desktop-free tests show: valid Pillow Image → fake backend receives a
 transferable RGB/RGBA raster; invalid/unloadable Image → `ClipboardImageError`
 with **no** backend replace call (prior fake offer unchanged); backend failure →
@@ -194,6 +194,12 @@ helpers; evidence wording is honest.
 - Command: `nix develop -c uv run --locked --extra images pytest tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_copy_image.py -q` → 22 passed.
 - Observations: public `copy_image` / `set_image_writeclipboard`; injectable fake receives Image; reset restores stub; ImportError without Pillow; text and `paste_image` suites green.
 
+## Accepted proof (slice 2)
+
+- Command: `nix develop -c uv run --locked --extra images pytest tests/test_copy_image.py tests/test_copy_image_failures.py tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py -q` → 41 passed.
+- Observations: transferable RGB/RGBA; mode conversion; fail-before-replace; clear text+image in fake offer; backend/stub → `ClipboardImageError`; text/`paste_image` regression green.
+- Learning: split success vs failure `copy_image` tests; shared `tests/image_offer.py` fake offer stand-in.
+
 ## Concern evidence
 
 - Slice-plan refinement: not needed — Behavior/Structure split is one write
@@ -209,7 +215,7 @@ helpers; evidence wording is honest.
 ### G-interim-stub. Default write raises NotImplementedError
 Reported: slice 1 — "default `_default_writeclipboard` raises `NotImplementedError` until a real writer or contract wrapper lands"
 Story clause: "Failures other than successful publication (missing helper, denied access, transfer failure, unsupported session) raise `ClipboardImageError` rather than silent no-op."
-Disposition: interim until slices 2, 3
+Disposition: proved by slice 2: tests/test_copy_image_failures.py::test_default_write_stub_wrapped_as_clipboard_image_error (public copy_image wraps stub NotImplementedError into ClipboardImageError; internal stub remains until native writers)
 
 ### G-excl-env. Non-desktop environments are not guaranteed desktops
 Reported: slice 1 — "WSL, SSH, containers, and headless CI are not additional guaranteed desktops"

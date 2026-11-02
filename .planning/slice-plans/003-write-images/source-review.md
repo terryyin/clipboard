@@ -20,14 +20,14 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | R.1 | Add an explicit public write API (proposed spelling `copy_image`) | slice 1 | observed: clipboard.copy_image is public and callable (tests/test_copy_image.py::test_copy_image_is_public_and_callable) |
 | R.2 | The API accepts a Pillow `Image` | slice 1 | observed: copy_image(image) forwards the same Pillow Image to the injectable writer (tests/test_copy_image.py::test_injected_writeclipboard_receives_image) |
 | R.3 | The API requires the existing optional `clipboard[images]` extra | slice 1 | observed: without Pillow, copy_image raises ImportError naming images/pillow (tests/test_copy_image.py::test_copy_image_without_pillow_raises_import_error) |
-| R.4 | A successful call publishes one static raster offer the desktop can paste | slice 2 | |
-| R.5 | Invalid or unloadable input is rejected with `ClipboardImageError` before replacing current clipboard contents | slice 2 | |
-| R.6 | A successful write replaces prior text representations so a later paste does not see a stale text offer | slice 2 | |
-| R.7 | A successful write replaces prior image representations so a later paste does not see a stale image offer | slice 2 | |
-| R.8 | Failures other than successful publication raise `ClipboardImageError` rather than silent no-op | slice 2 | |
+| R.4 | A successful call publishes one static raster offer the desktop can paste | slice 7 | |
+| R.5 | Invalid or unloadable input is rejected with `ClipboardImageError` before replacing current clipboard contents | slice 2 | observed: tests/test_copy_image_failures.py::test_invalid_input_raises_before_replace; test_empty_image_raises_before_replace; test_unloadable_image_raises_before_replace |
+| R.6 | A successful write replaces prior text representations so a later paste does not see a stale text offer | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster (offer text cleared on success) |
+| R.7 | A successful write replaces prior image representations so a later paste does not see a stale image offer | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster (prior image replaced on success) |
+| R.8 | Failures other than successful publication raise `ClipboardImageError` rather than silent no-op | slice 2 | observed: tests/test_copy_image_failures.py::test_backend_failure_raises_clipboard_image_error; test_default_write_stub_wrapped_as_clipboard_image_error |
 | R.8a | Missing helper → `ClipboardImageError` (not silent no-op) | slice 4 | |
 | R.8b | Denied access → `ClipboardImageError` (not silent no-op) | slice 3 | |
-| R.8c | Transfer failure → `ClipboardImageError` (not silent no-op) | slice 2 | |
+| R.8c | Transfer failure → `ClipboardImageError` (not silent no-op) | slice 2 | observed: tests/test_copy_image_failures.py::test_backend_failure_raises_clipboard_image_error |
 | R.8d | Unsupported session → `ClipboardImageError` (not silent no-op) | slice 3 | |
 | R.9 | Document Linux helper dependencies: `xclip` on X11 | slice 7 | |
 | R.10 | Document Linux helper dependencies: `wl-copy` on Wayland | slice 7 | |
@@ -38,7 +38,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | R.15 | Successful writes remain pasteable after the writing process exits on each claimed desktop | slice 7 | |
 | R.16 | Opaque rasters are required | slice 3 | |
 | R.17 | When the native offer carries alpha, preserve it or document a platform drop | slice 3 | |
-| R.18 | Convert non-RGB(A) modes to a transferable RGB/RGBA raster before offering | slice 2 | |
+| R.18 | Convert non-RGB(A) modes to a transferable RGB/RGBA raster before offering | slice 2 | observed: tests/test_copy_image.py::test_non_rgba_modes_convert_before_offer; test_palette_with_transparency_converts_to_rgba |
 | R.19 | Document conversion limits | slice 7 | |
 | R.20 | Calling without the images extra raises `ImportError` consistent with `paste_image` | slice 1 | observed: tests/test_copy_image.py::test_copy_image_without_pillow_raises_import_error |
 | S.1 | Windows desktop is a supported desktop for this story | slice 6 | |
@@ -58,9 +58,9 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | X.1 | Do not overload `copy()` to accept or return images | slice 1 | observed: write path is separate `copy_image`; `copy` remains pyperclip text API (clipboard.py; tests/test_clipboard.py) |
 | X.2 | Do not overload `paste()` to accept or return images | slice 1 | observed: write path is separate `copy_image`; `paste` remains pyperclip text API (clipboard.py; tests/test_clipboard.py) |
 | X.3 | Do not bypass OS pasteboard / clipboard authorization | slice 3 | |
-| X.4 | Do not treat a file-path / file-list / URL offer as fulfilling this image-content story | slice 2 | |
-| X.5 | Do not leave a superseded text representation readable after a successful image write | slice 2 | |
-| X.6 | Do not leave a superseded image representation readable after a successful image write | slice 2 | |
+| X.4 | Do not treat a file-path / file-list / URL offer as fulfilling this image-content story | slice 2 | observed: copy_image accepts Pillow Image only; path/str/bytes rejected before replace (tests/test_copy_image_failures.py::test_invalid_input_raises_before_replace) |
+| X.5 | Do not leave a superseded text representation readable after a successful image write | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster |
+| X.6 | Do not leave a superseded image representation readable after a successful image write | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster |
 | X.7 | Do not hang the caller indefinitely waiting to serve clipboard data | slice 3 | |
 | X.8 | Do not generalize one Wayland compositor's result to all Wayland environments | slice 5 | |
 | D.1 | Path/bytes overloads deferred; callers open to `Image` first |  | G-excl-deferred |
@@ -77,7 +77,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | D.8 | Inventing rollback/atomicity guarantees beyond fail-before-replace deferred |  | G-excl-deferred |
 | D.9 | Using `paste_image` alone as native proof remains deferred (insufficient) |  | G-excl-deferred |
 | D.10 | Splitting Linux-first vs Win/macOS into separate stories is deferred unless execution evidence forces a resplit |  | G-excl-deferred |
-| C.1 | Invalid image input must not replace current content | slice 2 | |
+| C.1 | Invalid image input must not replace current content | slice 2 | observed: tests/test_copy_image_failures.py::test_invalid_input_raises_before_replace (replace_calls stays 0; prior offer intact) |
 | C.2 | Silent success on an unproved desktop is forbidden | slice 3 | |
 | C.3 | Windows-only delivery is forbidden as story completion (issue #5) | slice 7 | |
 | C.4 | Wayland compositor generalization is forbidden | slice 5 | |
