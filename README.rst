@@ -203,6 +203,7 @@ Evidence / verified platforms:
 * macOS Aqua ``paste_files`` verified (independent ``osascript`` / ``NSFilenamesPboardType``; Unicode+spaces; non-mutation; floors macOS 26.6.2 / Darwin 25.6.0 / arm64; ``scripts/probe_macos_native_paste_files.py``).
 * Linux X11 ``paste_files`` (``xclip -o -selection clipboard -t text/uri-list`` after a **named** FM) is an **evidence limit** here (Darwin; no ``xclip``/DISPLAY). Not verified; ``file_manager_generalization: false``. ``scripts/probe_linux_x11_native_paste_files.py`` exits 2.
 * Linux Wayland ``paste_files`` (``wl-paste -t text/uri-list`` on a **named** compositor after a **named** FM) is an **evidence limit** here (Darwin; no ``wl-paste``/``WAYLAND_DISPLAY``). Never verified; do not generalize one compositor. ``scripts/probe_linux_wayland_native_paste_files.py``: ``evidence_limit`` / ``verified: false`` / ``compositor_generalization: false`` (exit 2).
+* Windows desktop ``paste_files`` (Explorer ``CF_HDROP`` via ctypes) is an **evidence limit** here (Darwin; no Windows desktop). Never verified. ``scripts/probe_windows_native_paste_files.py``: ``evidence_limit`` / ``verified: false`` (exit 2).
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the

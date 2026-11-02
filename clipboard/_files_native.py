@@ -11,6 +11,7 @@ from ._files_native_linux import (
     _linux_x11_files_clipboard_reader,
 )
 from ._files_native_macos import _macos_files_clipboard_reader
+from ._files_native_windows import _windows_files_clipboard_reader
 
 
 def _unavailable_native_reader_message() -> str:
@@ -24,11 +25,13 @@ def _unavailable_native_reader_message() -> str:
 
 
 def _default_files_clipboard_reader() -> object:
-    """Platform-selected file-list reader (Darwin; Linux X11 / Wayland)."""
+    """Platform-selected file-list reader (Darwin; Linux; Windows CF_HDROP)."""
     if sys.platform == "darwin":
         return _macos_files_clipboard_reader()
     if sys.platform.startswith("linux"):
         if _linux_wayland_without_x11():
             return _linux_wayland_files_clipboard_reader()
         return _linux_x11_files_clipboard_reader()
+    if sys.platform == "win32":
+        return _windows_files_clipboard_reader()
     raise ClipboardContentError(_unavailable_native_reader_message())

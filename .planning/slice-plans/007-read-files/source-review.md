@@ -42,7 +42,7 @@
 | 29 | The read performs no existence check on the referenced paths. | slice 2 | observed: clipboard/_files.py no existence check |
 | 30 | Normalize platform payloads to local path strings. | slice 2 | observed: clipboard/_files.py _local_path_from_file_uri / _paths_from_path_list |
 | 31 | Normalization includes decoding `file://` URIs including percent-encoding and Unicode / spaces. | slice 2 | observed: test_uri_list_file_uris_decode_to_local_paths (percent-encoding Unicode spaces) |
-| 32 | Normalization includes reading Windows `CF_HDROP` path lists. | slice 6 |  |
+| 32 | Normalization includes reading Windows `CF_HDROP` path lists. | slice 6 | observed: clipboard/_files_native_windows.py CF_HDROP ctypes reader; scripts/probe_windows_native_paste_files.py evidence_limit verified:false |
 | 33 | Normalization includes reading macOS file-URL / filename pasteboard types. | slice 3 | observed: clipboard/_files_native_macos.py macOS file-URL/filename pasteboard read; tests/test_paste_files_native_macos.py gated |
 | 34 | Preserve offer order. | slice 2 | observed: test_ordered_two_file_path_list_unicode_and_spaces; uri-list line order preserved |
 | 35 | If a cut/move marker is present beside the references, ignore it for all library behavior. | slice 2 | observed: tests/test_paste_files_failures.py::test_cut_marker_ignored_still_returns_paths; cut fields present but unused in clipboard/_files.py normalize |
@@ -62,7 +62,7 @@
 | 49 | Document Linux helper dependencies for file-list reads (`xclip` / `wl-paste` requesting `text/uri-list` or equivalent). | slice 7 |  |
 | 50 | Document supported desktop setup. | slice 7 |  |
 | 51 | No `clipboard[images]` requirement for this story. | slice 1 | observed: tests/test_paste_files_seam.py::test_paste_files_importable_without_images_extra |
-| 52 | Supported desktop: Windows desktop with Explorer (or equivalent) producing `CF_HDROP`. | slice 6 |  |
+| 52 | Supported desktop: Windows desktop with Explorer (or equivalent) producing `CF_HDROP`. | slice 6 | observed: README.rst Windows paste_files evidence limit; probe verified:false on Darwin host |
 | 53 | Supported desktop: macOS Aqua with Finder (or equivalent) producing file-URL / filename pasteboard types. | slice 3 | observed: README.rst macOS Aqua paste_files verified floors; clipboard/_files_native_macos.py |
 | 54 | Supported desktop: Linux X11 + helper able to request `text/uri-list` on CLIPBOARD from a named file manager. | slice 4 | observed: README.rst X11 paste_files evidence limit; clipboard/_files_native_linux.py xclip text/uri-list; scripts/probe_linux_x11_native_paste_files.py verified:false |
 | 55 | Supported desktop: Linux Wayland + helper able to request `text/uri-list` (or equivalent) from a named file manager, scoped to the compositor actually proved when one is available. | slice 5 | observed: README.rst Wayland paste_files evidence limit; clipboard/_files_native_linux.py wl-paste -t text/uri-list; probe verified:false |

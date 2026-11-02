@@ -15,11 +15,11 @@ def test_paste_files_public_surface():
     assert callable(clipboard.set_files_clipboard_reader)
 
 
-def test_default_reader_raises_on_windows_stub(
+def test_default_reader_raises_on_unknown_platform(
     restore_files_clipboard_reader, monkeypatch
 ):
-    """Windows / other platforms stay unavailable until their adapters land."""
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "win32")
+    """Platforms without a file-list adapter raise ClipboardContentError."""
+    monkeypatch.setattr(clipboard._files_native.sys, "platform", "aix")
     clipboard.set_files_clipboard_reader(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.paste_files()

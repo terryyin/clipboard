@@ -166,7 +166,7 @@ example 7 (Wayland branch) or honest limit.
 
 ### 6. Early probe — Windows desktop `CF_HDROP`
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Windows desktop session, gated probe: independent Explorer
 (or equivalent) copies two local files including Unicode/spaces;
 `paste_files()` returns matching ordered local paths from `CF_HDROP`;
@@ -250,6 +250,11 @@ guessing paths from text; evidence wording is honest.
   ``wl-paste``/WAYLAND_DISPLAY); thin ``wl-paste -t text/uri-list`` reader;
   ``compositor_generalization: false``. Native readers split to
   ``_files_native_{macos,linux}.py`` + dispatch.
+
+
+- Slice 6: Windows ``paste_files`` / ``CF_HDROP`` explicit evidence limit on
+  this Darwin host; thin ctypes DragQueryFileW reader (no win32clipboard
+  public dependency) for later owner-held verification.
 
 ## Concern evidence
 
