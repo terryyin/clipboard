@@ -1,4 +1,4 @@
-"""Cross-platform clipboard access, provided by pyperclip."""
+"""Cross-platform clipboard: text via pyperclip, plus image, HTML, and inspect."""
 
 from __future__ import annotations
 

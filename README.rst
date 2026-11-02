@@ -1,26 +1,21 @@
 clipboard
 =========
 
-A cross platform clipboard operation library of Python. Works for Windows, Mac and Linux.
-
-Well, as I was trying to implement this, I realize that everything is included in pyperclip already: https://pypi.python.org/pypi/pyperclip/
-
-But anyway, `clipboard` is a better name. You are free to choose:-) I might add more features to it.
+A cross platform clipboard library for Python (Windows, macOS, Linux). Text
+``copy`` / ``paste`` re-export pyperclip; richer APIs sit beside them.
 
 Usage
 -----
 
-Text copy and paste (no optional extras required):
+Text (no optional extras):
 
 ::
 
    import clipboard
-   clipboard.copy("abc")  # now the clipboard content will be string "abc"
-   text = clipboard.paste()  # text will have the content of clipboard
+   clipboard.copy("abc")
+   text = clipboard.paste()
 
-To read or write a static raster image on the clipboard as a Pillow ``Image``,
-install the optional ``images`` extra (Pillow) and call ``paste_image`` /
-``copy_image``:
+Image read/write needs the optional ``images`` extra (Pillow):
 
 ::
 
@@ -30,23 +25,15 @@ install the optional ``images`` extra (Pillow) and call ``paste_image`` /
    image = clipboard.paste_image()  # Pillow Image, or None when none is offered
    clipboard.copy_image(Image.new("RGB", (8, 8), (255, 0, 0)))
 
-``paste_image`` leaves clipboard contents unchanged. Ordinary absence (text-only
-clipboard, empty clipboard, or a file-reference / filename-list offer) returns
-``None``. Access, missing-helper, transfer, or malformed-image failures raise
-``clipboard.ClipboardImageError`` instead of returning ``None``.
+``paste_image`` leaves the clipboard unchanged. Ordinary absence (text-only,
+empty, or file-list offer) returns ``None``. Access, missing-helper, transfer,
+or malformed-image failures raise ``clipboard.ClipboardImageError`` (not
+``None``). ``copy_image`` publishes one static Pillow raster (non-RGB(A)
+converted); invalid input raises ``ClipboardImageError`` **before** replacing
+contents; helper/access/transfer failure raises (no silent success). Calling
+either without the extra raises ``ImportError``.
 
-``copy_image`` publishes one static raster offer (Pillow ``Image`` only; open
-path/bytes yourself first). Non-RGB(A) modes are converted to a transferable
-RGB or RGBA raster before the offer; animated / multi-frame / path overloads
-are out of scope. Invalid or unloadable input raises
-``clipboard.ClipboardImageError`` **before** replacing current clipboard
-contents. Missing helper, denied access, transfer failure, or an unsupported
-session raise ``ClipboardImageError`` (no silent success). A successful write
-replaces prior text and image representations for that clipboard. Calling
-``paste_image`` or ``copy_image`` without the extra raises ``ImportError``.
-
-To publish an HTML fragment with a matching plain-text alternative as one
-clipboard offer, call ``copy_html``:
+HTML dual-offer write (no ``clipboard[images]`` required):
 
 ::
 
@@ -56,174 +43,91 @@ clipboard offer, call ``copy_html``:
        'café → https://example.com',
    )
 
-``copy_html(html, text)`` requires the caller to supply both a Unicode HTML
-fragment and a matching plain-text alternative; the library does not synthesize
-text from HTML. Invalid arguments are rejected with
-``clipboard.ClipboardContentError`` **before** replacing clipboard contents.
-Success means both representations are published together as one offer: a rich
-consumer can obtain HTML and a text-only consumer can obtain the alternative.
-Inability to offer both together, missing helpers, denied access, transfer
-failure, or an unsupported session raises ``ClipboardContentError`` — never a
-silent text-only "success". Sequential single-format writes are not a dual
-offer.
+``copy_html(html, text)`` requires both Unicode arguments; the library does not
+synthesize text from HTML. Invalid args raise
+``clipboard.ClipboardContentError`` **before** replacing contents. Success
+publishes HTML and plain text together; inability to offer both, missing
+helpers, denied access, transfer failure, or an unsupported session raises
+``ClipboardContentError`` — never silent text-only success. On macOS Aqua the
+default writer uses ``NSPasteboard`` HTML + string via ``osascript``. Elsewhere
+the default path raises until a dual-offer writer exists; Linux/Windows HTML
+writes remain evidence-limited (below) — an evidence limit is not proof a
+native writer is present.
 
-On macOS Aqua the default writer uses the system pasteboard
-(``NSPasteboard`` HTML + string types via ``osascript``). On other platforms
-the default path raises ``ClipboardContentError`` until a dual-offer writer is
-available; Linux and Windows HTML writes remain evidence-limited rather than
-verified (see below) — do not read an evidence limit as proof that a native
-writer is already present for that desktop.
+Inspect the current offer (kinds + native format ids; no ``clipboard[images]``):
+
+::
+
+   import clipboard
+   snap = clipboard.inspect()
+   # snap.kinds: frozenset among {text, image, html, files}
+   # snap.formats: platform-native type / UTI / MIME / format names
+
+``inspect()`` returns a ``ClipboardOfferSnapshot``: library ``kinds`` mapped
+from known native ids, plus the full ``formats`` list (undecodable ids stay
+listed). Listing a format does **not** promise a later ``paste_*`` / decode
+will succeed. An empty offer yields empty ``kinds`` / ``formats`` — not an
+error. Denied access, missing helper, or enumeration failure raises
+``ClipboardContentError`` (never a fabricated empty success; not
+``ClipboardImageError``). Inspection does not replace, clear, or reserve the
+clipboard. The snapshot is a point-in-time view and can race with other
+writers. Linux helpers: X11 ``xclip -selection clipboard -o -t TARGETS``;
+Wayland ``wl-paste -l`` (verified claims stay **named-compositor-scoped**).
+WSL, SSH, containers, and headless CI are not additional guaranteed desktops
+for ``inspect``.
 
 Installation
 ------------
 
-Install from PyPI with ``python -m pip install clipboard``. This checkout
-supports Python 3.10 and newer. Text ``copy`` / ``paste`` need a working desktop
-clipboard backend on Linux; see the
-`pyperclip documentation <https://pyperclip.readthedocs.io/>`_.
+``python -m pip install clipboard`` (Python 3.10+). Text needs a working
+desktop clipboard backend on Linux; see
+`pyperclip <https://pyperclip.readthedocs.io/>`_. Images:
+``python -m pip install 'clipboard[images]'``. ``copy_html`` and ``inspect``
+do **not** need that extra.
 
-For ``paste_image`` and ``copy_image``, install the optional extra so Pillow is
-available:
+Linux image **reads**: X11 ``xclip``; Wayland ``wl-paste``. Linux HTML
+**writes** need a multi-MIME helper (X11 multi-type ``xclip``; Wayland e.g.
+``wl-copy`` on a **named** compositor — do not generalize). Linux image
+**writes**: X11 ``xclip`` / Wayland ``wl-copy`` (may keep a background owner).
+Windows/macOS need a usable desktop session; rich/image APIs are not
+guaranteed under WSL, SSH, containers, or headless CI.
 
-::
+Evidence / verified platforms (native probes gated via
+``CLIPBOARD_NATIVE_PROBE=1``; default tests are in-memory):
 
-   python -m pip install 'clipboard[images]'
-
-``copy_html`` does **not** require the ``clipboard[images]`` extra.
-
-On Linux, image clipboard **reads** also need a helper on ``PATH``:
-
-* X11: ``xclip``
-* Wayland: ``wl-paste`` (from wl-clipboard)
-
-For Linux HTML + plain-text **writes**, a helper must be able to offer
-**multiple** MIME types together (not a one-type-only path that drops the
-alternative):
-
-* X11: multi-type-capable ``xclip`` (or equivalent) offering ``text/html`` and
-  ``text/plain`` on CLIPBOARD together
-* Wayland: a multi-type-capable helper (for example ``wl-copy``) on a **named**
-  compositor; do not generalize one compositor's result to all Wayland
-  environments
-
-On Windows, a successful dual offer uses interoperable ``HTML Format`` (UTF-8
-fragment/context byte offsets, including non-ASCII) plus Unicode text in the
-same update. Windows and macOS need a usable desktop clipboard / pasteboard
-session; rich clipboard writes are not guaranteed under WSL, SSH, containers,
-or headless CI.
-
-Image **writes** via ``copy_image`` on Linux need:
-
-* X11: ``xclip`` (publishes ``image/png`` on CLIPBOARD; ``xclip -quiet`` may
-  keep a background owner so the offer stays pasteable after the writing
-  process exits)
-* Wayland: ``wl-copy`` (from wl-clipboard; publishes ``image/png``; may keep a
-  background owner so the offer stays pasteable after the writing process
-  exits)
-
-Windows and macOS need a usable desktop clipboard / pasteboard session; image read/write and rich clipboard writes are not guaranteed under WSL, SSH, containers, or headless CI.
-
-Evidence / verified platforms:
-
-* macOS Aqua pasteboard image reads have been verified with an independent
-  producer via the gated native probe (``CLIPBOARD_NATIVE_PROBE=1`` /
-  ``scripts/probe_macos_native_paste_image.py``).
-* Windows desktop, Linux X11 + ``xclip``, and Linux Wayland + ``wl-paste``
-  image reads remain supported targets but are each evidence-limited
-  (unverified / unsupported for native proof): no usable desktop clipboard
-  session for those environments was available during image-read
-  verification. Do not treat any of them as natively verified from that
-  work, and do not generalize a Wayland claim from X11 or an unstated
-  compositor.
-* macOS Aqua pasteboard image **writes** via ``copy_image`` have been verified
-  with an independent consumer (``PIL.ImageGrab.grabclipboard`` after the writing
-  process exits) at floors macOS 26.6.2 (build 25G83) / Darwin 25.6.0, Pillow
-  11.3.0, Python 3.13, arm64 Aqua; RGBA alpha was preserved in that probe.
-  Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
-  ``scripts/probe_macos_native_copy_image.py`` to refresh floors on another host.
-* Linux X11 image **writes** via ``copy_image`` (``xclip``) have been verified
-  under gated GitHub Actions job ``native-linux-x11-copy-image`` on
-  ``ubuntu-latest`` with Xvfb + ``xclip`` (independent consumer ``xclip -o``
-  ``image/png`` after writer exit) at floors Python 3.13 / Pillow 11.3.0; the
-  venue is headless CI with Xvfb, not an owner-held desktop. Opaque writer-exit
-  succeeded; the RGBA case is exercised in the same probe (preserve-or-drop
-  recorded there).
-* Linux Wayland image **writes** via ``copy_image`` (``wl-copy``) have been
-  verified **only** under gated GitHub Actions job
-  ``native-linux-wayland-copy-image`` on ``ubuntu-latest`` with the named
-  compositor **Sway** (``WLR_BACKENDS=headless``, ``wl-clipboard``; independent
-  consumer ``wl-paste -t image/png`` after writer exit) at floors Python 3.13 /
-  Pillow 11.3.0; do not generalize that result to other Wayland compositors.
-  Opaque writer-exit succeeded; the RGBA case is exercised in the same probe
-  (preserve-or-drop recorded there).
-* Windows desktop remains a supported write target, but image **writes** via
-  ``copy_image`` are **unverified**: no usable Windows desktop session was
-  available during ``SEED-001#write-images`` execution (developer checkout is
-  Darwin; GitHub Actions ``windows-latest`` matrix jobs are headless pytest
-  only and are not a desktop clipboard probe venue). This is an explicit
-  evidence limit — not a verified claim. Image-write story acceptance is
-  **not** Windows-only: Linux X11 (Xvfb CI) and Wayland (Sway CI) writer-exit
-  proofs above are required and already observed (issue #5); Windows remains
-  evidence-limited beside them.
-* macOS Aqua HTML + plain-text dual-offer writes via ``copy_html`` have been
-  verified with independent rich (``NSPasteboardTypeHTML``) and text
-  (``pbpaste``) consumers after the writing process exits. Floors recorded by
-  ``scripts/probe_macos_native_copy_html.py`` on this work: macOS
-  ProductVersion 26.6.2, BuildVersion 25G83, machine arm64 (Apple Silicon),
-  method ``osascript`` / AppKit ``NSPasteboardTypeHTML`` +
-  ``NSPasteboardTypeString``. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
-  the probe script to refresh floors on another host.
-* Linux X11 HTML + plain-text dual-offer writes via ``copy_html`` are an
-  **evidence limit** here: no usable X11 multi-type helper session (Darwin;
-  ``xclip`` absent). Do not treat as verified.
-  ``scripts/probe_linux_x11_native_copy_html.py`` records ``evidence_limit`` /
-  ``verified: false`` (exit 2). Re-run on owner-held X11 to replace this limit.
-* Linux Wayland HTML + plain-text dual-offer writes via ``copy_html`` are an
-  **evidence limit** here: no usable Wayland multi-type helper on a **named**
-  compositor (Darwin; ``wl-copy`` / ``wl-paste`` absent; ``WAYLAND_DISPLAY``
-  unset). Do not treat as verified or generalize one compositor. Probe
-  ``scripts/probe_linux_wayland_native_copy_html.py`` records
-  ``evidence_limit`` / ``verified: false`` /
-  ``compositor_generalization: false`` (exit 2). Re-run on owner-held Wayland
-  for that compositor only.
-* Windows desktop HTML + Unicode text dual-offer writes via ``copy_html``
-  (``HTML Format`` with UTF-8 fragment/context offsets for non-ASCII) are an
-  **evidence limit** here (Darwin; no Windows session). Do not treat as
-  verified. ``scripts/probe_windows_native_copy_html.py`` records
-  ``evidence_limit`` / ``verified: false`` /
-  ``non_ascii_case_required_for_verification: true`` (exit 2). Re-run on
-  owner-held Windows including a non-ASCII fragment/context case.
-* macOS Aqua ``inspect()`` verified with an independent AppKit producer
-  (HTML+plain-text; image-only PNG when feasible), matching kinds / UTIs, then
-  an independent consumer (non-mutation). Floors:
-  ``scripts/probe_macos_native_inspect.py`` 26.6.2 / 25G83 / arm64,
-  ``osascript`` ``NSPasteboard`` ``types()`` (no payload fetch; no images
-  extra). Refresh with ``CLIPBOARD_NATIVE_PROBE=1``. Other desktops separate.
-* Linux ``inspect()`` is an **evidence limit** here (Darwin checkout): X11
-  needs ``DISPLAY`` + ``xclip`` TARGETS; Wayland needs ``WAYLAND_DISPLAY`` +
-  ``wl-paste -l``, and any verified Wayland claim is **compositor-scoped
-  only**. Probes ``scripts/probe_linux_x11_native_inspect.py`` and
-  ``scripts/probe_linux_wayland_native_inspect.py`` record
-  ``evidence_limit`` / ``verified: false`` (Wayland also
-  ``compositor_generalization: false``; exit 2). Re-run with
-  ``CLIPBOARD_NATIVE_PROBE=1`` on owner-held Linux for that desktop (named
-  compositor on Wayland only).
-* Windows desktop ``inspect()`` is an **evidence limit** here (Darwin; no
-  Windows session): ``ctypes`` / ``user32`` ``EnumClipboardFormats`` (no
-  ``win32clipboard``). Probe ``scripts/probe_windows_native_inspect.py``
-  records ``evidence_limit`` / ``verified: false`` (exit 2). Re-run with
-  ``CLIPBOARD_NATIVE_PROBE=1`` on owner-held Windows to replace this limit.
-
-Default automated tests use an in-memory backend (no real desktop); native
-probes stay gated, outside the default suite. X11/Wayland image-write probes
-are separate gated jobs, not default matrix pytest.
+* Image **reads**: macOS Aqua verified (``scripts/probe_macos_native_paste_image.py``).
+  Windows / X11 / Wayland reads remain evidence-limited (no usable session in
+  that verification); do not generalize Wayland from X11 or an unstated compositor.
+* Image **writes** ``copy_image``: macOS Aqua verified (26.6.2 / 25G83 / Darwin
+  25.6.0, Pillow 11.3.0, Python 3.13, arm64; RGBA preserved;
+  ``scripts/probe_macos_native_copy_image.py``). Linux X11 verified under gated
+  GHA ``native-linux-x11-copy-image`` (Xvfb + ``xclip``, Python 3.13 / Pillow
+  11.3.0; headless CI, not owner desktop). Wayland verified **only** under
+  ``native-linux-wayland-copy-image`` with named compositor **Sway** (do not
+  generalize). Windows writes: evidence limit (Darwin checkout; GHA Windows is
+  headless pytest only).
+* ``copy_html``: macOS Aqua dual-offer verified (``scripts/probe_macos_native_copy_html.py``,
+  26.6.2 / 25G83 / arm64, ``osascript`` / AppKit). Linux X11 / Wayland (named
+  compositor only) / Windows HTML Format: evidence limits here (Darwin; probes
+  exit 2 with ``evidence_limit`` / ``verified: false``).
+* ``inspect()``: macOS Aqua verified with independent AppKit producer
+  (HTML+text; image-only when feasible), matching kinds/UTIs, then independent
+  consumer (non-mutation); floors ``scripts/probe_macos_native_inspect.py``
+  26.6.2 / 25G83 / arm64, ``NSPasteboard`` ``types()`` (no payload fetch).
+  Linux X11 (needs ``DISPLAY`` + ``xclip`` TARGETS), Wayland (``WAYLAND_DISPLAY``
+  + ``wl-paste -l``, compositor-scoped), and Windows (``ctypes`` / ``user32``
+  ``EnumClipboardFormats``, no ``win32clipboard``): evidence limits here
+  (Darwin); probes ``scripts/probe_linux_x11_native_inspect.py``,
+  ``scripts/probe_linux_wayland_native_inspect.py``,
+  ``scripts/probe_windows_native_inspect.py`` record ``evidence_limit`` /
+  ``verified: false`` (Wayland also ``compositor_generalization: false``;
+  exit 2). Re-run on owner-held desktops to replace limits.
 
 Development
 -----------
 
 Nix flakes (`Nix <https://nixos.org/download/>`_), like Lizard: ``flake.lock``
-pins Python 3.13, uv, Make, and actionlint. ``pyproject.toml`` /
-``uv.lock`` pin Python dependencies.
+pins Python 3.13, uv, Make, actionlint; ``uv.lock`` pins deps.
 
 ::
 
@@ -231,19 +135,16 @@ pins Python 3.13, uv, Make, and actionlint. ``pyproject.toml`` /
    make deps check lint-workflows build test-package
 
 Or ``nix develop -c make check``. Without Nix: Python 3.13 + uv + same Make
-targets (actionlint for ``lint-workflows``). Windows: ``uv sync --locked``,
-``uv run --locked --extra images pytest``, ``uv run --locked ruff check .``.
-Do not install into system Python.
-
-GitHub Actions covers Nix plus Python 3.10–3.14 (Windows/macOS boundaries),
-installs wheel and sdist outside the tree, and uses an in-memory clipboard
-backend (no desktop required).
+targets. Windows: ``uv sync --locked``, ``uv run --locked --extra images
+pytest``, ``uv run --locked ruff check .``. Do not install into system Python.
+GHA covers Nix plus Python 3.10–3.14, installs wheel/sdist outside the tree,
+and uses an in-memory clipboard (no desktop). X11/Wayland image-write probes
+are separate gated jobs.
 
 Publishing
 ----------
 
-Pushing a matching version tag runs checks and publishes through PyPI Trusted
-Publishing, followed by a GitHub release. Maintainers must first configure the
-``pypi`` environment and trusted publisher. See
-`the release guide <https://github.com/terryyin/clipboard/blob/master/docs/releasing.md>`_
-for setup, approval, and release steps.
+A matching version tag runs checks and publishes via PyPI Trusted Publishing,
+then a GitHub release. Configure the ``pypi`` environment and trusted
+publisher first. See
+`the release guide <https://github.com/terryyin/clipboard/blob/master/docs/releasing.md>`_.

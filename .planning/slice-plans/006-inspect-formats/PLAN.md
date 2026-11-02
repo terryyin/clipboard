@@ -206,13 +206,18 @@ Trigger: gated independent-producer inspect. Postcondition: examples 1–4
 
 ### 7. Docs and packaging alignment for inspect
 Type: Behavior
-Status: planned
+Status: done
 Proof: README (and related install/evidence notes) document `inspect`, empty
 vs `ClipboardContentError`, non-mutation, snapshot/race limits, kind↔native
 mapping floors, Linux enumeration helpers, per-desktop verified floors or
 evidence limits from slices 3–6, and that `clipboard[images]` is not required;
 desktop-free suites stay green under locked pytest / `make check` as
 applicable.
+
+Accepted proof (coordinator):
+- README Usage documents `inspect()` / snapshot / empty vs error / race /
+  helpers / decode non-promise; Evidence consolidates macOS verified + Linux/Windows limits
+- `nix develop -c make check` → 109 passed, 10 skipped; `VERSION` remains `0.0.5`
 
 Behavior: Pre-condition: outcomes from slices 2–6. Trigger: docs + packaging
 updates. Postcondition: callers can enable paste UIs from inspect without
