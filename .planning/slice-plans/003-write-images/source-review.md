@@ -25,7 +25,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | R.6 | A successful write replaces prior text representations so a later paste does not see a stale text offer | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster (offer text cleared on success) |
 | R.7 | A successful write replaces prior image representations so a later paste does not see a stale image offer | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster (prior image replaced on success) |
 | R.8 | Failures other than successful publication raise `ClipboardImageError` rather than silent no-op | slice 2 | observed: tests/test_copy_image_failures.py::test_backend_failure_raises_clipboard_image_error; test_default_write_stub_wrapped_as_clipboard_image_error |
-| R.8a | Missing helper → `ClipboardImageError` (not silent no-op) | slice 4 | |
+| R.8a | Missing helper → `ClipboardImageError` (not silent no-op) | slice 4 | observed: tests/test_copy_image_failures.py::test_missing_xclip_raises_clipboard_image_error (empty PATH → OSError naming xclip → ClipboardImageError) |
 | R.8b | Denied access → `ClipboardImageError` (not silent no-op) | slice 3 | observed: clipboard._write_macos_pngf raises OSError on osascript failure; copy_image wraps as ClipboardImageError (clipboard.py; failures suite) |
 | R.8c | Transfer failure → `ClipboardImageError` (not silent no-op) | slice 2 | observed: tests/test_copy_image_failures.py::test_backend_failure_raises_clipboard_image_error |
 | R.8d | Unsupported session → `ClipboardImageError` (not silent no-op) | slice 3 | observed: non-Darwin default still NotImplementedError → ClipboardImageError; Darwin osascript failure → OSError → ClipboardImageError (clipboard.py) |
@@ -43,13 +43,13 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | R.20 | Calling without the images extra raises `ImportError` consistent with `paste_image` | slice 1 | observed: tests/test_copy_image.py::test_copy_image_without_pillow_raises_import_error |
 | S.1 | Windows desktop is a supported desktop for this story | slice 6 | |
 | S.2 | macOS Aqua is a supported desktop for this story | slice 3 | observed: README Evidence marks macOS Aqua write verified; probe environment desktop Aqua |
-| S.3 | Linux X11 + `xclip` is a supported desktop for this story | slice 4 | |
+| S.3 | Linux X11 + `xclip` is a supported desktop for this story | slice 4 | observed: `_write_linux_xclip` on Linux default path; gated GHA job `native-linux-x11-copy-image` (Xvfb); README names X11/`xclip` write helper |
 | S.4 | Linux Wayland + `wl-copy` is a supported desktop, scoped to the compositor actually proved | slice 5 | |
 | S.5 | WSL is not an additional guaranteed desktop |  | G-excl-env |
 | S.6 | SSH is not an additional guaranteed desktop |  | G-excl-env |
 | S.7 | Containers are not an additional guaranteed desktop |  | G-excl-env |
 | S.8 | Headless CI is not an additional guaranteed desktop |  | G-excl-env |
-| S.9 | Linux X11 writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit | slice 4 | |
+| S.9 | Linux X11 writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit |  | G-x11-ci |
 | S.10 | Linux Wayland writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit | slice 5 | |
 | S.11 | Windows requires independent-consumer + writer-exit proof when a session is available | slice 6 | |
 | S.12 | macOS requires independent-consumer + writer-exit proof when a session is available | slice 3 | observed: writer subprocess exits then ImageGrab consume (scripts/probe_macos_native_copy_image.py) |

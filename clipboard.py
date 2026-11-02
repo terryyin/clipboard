@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from io import BytesIO
 from typing import TYPE_CHECKING, NoReturn
 
@@ -46,15 +47,27 @@ def set_image_grabclipboard(grabclipboard: Callable | None) -> None:
     _grabclipboard = _default_grabclipboard if grabclipboard is None else grabclipboard
 
 
-def _write_macos_pngf(image: Image.Image) -> None:
-    """Publish a transferable PNG via osascript «class PNGf» (no pyobjc)."""
-    import subprocess
+@contextmanager
+def _temporary_png_offer(image: Image.Image) -> Iterator:
+    """Yield a PNG path kept alive until the helper has finished reading it."""
     import tempfile
     from pathlib import Path
 
     with tempfile.TemporaryDirectory(prefix="clipboard-copy-image-") as raw:
         path = Path(raw) / "offer.png"
         image.save(path, format="PNG")
+        yield path
+
+
+def _helper_failure_detail(result) -> str:
+    return (result.stderr or result.stdout or "").strip() or "unknown error"
+
+
+def _write_macos_pngf(image: Image.Image) -> None:
+    """Publish a transferable PNG via osascript «class PNGf» (no pyobjc)."""
+    import subprocess
+
+    with _temporary_png_offer(image) as path:
         # osascript reads the file into the pasteboard before TemporaryDirectory
         # cleanup; normal macOS pasteboard authorization (no entitlement bypass).
         posix = str(path.resolve()).replace("\\", "\\\\").replace('"', '\\"')
@@ -69,16 +82,58 @@ def _write_macos_pngf(image: Image.Image) -> None:
         except subprocess.TimeoutExpired as exc:
             raise OSError("osascript clipboard write timed out") from exc
         if result.returncode != 0:
-            detail = (result.stderr or result.stdout or "").strip() or "unknown error"
-            raise OSError(f"osascript clipboard write failed: {detail}")
+            raise OSError(
+                f"osascript clipboard write failed: {_helper_failure_detail(result)}"
+            )
+
+
+def _write_linux_xclip(image: Image.Image) -> None:
+    """Publish PNG bytes on X11 CLIPBOARD via ``xclip`` (``image/png``).
+
+    ``xclip`` reads the tempfile into memory, then forks a background owner so
+    the foreground helper can exit while the offer remains pasteable. The
+    TemporaryDirectory is removed only after that foreground exit.
+    """
+    import subprocess
+
+    with _temporary_png_offer(image) as path:
+        try:
+            result = subprocess.run(
+                [
+                    "xclip",
+                    "-selection",
+                    "clipboard",
+                    "-t",
+                    "image/png",
+                    "-i",
+                    str(path),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except FileNotFoundError as exc:
+            raise OSError(
+                "xclip is required for clipboard image write on Linux X11; "
+                "install xclip and ensure it is on PATH"
+            ) from exc
+        except subprocess.TimeoutExpired as exc:
+            raise OSError("xclip clipboard write timed out") from exc
+        if result.returncode != 0:
+            raise OSError(
+                f"xclip clipboard write failed: {_helper_failure_detail(result)}"
+            )
 
 
 def _default_writeclipboard(image: Image.Image) -> None:
-    """Platform default image write; non-Darwin remains unimplemented for now."""
+    """Platform default image write; Windows / Wayland remain later slices."""
     import sys
 
     if sys.platform == "darwin":
         _write_macos_pngf(image)
+        return
+    if sys.platform.startswith("linux"):
+        _write_linux_xclip(image)
         return
     raise NotImplementedError("clipboard image write is not implemented yet")
 

@@ -51,6 +51,14 @@ On Linux, image clipboard reads also need a helper on ``PATH``:
 * X11: ``xclip``
 * Wayland: ``wl-paste`` (from wl-clipboard)
 
+Image **writes** via ``copy_image`` on Linux need:
+
+* X11: ``xclip`` (publishes ``image/png`` on CLIPBOARD; ``xclip`` may keep a
+  background owner so the offer stays pasteable after the writing process
+  exits)
+* Wayland: ``wl-copy`` (from wl-clipboard) — pending later
+  ``SEED-001#write-images`` probe
+
 Windows and macOS need a usable desktop clipboard / pasteboard session; image
 reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
@@ -60,12 +68,18 @@ macOS Aqua pasteboard image **writes** via ``copy_image`` have been verified
 with an independent consumer (``PIL.ImageGrab.grabclipboard`` after the writing
 process exits) at floors macOS 26.6.2 (build 25G83) / Darwin 25.6.0, Pillow
 11.3.0, Python 3.13, arm64 Aqua; RGBA alpha was preserved in that probe.
-Windows desktop, Linux X11 with ``xclip`` / ``wl-copy``, and Linux Wayland with
-``wl-paste`` / ``wl-copy`` remain supported write targets, unverified pending
-later ``SEED-001#write-images`` probes (Linux X11/Wayland are acceptance
-requirements). Windows and Linux image **reads** remain unverified pending
-``SEED-001#read-images-native``. Default automated tests use an in-memory
-backend and do not exercise a real desktop clipboard.
+Linux X11 image **writes** via ``copy_image`` (``xclip``) are verified under
+gated GitHub Actions job ``native-linux-x11-copy-image`` on ``ubuntu-latest``
+with Xvfb + ``xclip`` (independent consumer ``xclip -o`` ``image/png`` after
+writer exit). Exact Python / Pillow / ``xclip`` version floors and alpha
+preserve-or-drop are filled from that job's probe JSON on the first green CI
+run; the venue is headless CI with Xvfb, not an owner-held desktop. Windows
+desktop and Linux Wayland with ``wl-copy`` remain supported write targets,
+unverified pending later ``SEED-001#write-images`` probes (Wayland is still an
+acceptance requirement). Windows and Linux image **reads** remain unverified
+pending ``SEED-001#read-images-native``. Default automated tests use an
+in-memory backend and do not exercise a real desktop clipboard; the X11 write
+probe is a separate gated job, not part of the default matrix pytest.
 
 Development
 -----------

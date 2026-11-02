@@ -1,9 +1,11 @@
-"""Shared helpers for gated macOS Aqua native clipboard probes."""
+"""Shared helpers for gated native clipboard probes (macOS Aqua, Linux X11)."""
 
 from __future__ import annotations
 
 import json
+import os
 import platform
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -33,14 +35,16 @@ def sw_vers(key: str) -> str | None:
     return out or None
 
 
-def base_environment(**extra: object) -> dict:
-    pillow_version = None
+def _pillow_version() -> str | None:
     try:
         import PIL
 
-        pillow_version = PIL.__version__
+        return PIL.__version__
     except ImportError:
-        pass
+        return None
+
+
+def macos_environment(**extra: object) -> dict:
     env = {
         "os": platform.system(),
         "os_release": platform.release(),
@@ -49,8 +53,41 @@ def base_environment(**extra: object) -> dict:
         "machine": platform.machine(),
         "desktop": "Aqua (macOS WindowServer / Quartz)",
         "helper": "osascript (macOS built-in)",
-        "pillow_version": pillow_version,
+        "pillow_version": _pillow_version(),
         "python": sys.version.split()[0],
+    }
+    env.update(extra)
+    return env
+
+
+def xclip_version() -> str | None:
+    try:
+        out = subprocess.check_output(
+            ["xclip", "-version"],
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    first = (out or "").strip().splitlines()
+    return first[0].strip() if first else None
+
+
+def linux_x11_environment(**extra: object) -> dict:
+    env = {
+        "os": platform.system(),
+        "os_release": platform.release(),
+        "machine": platform.machine(),
+        "desktop": "X11 under Xvfb (CI) or local X11",
+        "display": os.environ.get("DISPLAY"),
+        "xdg_session_type": os.environ.get("XDG_SESSION_TYPE"),
+        "helper": "xclip",
+        "xclip_version": xclip_version(),
+        "pillow_version": _pillow_version(),
+        "python": sys.version.split()[0],
+        "ci": os.environ.get("CI"),
+        "runner_os": os.environ.get("RUNNER_OS"),
+        "image_os": os.environ.get("ImageOS"),
     }
     env.update(extra)
     return env
@@ -65,6 +102,77 @@ def require_darwin_and_images() -> None:
         import clipboard  # noqa: F401
     except ImportError as exc:
         die(f"missing dependency (install clipboard[images]): {exc}")
+
+
+def require_linux_x11_and_images() -> None:
+    if not sys.platform.startswith("linux"):
+        die(f"probe requires Linux; got {sys.platform!r}")
+    if not os.environ.get("DISPLAY"):
+        die("probe requires DISPLAY (run under Xvfb / xvfb-run -a)")
+    if shutil.which("xclip") is None:
+        die("xclip not found on PATH")
+    try:
+        from PIL import Image  # noqa: F401
+
+        import clipboard  # noqa: F401
+    except ImportError as exc:
+        die(f"missing dependency (install clipboard[images]): {exc}")
+
+
+def write_via_exiting_copy_image_subprocess(path: Path, *, root: Path) -> dict:
+    """Run copy_image in a child that exits before the parent consumes."""
+    child = f"""
+import sys
+from pathlib import Path
+from PIL import Image
+import clipboard
+
+clipboard.set_image_writeclipboard(None)
+image = Image.open(Path({str(path)!r}))
+image.load()
+clipboard.copy_image(image)
+sys.exit(0)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", child],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    return {
+        "returncode": result.returncode,
+        "stdout": result.stdout.strip() or None,
+        "stderr": result.stderr.strip() or None,
+    }
+
+
+def consume_after_writer(path: Path, *, root: Path, grab):
+    """Writer-exit then independent grab; record grab errors for JSON."""
+    from PIL import Image
+
+    writer = write_via_exiting_copy_image_subprocess(path, root=root)
+    grabbed = None
+    grab_error = None
+    if writer["returncode"] == 0:
+        try:
+            result = grab()
+        except Exception as exc:  # noqa: BLE001 — record for JSON report
+            grab_error = f"{type(exc).__name__}: {exc}"
+        else:
+            grabbed = result if isinstance(result, Image.Image) else None
+    return writer, grabbed, grab_error
+
+
+def rgb_samples(samples: dict) -> dict:
+    """Compare opaque identity on RGB channels even if consumer returns RGBA."""
+    out = {}
+    for key, value in samples.items():
+        if isinstance(value, list) and len(value) >= 3:
+            out[key] = value[:3]
+        else:
+            out[key] = value
+    return out
 
 
 def sample_corners(image) -> dict:

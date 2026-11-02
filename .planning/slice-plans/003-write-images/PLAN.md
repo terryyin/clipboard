@@ -40,11 +40,14 @@ round-trip as sole native proof; Linux completion via evidence-limit alone.
   (helpers on Linux). Do not default to pyperclipimg/Qt; evaluate only if a
   probe forces reconsideration.
 - ADR store is undefined in this repo; no Accepted ADR constrains this plan.
-- This preparation checkout is macOS (Darwin). Linux and Windows native
-  sessions are owner-held / other-machine observations bounded by early probe
-  slices; missing Linux session cannot close those slices with an evidence
-  limit — probe failure or absence stops dependent Linux claims and revises
-  the plan. Missing Win/macOS session may yield an explicit evidence limit.
+- This preparation checkout is macOS (Darwin). Linux writer-exit proof is
+  obtained via **gated GitHub Actions** jobs (not owner-held desktop sessions
+  and not default pytest): X11 + `xclip` under Xvfb; Wayland + `wl-copy` under
+  a **named** CI compositor. Floors must name that CI environment honestly —
+  headless CI is still not a product “guaranteed desktop,” but those jobs are
+  the authorized observation venue for issue #5. Failed CI probes stop Linux
+  acceptance (no evidence-limit substitute). Missing Win/macOS session may
+  yield an explicit evidence limit.
 
 ## Outside-in proof
 
@@ -71,8 +74,8 @@ consumer; `paste_image` round-trips alone do not establish interoperability.
 | Injectable grabclipboard pattern exists to mirror for write | Structure slice for injectable write backend | `set_image_grabclipboard` in `clipboard.py` | Settled |
 | README documents Linux **read** helpers (`xclip`, `wl-paste`); write needs `wl-copy` | Docs in native slices | README Installation lists X11 `xclip`, Wayland `wl-paste` only | Settled: write docs must add `wl-copy` |
 | This checkout can run macOS native pasteboard write probes | Slice 3 | `uname -s` → Darwin | Settled: macOS probe runnable here when authorized |
-| This checkout can run Windows or Linux native clipboard write probes | Slices 4–6 | Darwin host | Settled: **cannot** here; Linux/Windows are early probes on owner-held sessions |
-| Independent consumer can paste after writer exit on each target | Native Behavior slices | Owner-held desktop + helper / pasteboard | **Early probe** (slices 3–6); Linux failure/absence stops Linux acceptance; Win/macOS may record evidence limit |
+| This checkout can run Windows or Linux native clipboard write probes | Slices 4–6 | Darwin host | Settled: **cannot** locally; Linux proof venue revised to gated GHA (Xvfb/`xclip`, named Wayland compositor); Windows still session or evidence limit |
+| Independent consumer can paste after writer exit on each target | Native Behavior slices | macOS local; Linux via GHA; Windows session or limit | **Early probe** (slices 3–6); Linux CI probe failure stops Linux acceptance; Win/macOS may record evidence limit |
 
 ## Ordered slices
 
@@ -120,28 +123,29 @@ Postcondition: example 7 (macOS branch) or honest limit.
 ### 4. Early probe — Linux X11 + `xclip` image write
 Type: Behavior
 Status: planned
-Proof: On a usable X11 session with `xclip`, gated probe: `copy_image` →
-writer exits → independent image/document app (or non-library consumer)
-pastes matching opaque size/colors; alpha case recorded; deps/floors
-documented; README marks X11 write verified. **No evidence-limit substitute
-for story acceptance** — missing session or failed probe stops Linux X11
-acceptance and revises the plan; do not mark issue #5 satisfied without this
-or slice 5 both succeeding on their paths.
+Proof: Implement Linux X11/`xclip` writer; gated probe (`copy_image` → writer
+exits → independent consumer recovers opaque size/colors; alpha recorded);
+add a GitHub Actions job that installs `xclip`, runs under **Xvfb**, and
+executes that probe (not default matrix pytest). README marks X11 write
+verified at those CI floors. **No evidence-limit substitute** — failed probe
+or missing job stops Linux X11 acceptance; issue #5 needs this and slice 5.
 
-Behavior: Pre-condition: contract; owner-held X11+`xclip` session. Trigger:
-gated write + independent consumer after exit. Postcondition: key example 1.
+Behavior: Pre-condition: contract; GHA ubuntu + Xvfb + `xclip`. Trigger:
+gated write + independent consumer after exit in CI. Postcondition: key
+example 1 (floors name Xvfb/CI honestly).
 
 ### 5. Early probe — Linux Wayland + `wl-copy` image write
 Type: Behavior
 Status: planned
-Proof: On a usable Wayland session with `wl-copy` on a **named** compositor,
-same writer-exit independent-consumer success; document compositor scope;
-README marks Wayland write verified for that compositor only. Missing session
-or failed probe stops Wayland acceptance (not an evidence-limit completion).
+Proof: Implement Wayland/`wl-copy` writer; gated probe with writer-exit
+independent consumer; GitHub Actions job under a **named** CI compositor
+(e.g. Weston) with `wl-clipboard`; README marks Wayland write verified for
+that compositor/CI floors only. Failed probe stops Wayland acceptance (not
+an evidence-limit completion).
 
-Behavior: Pre-condition: contract; owner-held Wayland+`wl-copy` session.
-Trigger: gated write + independent consumer after exit. Postcondition: key
-example 2.
+Behavior: Pre-condition: contract; GHA Wayland compositor + `wl-copy`.
+Trigger: gated write + independent consumer after exit in CI. Postcondition:
+key example 2.
 
 ### 6. Early probe — Windows desktop image write
 Type: Behavior
@@ -179,6 +183,9 @@ helpers; evidence wording is honest.
   a probe forces reuse reconsideration.
 - Independent consumer required for native proof; `paste_image` round-trip is
   regression-only.
+- **Developer (2026-11-02):** do not block on owner-held Linux desktops; either
+  skip Linux probes or prove them in GitHub Actions. Selected: **GHA** (preserves
+  issue #5). Skip rejected. Linux proof venue = gated CI jobs with honest floors.
 
 ## Learnings
 
@@ -188,6 +195,7 @@ helpers; evidence wording is honest.
   by `paste_image` and `copy_image` (message still names the calling operation).
 - Default `_default_writeclipboard` raises `NotImplementedError` until later writers
   or slice-2 failure wrapping (tracked as G-interim-stub).
+- Darwin checkout cannot run Linux probes; owner chose GHA over skipping issue #5.
 
 ## Accepted proof (slice 1)
 
@@ -205,7 +213,7 @@ helpers; evidence wording is honest.
 - Darwin `_write_macos_pngf` via osascript «class PNGf»; gated probe with writer-exit + ImageGrab independent consumer.
 - Native: `CLIPBOARD_NATIVE_PROBE=1 … pytest tests/test_copy_image_native_macos.py` → pass; alpha preserved; floors macOS 26.6.2 / Pillow 11.3.0 recorded in README.
 - Desktop-free suites remain green (Darwin stub skip expected).
-- Learning: shared `scripts/macos_native_probe_common.py` for paste/copy Aqua probes.
+- Learning: shared `scripts/native_probe_common.py` for macOS/Linux native probes.
 
 ## Concern evidence
 
@@ -214,10 +222,15 @@ helpers; evidence wording is honest.
   `copy_image` offer model with platform adapters; Linux mandatory probes are
   authorized early probes, not unscoped concerns.
 - Remaining slice-specific concerns: none beyond the authorized early probes
-  in slices 3–6 (owner-held native sessions; Linux absence blocks acceptance
-  rather than silently succeeding).
+  in slices 4–6 (Linux via gated GHA; Windows session or evidence limit).
 
 ## Story obligations
+
+### G-x11-ci. Linux X11 writer-exit awaits green GHA probe
+Reported: slice 4 — "X11 writer-exit proof is gated on GitHub Actions job native-linux-x11-copy-image under Xvfb; not yet observed green"
+Story clause: "Linux X11 and Wayland writer-exit success are acceptance requirements (issue #5); they are not substitutable by an evidence-limit note."
+Disposition: interim until slices 4
+Commitment: S.9
 
 ### G-interim-stub. Default write raises NotImplementedError
 Reported: slice 1 — "default `_default_writeclipboard` raises `NotImplementedError` until a real writer or contract wrapper lands"

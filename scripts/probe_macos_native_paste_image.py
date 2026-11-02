@@ -16,13 +16,13 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from macos_native_probe_common import (
+from native_probe_common import (
     ALPHA_SIZE,
     OPAQUE_SIZE,
     alpha_preservation,
-    base_environment,
     describe,
     die,
+    macos_environment,
     require_darwin_and_images,
     write_alpha_rgba_png,
     write_opaque_rgb_png,
@@ -118,7 +118,7 @@ def main() -> None:
 
     report = {
         "ok": opaque["ok"] and alpha["ok"],
-        "environment": base_environment(
+        "environment": macos_environment(
             pasteboard_method=(
                 "osascript set clipboard to read POSIX file as «class PNGf»"
             ),

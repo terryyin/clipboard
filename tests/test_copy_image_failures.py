@@ -116,8 +116,8 @@ def test_backend_failure_raises_clipboard_image_error(
 
 
 @pytest.mark.skipif(
-    sys.platform == "darwin",
-    reason="Darwin default write is native; stub NotImplementedError is non-Darwin",
+    sys.platform == "darwin" or sys.platform.startswith("linux"),
+    reason="Darwin/Linux default write is native; stub NotImplementedError elsewhere",
 )
 def test_default_write_stub_wrapped_as_clipboard_image_error(
     restore_image_writeclipboard,
@@ -129,3 +129,19 @@ def test_default_write_stub_wrapped_as_clipboard_image_error(
         clipboard.copy_image(Image.new("RGB", (1, 1)))
     assert isinstance(raised.value.__cause__, NotImplementedError)
     assert "not implemented yet" in str(raised.value.__cause__)
+
+
+def test_missing_xclip_raises_clipboard_image_error(
+    monkeypatch, tmp_path, restore_image_writeclipboard
+):
+    """Missing xclip helper → ClipboardImageError (R.8a), not silent success."""
+    import clipboard
+
+    monkeypatch.setenv("PATH", str(tmp_path))
+    clipboard.set_image_writeclipboard(clipboard._write_linux_xclip)
+
+    with pytest.raises(clipboard.ClipboardImageError) as raised:
+        clipboard.copy_image(Image.new("RGB", (1, 1), color="red"))
+
+    assert isinstance(raised.value.__cause__, OSError)
+    assert "xclip" in str(raised.value.__cause__).lower()
