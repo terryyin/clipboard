@@ -55,7 +55,7 @@ producer; same-library round-trips alone do not establish interoperability.
 | Locked env has no Pillow | Optional extra / import path | same runner, `importlib.util.find_spec('PIL')` | Settled: `False` |
 | CI text tests substitute `pyperclip.determine_clipboard` | In-memory image contract tests | Read `tests/test_clipboard.py` | Settled: subprocess + in-memory copy/paste pair |
 | No in-product image-read path | New image module/API | Read `clipboard.py` | Settled: pyperclip re-export only (PFE gap) |
-| `ImageGrab.grabclipboard` yields a usable image from an independent desktop producer on each supported desktop (with helpers) | Native proof slices | Not observed in this checkout (no unpaid native producer run authorized here) | Open — bounded by early probe slices 5–6 |
+| `ImageGrab.grabclipboard` yields a usable image from an independent desktop producer on each supported desktop (with helpers) | Native proof slices | macOS Aqua observed (see Learnings slice 5); Windows / Linux remaining → slice 6 | Open — macOS settled for this checkout; other desktops → slice 6 |
 
 ## Ordered slices
 
@@ -105,7 +105,7 @@ slices 1–3 already expose.
 
 ### 5. Early probe — native image read on an available desktop
 Type: Behavior
-Status: planned
+Status: done
 Proof: On at least one supported desktop in this preparation/execution
 environment (Windows, macOS, or Linux with the matching helper), an
 independent screenshot or image app copies a static raster; `paste_image()`
@@ -150,6 +150,18 @@ from a single Wayland result.
 - Slice 3: `ClipboardImageError` wraps grab/decode failures (OSError/NotImplementedError); text-only still `None`.
 - Accepted proof (slice 3): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_clipboard.py -v` — failure≠absence coverage lives in `test_paste_image_failures.py` after post-change refactor.
 - Accepted proof (slice 4): README.rst documents `clipboard[images]`, Pillow/`paste_image`, Linux `xclip` / `wl-paste`; text install/usage remain accurate.
+- Slice 5 (evidence recorded; status not marked done pending delivery): Independent
+  producer on this macOS desktop — Pillow wrote known PNGs to temp files; osascript
+  placed them via `«class PNGf»`; `paste_image()` consumed with
+  `set_image_grabclipboard(None)` (real ImageGrab). Opaque RGB 32×24 matched corner
+  and center colors; second `paste_image()` matched first (preservative);
+  `ImageGrab.grabclipboard` still returned an image afterward. RGBA 16×16 with
+  translucent center `(0,0,255,128)` preserved mode RGBA and alpha 128.
+  Environment: macOS 26.6.2 (Build 25G83), Darwin 25.6.0 arm64, desktop Aqua
+  (WindowServer/Quartz), helper osascript (built-in), Pillow 11.3.0, Python 3.13.17.
+  Probe script: `scripts/probe_macos_native_paste_image.py` (JSON on stdout).
+  Optional gated test: `CLIPBOARD_NATIVE_PROBE=1` →
+  `tests/test_paste_image_native_macos.py` (skipped in default pytest).
 
 ## Concern evidence
 

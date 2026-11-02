@@ -13,13 +13,13 @@ told to read no other project files and change nothing.
 | --- | --- | --- | --- |
 | 1 | Python automation developers can retrieve a static raster image copied by an ordinary desktop application through one explicit clipboard operation, without writing platform-specific clipboard code. | slice 6 | |
 | 2 | `copy`, `paste`, and `VERSION`, and existing text callers, stay unchanged. | slice 1 | observed: tests/test_paste_image.py::test_text_api_importable_without_pillow; tests/test_clipboard.py |
-| 3 | An explicit image-read operation returns a Pillow `Image.Image` with usable raster pixels (dimensions, colors, and alpha when the native offer carries it) for one static image placed on the clipboard by an independent producer. | slice 5 | |
+| 3 | An explicit image-read operation returns a Pillow `Image.Image` with usable raster pixels (dimensions, colors, and alpha when the native offer carries it) for one static image placed on the clipboard by an independent producer. | slice 5 | observed: scripts/probe_macos_native_paste_image.py + tests/test_paste_image_native_macos.py (CLIPBOARD_NATIVE_PROBE=1); plan Learnings slice 5 |
 | 4 | The optional `clipboard[images]` extra installs Pillow. | slice 1 | observed: tests/test_paste_image.py::test_images_extra_declares_pillow; pyproject.toml `[project.optional-dependencies] images` |
 | 5.1 | Linux install docs name `xclip` (X11). | slice 4 | observed: README.rst Installation — X11: ``xclip`` |
 | 5.2 | Linux install docs name `wl-paste` (Wayland). | slice 4 | observed: README.rst Installation — Wayland: ``wl-paste`` |
-| 6.1 | Native encodings convert behind that Pillow contract: PNG. | slice 5 | |
+| 6.1 | Native encodings convert behind that Pillow contract: PNG. | slice 5 | observed: macOS probe placed PNG via osascript «class PNGf»; paste_image returned matching Image |
 | 6.2 | Native encodings convert behind that Pillow contract: DIB/DIBV5. | slice 6 | |
-| 6.3 | Native encodings convert behind that Pillow contract: macOS image types. | slice 5 | |
+| 6.3 | Native encodings convert behind that Pillow contract: macOS image types. | slice 5 | observed: macOS pasteboard PNGf → paste_image Image (probe) |
 | 6.4 | Native encodings convert behind that Pillow contract: Linux image MIME. | slice 6 | |
 | 7 | The image-read leaves clipboard contents unchanged. | slice 1 | observed: tests/test_paste_image.py::test_paste_image_absence_and_raster_preservative (before_text/after_text; same_object) |
 | 8 | Text-only or empty clipboard is ordinary absence (`None`). | slice 1 | observed: tests/test_paste_image.py::test_paste_image_absence_and_raster_preservative[hello text-None-False] |
@@ -28,14 +28,14 @@ told to read no other project files and change nothing.
 | 11.1 | Access denied, unavailable desktop, missing required helper, contention, or transfer failure are distinguishable from absence. | slice 3 | observed: tests/test_paste_image_failures.py::test_access_and_helper_failures_are_not_absence |
 | 11.2 | Access denied, unavailable desktop, missing required helper, contention, or transfer failure must not collapse to an empty success. | slice 3 | observed: tests/test_paste_image_failures.py::test_access_and_helper_failures_are_not_absence (raises ClipboardImageError, not None) |
 | 12.1 | Supported desktop: Windows desktop. | slice 6 | |
-| 12.2 | Supported desktop: macOS pasteboard sessions that grant access. | slice 5 | |
+| 12.2 | Supported desktop: macOS pasteboard sessions that grant access. | slice 5 | observed: plan Learnings — macOS 26.6.2 Aqua pasteboard probe ok |
 | 12.3 | Supported desktop: Linux X11 with `xclip`. | slice 6 | |
 | 12.4 | Supported desktop: Linux Wayland with `wl-paste` where the compositor exposes clipboard data. | slice 6 | |
 | 13 | Exact helper/OS floors are evidence-backed during planning and proof. | slice 6 | |
 | 14 | WSL, SSH, containers, and headless CI are not additional guaranteed desktops. | | X14 |
 | 15 | Wayland support is not inferred from one compositor. | slice 6 | |
 | 16 | Do not change `paste()` to return images. | slice 1 | observed: clipboard.py still re-exports pyperclip `paste`; tests/test_paste_image.py absence case keeps `paste()` text |
-| 17 | Do not bypass OS pasteboard authorization. | slice 5 | |
+| 17 | Do not bypass OS pasteboard authorization. | slice 5 | observed: probe uses normal ImageGrab.grabclipboard / osascript pasteboard; no entitlement bypass |
 | 18 | Do not treat URL-only or file-reference offers as images. | slice 2 | observed: tests/test_paste_image.py::test_url_only_offer_is_absence; test_file_list_offer_is_absence_without_filesystem_open |
 | 19.1 | Out of scope / deferred: Animation. | | X19.1 |
 | 19.2 | Out of scope / deferred: Screenshot capture. | | X19.2 |
@@ -53,8 +53,8 @@ told to read no other project files and change nothing.
 | 22 | Access / helper / malformed failures → not absence (independent need: actionable diagnosis per Shared Boundaries). | slice 3 | observed: clipboard.py ClipboardImageError; tests/test_paste_image_failures.py access/helper/malformed cases |
 | 23 | API spelling (settled): `paste_image() → Image \| None`; failures via exceptions. | slice 1 | observed: clipboard.py `paste_image` signature and return; ImportError without extra |
 | 24 | Keep the four-desktop promise with helper docs and evidence limits (settled with Pillow via `clipboard[images]`). | slice 6 | |
-| E1 | Independent screenshot app has copied a static PNG-capable raster → image-read → Pillow Image with matching width, height, expected opaque colors; clipboard still offers that image. | slice 5 | |
-| E2 | Desktop app copied an image with alpha → image-read → alpha preserved when native offer includes it; when a supported desktop drops alpha, docs/tests state that limit. | slice 5 | |
+| E1 | Independent screenshot app has copied a static PNG-capable raster → image-read → Pillow Image with matching width, height, expected opaque colors; clipboard still offers that image. | slice 5 | observed: independent osascript PNGf producer; opaque RGB match + preservative (probe/gated test) |
+| E2 | Desktop app copied an image with alpha → image-read → alpha preserved when native offer includes it; when a supported desktop drops alpha, docs/tests state that limit. | slice 5 | observed: RGBA center alpha 128 preserved on macOS Aqua (probe Learnings) |
 | E3 | Clipboard holds only Unicode text → image-read → `None`; `paste()` still returns the text; clipboard unchanged. | slice 1 | observed: tests/test_paste_image.py::test_paste_image_absence_and_raster_preservative[hello text-None-False] |
 | E4 | Windows (or other) clipboard holds only a filename / file-list offer → image-read → `None` (no file open); not an image success. | slice 2 | observed: tests/test_paste_image.py::test_file_list_offer_is_absence_without_filesystem_open |
 | E5 | Clipboard holds corrupted image bytes under an image type → image-read → distinguishable failure, not absence and not a partial fake image. | slice 3 | observed: tests/test_paste_image_failures.py::test_malformed_image_bytes_are_not_absence |
