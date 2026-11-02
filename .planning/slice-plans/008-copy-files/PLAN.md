@@ -35,9 +35,9 @@ desktops; persistence across logout/reboot; changing `copy`/`paste`.
   **Gap:** no outbound file-list writer exists. Windows PowerShell
   `Set-Clipboard -Path` treats `[` `]` as wildcards and adds a PowerShell
   startup per call; not selected as the default writer.
-- If SEED-001#desktop-helpers has landed when a Linux slice starts, its
-  private desktop module owns session detection, helper-failure detail, and
-  `TARGETS` listing; reuse it instead of the current per-module copies.
+- Private `clipboard/_desktop` owns session detection, helper-failure detail,
+  and `TARGETS` / list-types listing; Linux writer slices reuse it instead of
+  adding per-module copies.
 - No ADR store exists in this repository; no Accepted ADR constrains this plan.
 - This preparation checkout is Darwin 25.6.0 without `xclip`, `wl-copy`, or a
   Linux file manager. Windows/Linux offer-level proof runs in gated GitHub

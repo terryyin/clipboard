@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_desktop-helpers.json",
+      "identity": "SEED-001#desktop-helpers",
+      "completedAt": "2026-11-02T14:49:24.549Z",
+      "blob": "2ff3cf61251feb70da6187f936b7e0e9d886758d"
+    },
+    {
       "fileName": "SEED-001_read-files.json",
       "identity": "SEED-001#read-files",
       "completedAt": "2026-11-02T10:53:21.591Z",
