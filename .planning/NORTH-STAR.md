@@ -1,0 +1,22 @@
+# North Star
+
+Temporary direction for consequential choices that are not yet Accepted ADRs.
+Retire each topic into a maintained home when the product still needs the rule.
+
+## Rich clipboard content beside text re-exports
+
+New clipboard content operations (images first) stay as **explicit APIs** next
+to the existing pyperclip `copy` / `paste` re-exports. They do not overload
+`paste()`. Optional packaging extras declare content-stack dependencies (for
+images: Pillow via `clipboard[images]`; Linux helpers documented, not bundled).
+A thin contract layer normalizes platform offers into one absence / value /
+failure model. In-memory fakes prove the contract in CI; native
+interoperability needs independent producers and documented evidence limits.
+
+**Evidence:** SEED-001 Shared Boundaries and SEED-001#read-images refinement
+(2026-11-02); domain research reuse of Pillow `ImageGrab.grabclipboard`;
+product surface today is text-only (`clipboard.py`).
+
+**Affects:** SEED-001#read-images (establishes the pattern); later image write
+and HTML stories should follow the same explicit-API + optional-extra shape
+unless evidence forces a revision.

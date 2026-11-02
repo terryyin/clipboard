@@ -91,19 +91,98 @@ platform distinctions, reuse candidates, and uncertainty.
 
 **Identity:** SEED-001#read-images
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/001-read-images/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"414c9b90f9c00a00eab8c4f7852624359254d75ec8947813b00add9af722e63c","plan":"8d9b2e591d60a88b8b4ddd4a18317c202a9c19a20f79ad18767c8d5f1aac2152"}}
 ```
+
+**Plan:** [slice-plans/001-read-images/PLAN.md](../slice-plans/001-read-images/PLAN.md)
+
+**Goal:** Python automation developers can retrieve a static raster image
+copied by an ordinary desktop application through one explicit `clipboard`
+operation, without writing platform-specific clipboard code, while
+`copy` / `paste` / `VERSION` and existing text callers stay unchanged.
+
+**Scope:**
+
+- **Required behavior:** An explicit image-read operation returns a Pillow
+  `Image.Image` with usable raster pixels (dimensions, colors, and alpha
+  when the native offer carries it) for one static image placed on the
+  clipboard by an independent producer. The optional `clipboard[images]`
+  extra installs Pillow; Linux install docs name `xclip` (X11) or
+  `wl-paste` (Wayland). Native encodings (PNG, DIB/DIBV5, macOS image
+  types, Linux image MIME) convert behind that contract. The read leaves
+  clipboard contents unchanged. Text-only or empty clipboard is ordinary
+  absence (`None`). A file-reference / filename-list offer alone is absence
+  of image (not opened or decoded from disk). Malformed image bytes are a
+  distinguishable failure. Access denied, unavailable desktop, missing
+  required helper, contention, or transfer failure are distinguishable from
+  absence and must not collapse to an empty success.
+- **Supported desktops:** Windows desktop; macOS pasteboard sessions that
+  grant access; Linux X11 with `xclip`; Linux Wayland with `wl-paste` where
+  the compositor exposes clipboard data. Exact helper/OS floors are
+  evidence-backed during planning and proof. WSL, SSH, containers, and
+  headless CI are not additional guaranteed desktops. Wayland support is
+  not inferred from one compositor.
+- **Required restrictions:** Do not change `paste()` to return images.
+  Do not bypass OS pasteboard authorization. Do not treat URL-only or
+  file-reference offers as images.
+- **Scope limits / deferred:** Animation, screenshot capture, image
+  writing, automatic URL fetch, opening file-manager references, RTF,
+  arbitrary typed bytes, history, cloud sync, PNG-bytes-only APIs, and
+  library-owned non-Pillow buffers. Narrowing first delivery to a subset
+  of the supported desktops is out of scope for this story.
+- **Rejection constraints:** File-reference-only → no image (independent
+  need: do not perform filesystem reads from clipboard offers). Access /
+  helper / malformed failures → not absence (independent need: actionable
+  diagnosis per Shared Boundaries).
+
+**Key examples:**
+
+1. Independent screenshot app has copied a static PNG-capable raster →
+   caller runs the image-read API → receives a Pillow `Image` with matching
+   width, height, and expected opaque colors; clipboard still offers that
+   image.
+2. Desktop app copied an image with alpha → image-read → alpha preserved
+   when the native offer includes it; when a supported desktop drops alpha,
+   docs/tests state that limit rather than inventing opacity.
+3. Clipboard holds only Unicode text → image-read → `None`; `paste()` still
+   returns the text; clipboard unchanged.
+4. Windows (or other) clipboard holds only a filename / file-list offer →
+   image-read → `None` (no file open); not an image success.
+5. Clipboard holds corrupted image bytes under an image type → image-read →
+   distinguishable failure, not absence and not a partial fake image.
+6. No usable desktop clipboard / denied pasteboard access / required Linux
+   helper missing → image-read → actionable failure distinct from absence.
+
+**Architecture:**
+
+- This repository defines no ADR store, index, status fields, or
+  architecture-area map in project guidance (`AGENTS.md`, `.planning/`,
+  `docs/`). Accepted-ADR examination was unavailable; no ADR check completed.
+- Image read is a new responsibility beside the existing pyperclip text
+  re-export: a contract layer that normalizes platform offers into one
+  absence / Pillow image / failure model. Qualities at stake: cross-desktop
+  semantic uniformity, preservative reads, dependency honesty (Pillow /
+  helpers as declared install needs), and proof that in-memory fakes cannot
+  alone establish native interoperability.
+- Preferred reuse direction: wrap/normalize Pillow
+  `ImageGrab.grabclipboard()` (which on Windows may return a filename list)
+  rather than requiring a GUI toolkit or owning every native decoder in
+  this story. Exact module layout and API spelling are planning concerns.
+
+**Settled decisions (2026-11-02, Terry):** Pillow `Image` via
+`clipboard[images]`; keep the four-desktop promise with helper docs and
+evidence limits.
 
 - **For / why:** Python automation developers can consume a screenshot or
   copied image without platform-specific clipboard code.
 - **Evaluation:** On each supported desktop, an independent screenshot or
-  image application copies a static raster image; Python retrieves usable
-  pixels with the expected dimensions, colors, and supported alpha. A copied
+  image application copies a static raster image; Python retrieves a Pillow
+  image with the expected dimensions, colors, and supported alpha. A copied
   image file reference alone is reported as no image, not opened implicitly.
-- **Value / learning:** Answers the existing image-reading request and tests
+- **Value / learning:** Answers the existing image-reading request
+  ([issue #2](https://github.com/terryyin/clipboard/issues/2)) and tests
   whether native image differences can fit one useful contract.
-- **Boundary:** One static raster item; settle PNG/native-bitmap conversion
-  and alpha limits during refinement. No animation, screenshot capture,
+- **Boundary:** One static raster item. No animation, screenshot capture,
   automatic URL fetching, or image writing. Malformed image data has a
   distinguishable failure; text-only content is an ordinary absence case.
 - **Effort hypothesis:** **L**, medium-low confidence; assumes reusable image
