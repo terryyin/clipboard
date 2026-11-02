@@ -10,6 +10,7 @@ Make the clipboard project true to its name.
 
 ## Backlog list
 
+- [Keep native HTML-read proof strict and desktop helper knowledge single-homed](seeds/SEED-001-clipboard-true-to-its-name.md#desktop-helpers) — SEED-001#desktop-helpers
 - [Inspect clipboard content kinds and offered formats](seeds/SEED-001-clipboard-true-to-its-name.md#inspect-formats) — SEED-001#inspect-formats
 - [Read file references copied by file managers](seeds/SEED-001-clipboard-true-to-its-name.md#read-files) — SEED-001#read-files
 - [Copy local file references into file managers](seeds/SEED-001-clipboard-true-to-its-name.md#copy-files) — SEED-001#copy-files
