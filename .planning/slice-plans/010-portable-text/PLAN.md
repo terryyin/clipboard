@@ -327,6 +327,12 @@ Postcondition: callers know exactly what is promised and verified where.
   first but still offers `text/plain`. The macOS jobs in runs 41475927301 and
   41478592764 were cancelled because no hosted macOS arm64 runner was
   acquired (GitHub annotation; 0 steps); not a code failure.
+- Slice 6 (in progress, awaiting `native-windows-text`): proof only; no
+  product change. `scripts/probe_windows_native_text.py` with an
+  independent ctypes holder (`scripts/windows_clipboard_holder.py`) and
+  consumer (`scripts/windows_clipboard_consumer.py --text`). pyperclip's
+  Windows `CheckedCall` checks ctypes `get_errno()`, so the failure it raises
+  reliably is the `OpenClipboard` retry giving up.
 
 ## Story obligations
 
