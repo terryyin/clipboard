@@ -15,19 +15,21 @@ def test_paste_files_public_surface():
     assert callable(clipboard.set_files_clipboard_reader)
 
 
-def test_default_reader_raises_unavailable_not_absence(
-    restore_files_clipboard_reader,
+def test_default_reader_raises_on_non_darwin(
+    restore_files_clipboard_reader, monkeypatch
 ):
-    """Unimplemented default raises ClipboardContentError (not silent None).
+    """Non-Darwin default raises until later platform readers land.
 
-    Matches copy_html's unavailable-native pattern: structure stub must not
-    look like ordinary file-list absence. Platform decoding lands later.
+    Force a non-Darwin platform so default pytest never touches the pasteboard;
+    Darwin's native file-list path stays gated to the native probe.
     """
+    monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
     clipboard.set_files_clipboard_reader(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.paste_files()
     assert raised.value.__class__ is clipboard.ClipboardContentError
     assert not isinstance(raised.value, clipboard.ClipboardImageError)
+    assert "not available on this platform" in str(raised.value)
 
 
 def test_injected_reader_returns_paths(restore_files_clipboard_reader):
@@ -66,13 +68,14 @@ def test_injected_clipboard_content_error_propagates(
         clipboard.paste_files()
 
 
-def test_reset_reader_restores_default(restore_files_clipboard_reader):
+def test_reset_reader_restores_default(restore_files_clipboard_reader, monkeypatch):
     clipboard.set_files_clipboard_reader(lambda: ["/tmp/x"])
     clipboard.set_files_clipboard_reader(None)
     assert (
         clipboard._files._files_clipboard_reader
-        is clipboard._files._default_files_clipboard_reader
+        is clipboard._files_native._default_files_clipboard_reader
     )
+    monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.paste_files()
 

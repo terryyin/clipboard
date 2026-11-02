@@ -204,6 +204,7 @@ Evidence / verified platforms:
   silent success. Re-run that gated Windows dual-consumer probe on an
   owner-held Windows desktop to replace this limit, including a non-ASCII
   fragment/context case.
+* macOS Aqua ``paste_files`` verified with independent ``osascript`` / ``NSFilenamesPboardType`` producer (Unicode+spaces; not library round-trip), AppKit re-read non-mutation, files untouched; floors macOS 26.6.2 (25G83) / Darwin 25.6.0 / arm64 (``scripts/probe_macos_native_paste_files.py``; ``CLIPBOARD_NATIVE_PROBE=1`` / ``tests/test_paste_files_native_macos.py``).
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the

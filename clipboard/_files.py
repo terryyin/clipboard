@@ -7,20 +7,7 @@ from typing import Any, NoReturn
 from urllib.parse import unquote, urlparse
 
 from ._errors import ClipboardContentError, _call_content_backend
-
-
-def _default_files_clipboard_reader() -> object:
-    """Structure-only stub until platform file-list readers land.
-
-    Raises rather than returning ``None`` so an unimplemented native path is
-    not mistaken for ordinary file-list absence. Inject a fake via
-    ``set_files_clipboard_reader`` for desktop-free tests.
-    """
-    raise ClipboardContentError(
-        "paste_files native file-list reader is not available yet; "
-        "inject a reader with set_files_clipboard_reader for tests"
-    )
-
+from ._files_native import _default_files_clipboard_reader
 
 _files_clipboard_reader: Callable[[], object] = _default_files_clipboard_reader
 
@@ -31,8 +18,11 @@ def set_files_clipboard_reader(reader: Callable[[], object] | None) -> None:
     The reader returns a raw offer shape that ``paste_files`` normalizes:
     ``None`` / absence kinds → ``None``; path-list (``list[str]``) or structured
     ``uri-list`` / ``paths`` offers → ordered local paths; failures raise
-    ``ClipboardContentError``. Platform adapters (later slices) can return the
-    same shapes. Cut/move companion fields on structured offers are ignored.
+    ``ClipboardContentError``. On macOS Aqua the default reader recovers
+    Finder-equivalent ``NSFilenamesPboardType`` / file-URL offers via
+    ``osascript`` / AppKit. Other platforms raise until their adapters land,
+    or tests inject a fake. Cut/move companion fields on structured offers are
+    ignored.
     """
     global _files_clipboard_reader
     _files_clipboard_reader = (
@@ -174,13 +164,15 @@ def paste_files() -> list[str] | None:
 
     Does not require the optional ``clipboard[images]`` extra. Ordinary local
     file-list absence is ``None``. Failures other than ordinary absence raise
-    ``ClipboardContentError`` (not ``ClipboardImageError``). The default reader
-    is a structure-only stub that raises until platform adapters land; tests
-    inject a fake via ``set_files_clipboard_reader``.
+    ``ClipboardContentError`` (not ``ClipboardImageError``). On macOS Aqua the
+    default reader uses ``osascript`` / AppKit for file-URL / filename
+    pasteboard types (read-only; no filesystem open/move/delete). Other
+    platforms raise until their adapters land; tests may inject a fake via
+    ``set_files_clipboard_reader``.
 
     Injected readers may return path lists, structured ``uri-list`` / ``paths``
     offers (optional ignored cut markers), or absence kinds; ``paste_files``
-    normalizes them the same way platform adapters will.
+    normalizes them the same way platform adapters do.
     """
     raw = _call_content_backend("file-list read", _files_clipboard_reader)
     return _normalize_files_offer(raw)

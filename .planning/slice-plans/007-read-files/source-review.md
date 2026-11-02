@@ -43,7 +43,7 @@
 | 30 | Normalize platform payloads to local path strings. | slice 2 | observed: clipboard/_files.py _local_path_from_file_uri / _paths_from_path_list |
 | 31 | Normalization includes decoding `file://` URIs including percent-encoding and Unicode / spaces. | slice 2 | observed: test_uri_list_file_uris_decode_to_local_paths (percent-encoding Unicode spaces) |
 | 32 | Normalization includes reading Windows `CF_HDROP` path lists. | slice 6 |  |
-| 33 | Normalization includes reading macOS file-URL / filename pasteboard types. | slice 3 |  |
+| 33 | Normalization includes reading macOS file-URL / filename pasteboard types. | slice 3 | observed: clipboard/_files_native.py macOS file-URL/filename pasteboard read; tests/test_paste_files_native_macos.py gated |
 | 34 | Preserve offer order. | slice 2 | observed: test_ordered_two_file_path_list_unicode_and_spaces; uri-list line order preserved |
 | 35 | If a cut/move marker is present beside the references, ignore it for all library behavior. | slice 2 | observed: tests/test_paste_files_failures.py::test_cut_marker_ignored_still_returns_paths; cut fields present but unused in clipboard/_files.py normalize |
 | 36 | Cut/move markers in scope include `PreferredDropEffect`. | slice 2 | observed: tests/test_paste_files_failures.py PreferredDropEffect cut field ignored via omission in normalize |
@@ -56,14 +56,14 @@
 | 43 | Never interpret ordinary `paste()` plain text as a file-list success. | slice 2 | observed: clipboard/_files.py bare str → None; test_absence_kinds_return_none path-looking text |
 | 44 | Never interpret newline-separated path-looking text as a file-list success. | slice 2 | observed: clipboard/_files.py bare str → None; never parses newline path text as success |
 | 45 | Default automated tests stay desktop-free via an injectable read backend. | slice 1 | observed: clipboard/_files.py set_files_clipboard_reader; tests/test_paste_files_seam.py inject/absence/reset cases |
-| 46 | Native proof uses an independent file manager. | slice 3 |  |
-| 47 | Native proof is not a same-library `copy_files` round-trip alone. | slice 3 |  |
-| 48 | Native proof stays explicitly gated. | slice 3 |  |
+| 46 | Native proof uses an independent file manager. | slice 3 | observed: scripts/probe_macos_native_paste_files.py independent osascript NSFilenamesPboardType producer; gated test |
+| 47 | Native proof is not a same-library `copy_files` round-trip alone. | slice 3 | observed: README.rst + probe: not same-library paste_files round-trip |
+| 48 | Native proof stays explicitly gated. | slice 3 | observed: CLIPBOARD_NATIVE_PROBE gated tests/test_paste_files_native_macos.py |
 | 49 | Document Linux helper dependencies for file-list reads (`xclip` / `wl-paste` requesting `text/uri-list` or equivalent). | slice 7 |  |
 | 50 | Document supported desktop setup. | slice 7 |  |
 | 51 | No `clipboard[images]` requirement for this story. | slice 1 | observed: tests/test_paste_files_seam.py::test_paste_files_importable_without_images_extra |
 | 52 | Supported desktop: Windows desktop with Explorer (or equivalent) producing `CF_HDROP`. | slice 6 |  |
-| 53 | Supported desktop: macOS Aqua with Finder (or equivalent) producing file-URL / filename pasteboard types. | slice 3 |  |
+| 53 | Supported desktop: macOS Aqua with Finder (or equivalent) producing file-URL / filename pasteboard types. | slice 3 | observed: README.rst macOS Aqua paste_files verified floors; clipboard/_files_native.py |
 | 54 | Supported desktop: Linux X11 + helper able to request `text/uri-list` on CLIPBOARD from a named file manager. | slice 4 |  |
 | 55 | Supported desktop: Linux Wayland + helper able to request `text/uri-list` (or equivalent) from a named file manager, scoped to the compositor actually proved when one is available. | slice 5 |  |
 | 56 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available. | slice 7 |  |
@@ -76,7 +76,7 @@
 | 63 | Do not treat ordinary text offers as file-list success. | slice 2 | observed: test_absence_kinds_return_none text |
 | 64 | Do not treat HTML offers as file-list success. | slice 2 | observed: test_absence_kinds_return_none html |
 | 65 | Do not treat image-only offers as file-list success. | slice 2 | observed: test_absence_kinds_return_none image |
-| 66 | Do not bypass OS pasteboard / clipboard authorization. | slice 3 |  |
+| 66 | Do not bypass OS pasteboard / clipboard authorization. | slice 3 | observed: clipboard/_files_native.py uses normal AppKit pasteboard APIs (no entitlement bypass) |
 | 67 | Do not replace clipboard contents as part of the read. | slice 2 | observed: tests/test_paste_files_failures.py::test_read_does_not_mutate_uri_list_offer |
 | 68 | Do not clear clipboard contents as part of the read. | slice 2 | observed: tests/test_paste_files_failures.py::test_read_does_not_mutate_uri_list_offer |
 | 69 | Do not rewrite clipboard contents as part of the read. | slice 2 | observed: tests/test_paste_files_failures.py::test_read_does_not_mutate_uri_list_offer |
@@ -88,7 +88,7 @@
 | 75 | Do not promise that returned paths still exist. | slice 7 |  |
 | 76 | Do not promise that returned paths are readable. | slice 7 |  |
 | 77 | Do not fetch remote / non-`file` URIs. | slice 2 | observed: test_remote_only_uri_list_is_ordinary_absence; test_mixed_uri_list_keeps_local_skips_remote_without_fetch |
-| 78 | Do not hang the caller indefinitely waiting on a contended clipboard. | slice 3 |  |
+| 78 | Do not hang the caller indefinitely waiting on a contended clipboard. | slice 3 | observed: clipboard/_files_native.py osascript timeout 30s |
 | 79 | Do not silently reissue a cut/move marker as a move offer. | slice 2 | observed: tests/test_paste_files_failures.py no cut reissue |
 | 80 | Corrupt or unparseable native file-list metadata must not yield fabricated successful paths. | slice 2 | observed: tests/test_paste_files_failures.py::test_corrupt_metadata_raises_content_error_not_none_or_paths |
 | 81 | Plain text that resembles paths must not be treated as a file-list success. | slice 2 | observed: test_absence_kinds_return_none path-looking plain text |
@@ -106,7 +106,7 @@
 | 93 | Evidence for a desktop without a usable session during execution is an explicit unverified/unsupported limit, not a verified claim. | slice 7 |  |
 | 94 | Default automated tests remain desktop-free; native proof is gated and uses an independent file manager. | slice 7 |  |
 | 95 | This story does not require `clipboard[images]`. | slice 1 | observed: tests/test_paste_files_seam.py::test_paste_files_importable_without_images_extra |
-| 96 | Independent file manager (Explorer / Finder / named Linux FM) copies two existing local files, including a Unicode name and spaces → `paste_files()` returns an ordered `list[str]` of the corresponding local paths; a later independent consumer can still obtain the same offer; no file was opened or modified by the read. | slice 3 |  |
+| 96 | Independent file manager (Explorer / Finder / named Linux FM) copies two existing local files, including a Unicode name and spaces → `paste_files()` returns an ordered `list[str]` of the corresponding local paths; a later independent consumer can still obtain the same offer; no file was opened or modified by the read. | slice 3 | observed: gated probe Unicode+spaces ordered paths; second paste_files + AppKit re-read non-mutation |
 | 97 | Same pattern where the native offer is Linux `text/uri-list` of `file://` URIs (percent-encoded spaces / Unicode) or Windows `CF_HDROP` → returned strings are decoded local filesystem paths, not raw URI text and not `paste()` plain text alone. | slice 2 | observed: test_uri_list_file_uris_decode_to_local_paths; test_structured_paths_offer_decodes_like_path_list |
 | 98 | Clipboard holds only plain text that looks like paths (or is empty / image-only / HTML-only) → `paste_files()` returns `None` (ordinary files absence); `paste()` / other readers behave as before for their kinds. | slice 2 | observed: test_absence_kinds_return_none |
 | 99 | Offer includes a cut/move marker beside local file references → `paste_files()` still returns the local path list; the library does not move, delete, or rewrite the offer as a cut/move. | slice 2 | observed: tests/test_paste_files_failures.py::test_cut_marker_ignored_still_returns_paths |

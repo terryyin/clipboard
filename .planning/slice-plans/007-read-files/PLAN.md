@@ -119,7 +119,7 @@ real clipboard.
 
 ### 3. Early probe — macOS Aqua Finder file-list read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On this Darwin checkout (or equivalent Aqua session), gated probe: an
 **independent** Finder (or equivalent) copies two local files including
 Unicode/spaces; `paste_files()` returns matching ordered local paths; a later
@@ -231,6 +231,13 @@ guessing paths from text; evidence wording is honest.
 - Contract proof split across `tests/test_paste_files_contract.py` (decode/absence)
   and `tests/test_paste_files_failures.py` (cut/corrupt/access/non-mutation) with
   shared `tests/paste_files_offer.py` fakes.
+
+
+- Slice 3: macOS Aqua `paste_files` verified via Finder-equivalent osascript
+  ``NSFilenamesPboardType`` independent producer (gated
+  ``scripts/probe_macos_native_paste_files.py``); floors macOS 26.6.2 /
+  Darwin 25.6.0; README Evidence updated. Default Darwin reader in
+  ``clipboard/_files_native.py``.
 
 ## Concern evidence
 
