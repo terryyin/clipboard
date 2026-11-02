@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 9
+- Highest allocated local number: 12
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -140,6 +140,14 @@ jobs pass on their first published run, with no CI repair cycle.
   - Evidence: slice 4–6 delegation briefs cite the `native-linux-x11-copy-image` / `native-linux-wayland-copy-image` precedent; CI runs 41422813085 (X11), 41424913377 (Wayland), 41427386442 (Windows) succeeded on first attempt; contrast DD-003 / DD-004 repair loops
   - Observed effect: No CI repair commits in this execution; each native slice published a progress increment, then a records-only done commit after observing CI.
   - Inference: Useful practice — carry earlier DearDough helper/compositor findings into native-probe delegation briefs. The `windows-latest` runner also proved to have a usable clipboard session, contrary to an earlier README judgment.
+- Execution: SEED-001#desktop-helpers
+  - Timestamp: 2026-11-02T21:41:26+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: tip SHA 2b06eb3 CI run https://github.com/terryyin/clipboard/actions/runs/41464367130 success on first attempt including native-windows-paste-html, native-linux-x11/wayland paste_html and copy_image; intermediate published SHAs 1b9ed68, 98daafa, 75d3909 also coverage-success with no repair commits; observer `/tmp/dough-ci-501/watch-Xh83iA`; contrast DD-003 / DD-004
+  - Observed effect: Structure relocation of session/listing helpers landed with no CI repair; five-job native confirmation stayed green while later slices continued under observation
+  - Inference: Useful practice — reuse the same Xvfb/Sway venues and fail-not-skip native wrapper pattern when relocating desktop helpers; first-run green held for session-selection proof that desktop-free pytest cannot cover
 
 ## DD-009 — Producer-kind gap carried three slices before developer decision
 The story's "browser or rich editor" producer wording could not be met by the
@@ -182,3 +190,19 @@ When the 250-line refactor check required splitting an oversize module into a pa
   - Evidence: coordinator transcript eb2ce85d… DEVELOPER ATTENTION on clipboard.py 517 lines / 250-line gate; user authorized option 1 package split; commit acb5e62 (injectable seam + `clipboard/` package); PLAN.md Learnings slice 1
   - Observed effect: Slice-1 delivery paused until human authorization; authorized split preserved public `import clipboard` / `VERSION` and unblocked later slices
   - Inference: Useful practice — file-size fixes that cross delivered subsystem seams are human-owned packaging decisions, parallel to venue stops for mandatory native proof (DD-006)
+
+## DD-012 — progress:true left mid-plan Behavior slice unfinished until local-proof done commit
+Publishing the first Behavior increment with `progress: true` kept the slice
+`planned` until CI confirmation, which blocked continuing the plan; marking the
+slice done on accepted local proof required a second records-only commit and
+cancelled the still-running CI for the superseded implementation SHA.
+
+### Occurrences
+- Execution: SEED-001#desktop-helpers
+  - Timestamp: 2026-11-02T21:10:11+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: commits 237e23d (implementation) then 1b9ed68 (mark slice 1 done); coordinator transcript 0fc04e77… “Slice 1 stayed `planned` under `progress: true`… marking it done while CI keeps observing”; observer event CI_INCOMPLETE cancelled on 237e23d (run 41459230661); coverage success later on 1b9ed68 (run 41459401185)
+  - Observed effect: Extra records-only publish before slice 2; cancelled CI on the implementation SHA; ~1 minute between the two commits; later Structure slices proceeded under observation without waiting for tip green
+  - Inference: When local proof is the authorized done floor and CI is observation/repair only, publishing Behavior with `progress: true` creates avoidable mid-plan friction; mark done on local proof in the same publish, or treat progress as non-blocking for the next slice without a second commit

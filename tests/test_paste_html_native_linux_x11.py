@@ -21,10 +21,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 PROBE = ROOT / "scripts" / "probe_linux_x11_native_paste_html.py"
-FRAGMENT = (
-    '<a href="https://example.com/caf%C3%A9" style="color:#c00">'
-    "<b>café → naïve 日本</b></a>"
-)
+sys.path.insert(0, str(ROOT / "scripts"))
+from native_probe_paste_html import FRAGMENT  # noqa: E402
 
 pytestmark = [
     pytest.mark.skipif(

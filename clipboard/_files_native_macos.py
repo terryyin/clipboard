@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from ._desktop import _helper_failure_detail
 from ._errors import ClipboardContentError
 
 # Contended pasteboard must not hang callers indefinitely (commitment 78).
@@ -105,7 +106,7 @@ def _macos_files_clipboard_reader() -> list[str] | None:
             ) from exc
 
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout or "").strip()
+        detail = _helper_failure_detail(result)
         raise ClipboardContentError(
             "clipboard file-list read failed" + (f": {detail}" if detail else "")
         )

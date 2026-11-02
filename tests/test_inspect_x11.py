@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 import clipboard
-from clipboard import _offer, _offer_x11
+from clipboard import _desktop, _offer
 
 
 def test_missing_xclip_raises_clipboard_content_error_not_empty(
@@ -19,7 +19,7 @@ def test_missing_xclip_raises_clipboard_content_error_not_empty(
     def boom(*_args, **_kwargs):
         raise FileNotFoundError(2, "No such file or directory", "xclip")
 
-    monkeypatch.setattr(_offer_x11.subprocess, "run", boom)
+    monkeypatch.setattr(_desktop.subprocess, "run", boom)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
@@ -68,7 +68,7 @@ def test_xclip_helper_failure_raises_clipboard_content_error_not_empty(
             stderr="Error: Can't open display: (null)\n",
         )
 
-    monkeypatch.setattr(_offer_x11.subprocess, "run", fake_run)
+    monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
@@ -99,7 +99,7 @@ def test_xclip_targets_map_to_kinds_via_snapshot(
             stderr="",
         )
 
-    monkeypatch.setattr(_offer_x11.subprocess, "run", fake_run)
+    monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
@@ -118,19 +118,15 @@ def test_wayland_session_does_not_use_x11_enumerator(
     monkeypatch, restore_clipboard_inspector
 ):
     """Wayland-only session stays off the X11 path (routes to wl-paste -l)."""
-    from clipboard import _offer_wayland
-
     called = {"xclip": False}
 
-    def boom_xclip(*_args, **_kwargs):
-        called["xclip"] = True
-        raise AssertionError("xclip must not run on Wayland-only session")
-
-    def boom_wl_paste(*_args, **_kwargs):
+    def boom(cmd, *_args, **_kwargs):
+        if cmd and cmd[0] == "xclip":
+            called["xclip"] = True
+            raise AssertionError("xclip must not run on Wayland-only session")
         raise FileNotFoundError(2, "No such file or directory", "wl-paste")
 
-    monkeypatch.setattr(_offer_x11.subprocess, "run", boom_xclip)
-    monkeypatch.setattr(_offer_wayland.subprocess, "run", boom_wl_paste)
+    monkeypatch.setattr(_desktop.subprocess, "run", boom)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
@@ -152,7 +148,7 @@ def test_xclip_timeout_raises_clipboard_content_error(
     def boom(*_args, **_kwargs):
         raise subprocess.TimeoutExpired(cmd="xclip", timeout=15)
 
-    monkeypatch.setattr(_offer_x11.subprocess, "run", boom)
+    monkeypatch.setattr(_desktop.subprocess, "run", boom)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("DISPLAY", ":99")

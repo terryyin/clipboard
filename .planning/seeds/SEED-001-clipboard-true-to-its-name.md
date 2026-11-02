@@ -85,50 +85,6 @@ platform distinctions, reuse candidates, and uncertainty.
 
 ## Story Decomposition
 
-
-<a id="desktop-helpers"></a>
-
-### Keep native HTML-read proof strict and desktop helper knowledge single-homed
-
-**Identity:** SEED-001#desktop-helpers
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/006-desktop-helpers/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"d4eeaa5af737700198da1f72610779a7621ef2a94984fde291d5b389fcdca34d","plan":"38af20c407bcde14a8618c5793ce256c712c894bd95eb4e9b2032efdcc2588d7"}}
-```
-
-**Goal:** Python developers relying on the README's verified desktop claims
-keep a CI signal that fails when a verified native HTML-read probe stops
-proving anything, and maintainers of the remaining SEED-001 stories reuse one
-home for desktop session detection and helper handling instead of copying it
-per content kind (correction of SEED-001#read-html; story recoverable at
-`9d3ceda:.planning/seeds/SEED-001-clipboard-true-to-its-name.md#read-html`).
-
-**Scope:** Make the gated Windows `paste_html` probe fail rather than skip when
-it cannot verify; move Linux session detection, helper-failure detail
-formatting, and the CLIPBOARD type listing (xclip `TARGETS`,
-`wl-paste --list-types`) out of every content-kind module that copies them
-(image write, HTML read/write, `inspect`, and the `paste_files` readers that
-landed since this correction was planned) into one private desktop module,
-keeping each caller's current semantics, including the file-list reader's
-distinct Wayland rule; keep macOS HTML writer and reader together and
-`_html_native.py` dispatch only; fold duplicated seam and structural
-`paste_html` tests into the behavioral contract, with one no-Pillow import test
-replacing the per-file `block_pil` copies. Public API, results, error messages,
-and install hints stay unchanged. Unifying the divergent Wayland session rules
-is a product decision outside this correction. Plan:
-[006-desktop-helpers](../slice-plans/006-desktop-helpers/PLAN.md).
-
-**Key examples:**
-
-- With `CLIPBOARD_NATIVE_PROBE=1` on Windows, a probe report of
-  `evidence_limit` fails `native-windows-paste-html` and `ci-passed`; a
-  `verified: true` report passes as it does today.
-- On Linux with only `XDG_SESSION_TYPE=wayland`, `paste_html()` and
-  `inspect()` still select `wl-paste`; with `WAYLAND_DISPLAY` and `DISPLAY`
-  both set, `paste_files()` still selects `xclip`. Each reader's error text is
-  unchanged.
-- An unowned X11 CLIPBOARD still makes `paste_html()` return `None` while
-  image-write polling still treats a `TARGETS` failure as "not yet offered".
-
 <a id="copy-files"></a>
 
 ### Copy local file references into file managers
@@ -223,13 +179,12 @@ writers beside the existing `_files_native_*` readers, with a
 `set_files_clipboard_writer` injection seam mirroring the HTML and image
 writers so default tests stay in-memory. Validation lives above the writer so
 every platform shares fail-before-replace. Linux session detection and helper
-failure reporting reuse the single private desktop module that
-SEED-001#desktop-helpers introduces when it has landed; otherwise follow the
-current `paste_files` session rule rather than adding another copy. Linux
-writer lifetime relies on a background helper owner (`xclip` / `wl-copy`), as
-`copy_image` does; Windows and macOS hand the data to the system clipboard,
-which keeps it after exit. No ADR store exists in this repository, so no
-Accepted decision was checked.
+failure reporting reuse private `clipboard/_desktop` (including the
+file-list reader's distinct Wayland rule) rather than adding another copy.
+Linux writer lifetime relies on a background helper owner (`xclip` /
+`wl-copy`), as `copy_image` does; Windows and macOS hand the data to the
+system clipboard, which keeps it after exit. No ADR store exists in this
+repository, so no Accepted decision was checked.
 
 **Open risk for planning.** `xclip` and `wl-copy` offer one MIME type per
 owner process. Whether named Linux file managers (GNOME Files, Dolphin,

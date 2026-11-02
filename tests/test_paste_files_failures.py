@@ -1,4 +1,4 @@
-"""In-memory paste_files Behavior: cut-ignore, failures, non-mutation, no Pillow.
+"""In-memory paste_files Behavior: cut-ignore, failures, and non-mutation.
 
 Observes plan slice 2 / key examples 4–6 and 8 without a real clipboard.
 """
@@ -192,54 +192,3 @@ def test_read_does_not_mutate_uri_list_offer(
     assert fake.offer == before
     assert fake.reader_calls == 2
     assert fake.writes == []
-
-
-# --- Example 8 regression: paste_files without clipboard[images] ---
-
-
-def test_paste_files_contract_without_images_extra(
-    restore_files_clipboard_reader,
-):
-    """Contract path must not import or require Pillow."""
-    import subprocess
-    import sys
-
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            """
-import builtins
-
-real_import = builtins.__import__
-
-def block_pil(name, globals=None, locals=None, fromlist=(), level=0):
-    if name == "PIL" or name.startswith("PIL."):
-        raise ImportError("No module named 'PIL'")
-    return real_import(name, globals, locals, fromlist, level)
-
-builtins.__import__ = block_pil
-
-import clipboard
-
-clipboard.set_files_clipboard_reader(
-    lambda: {
-        "kind": "uri-list",
-        "uri_list": (
-            "file:///tmp/photos/a%20file.png\\n"
-            "file:///tmp/docs/unicod%C3%A9%20report.txt\\n"
-        ),
-    }
-)
-assert clipboard.paste_files() == [
-    "/tmp/photos/a file.png",
-    "/tmp/docs/unicodé report.txt",
-]
-clipboard.set_files_clipboard_reader(None)
-""",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0

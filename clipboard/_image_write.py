@@ -11,6 +11,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from clipboard._desktop import (
+    _helper_failure_detail,
+    _is_linux_wayland,
+    _xclip_targets_lenient,
+)
 from clipboard._errors import ClipboardImageError
 from clipboard._image_read import _pillow_image, _raise_image_failure
 
@@ -25,10 +30,6 @@ def _temporary_png_offer(image: Image.Image) -> Iterator:
         path = Path(raw) / "offer.png"
         image.save(path, format="PNG")
         yield path
-
-
-def _helper_failure_detail(result) -> str:
-    return (result.stderr or result.stdout or "").strip() or "unknown error"
 
 
 def _png_bytes(image: Image.Image) -> bytes:
@@ -55,33 +56,21 @@ def _write_macos_pngf(image: Image.Image) -> None:
             raise OSError("osascript clipboard write timed out") from exc
         if result.returncode != 0:
             raise OSError(
-                f"osascript clipboard write failed: {_helper_failure_detail(result)}"
+                "osascript clipboard write failed: "
+                f"{_helper_failure_detail(result, fallback='unknown error')}"
             )
 
 
-def _xclip_clipboard_targets() -> bytes:
-    """Return CLIPBOARD TARGETS bytes, or empty on helper failure."""
-    try:
-        result = subprocess.run(
-            ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"],
-            capture_output=True,
-            timeout=2,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return b""
-    if result.returncode != 0:
-        return b""
-    return result.stdout or b""
-
-
 def _wait_xclip_image_png_offer(*, timeout_s: float = 5.0) -> None:
-    """Block until CLIPBOARD advertises ``image/png``, or raise."""
+    """Block until CLIPBOARD advertises ``image/png``, or raise.
+
+    Listing failures are lenient (empty TARGETS): treat as not yet offered.
+    """
     import time
 
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
-        if b"image/png" in _xclip_clipboard_targets():
+        if b"image/png" in _xclip_targets_lenient():
             return
         time.sleep(0.05)
     raise OSError("xclip clipboard write did not publish image/png in time")
@@ -126,13 +115,6 @@ def _write_linux_xclip(image: Image.Image) -> None:
     if exit_code not in (None, 0):
         raise OSError(f"xclip clipboard write failed: exit {exit_code}")
     _wait_xclip_image_png_offer()
-
-
-def _is_linux_wayland() -> bool:
-    import os
-
-    session = (os.environ.get("XDG_SESSION_TYPE") or "").strip().lower()
-    return session == "wayland" or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
 def _write_linux_wl_copy(image: Image.Image) -> None:

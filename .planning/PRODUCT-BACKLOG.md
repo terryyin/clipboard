@@ -6,7 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Keep native HTML-read proof strict and desktop helper knowledge single-homed](seeds/SEED-001-clipboard-true-to-its-name.md#desktop-helpers) — SEED-001#desktop-helpers ([plan](slice-plans/006-desktop-helpers/PLAN.md))
 - [Copy local file references into file managers](seeds/SEED-001-clipboard-true-to-its-name.md#copy-files) — SEED-001#copy-files ([plan](slice-plans/008-copy-files/PLAN.md))
 - [Use the text clipboard reliably and diagnose unavailable access](seeds/SEED-001-clipboard-true-to-its-name.md#portable-text) — SEED-001#portable-text ([plan](slice-plans/010-portable-text/PLAN.md))
 
