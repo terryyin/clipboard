@@ -97,7 +97,7 @@ the unsupported platform until slices 3–6 replace it per platform.
 
 ### 2. Early probe — which offer a named Linux file manager pastes
 Type: Behavior
-Status: planned
+Status: done
 Proof: developer-operated round on an owner-held Linux desktop (X11 or
 Wayland; record distro, desktop, compositor, file manager and helper
 versions). Question: does the named file manager paste copies from a lone
@@ -217,6 +217,7 @@ Disposition: interim until slices 3, 4, 5, 6
 ## Learnings
 
 - Slice 1: validation lives in `clipboard/_files.py` `_validate_copy_files_paths`; the default writer dispatch is `clipboard/_files_native.py` `_default_files_clipboard_writer`, where slices 3–6 add per-platform branches. A dangling symlink is rejected as missing (`os.path.exists`), matching "each named path must exist".
+- Slice 2 (2026-11-02): the developer has no owner-held Linux desktop for the probe. No file-manager paste was observed on Linux. Slices 5–6 therefore offer a lone `text/uri-list` (percent-encoded `file://` URIs, CRLF — the freedesktop format `paste_files` reads), and README records the Linux X11/Wayland file-manager evidence limit; slices 5–6 do not claim file-manager paste.
 
 ## Plan review
 
