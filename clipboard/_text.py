@@ -7,15 +7,20 @@ pyperclip's order): Windows, WSL, a mechanism already resolved in pyperclip,
 X11 without ``xclip``, and other platforms delegate to pyperclip (resolved
 lazily, so ``import clipboard`` never makes pyperclip pick a mechanism);
 macOS (``_text_native_macos``: ``pbcopy`` / ``pbpaste``), Linux X11 with
-``xclip`` (``_text_native_x11``), and Linux Wayland with wl-clipboard (still
-a placeholder) are owned paths.
+``xclip`` (``_text_native_x11``), and Linux Wayland with wl-clipboard
+(``_text_native_wayland``) are owned paths.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 
-from . import _desktop_text, _text_native_macos, _text_native_x11
+from . import (
+    _desktop_text,
+    _text_native_macos,
+    _text_native_wayland,
+    _text_native_x11,
+)
 from ._errors import ClipboardContentError, _call_content_backend
 
 
@@ -34,27 +39,31 @@ def _select_text_backend() -> str:
     return _desktop_text._text_session_owner()
 
 
-def _owned_text_path_pending(owner: str, operation: str) -> None:
-    """Placeholder for the owned Wayland path filled in by a later slice."""
-    raise ClipboardContentError(
-        f"clipboard text {operation} failed: the owned {owner} text path is "
-        "not implemented yet"
-    )
+# Owned paths by session owner; any other owner delegates to pyperclip.
+_OWNED_TEXT_WRITERS: dict[str, Callable[[str], None]] = {
+    _desktop_text._TEXT_OWNER_MACOS: _text_native_macos._macos_text_clipboard_writer,
+    _desktop_text._TEXT_OWNER_X11: _text_native_x11._x11_text_clipboard_writer,
+    _desktop_text._TEXT_OWNER_WAYLAND: (
+        _text_native_wayland._wayland_text_clipboard_writer
+    ),
+}
+_OWNED_TEXT_READERS: dict[str, Callable[[], object]] = {
+    _desktop_text._TEXT_OWNER_MACOS: _text_native_macos._macos_text_clipboard_reader,
+    _desktop_text._TEXT_OWNER_X11: _text_native_x11._x11_text_clipboard_reader,
+    _desktop_text._TEXT_OWNER_WAYLAND: (
+        _text_native_wayland._wayland_text_clipboard_reader
+    ),
+}
 
 
 def _default_text_clipboard_writer(text: str) -> None:
     """Write through the session's backend; pyperclip's ``copy`` is looked up
     at call time because pyperclip swaps it on first use.
     """
-    owner = _select_text_backend()
-    if owner == _desktop_text._TEXT_OWNER_MACOS:
-        _text_native_macos._macos_text_clipboard_writer(text)
+    owned = _OWNED_TEXT_WRITERS.get(_select_text_backend())
+    if owned is not None:
+        owned(text)
         return
-    if owner == _desktop_text._TEXT_OWNER_X11:
-        _text_native_x11._x11_text_clipboard_writer(text)
-        return
-    if owner != _desktop_text._TEXT_OWNER_PYPERCLIP:
-        _owned_text_path_pending(owner, "write")
     import pyperclip
 
     pyperclip.copy(text)
@@ -62,13 +71,9 @@ def _default_text_clipboard_writer(text: str) -> None:
 
 def _default_text_clipboard_reader() -> object:
     """Read through the session's backend (pyperclip ``paste`` at call time)."""
-    owner = _select_text_backend()
-    if owner == _desktop_text._TEXT_OWNER_MACOS:
-        return _text_native_macos._macos_text_clipboard_reader()
-    if owner == _desktop_text._TEXT_OWNER_X11:
-        return _text_native_x11._x11_text_clipboard_reader()
-    if owner != _desktop_text._TEXT_OWNER_PYPERCLIP:
-        _owned_text_path_pending(owner, "read")
+    owned = _OWNED_TEXT_READERS.get(_select_text_backend())
+    if owned is not None:
+        return owned()
     import pyperclip
 
     return pyperclip.paste()

@@ -119,20 +119,9 @@ def test_no_desktop_session_is_diagnosed_not_empty(text_session, monkeypatch):
     assert fake.reads == 0
 
 
-# macOS and X11 are owned for real (``test_text_macos.py`` and
-# ``test_text_x11.py`` cover their dispatch); Wayland remains a placeholder
-# until its slice fills it.
-def test_placeholder_owned_paths_do_not_reach_pyperclip(text_session, monkeypatch):
-    fake = FakePyperclip(monkeypatch)
-    text_session("linux", {"WAYLAND_DISPLAY": "wayland-0"}, ("wl-copy", "wl-paste"))
-
-    assert _text._select_text_backend() == "wayland"
-    with pytest.raises(clipboard.ClipboardContentError):
-        clipboard.copy("x")
-    with pytest.raises(clipboard.ClipboardContentError):
-        clipboard.paste()
-    assert fake.writes == []
-    assert fake.reads == 0
+# The owned macOS, X11, and Wayland paths have their own dispatch tests
+# (``test_text_macos.py``, ``test_text_x11.py``, ``test_text_wayland.py``),
+# each asserting that pyperclip is never reached.
 
 
 def test_selection_follows_session_at_call_time(text_session, monkeypatch):

@@ -308,6 +308,14 @@ Postcondition: callers know exactly what is promised and verified where.
   lacked `os.killpg` (test fixture and `_stop_owner` fallback) and the probe's
   `xvfb_version` floor was empty (now `dpkg-query` first). Run 41473939537
   green on every job (Xvfb `2:21.1.22-1ubuntu1.3`).
+- Slice 5 (in progress, awaiting `native-linux-wayland-text`):
+  `clipboard/_text_native_wayland.py` lists types, prefers
+  `text/plain;charset=utf-8`, reads with `wl-paste -n -t`, writes with
+  `wl-copy --type text/plain;charset=utf-8` (untyped wl-copy guesses a MIME
+  type from content), keeps `--clear` for `copy("")`, and has no read-back
+  wait pending the probe's immediate-visibility step. `_text.py` now maps
+  owners to readers/writers; the placeholder is gone. Local: `make check`
+  423 passed / 19 skipped.
 
 ## Story obligations
 

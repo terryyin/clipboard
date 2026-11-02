@@ -28,6 +28,8 @@ from clipboard._desktop import _XCLIP_NO_TARGETS, _XCLIP_TARGETS_CMD
 from clipboard._text_native_linux import (
     _LINUX_TEXT_TIMEOUT_S,
     _decode_text,
+    _helper_log_suffix,
+    _logged_exit_error,
     _remaining,
     _run_text_helper,
     _text_error,
@@ -109,11 +111,6 @@ def _owner_serves(data: bytes, deadline: float) -> bool:
     return result.returncode == 0 and result.stdout == data
 
 
-def _helper_log(log) -> bytes:
-    log.seek(0)
-    return log.read()
-
-
 def _stop_owner(proc: subprocess.Popen) -> None:
     """Best effort: stop an owner that never offered (its whole session).
 
@@ -161,26 +158,19 @@ def _x11_text_clipboard_writer(text: str) -> None:
         while True:
             status = proc.poll()
             if status not in (None, 0):
-                raise _text_exit_error(
-                    _DESKTOP,
-                    "write",
-                    _XCLIP_WRITE_CMD,
-                    subprocess.CompletedProcess(
-                        _XCLIP_WRITE_CMD, status, None, _helper_log(log)
-                    ),
+                raise _logged_exit_error(
+                    _DESKTOP, "write", _XCLIP_WRITE_CMD, status, log
                 )
             if _owner_serves(data, deadline):
                 return
             if time.monotonic() >= deadline:
                 _stop_owner(proc)
-                detail = _helper_log(log).decode("utf-8", "replace").strip()
                 raise _text_error(
                     _DESKTOP,
                     "write",
                     f"{' '.join(_XCLIP_WRITE_CMD)} did not serve the text as "
                     f"UTF8_STRING within the "
-                    f"{_X11_TEXT_WRITE_TIMEOUT_S:g}s bound"
-                    + (f": {detail}" if detail else ""),
+                    f"{_X11_TEXT_WRITE_TIMEOUT_S:g}s bound" + _helper_log_suffix(log),
                 ) from subprocess.TimeoutExpired(
                     _XCLIP_WRITE_CMD, _X11_TEXT_WRITE_TIMEOUT_S
                 )

@@ -207,6 +207,10 @@ jobs:
     name: Native Linux Wayland paste_html (Sway)
     uses: ./.github/workflows/native-wayland-paste-html.yml
 
+  native-linux-wayland-text:
+    name: Native Linux Wayland text copy/paste (Sway)
+    uses: ./.github/workflows/native-wayland-text.yml
+
   native-windows-paste-html:
     name: Native Windows paste_html (windows-latest)
     runs-on: windows-latest
@@ -238,6 +242,7 @@ jobs:
       - native-linux-x11-file-manager-offers
       - native-linux-wayland-copy-image
       - native-linux-wayland-paste-html
+      - native-linux-wayland-text
       - native-windows-paste-html
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -252,6 +257,7 @@ jobs:
           NATIVE_FILE_MANAGER_OFFERS_RESULT: ${{ needs.native-linux-x11-file-manager-offers.result }}
           NATIVE_WAYLAND_RESULT: ${{ needs.native-linux-wayland-copy-image.result }}
           NATIVE_WAYLAND_PASTE_HTML_RESULT: ${{ needs.native-linux-wayland-paste-html.result }}
+          NATIVE_WAYLAND_TEXT_RESULT: ${{ needs.native-linux-wayland-text.result }}
           NATIVE_WINDOWS_PASTE_HTML_RESULT: ${{ needs.native-windows-paste-html.result }}
         run: >-
           test "$QUALITY_RESULT" = success
@@ -262,4 +268,5 @@ jobs:
           && test "$NATIVE_FILE_MANAGER_OFFERS_RESULT" = success
           && test "$NATIVE_WAYLAND_RESULT" = success
           && test "$NATIVE_WAYLAND_PASTE_HTML_RESULT" = success
+          && test "$NATIVE_WAYLAND_TEXT_RESULT" = success
           && test "$NATIVE_WINDOWS_PASTE_HTML_RESULT" = success

@@ -1,4 +1,4 @@
-"""Bounded Linux text-helper runs shared by the owned X11 (and Wayland) paths.
+"""Bounded Linux text-helper runs shared by the owned X11 and Wayland paths.
 
 Every helper run has a deadline, and every failure becomes
 ``ClipboardContentError`` naming the desktop, the helper command, its exit
@@ -111,3 +111,27 @@ def _decode_text(raw: bytes, encoding: str, desktop: str, what: str) -> str:
         raise _text_error(
             desktop, "read", f"{what} is not valid {encoding} ({exc})"
         ) from exc
+
+
+def _helper_log(log) -> bytes:
+    """Everything a writer helper logged to its unlinked stderr file."""
+    log.seek(0)
+    return log.read()
+
+
+def _helper_log_suffix(log) -> str:
+    """``": <stderr>"`` for an error message, or ``""`` when nothing logged."""
+    detail = _helper_log(log).decode("utf-8", "replace").strip()
+    return f": {detail}" if detail else ""
+
+
+def _logged_exit_error(
+    desktop: str, operation: str, cmd: list[str], status: int, log
+) -> ClipboardContentError:
+    """``_text_exit_error`` for a writer helper whose stderr went to ``log``."""
+    return _text_exit_error(
+        desktop,
+        operation,
+        cmd,
+        subprocess.CompletedProcess(cmd, status, None, _helper_log(log)),
+    )
