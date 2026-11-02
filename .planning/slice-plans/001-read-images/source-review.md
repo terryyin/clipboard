@@ -15,8 +15,8 @@ told to read no other project files and change nothing.
 | 2 | `copy`, `paste`, and `VERSION`, and existing text callers, stay unchanged. | slice 1 | observed: tests/test_paste_image.py::test_text_api_importable_without_pillow; tests/test_clipboard.py |
 | 3 | An explicit image-read operation returns a Pillow `Image.Image` with usable raster pixels (dimensions, colors, and alpha when the native offer carries it) for one static image placed on the clipboard by an independent producer. | slice 5 | |
 | 4 | The optional `clipboard[images]` extra installs Pillow. | slice 1 | observed: tests/test_paste_image.py::test_images_extra_declares_pillow; pyproject.toml `[project.optional-dependencies] images` |
-| 5.1 | Linux install docs name `xclip` (X11). | slice 4 | |
-| 5.2 | Linux install docs name `wl-paste` (Wayland). | slice 4 | |
+| 5.1 | Linux install docs name `xclip` (X11). | slice 4 | observed: README.rst Installation — X11: ``xclip`` |
+| 5.2 | Linux install docs name `wl-paste` (Wayland). | slice 4 | observed: README.rst Installation — Wayland: ``wl-paste`` |
 | 6.1 | Native encodings convert behind that Pillow contract: PNG. | slice 5 | |
 | 6.2 | Native encodings convert behind that Pillow contract: DIB/DIBV5. | slice 6 | |
 | 6.3 | Native encodings convert behind that Pillow contract: macOS image types. | slice 5 | |

@@ -7,7 +7,10 @@ Well, as I was trying to implement this, I realize that everything is included i
 
 But anyway, `clipboard` is a better name. You are free to choose:-) I might add more features to it.
 
-Usage:
+Usage
+-----
+
+Text copy and paste (no optional extras required):
 
 ::
 
@@ -15,12 +18,41 @@ Usage:
    clipboard.copy("abc")  # now the clipboard content will be string "abc"
    text = clipboard.paste()  # text will have the content of clipboard
 
+To read a static raster image from the clipboard as a Pillow ``Image``, install
+the optional ``images`` extra (Pillow) and call ``paste_image``:
+
+::
+
+   import clipboard
+   image = clipboard.paste_image()  # Pillow Image, or None when none is offered
+
+``paste_image`` leaves clipboard contents unchanged. Ordinary absence (text-only
+clipboard, empty clipboard, or a file-reference / filename-list offer) returns
+``None``. Access, missing-helper, transfer, or malformed-image failures raise
+``clipboard.ClipboardImageError`` instead of returning ``None``. Calling
+``paste_image`` without the extra raises ``ImportError``.
+
 Installation
 ------------
 
 Install from PyPI with ``python -m pip install clipboard``. This checkout
-supports Python 3.10 and newer. Linux clipboard access needs a working desktop
-clipboard backend; see the `pyperclip documentation <https://pyperclip.readthedocs.io/>`_.
+supports Python 3.10 and newer. Text ``copy`` / ``paste`` need a working desktop
+clipboard backend on Linux; see the
+`pyperclip documentation <https://pyperclip.readthedocs.io/>`_.
+
+For ``paste_image``, install the optional extra so Pillow is available:
+
+::
+
+   python -m pip install 'clipboard[images]'
+
+On Linux, image clipboard reads also need a helper on ``PATH``:
+
+* X11: ``xclip``
+* Wayland: ``wl-paste`` (from wl-clipboard)
+
+Windows and macOS need a usable desktop clipboard / pasteboard session; image
+reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
 Development
 -----------

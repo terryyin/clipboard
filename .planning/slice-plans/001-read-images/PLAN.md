@@ -95,7 +95,7 @@ helper failure. Trigger: `paste_image()`. Postcondition: failure ≠ absence.
 
 ### 4. Docs name extras and Linux helpers
 Type: Structure
-Status: planned
+Status: done
 Proof: README (or equivalent) documents `clipboard[images]`, Pillow, and
 Linux `xclip` / `wl-paste`; existing text install/usage docs remain accurate.
 Enables slices 5–6 consumer setup.
@@ -149,6 +149,7 @@ from a single Wayland result.
 - Accepted proof (slice 2): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_clipboard.py -v` — pass; file-list/URL stubs → `None` with open/path spy `path_hits == []`.
 - Slice 3: `ClipboardImageError` wraps grab/decode failures (OSError/NotImplementedError); text-only still `None`.
 - Accepted proof (slice 3): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_clipboard.py -v` — failure≠absence coverage lives in `test_paste_image_failures.py` after post-change refactor.
+- Accepted proof (slice 4): README.rst documents `clipboard[images]`, Pillow/`paste_image`, Linux `xclip` / `wl-paste`; text install/usage remain accurate.
 
 ## Concern evidence
 
