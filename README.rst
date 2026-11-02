@@ -32,6 +32,35 @@ clipboard, empty clipboard, or a file-reference / filename-list offer) returns
 ``clipboard.ClipboardImageError`` instead of returning ``None``. Calling
 ``paste_image`` without the extra raises ``ImportError``.
 
+To publish an HTML fragment with a matching plain-text alternative as one
+clipboard offer, call ``copy_html``:
+
+::
+
+   import clipboard
+   clipboard.copy_html(
+       '<a href="https://example.com"><b>café</b></a>',
+       'café → https://example.com',
+   )
+
+``copy_html(html, text)`` requires the caller to supply both a Unicode HTML
+fragment and a matching plain-text alternative; the library does not synthesize
+text from HTML. Invalid arguments are rejected with
+``clipboard.ClipboardContentError`` **before** replacing clipboard contents.
+Success means both representations are published together as one offer: a rich
+consumer can obtain HTML and a text-only consumer can obtain the alternative.
+Inability to offer both together, missing helpers, denied access, transfer
+failure, or an unsupported session raises ``ClipboardContentError`` — never a
+silent text-only "success". Sequential single-format writes are not a dual
+offer.
+
+On macOS Aqua the default writer uses the system pasteboard
+(``NSPasteboard`` HTML + string types via ``osascript``). On other platforms
+the default path raises ``ClipboardContentError`` until a dual-offer writer is
+available; Linux and Windows HTML writes remain evidence-limited rather than
+verified (see below) — do not read an evidence limit as proof that a native
+writer is already present for that desktop.
+
 Installation
 ------------
 
@@ -46,26 +75,83 @@ For ``paste_image``, install the optional extra so Pillow is available:
 
    python -m pip install 'clipboard[images]'
 
+``copy_html`` does **not** require the ``clipboard[images]`` extra.
+
 On Linux, image clipboard reads also need a helper on ``PATH``:
 
 * X11: ``xclip``
 * Wayland: ``wl-paste`` (from wl-clipboard)
 
-Windows and macOS need a usable desktop clipboard / pasteboard session; image
-reading is not guaranteed under WSL, SSH, containers, or headless CI.
+For Linux HTML + plain-text **writes**, a helper must be able to offer
+**multiple** MIME types together (not a one-type-only path that drops the
+alternative):
 
-Evidence / verified platforms: macOS Aqua pasteboard image reads have been
-verified with an independent producer via the gated native probe
-(``CLIPBOARD_NATIVE_PROBE=1`` /
-``scripts/probe_macos_native_paste_image.py``). Windows desktop, Linux
-X11 + ``xclip``, and Linux Wayland + ``wl-paste`` remain supported
-targets but are each evidence-limited (unverified / unsupported for
-native proof): no usable desktop clipboard session for those
-environments was available during this verification. Do not treat any
-of them as natively verified from this work, and do not generalize a
-Wayland claim from X11 or an unstated compositor. Default automated
-tests use an in-memory backend and do not exercise a real desktop
-clipboard; native probes stay explicitly gated and are not part of the
+* X11: multi-type-capable ``xclip`` (or equivalent) offering ``text/html`` and
+  ``text/plain`` on CLIPBOARD together
+* Wayland: a multi-type-capable helper (for example ``wl-copy``) on a **named**
+  compositor; do not generalize one compositor's result to all Wayland
+  environments
+
+On Windows, a successful dual offer uses interoperable ``HTML Format`` (UTF-8
+fragment/context byte offsets, including non-ASCII) plus Unicode text in the
+same update. Windows and macOS need a usable desktop clipboard / pasteboard
+session; rich clipboard writes are not guaranteed under WSL, SSH, containers,
+or headless CI.
+
+Evidence / verified platforms:
+
+* macOS Aqua pasteboard image reads have been verified with an independent
+  producer via the gated native probe (``CLIPBOARD_NATIVE_PROBE=1`` /
+  ``scripts/probe_macos_native_paste_image.py``).
+* Windows desktop, Linux X11 + ``xclip``, and Linux Wayland + ``wl-paste``
+  image reads remain supported targets but are each evidence-limited
+  (unverified / unsupported for native proof): no usable desktop clipboard
+  session for those environments was available during image-read
+  verification. Do not treat any of them as natively verified from that
+  work, and do not generalize a Wayland claim from X11 or an unstated
+  compositor.
+* macOS Aqua HTML + plain-text dual-offer writes via ``copy_html`` have been
+  verified with independent rich (``NSPasteboardTypeHTML``) and text
+  (``pbpaste``) consumers after the writing process exits. Floors recorded by
+  ``scripts/probe_macos_native_copy_html.py`` on this work: macOS
+  ProductVersion 26.6.2, BuildVersion 25G83, machine arm64 (Apple Silicon),
+  method ``osascript`` / AppKit ``NSPasteboardTypeHTML`` +
+  ``NSPasteboardTypeString``. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
+  the probe script to refresh floors on another host.
+* Linux X11 HTML + plain-text dual-offer writes via ``copy_html`` are an
+  explicit **evidence limit** on this execution host: no usable X11 session
+  with a multi-type-capable helper (for example ``xclip`` offering
+  ``text/html`` and ``text/plain`` together) was available (Darwin checkout;
+  ``xclip`` not on ``PATH``). Do not treat X11 HTML write as verified.
+  ``scripts/probe_linux_x11_native_copy_html.py`` records
+  ``evidence_limit`` / ``verified: false`` (exit 2) rather than silent
+  success. Re-run that gated X11 dual-consumer probe on an owner-held X11
+  session to replace this limit.
+* Linux Wayland HTML + plain-text dual-offer writes via ``copy_html`` are an
+  explicit **evidence limit** on this execution host: no usable Wayland
+  session with a multi-type-capable helper on a **named** compositor was
+  available (Darwin checkout; ``wl-copy`` / ``wl-paste`` not on ``PATH``;
+  ``WAYLAND_DISPLAY`` unset). Do not treat Wayland HTML write as verified,
+  and do not generalize any future single-compositor result to all Wayland
+  environments. ``scripts/probe_linux_wayland_native_copy_html.py`` records
+  ``evidence_limit`` / ``verified: false`` /
+  ``compositor_generalization: false`` (exit 2) rather than silent success.
+  Re-run that gated Wayland dual-consumer probe on an owner-held Wayland
+  session to replace this limit for that compositor only.
+* Windows desktop HTML + Unicode text dual-offer writes via ``copy_html``
+  (interoperable ``HTML Format`` with UTF-8 fragment/context byte offsets for
+  non-ASCII content) are an explicit **evidence limit** on this execution
+  host: no usable Windows desktop session was available (Darwin checkout).
+  Do not treat Windows HTML write as verified.
+  ``scripts/probe_windows_native_copy_html.py`` records
+  ``evidence_limit`` / ``verified: false`` /
+  ``non_ascii_case_required_for_verification: true`` (exit 2) rather than
+  silent success. Re-run that gated Windows dual-consumer probe on an
+  owner-held Windows desktop to replace this limit, including a non-ASCII
+  fragment/context case.
+
+Default automated tests use an in-memory backend and do not exercise a real
+desktop clipboard; native probes stay explicitly gated and are not part of the
 default suite.
 
 Development

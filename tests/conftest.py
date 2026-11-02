@@ -9,3 +9,11 @@ def restore_image_grabclipboard():
 
     yield
     clipboard.set_image_grabclipboard(None)
+
+
+@pytest.fixture
+def restore_html_clipboard_writer():
+    import clipboard
+
+    yield
+    clipboard.set_html_clipboard_writer(None)
