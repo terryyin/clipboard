@@ -124,7 +124,7 @@ hold without a real clipboard.
 
 ### 3. Early probe — macOS Aqua offer inspect
 Type: Behavior
-Status: planned
+Status: done
 Proof: On this Darwin checkout (or equivalent Aqua session), gated probe: an
 **independent** producer offers HTML+text (and separately image-only when
 feasible); `inspect()` reports matching kinds and native pasteboard type /
@@ -133,6 +133,11 @@ UTI identifiers; a later independent consumer still sees the offer
 those floors. If Aqua inspect cannot be observed, record an explicit macOS
 inspect evidence limit — never claim verified. Probe failure stops dependent
 macOS inspect claims.
+
+Accepted proof (coordinator):
+- `CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked pytest tests/test_inspect_native_macos.py -v` → 1 passed
+- Floors: macOS 26.6.2 / build 25G83 / Darwin 25.6.0 / arm64; HTML+text kinds `{html,text}`; image-only `{image}`; non-mutation observed
+- Darwin default inspector enumerates via osascript/AppKit `types()` → `snapshot_from_native_formats`
 
 Behavior: Pre-condition: contract from slice 2; Darwin session **or** evidence
 limit path. Trigger: gated native independent-producer inspect. Postcondition:
@@ -227,6 +232,9 @@ guessing empty vs denied; evidence wording is honest.
 - Shared `kinds_from_native_formats` / `snapshot_from_native_formats` is the
   reusable bridge for slices 3–6 enumerators; contract fake proves kinds from
   the type list alone without payload fetch.
+- macOS `types()` also returns legacy aliases (`Apple HTML pasteboard type`,
+  `NSStringPboardType`); kinds map from known UTIs while aliases remain in
+  `formats`.
 
 ## Concern evidence
 

@@ -8,6 +8,23 @@ import pytest
 import clipboard
 
 
+def _assert_default_inspector_platform_behavior() -> None:
+    """Darwin enumerates Aqua types; other platforms still raise until landed."""
+    if sys.platform == "darwin":
+        try:
+            snapshot = clipboard.inspect()
+        except clipboard.ClipboardContentError as exc:
+            assert not isinstance(exc, clipboard.ClipboardImageError)
+        else:
+            assert isinstance(snapshot, clipboard.ClipboardOfferSnapshot)
+            assert isinstance(snapshot.kinds, frozenset)
+            assert isinstance(snapshot.formats, tuple)
+        return
+    with pytest.raises(clipboard.ClipboardContentError) as raised:
+        clipboard.inspect()
+    assert not isinstance(raised.value, clipboard.ClipboardImageError)
+
+
 def test_inspect_public_surface():
     assert callable(clipboard.inspect)
     assert issubclass(clipboard.ClipboardContentError, Exception)
@@ -20,11 +37,9 @@ def test_inspect_public_surface():
 def test_default_inspect_raises_clipboard_content_error(
     restore_clipboard_inspector,
 ):
-    """Default stub fails until later desktop enumerators land."""
+    """Non-Darwin default still fails; Darwin enumerates Aqua pasteboard types."""
     clipboard.set_clipboard_inspector(None)
-    with pytest.raises(clipboard.ClipboardContentError) as raised:
-        clipboard.inspect()
-    assert not isinstance(raised.value, clipboard.ClipboardImageError)
+    _assert_default_inspector_platform_behavior()
 
 
 def test_injected_inspector_returns_empty_snapshot(restore_clipboard_inspector):
@@ -79,8 +94,7 @@ def test_reset_inspector_restores_default(restore_clipboard_inspector):
     )
     clipboard.set_clipboard_inspector(None)
     assert clipboard._clipboard_inspector is clipboard._default_clipboard_inspector
-    with pytest.raises(clipboard.ClipboardContentError):
-        clipboard.inspect()
+    _assert_default_inspector_platform_behavior()
 
 
 def test_inspect_importable_without_images_extra():

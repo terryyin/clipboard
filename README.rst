@@ -204,40 +204,37 @@ Evidence / verified platforms:
   silent success. Re-run that gated Windows dual-consumer probe on an
   owner-held Windows desktop to replace this limit, including a non-ASCII
   fragment/context case.
+* macOS Aqua ``inspect()`` verified with an independent AppKit producer
+  (HTML+plain-text; image-only PNG when feasible), matching kinds / UTIs, and
+  an independent consumer afterward (non-mutation). Floors via
+  ``scripts/probe_macos_native_inspect.py``: 26.6.2 / 25G83 / arm64,
+  ``osascript`` ``NSPasteboard`` ``types()`` (no payload fetch; no images
+  extra). Refresh with ``CLIPBOARD_NATIVE_PROBE=1``. Other desktops separate.
 
-Default automated tests use an in-memory backend and do not exercise a real
-desktop clipboard; native probes stay explicitly gated and are not part of the
-default suite. The X11 and Wayland image-write probes are separate gated jobs,
-not part of the default matrix pytest.
+Default automated tests use an in-memory backend (no real desktop); native
+probes stay gated, outside the default suite. X11/Wayland image-write probes
+are separate gated jobs, not default matrix pytest.
 
 Development
 -----------
 
-The development environment uses `Nix <https://nixos.org/download/>`_ with flakes
-enabled, like the neighboring Lizard project. ``flake.lock`` pins Python 3.13,
-uv, Make, and actionlint. ``pyproject.toml`` declares Python dependencies and
-``uv.lock`` pins their resolved versions.
+Nix flakes (`Nix <https://nixos.org/download/>`_), like Lizard: ``flake.lock``
+pins Python 3.13, uv, Make, and actionlint. ``pyproject.toml`` /
+``uv.lock`` pin Python dependencies.
 
 ::
 
    nix develop
-   make deps            # sync the locked Python environment
-   make check           # Ruff lint, format check, and pytest
-   make lint-workflows  # GitHub Actions validation with actionlint
-   make build           # wheel, sdist, and strict package metadata checks
-   make test-package    # build and test installation of both distributions
+   make deps check lint-workflows build test-package
 
-For a single command, use ``nix develop -c make check``. Without Nix, install
-Python 3.13 and uv, then use the same Make targets; actionlint is needed for
-``make lint-workflows``. Windows contributors can run ``uv sync --locked``,
-``uv run --locked --extra images pytest``, and ``uv run --locked ruff check .``
-directly.
-Do not install project dependencies into the system Python environment.
+Or ``nix develop -c make check``. Without Nix: Python 3.13 + uv + same Make
+targets (actionlint for ``lint-workflows``). Windows: ``uv sync --locked``,
+``uv run --locked --extra images pytest``, ``uv run --locked ruff check .``.
+Do not install into system Python.
 
-GitHub Actions checks the Nix environment and tests Python 3.10–3.14, including
-Windows and macOS at the supported version boundaries. Package checks install
-both the wheel and source archive outside the source tree. Tests use an
-in-memory clipboard backend and do not require desktop clipboard access.
+GitHub Actions covers Nix plus Python 3.10–3.14 (Windows/macOS boundaries),
+installs wheel and sdist outside the tree, and uses an in-memory clipboard
+backend (no desktop required).
 
 Publishing
 ----------
