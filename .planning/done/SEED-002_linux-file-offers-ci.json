@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-002#linux-file-offers-ci",
+  "title": "Verify Linux file offers in CI",
+  "completedAt": "2026-11-02T14:30:31.104Z",
+  "developer": "Terry Yin",
+  "agent": "Airi-chan",
+  "host": "codex"
+}

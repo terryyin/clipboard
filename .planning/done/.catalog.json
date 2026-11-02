@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-002_linux-file-offers-ci.json",
+      "identity": "SEED-002#linux-file-offers-ci",
+      "completedAt": "2026-11-02T14:30:31.104Z",
+      "blob": "dbfb4199a8890e77eb4a836fbb75cd2042859b5b"
+    },
+    {
       "fileName": "SEED-001_read-files.json",
       "identity": "SEED-001#read-files",
       "completedAt": "2026-11-02T10:53:21.591Z",

@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Airi-chan",
-  "email": "airi-chan@example.org",
-  "identity": "SEED-002#linux-file-offers-ci",
-  "mode": "story-branch",
-  "branch": "codex/verify-linux-file-offers-ci",
-  "host": "codex"
-}
