@@ -298,6 +298,15 @@ Postcondition: callers know exactly what is promised and verified where.
   a free display from `:90` as the dead display. Shared Linux runner:
   `clipboard/_text_native_linux.py`. Local: `make check` 389 passed / 18
   skipped.
+  First CI run 41471306541 (Ubuntu 26.04.1, kernel 7.0.0-1017-azure, xclip
+  0.13, Python 3.13.14): every probe step passed; observed xclip stderr
+  `Error: target TARGETS not available` (no owner) and `Error: Can't open
+  display: :90` (dead display, both operations failed in < 0.1 s); a
+  STRING-only owner answers a `UTF8_STRING` request with exit 0 and raw
+  Latin-1 bytes, which confirms listing TARGETS first; `copy("")` leaves an
+  empty `UTF8_STRING` offer. Repaired in the same slice: Windows unit runs
+  lacked `os.killpg` (test fixture and `_stop_owner` fallback) and the probe's
+  `xvfb_version` floor was empty (now `dpkg-query` first).
 
 ## Story obligations
 

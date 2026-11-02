@@ -115,9 +115,16 @@ def _helper_log(log) -> bytes:
 
 
 def _stop_owner(proc: subprocess.Popen) -> None:
-    """Best effort: stop an owner that never offered (its whole session)."""
+    """Best effort: stop an owner that never offered (its whole session).
+
+    ``os.killpg`` is POSIX-only; without it, kill the owner process itself.
+    """
+    killpg = getattr(os, "killpg", None)
     try:
-        os.killpg(proc.pid, signal.SIGTERM)
+        if killpg is None:
+            proc.kill()
+        else:
+            killpg(proc.pid, signal.SIGTERM)
     except (ProcessLookupError, PermissionError):
         pass
 

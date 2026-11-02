@@ -169,19 +169,29 @@ def errors_within_bound(child: dict, must_contain: list[str]) -> bool:
     )
 
 
-def xvfb_version() -> str | None:
+def _version_output(cmd: list[str]) -> subprocess.CompletedProcess | None:
     try:
-        result = subprocess.run(
-            ["Xvfb", "-version"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
+        return subprocess.run(
+            cmd, capture_output=True, text=True, timeout=10, check=False
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
-    lines = (result.stderr + result.stdout).splitlines()
-    return next((line.strip() for line in lines if "X Server" in line), None)
+
+
+def xvfb_version() -> str | None:
+    """The installed Xvfb: the apt package version, else its stderr banner."""
+    package = _version_output(["dpkg-query", "-W", "-f=${Version}", "xvfb"])
+    if package is not None and package.returncode == 0 and package.stdout.strip():
+        return f"xvfb {package.stdout.strip()}"
+    banner = _version_output(["Xvfb", "-version"])
+    if banner is None:
+        return None
+    lines = [line.strip() for line in (banner.stderr + banner.stdout).splitlines()]
+    lines = [line for line in lines if line]
+    return next(
+        (line for line in lines if "x server" in line.lower()),
+        next((line for line in lines if "version" in line.lower()), None),
+    )
 
 
 def environment() -> dict:

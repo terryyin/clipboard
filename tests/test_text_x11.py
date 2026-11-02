@@ -29,7 +29,10 @@ def x11(text_session, monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake.run)
     monkeypatch.setattr(subprocess, "Popen", fake.popen)
     monkeypatch.setattr(
-        _text_native_x11.os, "killpg", lambda pid, sig: fake.killed.append(pid)
+        _text_native_x11.os,
+        "killpg",
+        lambda pid, sig: fake.killed.append(pid),
+        raising=False,  # os.killpg is POSIX-only; these tests also run on Windows
     )
     text_session("linux", {"DISPLAY": ":0"}, ("xclip",))
     fake.pyperclip = FakePyperclip(monkeypatch)
@@ -196,6 +199,16 @@ def test_owner_that_never_offers_raises_after_the_bound(x11, monkeypatch):
         clipboard.copy("x")
     assert "0.2s bound" in str(caught.value)
     assert isinstance(caught.value.__cause__, subprocess.TimeoutExpired)
+    assert x11.killed == [4242]
+
+
+def test_owner_is_killed_directly_where_process_groups_do_not_exist(x11, monkeypatch):
+    monkeypatch.setattr(_text_native_x11, "_X11_TEXT_WRITE_TIMEOUT_S", 0.2)
+    monkeypatch.delattr(_text_native_x11.os, "killpg")
+    x11.never_offers = True
+
+    with pytest.raises(clipboard.ClipboardContentError, match="0.2s bound"):
+        clipboard.copy("x")
     assert x11.killed == [4242]
 
 

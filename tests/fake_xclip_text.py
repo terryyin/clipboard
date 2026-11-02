@@ -40,6 +40,9 @@ class FakeOwner:
     def poll(self):
         return self.status
 
+    def kill(self):
+        self.x11.killed.append(self.pid)
+
 
 class FakeX11:
     def __init__(self):
