@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Shunka-chan",
+  "email": "shunka-chan@example.org",
+  "identity": "SEED-001#copy-files",
+  "mode": "story-branch",
+  "branch": "claude/copy-local-file-references-into-file-managers",
+  "host": "claude",
+  "model": "opus"
+}
