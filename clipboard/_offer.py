@@ -92,7 +92,7 @@ def snapshot_from_native_formats(
 
 
 def _default_clipboard_inspector() -> ClipboardOfferSnapshot:
-    """Platform-selected enumerator (Darwin; Linux Wayland/X11 helpers)."""
+    """Platform-selected enumerator (Darwin; Linux; Windows desktop)."""
     if sys.platform == "darwin":
         from clipboard._offer_macos import _macos_clipboard_inspector
 
@@ -110,13 +110,18 @@ def _default_clipboard_inspector() -> ClipboardOfferSnapshot:
 
             return _linux_wayland_clipboard_inspector()
         return _linux_x11_clipboard_inspector()
+    if sys.platform == "win32":
+        from clipboard._offer_windows import _windows_clipboard_inspector
+
+        return _windows_clipboard_inspector()
     raise ClipboardContentError(
-        "inspect format enumeration is not available yet "
-        f"({sys.platform}); need a usable desktop session with a helper that "
-        "can list offered clipboard formats/types (Windows desktop; macOS "
-        "Aqua pasteboard types; Linux X11: CLIPBOARD TARGETS helper; Linux "
-        "Wayland: MIME-list helper on a named compositor), or inject an "
-        "inspector with set_clipboard_inspector for tests"
+        "inspect format enumeration is not available "
+        f"({sys.platform}); need a usable desktop session that can list "
+        "offered clipboard formats/types (Windows desktop via user32 "
+        "EnumClipboardFormats; macOS Aqua pasteboard types; Linux X11: "
+        "CLIPBOARD TARGETS helper; Linux Wayland: MIME-list helper on a "
+        "named compositor), or inject an inspector with "
+        "set_clipboard_inspector for tests"
     )
 
 
@@ -147,8 +152,9 @@ def inspect() -> ClipboardOfferSnapshot:
     TARGETS via ``xclip -selection clipboard -o -t TARGETS``. On Linux
     Wayland (``WAYLAND_DISPLAY`` / session type) it lists MIME types via
     ``wl-paste -l``; native verified claims stay scoped to the named
-    compositor actually probed. Windows still needs an injected inspector
-    via ``set_clipboard_inspector`` until its native enumerator lands.
+    compositor actually probed. On Windows desktop it enumerates formats via
+    ``ctypes`` / ``user32`` ``EnumClipboardFormats`` +
+    ``GetClipboardFormatNameW`` (no ``win32clipboard`` dependency).
     """
     try:
         return _clipboard_inspector()

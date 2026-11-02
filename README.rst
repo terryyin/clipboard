@@ -187,16 +187,12 @@ Evidence / verified platforms:
   ``compositor_generalization: false`` (exit 2). Re-run on owner-held Wayland
   for that compositor only.
 * Windows desktop HTML + Unicode text dual-offer writes via ``copy_html``
-  (interoperable ``HTML Format`` with UTF-8 fragment/context byte offsets for
-  non-ASCII content) are an explicit **evidence limit** on this execution
-  host: no usable Windows desktop session was available (Darwin checkout).
-  Do not treat Windows HTML write as verified.
-  ``scripts/probe_windows_native_copy_html.py`` records
+  (``HTML Format`` with UTF-8 fragment/context offsets for non-ASCII) are an
+  **evidence limit** here (Darwin; no Windows session). Do not treat as
+  verified. ``scripts/probe_windows_native_copy_html.py`` records
   ``evidence_limit`` / ``verified: false`` /
-  ``non_ascii_case_required_for_verification: true`` (exit 2) rather than
-  silent success. Re-run that gated Windows dual-consumer probe on an
-  owner-held Windows desktop to replace this limit, including a non-ASCII
-  fragment/context case.
+  ``non_ascii_case_required_for_verification: true`` (exit 2). Re-run on
+  owner-held Windows including a non-ASCII fragment/context case.
 * macOS Aqua ``inspect()`` verified with an independent AppKit producer
   (HTML+plain-text; image-only PNG when feasible), matching kinds / UTIs, then
   an independent consumer (non-mutation). Floors:
@@ -212,6 +208,11 @@ Evidence / verified platforms:
   ``compositor_generalization: false``; exit 2). Re-run with
   ``CLIPBOARD_NATIVE_PROBE=1`` on owner-held Linux for that desktop (named
   compositor on Wayland only).
+* Windows desktop ``inspect()`` is an **evidence limit** here (Darwin; no
+  Windows session): ``ctypes`` / ``user32`` ``EnumClipboardFormats`` (no
+  ``win32clipboard``). Probe ``scripts/probe_windows_native_inspect.py``
+  records ``evidence_limit`` / ``verified: false`` (exit 2). Re-run with
+  ``CLIPBOARD_NATIVE_PROBE=1`` on owner-held Windows to replace this limit.
 
 Default automated tests use an in-memory backend (no real desktop); native
 probes stay gated, outside the default suite. X11/Wayland image-write probes

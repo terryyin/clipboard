@@ -23,7 +23,7 @@ No human amendments.
 | 8 | Add an explicit public inspect API (proposed spelling inspect()). | slice 1 | observed: clipboard.inspect in clipboard package; tests/test_inspect_seam.py::test_inspect_public_surface |
 | 9 | The API returns a structured snapshot of the current clipboard offer. | slice 2 | observed: tests/test_inspect_contract.py success paths return ClipboardOfferSnapshot |
 | 10 | The snapshot includes the set of library-understood kinds currently present among the fixed vocabulary {text, image, html, files} when native formats map to them. | slice 2 | observed: clipboard/_offer.py snapshot_from_native_formats + contract kind asserts |
-| 11.1 | Native format identifiers include Windows format names/ids. | slice 6 | |
+| 11.1 | Native format identifiers include Windows format names/ids. | slice 6 | observed: clipboard/_offer_windows.py ctypes EnumClipboardFormats + format names; tests/test_inspect_windows.py CF_*/HTML Format mapping; native verification evidence-limited |
 | 11.2 | Native format identifiers include macOS pasteboard types / UTIs. | slice 3 | observed: probe formats public.html/public.utf8-plain-text/public.png; tests/test_inspect_native_macos.py + scripts/probe_macos_native_inspect.py |
 | 11.3 | Native format identifiers include Linux MIME types. | slice 4 | observed: _offer_x11 TARGETS→snapshot_from_native_formats (MIME/atoms); tests/test_inspect_x11.py; native verification evidence-limited on Darwin |
 | 12 | Native format identifiers include identifiers for types this library cannot yet decode. | slice 2 | observed: undecodable com.example.undecodable retained in formats (HTML+text and file-list tests) |
@@ -38,7 +38,7 @@ No human amendments.
 | 19 | Native proof uses an independent producer and stays explicitly gated. | slice 3 | observed: gated CLIPBOARD_NATIVE_PROBE independent AppKit producer outside clipboard.inspect |
 | 20 | Document Linux helper dependencies for enumeration (xclip / wl-paste -l or equivalent) and supported desktop setup. | slice 7 | |
 | 21 | No clipboard[images] requirement for this story. | slice 1 | observed: inspect() docstring + tests/test_inspect_seam.py::test_inspect_importable_without_images_extra |
-| 22.1 | Supported desktop: Windows desktop. | slice 6 | |
+| 22.1 | Supported desktop: Windows desktop. | slice 6 | observed: win32 default inspector wired; README Windows inspect evidence limit (not verified) |
 | 22.2 | Supported desktop: macOS Aqua. | slice 3 | observed: Aqua session success; README.rst macOS inspect verified floors 26.6.2/25G83 |
 | 22.3 | Supported desktop: Linux X11 + helper able to list CLIPBOARD targets. | slice 4 | observed: Linux X11 enumerator wired; README.rst X11 inspect evidence limit (not verified) |
 | 22.4 | Supported desktop: Linux Wayland + helper able to list offered MIME types, scoped to the compositor actually proved when one is available. | slice 5 | observed: clipboard/_offer_wayland.py wl-paste -l wired; README Wayland inspect evidence limit; verified path requires named compositor |

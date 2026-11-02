@@ -185,7 +185,7 @@ Postcondition: example 6 (Wayland branch) or honest limit.
 
 ### 6. Early probe — Windows desktop format enumeration
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Windows desktop session, gated probe: independent producer
 offers HTML+text (and image-only / file-list when feasible); `inspect()`
 reports matching kinds and native Windows format names/ids; clipboard
@@ -193,6 +193,12 @@ unchanged afterward; floors recorded; README marks Windows inspect verified.
 If no Windows session is available, record an explicit Windows inspect
 evidence limit — never claim verified. Probe failure stops dependent Windows
 claims.
+
+Accepted proof (coordinator):
+- Evidence-limit on Darwin: README Windows inspect limit; probe `evidence_limit: true`, exit 2
+- Enumerator: ctypes/user32 `EnumClipboardFormats` + `GetClipboardFormatNameW` in `clipboard/_offer_windows.py` (no win32clipboard dep)
+- Desktop-free CF_*/HTML Format mapping + OpenClipboard failure → ClipboardContentError
+- Focused: 37 passed, 4 skipped
 
 Behavior: Pre-condition: contract; Windows session **or** evidence-limit path.
 Trigger: gated independent-producer inspect. Postcondition: examples 1–4
@@ -250,6 +256,8 @@ guessing empty vs denied; evidence wording is honest.
   usable X11+xclip session; enumerator is wired for owner-held replacement.
 - Linux Wayland inspect similarly evidence-limited here; any future verified
   claim must name the compositor and must not generalize to all Wayland.
+- Windows inspect enumerator uses ctypes/user32 (no required win32clipboard);
+  verified claim deferred until an owner-held Windows desktop probe succeeds.
 
 ## Concern evidence
 

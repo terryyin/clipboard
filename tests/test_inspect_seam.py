@@ -9,7 +9,7 @@ import clipboard
 
 
 def _assert_default_inspector_platform_behavior() -> None:
-    """Darwin/X11 enumerate when session+helper allow; else ClipboardContentError."""
+    """Platform enumerator when session allows; else ClipboardContentError."""
     if sys.platform == "darwin":
         try:
             snapshot = clipboard.inspect()
@@ -20,7 +20,7 @@ def _assert_default_inspector_platform_behavior() -> None:
             assert isinstance(snapshot.kinds, frozenset)
             assert isinstance(snapshot.formats, tuple)
         return
-    # Linux X11 may raise (missing DISPLAY/xclip) or succeed; Wayland/other raise.
+    # Linux / win32 may raise (missing session/helper) or succeed.
     try:
         snapshot = clipboard.inspect()
     except clipboard.ClipboardContentError as exc:
