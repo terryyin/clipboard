@@ -11,7 +11,7 @@
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| 1 | Python desktop tools and automation developers can recover an ordered list of local file references from an independent file manager's clipboard offer through `clipboard`, instead of asking users to transcribe paths or parsing plain text that happens to look like paths. | slice 7 |  |
+| 1 | Python desktop tools and automation developers can recover an ordered list of local file references from an independent file manager's clipboard offer through `clipboard`, instead of asking users to transcribe paths or parsing plain text that happens to look like paths. | slice 7 | observed: README.rst paste_files Usage + Evidence; public API recovers ordered local paths |
 | 2 | When a native file-list representation offers local files, the call returns those local paths in offer order. | slice 2 | observed: clipboard/_files.py _normalize_files_offer/_paths_from_*; tests/test_paste_files_contract.py::test_ordered_two_file_path_list_unicode_and_spaces |
 | 3 | When no local file-list is offered, the call reports ordinary files absence. | slice 2 | observed: clipboard/_files.py absence kinds → None; tests/test_paste_files_contract.py::test_absence_kinds_return_none |
 | 4 | Corrupt native file-list metadata or transfer/access failure reports an actionable error. | slice 2 | observed: tests/test_paste_files_failures.py::test_corrupt_metadata_raises_content_error_not_none_or_paths |
@@ -59,16 +59,16 @@
 | 46 | Native proof uses an independent file manager. | slice 3 | observed: scripts/probe_macos_native_paste_files.py independent osascript NSFilenamesPboardType producer; gated test |
 | 47 | Native proof is not a same-library `copy_files` round-trip alone. | slice 3 | observed: README.rst + probe: not same-library paste_files round-trip |
 | 48 | Native proof stays explicitly gated. | slice 3 | observed: CLIPBOARD_NATIVE_PROBE gated tests/test_paste_files_native_macos.py |
-| 49 | Document Linux helper dependencies for file-list reads (`xclip` / `wl-paste` requesting `text/uri-list` or equivalent). | slice 7 |  |
-| 50 | Document supported desktop setup. | slice 7 |  |
+| 49 | Document Linux helper dependencies for file-list reads (`xclip` / `wl-paste` requesting `text/uri-list` or equivalent). | slice 7 | observed: README.rst Linux xclip/wl-paste text/uri-list helper docs for paste_files |
+| 50 | Document supported desktop setup. | slice 7 | observed: README.rst supported desktop setup for paste_files (macOS/X11/Wayland/Windows) |
 | 51 | No `clipboard[images]` requirement for this story. | slice 1 | observed: tests/test_paste_files_seam.py::test_paste_files_importable_without_images_extra |
 | 52 | Supported desktop: Windows desktop with Explorer (or equivalent) producing `CF_HDROP`. | slice 6 | observed: README.rst Windows paste_files evidence limit; probe verified:false on Darwin host |
 | 53 | Supported desktop: macOS Aqua with Finder (or equivalent) producing file-URL / filename pasteboard types. | slice 3 | observed: README.rst macOS Aqua paste_files verified floors; clipboard/_files_native_macos.py |
 | 54 | Supported desktop: Linux X11 + helper able to request `text/uri-list` on CLIPBOARD from a named file manager. | slice 4 | observed: README.rst X11 paste_files evidence limit; clipboard/_files_native_linux.py xclip text/uri-list; scripts/probe_linux_x11_native_paste_files.py verified:false |
 | 55 | Supported desktop: Linux Wayland + helper able to request `text/uri-list` (or equivalent) from a named file manager, scoped to the compositor actually proved when one is available. | slice 5 | observed: README.rst Wayland paste_files evidence limit; clipboard/_files_native_linux.py wl-paste -t text/uri-list; probe verified:false |
-| 56 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available. | slice 7 |  |
-| 57 | When no usable session exists during execution, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified. | slice 7 |  |
-| 58 | Never silent success for an unproved desktop. | slice 7 |  |
+| 56 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available. | slice 7 | observed: README.rst Evidence: independent-producer required when session available; macOS verified |
+| 57 | When no usable session exists during execution, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified. | slice 7 | observed: README.rst Evidence: X11/Wayland/Windows explicit evidence limits |
+| 58 | Never silent success for an unproved desktop. | slice 7 | observed: README.rst + probes never silent success; verified:false evidence limits |
 | 59 | Do not generalize one Wayland compositor’s result to all environments. | slice 5 | observed: README + probe compositor_generalization:false |
 | 60 | Do not generalize one Linux file manager’s result to all environments. | slice 4 | observed: README.rst + probe file_manager_generalization:false — do not generalize one Linux FM |
 | 61 | Do not overload `paste()` to return or accept file lists. | slice 1 | observed: clipboard/__init__.py re-exports pyperclip paste separately from paste_files |
@@ -85,8 +85,8 @@
 | 72 | Do not copy referenced files as part of the read. | slice 2 | observed: clipboard/_files.py no copy of referenced paths |
 | 73 | Do not move referenced files as part of the read. | slice 2 | observed: clipboard/_files.py no move of referenced paths |
 | 74 | Do not delete referenced files as part of the read. | slice 2 | observed: clipboard/_files.py no delete of referenced paths |
-| 75 | Do not promise that returned paths still exist. | slice 7 |  |
-| 76 | Do not promise that returned paths are readable. | slice 7 |  |
+| 75 | Do not promise that returned paths still exist. | slice 7 | observed: README.rst paste_files does not promise paths still exist |
+| 76 | Do not promise that returned paths are readable. | slice 7 | observed: README.rst paste_files does not promise paths are readable |
 | 77 | Do not fetch remote / non-`file` URIs. | slice 2 | observed: test_remote_only_uri_list_is_ordinary_absence; test_mixed_uri_list_keeps_local_skips_remote_without_fetch |
 | 78 | Do not hang the caller indefinitely waiting on a contended clipboard. | slice 3 | observed: clipboard/_files_native_macos.py / _files_native_linux.py timeout 30s |
 | 79 | Do not silently reissue a cut/move marker as a move offer. | slice 2 | observed: tests/test_paste_files_failures.py no cut reissue |
@@ -96,15 +96,15 @@
 | 83 | A successful read must not perform filesystem side effects on the referenced paths. | slice 2 | observed: contract suite; decode-only _files.py |
 | 84 | A cut marker must not cause library-side move/delete. | slice 2 | observed: tests/test_paste_files_failures.py cut ignore no move/delete |
 | 85 | A cut marker must not be reissued as move. | slice 2 | observed: tests/test_paste_files_failures.py cut ignore no reissue |
-| 86 | Silent success on an unproved desktop is forbidden. | slice 7 |  |
+| 86 | Silent success on an unproved desktop is forbidden. | slice 7 | observed: README.rst Evidence forbids silent success on unproved desktops |
 | 87 | The public API spelling is proposed as `paste_files()` (not locked as the only possible name by the story’s own wording). | slice 1 | observed: clipboard/_files.py and __init__ paste_files public name |
 | 88 | Ordinary absence is reported as `None`. | slice 2 | observed: test_absence_kinds_return_none returns None |
 | 89 | Non-absence failures raise `ClipboardContentError` with actionable messaging (where failure messaging is stated). | slice 2 | observed: tests/test_paste_files_failures.py actionable ClipboardContentError on corrupt/access |
 | 90 | Cut/move markers are ignored for library behavior; they are not treated as structured success metadata in this story. | slice 2 | observed: tests/test_paste_files_failures.py cut not structured success metadata |
 | 91 | Linux Wayland support is scoped to the compositor actually proved when one is available. | slice 5 | observed: README Wayland scoped to compositor proved when available; evidence-limited here |
 | 92 | WSL, SSH, containers, and headless CI are not additional guaranteed desktops. |  | X92 |
-| 93 | Evidence for a desktop without a usable session during execution is an explicit unverified/unsupported limit, not a verified claim. | slice 7 |  |
-| 94 | Default automated tests remain desktop-free; native proof is gated and uses an independent file manager. | slice 7 |  |
+| 93 | Evidence for a desktop without a usable session during execution is an explicit unverified/unsupported limit, not a verified claim. | slice 7 | observed: README.rst evidence-limit wording for desktops without session |
+| 94 | Default automated tests remain desktop-free; native proof is gated and uses an independent file manager. | slice 7 | observed: README.rst desktop-free default tests; gated native probes |
 | 95 | This story does not require `clipboard[images]`. | slice 1 | observed: tests/test_paste_files_seam.py::test_paste_files_importable_without_images_extra |
 | 96 | Independent file manager (Explorer / Finder / named Linux FM) copies two existing local files, including a Unicode name and spaces → `paste_files()` returns an ordered `list[str]` of the corresponding local paths; a later independent consumer can still obtain the same offer; no file was opened or modified by the read. | slice 3 | observed: gated probe Unicode+spaces ordered paths; second paste_files + AppKit re-read non-mutation |
 | 97 | Same pattern where the native offer is Linux `text/uri-list` of `file://` URIs (percent-encoded spaces / Unicode) or Windows `CF_HDROP` → returned strings are decoded local filesystem paths, not raw URI text and not `paste()` plain text alone. | slice 2 | observed: test_uri_list_file_uris_decode_to_local_paths; test_structured_paths_offer_decodes_like_path_list |
@@ -112,7 +112,7 @@
 | 99 | Offer includes a cut/move marker beside local file references → `paste_files()` still returns the local path list; the library does not move, delete, or rewrite the offer as a cut/move. | slice 2 | observed: tests/test_paste_files_failures.py::test_cut_marker_ignored_still_returns_paths |
 | 100 | Native file-list metadata is present but corrupt or inconsistent → `ClipboardContentError`; no fabricated paths; clipboard contents remain unchanged. | slice 2 | observed: tests/test_paste_files_failures.py::test_corrupt_metadata_raises_content_error_not_none_or_paths |
 | 101 | Missing Linux file-list helper or denied/unavailable clipboard access → `ClipboardContentError` with an actionable message; not silent `None` success. | slice 2 | observed: tests/test_paste_files_failures.py::test_access_and_helper_failures_are_not_absence |
-| 102 | Windows, macOS Aqua, Linux X11, and/or Linux Wayland session available → independent file-manager success with floors recorded for the named compositor/helper/file manager; if a session is unavailable during execution, that desktop keeps an explicit evidence limit instead of a verified claim. | slice 7 |  |
+| 102 | Windows, macOS Aqua, Linux X11, and/or Linux Wayland session available → independent file-manager success with floors recorded for the named compositor/helper/file manager; if a session is unavailable during execution, that desktop keeps an explicit evidence limit instead of a verified claim. | slice 7 | observed: README.rst Evidence consolidates macOS verified + X11/Wayland/Windows limits |
 | 103 | After this work, in-memory `copy` / `paste` / `paste_image` / `copy_html` / (when present) `paste_html` / `inspect` contract tests still pass; `VERSION` and text-only callers behave as before; `paste_files` does not require `clipboard[images]`. | slice 2 | observed: tests/test_paste_files_failures.py::test_paste_files_contract_without_images_extra + broader in-memory suites |
 | 104 | Public exposure of cut vs copy intent / PreferredDropEffect / GNOME–KDE cut verbs as structured return metadata (parse/ignore markers only as needed for the non-move safety rule). |  | X104 |
 | 105 | Returning `pathlib.Path` objects or richer reference types. |  | X105 |

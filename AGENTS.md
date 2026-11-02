@@ -1,10 +1,13 @@
 # Clipboard
 
-A small Python library exposing `copy`, `paste`, and `VERSION` through
-pyperclip, plus optional image read/write via `paste_image` / `copy_image`
-when the `clipboard[images]` extra (Pillow) is installed. Access, helper,
-transfer, or malformed-image failures raise `ClipboardImageError` rather than
-returning `None` (or silently succeeding on write).
+A small Python library exposing `copy`, `paste`, `VERSION`, `paste_files`,
+`copy_html`, and `ClipboardContentError` through the public package, plus
+optional image read/write via `paste_image` / `copy_image` when the
+`clipboard[images]` extra (Pillow) is installed. `paste_files` and
+`copy_html` do not require that extra. Access, helper, transfer, or
+malformed-image failures raise `ClipboardImageError` rather than returning
+`None` (or silently succeeding on write); non-absence file-list / HTML
+failures raise `ClipboardContentError`.
 
 Use Nix for development tools, as in the neighboring Lizard project. Run tools
 with `nix develop -c <command>`; Git commands can run directly. Nix pins the
@@ -19,8 +22,9 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop
-session; optional native pasteboard probes stay gated via
+session; optional native pasteboard / file-list probes stay gated via
 `CLIPBOARD_NATIVE_PROBE` (see README and
-`scripts/probe_macos_native_paste_image.py`).
+`scripts/probe_macos_native_paste_image.py` /
+`scripts/probe_macos_native_paste_files.py`).
 Release setup and maintainer steps are documented in `docs/releasing.md`.
 Never create or push a release tag unless the maintainer explicitly requests it.

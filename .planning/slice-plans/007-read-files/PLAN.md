@@ -182,7 +182,7 @@ Trigger: gated independent-FM paste. Postcondition: examples 1–2 and 4
 
 ### 7. Docs and packaging alignment for `paste_files`
 Type: Behavior
-Status: planned
+Status: done
 Proof: README (and related install/evidence notes) document `paste_files`,
 absence vs `ClipboardContentError`, non-mutation, no filesystem side effects,
 plain-text rejection, cut-marker ignore rule, Linux `text/uri-list` helpers,
@@ -255,6 +255,11 @@ guessing paths from text; evidence wording is honest.
 - Slice 6: Windows ``paste_files`` / ``CF_HDROP`` explicit evidence limit on
   this Darwin host; thin ctypes DragQueryFileW reader (no win32clipboard
   public dependency) for later owner-held verification.
+
+
+- Slice 7: README/AGENTS/pyproject document ``paste_files`` contract, helpers,
+  and per-desktop evidence (macOS verified; X11/Wayland/Windows limits);
+  ``clipboard[images]`` not required; desktop-free ``make check`` green.
 
 ## Concern evidence
 
