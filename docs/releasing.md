@@ -1,7 +1,8 @@
 # Releasing Clipboard
 
-A version tag runs checks, builds a wheel and source distribution, publishes
-those artifacts to PyPI, then creates a GitHub release with the same files.
+A version tag runs checks, builds a wheel and source distribution, automatically
+publishes those artifacts to PyPI, then creates a GitHub release with the same
+files. No manual deployment approval is required.
 Both `X.Y.Z` and `vX.Y.Z` tags are accepted. The tag must match
 `clipboard.VERSION` exactly after removing an optional `v`.
 
@@ -11,11 +12,9 @@ These account settings require a repository administrator and a PyPI project
 owner. The workflow uses OIDC Trusted Publishing and needs no PyPI API token.
 
 1. Open [the GitHub environments settings](https://github.com/terryyin/clipboard/settings/environments)
-   and create an environment named **pypi**. Add yourself as a required reviewer
-   if you want to approve each publication. Restrict deployment to version tags
-   using tag patterns `*.*.*` and `v*.*.*`. Without a reviewer rule, a matching
-   tag can publish automatically after checks pass. GitHub's availability of
-   protection rules depends on repository visibility and plan.
+   and create an environment named **pypi**. Leave required reviewers
+   unconfigured so releases publish automatically after all checks pass.
+   Restrict deployment to version tags using tag patterns `*.*.*` and `v*.*.*`.
 2. Sign in to PyPI as an owner of `clipboard` and
    [add a GitHub Trusted Publisher](https://pypi.org/manage/project/clipboard/settings/publishing/?provider=github&owner=terryyin&repository=clipboard&workflow_filename=release.yml).
    Enter these exact values:
@@ -55,8 +54,9 @@ The environment name must agree between PyPI and the workflow.
    ```
 
 5. Open [Actions → Release](https://github.com/terryyin/clipboard/actions/workflows/release.yml).
-   If required reviewers are configured, approve the **pypi** deployment after
-   reviewing the tagged source and the `distributions-<attempt>` artifact.
+   Monitor the checks and automatic publication. The **pypi** deployment proceeds
+   without manual approval once all checks pass; the checked distributions are
+   available in the `distributions-<attempt>` artifact.
 6. Confirm the new version on PyPI and the GitHub release with its attached
    wheel and source archive.
 
