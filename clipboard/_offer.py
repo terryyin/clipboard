@@ -92,7 +92,7 @@ def snapshot_from_native_formats(
 
 
 def _default_clipboard_inspector() -> ClipboardOfferSnapshot:
-    """Platform-selected enumerator (Darwin Aqua; Linux X11 via xclip TARGETS)."""
+    """Platform-selected enumerator (Darwin; Linux Wayland/X11 helpers)."""
     if sys.platform == "darwin":
         from clipboard._offer_macos import _macos_clipboard_inspector
 
@@ -104,12 +104,11 @@ def _default_clipboard_inspector() -> ClipboardOfferSnapshot:
         )
 
         if _is_linux_wayland():
-            raise ClipboardContentError(
-                "inspect format enumeration is not available yet on Linux "
-                "Wayland; need wl-paste -l (or equivalent) on a named "
-                "compositor, or inject an inspector with "
-                "set_clipboard_inspector for tests"
+            from clipboard._offer_wayland import (
+                _linux_wayland_clipboard_inspector,
             )
+
+            return _linux_wayland_clipboard_inspector()
         return _linux_x11_clipboard_inspector()
     raise ClipboardContentError(
         "inspect format enumeration is not available yet "
@@ -145,9 +144,11 @@ def inspect() -> ClipboardOfferSnapshot:
     ``ClipboardImageError``). On macOS Aqua the default path enumerates
     pasteboard types via ``osascript`` / AppKit without fetching payloads.
     On Linux X11 (``DISPLAY`` set, not Wayland-only) it enumerates CLIPBOARD
-    TARGETS via ``xclip -selection clipboard -o -t TARGETS``. Wayland and
-    Windows still need an injected inspector via
-    ``set_clipboard_inspector`` until their native enumerators land.
+    TARGETS via ``xclip -selection clipboard -o -t TARGETS``. On Linux
+    Wayland (``WAYLAND_DISPLAY`` / session type) it lists MIME types via
+    ``wl-paste -l``; native verified claims stay scoped to the named
+    compositor actually probed. Windows still needs an injected inspector
+    via ``set_clipboard_inspector`` until its native enumerator lands.
     """
     try:
         return _clipboard_inspector()

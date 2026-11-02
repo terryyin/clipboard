@@ -41,11 +41,11 @@ No human amendments.
 | 22.1 | Supported desktop: Windows desktop. | slice 6 | |
 | 22.2 | Supported desktop: macOS Aqua. | slice 3 | observed: Aqua session success; README.rst macOS inspect verified floors 26.6.2/25G83 |
 | 22.3 | Supported desktop: Linux X11 + helper able to list CLIPBOARD targets. | slice 4 | observed: Linux X11 enumerator wired; README.rst X11 inspect evidence limit (not verified) |
-| 22.4 | Supported desktop: Linux Wayland + helper able to list offered MIME types, scoped to the compositor actually proved when one is available. | slice 5 | |
+| 22.4 | Supported desktop: Linux Wayland + helper able to list offered MIME types, scoped to the compositor actually proved when one is available. | slice 5 | observed: clipboard/_offer_wayland.py wl-paste -l wired; README Wayland inspect evidence limit; verified path requires named compositor |
 | 23 | WSL, SSH, containers, and headless CI are not additional guaranteed desktops. | slice 7 | |
 | 24 | Independent-producer success is an acceptance requirement on each claimed desktop when a session is available. | slice 3 | observed: independent-producer HTML+text and image-only inspect success on macOS |
 | 25 | When no usable session exists during execution, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified — never silent success. | slice 3 | observed: session available → verified claim (not evidence-limit) for macOS |
-| 26 | Do not generalize one Wayland compositor's result to all Wayland environments. | slice 5 | |
+| 26 | Do not generalize one Wayland compositor's result to all Wayland environments. | slice 5 | observed: probe compositor_generalization false; README compositor-scoped-only wording |
 | 27 | Do not overload paste() / copy() to return format metadata. | slice 1 | observed: separate clipboard.inspect; copy/paste remain pyperclip re-exports |
 | 28 | Do not treat access failure as an empty clipboard. | slice 2 | observed: access-denied / missing-helper tests raise ClipboardContentError not empty |
 | 29 | Do not bypass OS pasteboard / clipboard authorization. | slice 3 | observed: normal NSPasteboard types() path; no authorization bypass |

@@ -117,14 +117,20 @@ def test_xclip_targets_map_to_kinds_via_snapshot(
 def test_wayland_session_does_not_use_x11_enumerator(
     monkeypatch, restore_clipboard_inspector
 ):
-    """Wayland-only session stays off the X11 path (slice 5 owns wl-paste)."""
+    """Wayland-only session stays off the X11 path (routes to wl-paste -l)."""
+    from clipboard import _offer_wayland
+
     called = {"xclip": False}
 
-    def boom(*_args, **_kwargs):
+    def boom_xclip(*_args, **_kwargs):
         called["xclip"] = True
         raise AssertionError("xclip must not run on Wayland-only session")
 
-    monkeypatch.setattr(_offer_x11.subprocess, "run", boom)
+    def boom_wl_paste(*_args, **_kwargs):
+        raise FileNotFoundError(2, "No such file or directory", "wl-paste")
+
+    monkeypatch.setattr(_offer_x11.subprocess, "run", boom_xclip)
+    monkeypatch.setattr(_offer_wayland.subprocess, "run", boom_wl_paste)
     monkeypatch.setattr(_offer.sys, "platform", "linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
@@ -136,8 +142,8 @@ def test_wayland_session_does_not_use_x11_enumerator(
 
     assert called["xclip"] is False
     message = str(raised.value).lower()
-    assert "wayland" in message
     assert "wl-paste" in message
+    assert "xclip" not in message
 
 
 def test_xclip_timeout_raises_clipboard_content_error(

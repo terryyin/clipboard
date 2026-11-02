@@ -166,13 +166,18 @@ Postcondition: key example 1 (X11) / example 6 or honest limit.
 
 ### 5. Early probe — Linux Wayland + helper MIME list
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Wayland session with `wl-paste -l` (or equivalent) on a
 **named** compositor, same independent-producer kinds+MIME success and
 non-mutation; document compositor and helper scope; README marks Wayland
 inspect verified for that compositor only. Missing session or failed probe →
 explicit Wayland evidence limit or stopped dependent claims — never silent
 verified.
+
+Accepted proof (coordinator):
+- Evidence-limit on Darwin: README Wayland/X11 inspect limits; probe `evidence_limit: true`, `compositor_generalization: false`, exit 2
+- Enumerator: `wl-paste -l` via `clipboard/_offer_wayland.py`; named-compositor required for verified path
+- Focused: 29 passed, 3 skipped (native probes gated)
 
 Behavior: Pre-condition: contract; owner-held Wayland+helper session **or**
 evidence-limit path. Trigger: gated independent-producer inspect.
@@ -243,6 +248,8 @@ guessing empty vs denied; evidence wording is honest.
   `formats`.
 - Linux X11 inspect verified claim deferred: Darwin execution host has no
   usable X11+xclip session; enumerator is wired for owner-held replacement.
+- Linux Wayland inspect similarly evidence-limited here; any future verified
+  claim must name the compositor and must not generalize to all Wayland.
 
 ## Concern evidence
 

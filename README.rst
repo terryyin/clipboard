@@ -203,12 +203,15 @@ Evidence / verified platforms:
   ``scripts/probe_macos_native_inspect.py`` 26.6.2 / 25G83 / arm64,
   ``osascript`` ``NSPasteboard`` ``types()`` (no payload fetch; no images
   extra). Refresh with ``CLIPBOARD_NATIVE_PROBE=1``. Other desktops separate.
-* Linux X11 ``inspect()`` (``xclip -selection clipboard -o -t TARGETS``) is an
-  **evidence limit** here: no usable X11 session/helper on this Darwin
-  checkout (``xclip`` absent; ``DISPLAY`` unset). Do not treat as verified.
-  ``scripts/probe_linux_x11_native_inspect.py`` records ``evidence_limit`` /
-  ``verified: false`` (exit 2). Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` on
-  owner-held Linux + ``DISPLAY`` + ``xclip`` to replace this limit.
+* Linux ``inspect()`` is an **evidence limit** here (Darwin checkout): X11
+  needs ``DISPLAY`` + ``xclip`` TARGETS; Wayland needs ``WAYLAND_DISPLAY`` +
+  ``wl-paste -l``, and any verified Wayland claim is **compositor-scoped
+  only**. Probes ``scripts/probe_linux_x11_native_inspect.py`` and
+  ``scripts/probe_linux_wayland_native_inspect.py`` record
+  ``evidence_limit`` / ``verified: false`` (Wayland also
+  ``compositor_generalization: false``; exit 2). Re-run with
+  ``CLIPBOARD_NATIVE_PROBE=1`` on owner-held Linux for that desktop (named
+  compositor on Wayland only).
 
 Default automated tests use an in-memory backend (no real desktop); native
 probes stay gated, outside the default suite. X11/Wayland image-write probes
