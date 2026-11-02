@@ -91,7 +91,7 @@ desktop-free pytest 18 passed, 1 skipped.
 
 ### 2. Early probe — Linux X11 + `xclip` native image read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Linux X11 session with `xclip` on `PATH`, same
 independent-producer opaque (and alpha-when-offered) gated probe pattern;
 floors include helper version; README marks X11+`xclip` verified **or**
@@ -102,6 +102,11 @@ Behavior: Pre-condition: delivered `paste_image`; X11+`xclip` session **or**
 unavailability. Trigger: gated X11 probe or evidence-limit write.
 Postcondition: X11 target honestly verified or limited; CI default still
 desktop-free.
+
+Accepted: Darwin checkout; no X11 session, empty DISPLAY, no `xclip`.
+README.rst Evidence marks X11+`xclip` evidence-limited
+(unverified/unsupported for native proof). Focused desktop-free pytest 18
+passed, 1 skipped. Windows/macOS wording preserved; Wayland still pending.
 
 ### 3. Early probe — Linux Wayland + `wl-paste` native image read
 Type: Behavior
@@ -149,6 +154,8 @@ and text behavior already proved in-memory / macOS.
 
 - Slice 1: This Darwin execution checkout cannot run a Windows desktop clipboard
   session; Windows closed via explicit README evidence limit, not native proof.
+- Slice 2: Same Darwin checkout has no X11 session, empty DISPLAY, and no
+  `xclip`; X11+`xclip` closed via explicit README evidence limit.
 
 ## Story obligations
 

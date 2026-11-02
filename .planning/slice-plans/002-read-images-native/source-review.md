@@ -24,12 +24,12 @@ and settled prior-delivery notes), as supplied in the reviewer prompt.
 | 5a.3 | Alpha preserved or documented drop (Windows probe path). | slice 1 | observed: not applicable — 5b evidence-limit path; no Windows session |
 | 5a.4 | Named OS, desktop/compositor, helper, and Pillow floors (Windows probe path). | slice 1 | observed: not applicable — 5b evidence-limit path; no Windows session |
 | 5b | Keep an explicit unverified/unsupported evidence-limit note for Windows desktop. | slice 1 | observed: README.rst Evidence paragraph — Windows evidence-limited (unverified/unsupported for native proof) |
-| 6 | For Linux X11 with `xclip`, either probe (6a) or evidence-limit note (6b). | slice 2 | |
-| 6a.1 | Opaque raster size/colors (X11 probe path). | slice 2 | |
-| 6a.2 | Preservative read (X11 probe path). | slice 2 | |
-| 6a.3 | Alpha preserved or documented drop (X11 probe path). | slice 2 | |
-| 6a.4 | Named OS, desktop/compositor, helper, and Pillow floors (X11 probe path). | slice 2 | |
-| 6b | Keep an explicit unverified/unsupported evidence-limit note for Linux X11 + `xclip`. | slice 2 | |
+| 6 | For Linux X11 with `xclip`, either probe (6a) or evidence-limit note (6b). | slice 2 | observed: README.rst Evidence — X11+xclip evidence-limited (6b); Darwin, no xclip, empty DISPLAY |
+| 6a.1 | Opaque raster size/colors (X11 probe path). | slice 2 | observed: not applicable — 6b evidence-limit path; no X11 session |
+| 6a.2 | Preservative read (X11 probe path). | slice 2 | observed: not applicable — 6b evidence-limit path; no X11 session |
+| 6a.3 | Alpha preserved or documented drop (X11 probe path). | slice 2 | observed: not applicable — 6b evidence-limit path; no X11 session |
+| 6a.4 | Named OS, desktop/compositor, helper, and Pillow floors (X11 probe path). | slice 2 | observed: not applicable — 6b evidence-limit path; no X11 session |
+| 6b | Keep an explicit unverified/unsupported evidence-limit note for Linux X11 + `xclip`. | slice 2 | observed: README.rst Evidence paragraph — X11+xclip evidence-limited |
 | 7 | For Linux Wayland with `wl-paste`, either probe (7a) or evidence-limit note (7b). | slice 3 | |
 | 7a.1 | Opaque raster size/colors (Wayland probe path). | slice 3 | |
 | 7a.2 | Preservative read (Wayland probe path). | slice 3 | |
@@ -43,10 +43,10 @@ and settled prior-delivery notes), as supplied in the reviewer prompt.
 | 12 | Reuse `paste_image` / `clipboard[images]` as delivered. | slice 1 | observed: no API/code change; docs-only evidence-limit |
 | 13 | All-remaining-desktops evidence-limited still fulfills the story when each limit is explicit. | slice 4 | |
 | 14a | Supported desktop: Windows desktop. | slice 1 | observed: README.rst still names Windows as supported target (evidence-limited) |
-| 14b | Supported desktop: Linux X11 + `xclip`. | slice 2 | |
+| 14b | Supported desktop: Linux X11 + `xclip`. | slice 2 | observed: README.rst still names X11+xclip as supported target (evidence-limited) |
 | 14c | Supported desktop: Linux Wayland + `wl-paste` scoped to probed compositor. | slice 3 | |
 | 15 | macOS Aqua remains verified and compatible; re-proving macOS is not this story's outcome. | slice 1 | observed: README.rst retains macOS Aqua verified wording; no macOS redesign |
-| 16 | Do not claim a desktop verified without an independent-producer observation. | slice 1 | observed: README.rst never claims Windows verified |
+| 16 | Do not claim a desktop verified without an independent-producer observation. | slice 1 | observed: README.rst never claims Windows or X11+xclip verified |
 | 17 | Do not generalize one Wayland compositor's result to all Wayland environments. | slice 3 | |
 | 18 | Do not bypass OS pasteboard / clipboard authorization. | slice 1 | observed: no clipboard access attempted; docs-only |
 | 19 | Do not change `paste()`. | slice 1 | observed: no code change to paste/copy/VERSION |
@@ -69,9 +69,9 @@ and settled prior-delivery notes), as supplied in the reviewer prompt.
 | 31 | Wayland verification scoped to probed compositor; others remain evidence-limited. | slice 3 | |
 | 32 | Journey: Windows session → independent opaque PNG → matching size/colors; preservative; floors; README verified. | slice 1 | observed: trigger unmet (no Windows session); 5b/36 path instead |
 | 33 | Journey: Windows CF_HDROP-only → `None` without opening paths. | slice 1 | observed: trigger unmet (no Windows session); conditional commitment 8 not owed |
-| 34 | Journey: Linux X11 + `xclip` independent success. | slice 2 | |
+| 34 | Journey: Linux X11 + `xclip` independent success. | slice 2 | observed: trigger unmet (no X11+xclip session); 6b path instead |
 | 35 | Journey: Linux Wayland + `wl-paste` compositor-scoped success. | slice 3 | |
-| 36 | Journey: no usable session → explicit unverified/unsupported note; never verified; all-three limits still complete when honest. | slice 1 | observed: README.rst Windows evidence-limit note; X11/Wayland still pending later slices |
+| 36 | Journey: no usable session → explicit unverified/unsupported note; never verified; all-three limits still complete when honest. | slice 1 | observed: README.rst Windows and X11+xclip evidence-limit notes; Wayland still pending later slice |
 | 37 | After this work, in-memory paste_image tests and gated macOS probe still pass; copy/paste/VERSION unchanged. | slice 4 | |
-| 38 | Silent success on an unprobed desktop is forbidden. | slice 1 | observed: README.rst explicitly evidence-limits Windows |
+| 38 | Silent success on an unprobed desktop is forbidden. | slice 1 | observed: README.rst explicitly evidence-limits Windows and X11+xclip |
 | 39 | Wayland compositor generalization is forbidden. | slice 3 | |
