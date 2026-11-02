@@ -148,3 +148,29 @@ the same helper-producer pattern.
   - Evidence: 2026-11-02, between commits 8659430 (17:18:38+07:00) and 1a5b92d (17:36:04+07:00); `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md` Story obligations G4 (reported slice 4, interim until slices 5, 6, 7, then owner changed); developer answer "Verified, helper-labelled"; `9d3ceda:.planning/seeds/SEED-001-clipboard-true-to-its-name.md` "Developer amendment (2026-11-02, during execution)"; `9d3ceda:.planning/slice-plans/005-read-html/source-review.md` replaced after the amendment
   - Observed effect: Slices 5–6 proceeded on an unresolved acceptance question; the amendment then required a fresh source review and re-allocation of 77 commitment ids.
   - Inference: Asking at the first occurrence (slice 4) would have settled README wording earlier and avoided carrying the interim; the late ask still preceded any false claim.
+
+## DD-010 — Desktop-free unavailable-path test asserted host OS
+A desktop-free test for the Windows unavailable stub used `assert sys.platform != "win32"` so the path was only exercised off Windows; the windows-latest matrix failed until the assertion was replaced with a platform monkeypatch.
+
+### Occurrences
+- Execution: SEED-001#read-files
+  - Timestamp: 2026-11-02T17:45:49+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: CI failures on 23ff505 (run https://github.com/terryyin/clipboard/actions/runs/41430900179, Python 3.10/3.14 windows-latest); repair commit b00d9ab (`monkeypatch…platform` to `"darwin"`); observer `/tmp/dough-ci-501/watch-8h3joP` events 1–3; coordinator transcript eb2ce85d… stash slice-7 docs then CI repair
+  - Observed effect: Extra story-branch CI repair between slice-6 Windows evidence-limit publish and tip green; desktop-free suite had encoded a Darwin/non-Windows host assumption
+  - Inference: Unavailable-stub / platform-branch tests must force the non-target platform via monkeypatch (or assert exception type only), never require the CI host OS; distinct from stub-message substring coupling (DD-005)
+
+## DD-011 — Stop for authorization before cross-subsystem package split
+When the 250-line refactor check required splitting an oversize module into a package that also moved delivered sibling seams, execution stopped for an explicit developer choice instead of splitting without authority or deferring silently.
+
+### Occurrences
+- Execution: SEED-001#read-files
+  - Timestamp: 2026-11-02T17:02:13+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: coordinator transcript eb2ce85d… DEVELOPER ATTENTION on clipboard.py 517 lines / 250-line gate; user authorized option 1 package split; commit acb5e62 (injectable seam + `clipboard/` package); PLAN.md Learnings slice 1
+  - Observed effect: Slice-1 delivery paused until human authorization; authorized split preserved public `import clipboard` / `VERSION` and unblocked later slices
+  - Inference: Useful practice — file-size fixes that cross delivered subsystem seams are human-owned packaging decisions, parallel to venue stops for mandatory native proof (DD-006)

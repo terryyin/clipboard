@@ -3,13 +3,14 @@
 A small Python library exposing `copy`, `paste`, and `VERSION` through
 pyperclip, plus optional image read/write via `paste_image` / `copy_image`
 when the `clipboard[images]` extra (Pillow) is installed, HTML dual-offer
-writes and fragment reads via `copy_html` / `paste_html`, and non-mutating
-offer inspection via `inspect` (kinds + native formats; no images extra).
-Image access/helper/transfer or malformed-image failures raise
-`ClipboardImageError` rather than returning `None` (or silently succeeding on
-write). HTML and inspect access, helper, transfer, enumeration, or
-malformed-envelope failures raise `ClipboardContentError` (`paste_html`
-returns `None` only when no HTML is offered).
+writes and fragment reads via `copy_html` / `paste_html`, local file-list
+reads via `paste_files`, and non-mutating offer inspection via `inspect`
+(kinds + native formats; no images extra). Image access/helper/transfer or
+malformed-image failures raise `ClipboardImageError` rather than returning
+`None` (or silently succeeding on write). HTML, file-list, and inspect access,
+helper, transfer, enumeration, or malformed-envelope failures raise
+`ClipboardContentError` (`paste_html` returns `None` only when no HTML is
+offered).
 
 Use Nix for development tools, as in the neighboring Lizard project. Run tools
 with `nix develop -c <command>`; Git commands can run directly. Nix pins the
@@ -24,8 +25,9 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop
-session; optional native pasteboard probes stay gated via
+session; optional native pasteboard / file-list probes stay gated via
 `CLIPBOARD_NATIVE_PROBE` (see README and
-`scripts/probe_macos_native_paste_image.py`).
+`scripts/probe_macos_native_paste_image.py` /
+`scripts/probe_macos_native_paste_files.py`).
 Release setup and maintainer steps are documented in `docs/releasing.md`.
 Never create or push a release tag unless the maintainer explicitly requests it.

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#read-files",
+  "title": "Read file references copied by file managers",
+  "completedAt": "2026-11-02T10:53:21.591Z",
+  "developer": "Terry Yin",
+  "agent": "Maria-chan",
+  "host": "cursor",
+  "model": "auto"
+}

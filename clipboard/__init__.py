@@ -1,4 +1,4 @@
-"""Cross-platform clipboard: text via pyperclip, plus image, HTML, and inspect."""
+"""Cross-platform clipboard: text, image, HTML, files, and inspect."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pyperclip import paste as paste
 
 from clipboard import _html, _offer
 from clipboard._errors import ClipboardContentError, ClipboardImageError
+from clipboard._files import paste_files, set_files_clipboard_reader
 from clipboard._html import (
     copy_html,
     paste_html,
@@ -38,9 +39,11 @@ __all__ = [
     "copy_image",
     "inspect",
     "paste",
+    "paste_files",
     "paste_html",
     "paste_image",
     "set_clipboard_inspector",
+    "set_files_clipboard_reader",
     "set_html_clipboard_reader",
     "set_html_clipboard_writer",
     "set_image_grabclipboard",
@@ -54,6 +57,14 @@ def __getattr__(name: str):
         return _offer._clipboard_inspector
     if name == "_default_clipboard_inspector":
         return _offer._default_clipboard_inspector
+    if name == "_files_clipboard_reader":
+        from clipboard import _files
+
+        return _files._files_clipboard_reader
+    if name == "_default_files_clipboard_reader":
+        from clipboard import _files
+
+        return _files._default_files_clipboard_reader
     if name == "_html_clipboard_writer":
         return _html._html_clipboard_writer
     if name == "_default_html_clipboard_writer":

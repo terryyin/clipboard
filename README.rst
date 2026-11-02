@@ -140,6 +140,28 @@ For desktop-free tests, inject a fake reader with
 returns ``None`` when no HTML is offered; the offer values it returns
 otherwise are package-private test plumbing, not public API.
 
+File-list read (no ``clipboard[images]`` required):
+
+::
+
+   import clipboard
+   paths = clipboard.paste_files()  # ordered list[str], or None
+
+``paste_files()`` returns an ordered ``list[str]`` of local filesystem paths
+when a native file-list offer yields at least one local reference, or ``None``
+for ordinary absence (empty clipboard; plain text — including path-looking
+text; image-only; HTML-only; only non-local URIs). Access, missing Linux
+helper, transfer, or malformed file-list metadata raises
+``clipboard.ClipboardContentError`` — never ``None`` or fabricated paths. The
+read does not mutate the clipboard and performs no open, copy, move, delete,
+or existence check on referenced paths. Cut/move companion markers are
+ignored for library behavior. Do not overload ``paste()`` / ``copy()`` for
+file lists. Supported desktops: Windows Explorer ``CF_HDROP``; macOS Aqua
+Finder file-URL / filename types; Linux X11 + ``xclip`` ``text/uri-list``
+from a **named** file manager; Linux Wayland + ``wl-paste`` ``text/uri-list``
+from a **named** FM on a **named** compositor. WSL, SSH, containers, and
+headless CI are not additional guaranteed desktops.
+
 Installation
 ------------
 
@@ -147,14 +169,17 @@ Installation
 desktop clipboard backend on Linux; see
 `pyperclip <https://pyperclip.readthedocs.io/>`_. Images:
 ``python -m pip install 'clipboard[images]'``. ``copy_html``, ``paste_html``,
-and ``inspect`` do **not** need that extra.
+``paste_files``, and ``inspect`` do **not** need that extra.
 
-Linux image **reads**: X11 ``xclip``; Wayland ``wl-paste``. Linux HTML
-**writes** need a multi-MIME helper (X11 multi-type ``xclip``; Wayland e.g.
-``wl-copy`` on a **named** compositor — do not generalize). Linux image
-**writes**: X11 ``xclip`` / Wayland ``wl-copy`` (may keep a background owner).
-Windows/macOS need a usable desktop session; rich/image APIs are not
-guaranteed under WSL, SSH, containers, or headless CI.
+Linux image **reads**: X11 ``xclip``; Wayland ``wl-paste``. Linux file-list
+**reads** (``paste_files``): X11 ``xclip -o -selection clipboard -t
+text/uri-list``; Wayland ``wl-paste -t text/uri-list`` (missing helper →
+``ClipboardContentError``, not silent ``None``). Linux HTML **writes** need a
+multi-MIME helper (X11 multi-type ``xclip``; Wayland e.g. ``wl-copy`` on a
+**named** compositor — do not generalize). Linux image **writes**: X11
+``xclip`` / Wayland ``wl-copy`` (may keep a background owner). Windows/macOS
+need a usable desktop session; rich/image/file-list APIs are not guaranteed
+under WSL, SSH, containers, or headless CI.
 
 HTML **reads** via ``paste_html`` need:
 
@@ -264,6 +289,16 @@ Evidence / verified platforms (native probes gated via
   non-ASCII content as ANSI so their offsets no longer matched the bytes;
   ``paste_html`` raised ``ClipboardContentError`` for them rather than return
   a guessed fragment.
+* ``paste_files``: macOS Aqua **verified** (independent ``osascript`` /
+  ``NSFilenamesPboardType``; Unicode+spaces; non-mutation; floors macOS
+  26.6.2 / Darwin 25.6.0 / arm64;
+  ``scripts/probe_macos_native_paste_files.py``). Linux X11 (``xclip``
+  ``text/uri-list`` after a **named** FM), Linux Wayland (``wl-paste``
+  ``text/uri-list`` on a **named** compositor after a **named** FM), and
+  Windows (Explorer ``CF_HDROP``) are **evidence limits** here (Darwin; no
+  session/helpers) — never verified; do not generalize one FM or compositor.
+  Probes ``scripts/probe_{linux_x11,linux_wayland,windows}_native_paste_files.py``
+  exit 2 with ``verified: false``.
 
 Development
 -----------

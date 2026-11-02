@@ -6,8 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Read file references copied by file managers](seeds/SEED-001-clipboard-true-to-its-name.md#read-files) — SEED-001#read-files ([plan](slice-plans/007-read-files/PLAN.md))
-
 ## Backlog list
 
 - [Keep native HTML-read proof strict and desktop helper knowledge single-homed](seeds/SEED-001-clipboard-true-to-its-name.md#desktop-helpers) — SEED-001#desktop-helpers

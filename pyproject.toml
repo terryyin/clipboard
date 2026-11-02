@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "clipboard"
 dynamic = ["version"]
-description = "A cross-platform clipboard read/write library for Python."
+description = "A cross-platform clipboard library for text, images, HTML dual offers, and file-list reads."
 readme = "README.rst"
 requires-python = ">=3.10"
 license = "MIT"
