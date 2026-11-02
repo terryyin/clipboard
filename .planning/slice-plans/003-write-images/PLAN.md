@@ -149,7 +149,7 @@ key example 2.
 
 ### 6. Early probe — Windows desktop image write
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Windows desktop session, gated probe with independent
 consumer after writer exit; native interoperable formats (not arbitrary labeled
 PNG bytes alone); floors recorded; README marks Windows write verified. If no
@@ -198,6 +198,7 @@ helpers; evidence wording is honest.
 - Darwin checkout cannot run Linux probes; owner chose GHA over skipping issue #5.
 - Linux xclip under Xvfb: do not wait for exit (CLIPBOARD owner stays up); feed PNG on stdin, leave the process (`start_new_session`), then wait until CLIPBOARD TARGETS lists `image/png` (0.05s alone raced opaque first write).
 - Wayland: Weston headless lacks wlr-data-control so `wl-copy` exits 1; proof venue is gated GHA under named compositor **Sway** (`WLR_BACKENDS=headless`) only (S.4/X.8/C.4). Prefer `wl-copy` when Wayland; leave xclip for X11.
+- Slice 6 Windows: no usable desktop session on Darwin checkout; `windows-latest` GHA is headless pytest only — took evidence-limit path (README explicit unverified; keep default writer `NotImplementedError` → `ClipboardImageError`; no pywin32).
 
 ## Accepted proof (slice 1)
 
@@ -230,6 +231,12 @@ helpers; evidence wording is honest.
 - Gated probe + GHA job `native-linux-wayland-copy-image` under **Sway** (`WLR_BACKENDS=headless`); green with X11 on `833bbd3`.
 - Floors: ubuntu-latest + Sway + wl-clipboard; Python 3.13 / Pillow 11.3.0 (README); do not generalize beyond Sway.
 - Learning: Weston lacks wlr-data-control; use Sway (or other wlroots) for wl-clipboard CI.
+
+## Accepted proof (slice 6)
+
+- No usable Windows desktop session (Darwin checkout; `windows-latest` headless pytest only).
+- README Evidence: explicit Windows write evidence limit — never claimed verified.
+- Default Windows write remains `NotImplementedError` → `ClipboardImageError` (no silent success; no pywin32).
 
 ## Concern evidence
 

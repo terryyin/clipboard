@@ -83,8 +83,12 @@ consumer ``wl-paste -t image/png`` after writer exit) at floors Python 3.13 /
 Pillow 11.3.0; do not generalize that result to other Wayland compositors.
 Opaque writer-exit succeeded; the RGBA case is exercised in the same probe
 (preserve-or-drop recorded there). Windows desktop remains a supported write
-target, unverified pending a later ``SEED-001#write-images`` probe or
-evidence limit. Windows and Linux image **reads** remain unverified pending
+target for this story, but image **writes** via ``copy_image`` are
+**unverified**: no usable Windows desktop session was available during
+``SEED-001#write-images`` execution (developer checkout is Darwin; GitHub
+Actions ``windows-latest`` matrix jobs are headless pytest only and are not a
+desktop clipboard probe venue). This is an explicit evidence limit — not a
+verified claim. Windows and Linux image **reads** remain unverified pending
 ``SEED-001#read-images-native``. Default automated tests use an in-memory
 backend and do not exercise a real desktop clipboard; the X11 and Wayland
 write probes are separate gated jobs, not part of the default matrix pytest.

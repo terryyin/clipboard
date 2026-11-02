@@ -207,7 +207,7 @@ def _write_linux_wl_copy(image: Image.Image) -> None:
 
 
 def _default_writeclipboard(image: Image.Image) -> None:
-    """Platform default image write; Windows remains a later slice."""
+    """Platform default image write; Windows stays unimplemented (evidence-limited)."""
     import sys
 
     if sys.platform == "darwin":
@@ -219,7 +219,9 @@ def _default_writeclipboard(image: Image.Image) -> None:
         else:
             _write_linux_xclip(image)
         return
-    raise NotImplementedError("clipboard image write is not implemented yet")
+    raise NotImplementedError(
+        "clipboard image write is not implemented for this platform"
+    )
 
 
 _writeclipboard: Callable = _default_writeclipboard

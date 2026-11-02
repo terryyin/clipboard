@@ -41,7 +41,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | R.18 | Convert non-RGB(A) modes to a transferable RGB/RGBA raster before offering | slice 2 | observed: tests/test_copy_image.py::test_non_rgba_modes_convert_before_offer; test_palette_with_transparency_converts_to_rgba |
 | R.19 | Document conversion limits | slice 7 | |
 | R.20 | Calling without the images extra raises `ImportError` consistent with `paste_image` | slice 1 | observed: tests/test_copy_image.py::test_copy_image_without_pillow_raises_import_error |
-| S.1 | Windows desktop is a supported desktop for this story | slice 6 | |
+| S.1 | Windows desktop is a supported desktop for this story | slice 6 | observed: README Evidence retains Windows as a supported write target; write remains unverified via explicit evidence limit (no session) |
 | S.2 | macOS Aqua is a supported desktop for this story | slice 3 | observed: README Evidence marks macOS Aqua write verified; probe environment desktop Aqua |
 | S.3 | Linux X11 + `xclip` is a supported desktop for this story | slice 4 | observed: `_write_linux_xclip` on Linux default path; gated GHA job `native-linux-x11-copy-image` (Xvfb); README names X11/`xclip` write helper |
 | S.4 | Linux Wayland + `wl-copy` is a supported desktop, scoped to the compositor actually proved | slice 5 | observed: `_write_linux_wl_copy`; gated GHA job native-linux-wayland-copy-image under Sway; README scopes Wayland write to Sway (CI) only |
@@ -51,9 +51,9 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | S.8 | Headless CI is not an additional guaranteed desktop |  | G-excl-env |
 | S.9 | Linux X11 writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit | slice 4 | observed: GHA job native-linux-x11-copy-image PASSED on c6f6585 (Xvfb + xclip; opaque writer-exit + independent xclip -o) |
 | S.10 | Linux Wayland writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit | slice 5 | observed: GHA job native-linux-wayland-copy-image PASSED on 833bbd3 (Sway + wl-clipboard; opaque writer-exit + independent wl-paste) |
-| S.11 | Windows requires independent-consumer + writer-exit proof when a session is available | slice 6 | |
+| S.11 | Windows requires independent-consumer + writer-exit proof when a session is available | slice 6 | observed: no usable Windows desktop session during execution; session proof path not taken; evidence-limit path used (S.13) |
 | S.12 | macOS requires independent-consumer + writer-exit proof when a session is available | slice 3 | observed: writer subprocess exits then ImageGrab consume (scripts/probe_macos_native_copy_image.py) |
-| S.13 | When no usable Windows session exists during execution, record an explicit unverified/unsupported evidence limit rather than claiming verified | slice 6 | |
+| S.13 | When no usable Windows session exists during execution, record an explicit unverified/unsupported evidence limit rather than claiming verified | slice 6 | observed: README Evidence records explicit Windows write evidence limit — no usable Windows desktop session (Darwin checkout; windows-latest headless pytest not a probe venue); never claimed verified |
 | S.14 | When no usable macOS session exists during execution, record an explicit unverified/unsupported evidence limit rather than claiming verified | slice 3 | observed: session was available; verified path taken instead of evidence limit (README write floors) |
 | X.1 | Do not overload `copy()` to accept or return images | slice 1 | observed: write path is separate `copy_image`; `copy` remains pyperclip text API (clipboard.py; tests/test_clipboard.py) |
 | X.2 | Do not overload `paste()` to accept or return images | slice 1 | observed: write path is separate `copy_image`; `paste` remains pyperclip text API (clipboard.py; tests/test_clipboard.py) |
@@ -78,7 +78,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | D.9 | Using `paste_image` alone as native proof remains deferred (insufficient) |  | G-excl-deferred |
 | D.10 | Splitting Linux-first vs Win/macOS into separate stories is deferred unless execution evidence forces a resplit |  | G-excl-deferred |
 | C.1 | Invalid image input must not replace current content | slice 2 | observed: tests/test_copy_image_failures.py::test_invalid_input_raises_before_replace (replace_calls stays 0; prior offer intact) |
-| C.2 | Silent success on an unproved desktop is forbidden | slice 3 | observed: macOS write verified with probe+README floors; other desktops still marked unverified |
+| C.2 | Silent success on an unproved desktop is forbidden | slice 3 | observed: macOS write verified with probe+README floors; Linux X11/Wayland write verified in gated CI; Windows write evidence-limited (default writer NotImplementedError → ClipboardImageError; no silent success) |
 | C.3 | Windows-only delivery is forbidden as story completion (issue #5) | slice 7 | |
 | C.4 | Wayland compositor generalization is forbidden | slice 5 | observed: verification wording scoped to Sway (CI) in README Evidence |
 | E8.1 | In-memory `copy` contract tests still pass | slice 1 | observed: tests/test_clipboard.py under focused regression |
