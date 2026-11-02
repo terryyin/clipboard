@@ -19,6 +19,8 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop
-session; optional native pasteboard probes stay gated (see README).
+session; optional native pasteboard probes stay gated via
+`CLIPBOARD_NATIVE_PROBE` (see README and
+`scripts/probe_macos_native_paste_image.py`).
 Release setup and maintainer steps are documented in `docs/releasing.md`.
 Never create or push a release tag unless the maintainer explicitly requests it.

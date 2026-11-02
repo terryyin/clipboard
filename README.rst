@@ -55,23 +55,18 @@ Windows and macOS need a usable desktop clipboard / pasteboard session; image
 reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
 Evidence / verified platforms: macOS Aqua pasteboard image reads have been
-verified with an independent producer in this project's native probe work.
-Windows desktop image reads remain a supported target but are
-evidence-limited (unverified / unsupported for native proof) because no
-usable Windows desktop clipboard session was available during this
-verification — never treat Windows as natively verified from this work.
-Linux X11 with ``xclip`` image reads remain a supported target but are
-evidence-limited (unverified / unsupported for native proof) because no
-usable Linux X11 + ``xclip`` session was available during this
-verification — never treat X11 + ``xclip`` as natively verified from this
-work. Linux Wayland with ``wl-paste`` image reads remain a supported
-target but are evidence-limited (unverified / unsupported for native
-proof) because no usable Linux Wayland + ``wl-paste`` session was
-available during this verification — never treat Wayland + ``wl-paste``
-as natively verified from this work, and never generalize from X11 or
-an unstated compositor.
-Default automated tests use an in-memory backend and do not exercise a
-real desktop clipboard.
+verified with an independent producer via the gated native probe
+(``CLIPBOARD_NATIVE_PROBE=1`` /
+``scripts/probe_macos_native_paste_image.py``). Windows desktop, Linux
+X11 + ``xclip``, and Linux Wayland + ``wl-paste`` remain supported
+targets but are each evidence-limited (unverified / unsupported for
+native proof): no usable desktop clipboard session for those
+environments was available during this verification. Do not treat any
+of them as natively verified from this work, and do not generalize a
+Wayland claim from X11 or an unstated compositor. Default automated
+tests use an in-memory backend and do not exercise a real desktop
+clipboard; native probes stay explicitly gated and are not part of the
+default suite.
 
 Development
 -----------

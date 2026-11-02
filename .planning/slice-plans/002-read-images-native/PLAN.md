@@ -129,7 +129,7 @@ macOS verified wording preserved.
 
 ### 4. Evidence summary and regression gate
 Type: Structure
-Status: planned
+Status: done
 Proof: README Evidence / verified-platforms wording no longer says all three
 targets are uniformly "unverified pending SEED-001#read-images-native"; each
 of Windows, X11+`xclip`, and Wayland+`wl-paste` has either verified floors or
@@ -142,6 +142,13 @@ four-desktop promise.
 Internal change: consolidate docs (and AGENTS.md probe pointers if needed)
 from slice 1–3 outcomes; no new public API. Preserves external `paste_image`
 and text behavior already proved in-memory / macOS.
+
+Accepted: README.rst Evidence consolidated; no uniform "unverified pending
+SEED-001#read-images-native" placeholder; Windows, X11+`xclip`, and
+Wayland+`wl-paste` each explicitly evidence-limited; macOS verified path and
+gated probe named (`CLIPBOARD_NATIVE_PROBE` /
+`scripts/probe_macos_native_paste_image.py`) in README.rst and AGENTS.md.
+Focused desktop-free pytest 18 passed, 1 skipped.
 
 ## Current decisions
 
@@ -165,6 +172,8 @@ and text behavior already proved in-memory / macOS.
 - Slice 3: Same Darwin checkout has no Wayland session and no `wl-paste`;
   Wayland+`wl-paste` closed via explicit README evidence limit (no compositor
   generalization).
+- Slice 4: Consolidated Evidence prose; uniform pending-SEED placeholder gone;
+  AGENTS.md names gated macOS probe; regression 18 passed / 1 skipped.
 
 ## Story obligations
 
