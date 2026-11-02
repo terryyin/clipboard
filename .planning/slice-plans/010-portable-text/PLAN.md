@@ -186,7 +186,7 @@ Behavior: Pre-condition: slices 1–2. Trigger: `copy` / `paste` on X11 with
 
 ### 5. Linux Wayland owned path and gated Sway job
 Type: Behavior
-Status: planned
+Status: done
 Proof: owned Wayland reader lists `wl-paste --list-types`, picks the first
 text type (`text/plain;charset=utf-8`, `text/plain`, `UTF8_STRING`, `TEXT`,
 `STRING`) and reads it with `wl-paste -n -t <type>` (10 s bound), returns `""`
@@ -308,7 +308,7 @@ Postcondition: callers know exactly what is promised and verified where.
   lacked `os.killpg` (test fixture and `_stop_owner` fallback) and the probe's
   `xvfb_version` floor was empty (now `dpkg-query` first). Run 41473939537
   green on every job (Xvfb `2:21.1.22-1ubuntu1.3`).
-- Slice 5 (in progress, awaiting `native-linux-wayland-text`):
+- Slice 5:
   `clipboard/_text_native_wayland.py` lists types, prefers
   `text/plain;charset=utf-8`, reads with `wl-paste -n -t`, writes with
   `wl-copy --type text/plain;charset=utf-8` (untyped wl-copy guesses a MIME
@@ -316,13 +316,24 @@ Postcondition: callers know exactly what is promised and verified where.
   wait pending the probe's immediate-visibility step. `_text.py` now maps
   owners to readers/writers; the placeholder is gone. Local: `make check`
   423 passed / 19 skipped.
+  CI run 41478592764 (Ubuntu 26.04.1, Sway 1.11, wl-clipboard 2.2.1, Python
+  3.13.14): all 12 probe steps passed. Observed: `wl-paste --list-types` on
+  an empty selection exits 1 with `Nothing is copied`; a stale socket gives
+  `Failed to connect to a Wayland server: No such file or directory` plus
+  notes; `wl-copy --type text/plain;charset=utf-8` with empty input leaves an
+  empty text offer (so `--clear` is not required, kept as is); copy then an
+  immediate paste had zero mismatches (no read-back wait needed); `-n` keeps a
+  trailing `\n`; untyped wl-copy of a script lists `text/x-shellscript`
+  first but still offers `text/plain`. The macOS jobs in runs 41475927301 and
+  41478592764 were cancelled because no hosted macOS arm64 runner was
+  acquired (GitHub annotation; 0 steps); not a code failure.
 
 ## Story obligations
 
 ### G1. Owned macOS, X11 and Wayland text paths are placeholders
 Reported: slice 2 — "with the placeholders, default `copy` / `paste` raise `ClipboardContentError` on real macOS, on Linux X11 with xclip, and on Linux Wayland with wl-clipboard. This must not reach trunk until slices 3–5 fill those paths."
 Story clause: "`copy(text)` replaces the clipboard with exactly `text`, and `paste()` returns exactly the text the clipboard offers"
-Disposition: interim until slices 3, 4, 5
+Disposition: proved by slice 5: scripts/probe_macos_native_text.py local pass, CI run 41473939537 native-linux-x11-text, CI run 41478592764 native-linux-wayland-text (all owned paths real, exact round trips with independent consumers)
 
 ### G2. macOS pyobjc users move from pyperclip's AppKit path to the owned pbcopy path
 Reported: slice 2 — "pyperclip prefers pyobjc there (lines 524–530), but the owned macOS path (plan: pbcopy, no pyobjc text path) will change their mechanism."
