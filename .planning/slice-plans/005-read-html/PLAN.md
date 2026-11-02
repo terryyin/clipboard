@@ -254,6 +254,15 @@ envelopes/helpers; evidence wording is honest.
   (185 passed, 8 skipped); `make lint-workflows`; CI run 41422813085 job
   `native-linux-x11-paste-html` PASSED on e424146 (Ubuntu 26.04, xclip 0.13,
   Python 3.13.14).
+- Slice 5: Wayland reader `_linux_wayland_html_clipboard_reader` in
+  `clipboard/_html_native_linux.py` (`wl-paste --list-types`, then
+  `--no-newline --type text/html`; exact stderr "Nothing is copied" / "No
+  selection" ⇒ `None`, per wl-clipboard 2.0–2.3 source). Linux probes share
+  `scripts/native_probe_paste_html.py`; Sway facts in
+  `scripts/native_probe_wayland.py`. Native proof venue: gated CI job
+  `native-linux-wayland-paste-html` (headless Sway), delivered with
+  `progress: true`. Slice 6 must move the "not available" test cases off
+  win32 (e.g. `sunos5`).
 
 ## Concern evidence
 

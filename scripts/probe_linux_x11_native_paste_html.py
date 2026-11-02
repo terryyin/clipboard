@@ -27,14 +27,10 @@ import time
 from pathlib import Path
 
 from native_probe_common import linux_x11_environment
+from native_probe_paste_html import FRAGMENT, PLAIN_TEXT, child_paste_html, paste_html
 from stdlib_png import solid_red_png_bytes
 
 ROOT = Path(__file__).resolve().parents[1]
-FRAGMENT = (
-    '<a href="https://example.com/caf%C3%A9" style="color:#c00">'
-    "<b>café → naïve 日本</b></a>"
-)
-PLAIN_TEXT = "café → naïve 日本 (plain text only)"
 CONSUMER_API = "xclip -selection clipboard -o -t text/html"
 _producers: list[subprocess.Popen] = []
 
@@ -119,49 +115,12 @@ def _release_clipboard() -> None:
         time.sleep(0.05)
 
 
-def _paste_html() -> dict:
-    import clipboard
-
-    clipboard.set_html_clipboard_reader(None)
-    try:
-        return {"paste_html": clipboard.paste_html()}
-    except clipboard.ClipboardContentError as exc:
-        return {"paste_html": None, "error": f"ClipboardContentError: {exc}"}
-
-
-def _child_paste_html(env: dict) -> dict:
-    """paste_html() in a child with a modified environment; record the outcome."""
-    child = (
-        "import clipboard\n"
-        "try:\n"
-        "    print(repr(clipboard.paste_html()))\n"
-        "except clipboard.ClipboardContentError as exc:\n"
-        "    print('ClipboardContentError:', exc)\n"
-    )
-    result = subprocess.run(
-        [sys.executable, "-c", child],
-        cwd=ROOT,
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
-    )
-    out = result.stdout.strip()
-    return {
-        "returncode": result.returncode,
-        "outcome": out or result.stderr.strip(),
-        "content_error": out.startswith("ClipboardContentError:"),
-        "names_xclip": "xclip" in out and "apt install xclip" in out,
-    }
-
-
 def _probe_html() -> dict:
     raw = FRAGMENT.encode("utf-8")
     _own_clipboard(raw, "text/html", "text/html")
     targets_before = _targets()
     started = time.monotonic()
-    read = _paste_html()
+    read = paste_html()
     elapsed = time.monotonic() - started
     later = _xclip_out("text/html")
     return {
@@ -180,9 +139,9 @@ def _probe_html() -> dict:
 def _probe_absent() -> list[dict]:
     cases = []
     _own_clipboard(PLAIN_TEXT.encode("utf-8"), None, "UTF8_STRING")
-    cases.append({"case": "text_only", "targets": _targets(), **_paste_html()})
+    cases.append({"case": "text_only", "targets": _targets(), **paste_html()})
     _own_clipboard(solid_red_png_bytes(), "image/png", "image/png")
-    cases.append({"case": "image_only", "targets": _targets(), **_paste_html()})
+    cases.append({"case": "image_only", "targets": _targets(), **paste_html()})
     _release_clipboard()
     empty = _xclip_out("TARGETS")
     cases.append(
@@ -190,10 +149,16 @@ def _probe_absent() -> list[dict]:
             "case": "unowned_empty",
             "xclip_targets_exit": empty.returncode,
             "xclip_targets_stderr": empty.stderr.decode("utf-8", "replace").strip(),
-            **_paste_html(),
+            **paste_html(),
         }
     )
     return cases
+
+
+def _child(env: dict) -> dict:
+    return child_paste_html(
+        env, root=ROOT, names_key="names_xclip", names=("xclip", "apt install xclip")
+    )
 
 
 def _probe_failures() -> dict:
@@ -201,8 +166,8 @@ def _probe_failures() -> dict:
     no_display = {k: v for k, v in base.items() if k != "DISPLAY"}
     no_xclip = {**base, "PATH": "/nonexistent-clipboard-probe-path"}
     return {
-        "no_display": _child_paste_html(no_display),
-        "no_xclip": _child_paste_html(no_xclip),
+        "no_display": _child(no_display),
+        "no_xclip": _child(no_xclip),
     }
 
 

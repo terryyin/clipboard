@@ -11,7 +11,10 @@ from pathlib import Path
 
 from ._errors import ClipboardContentError
 from ._html_envelope import _fragment_offer, _HtmlOffer
-from ._html_native_linux import _linux_x11_html_clipboard_reader
+from ._html_native_linux import (
+    _linux_wayland_html_clipboard_reader,
+    _linux_x11_html_clipboard_reader,
+)
 from ._image_native import _is_linux_wayland
 
 
@@ -190,17 +193,18 @@ def _macos_html_clipboard_reader() -> _HtmlOffer | None:
 def _default_html_clipboard_reader() -> _HtmlOffer | None:
     """Platform-selected HTML reader.
 
-    Darwin reads NSPasteboard via osascript; Linux X11 reads CLIPBOARD
-    ``text/html`` via ``xclip -o``. Wayland and Windows readers are not
-    available yet.
+    Darwin reads NSPasteboard via osascript; a Linux Wayland session reads
+    ``text/html`` via ``wl-paste``; other Linux sessions read X11 CLIPBOARD
+    ``text/html`` via ``xclip -o``. A Windows reader is not available yet.
     """
     if sys.platform == "darwin":
         return _macos_html_clipboard_reader()
-    if sys.platform.startswith("linux") and not _is_linux_wayland():
+    if sys.platform.startswith("linux"):
+        if _is_linux_wayland():
+            return _linux_wayland_html_clipboard_reader()
         return _linux_x11_html_clipboard_reader()
-    session = " Wayland session" if sys.platform.startswith("linux") else ""
     raise ClipboardContentError(
         "paste_html native HTML reader is not available on this platform "
-        f"({sys.platform}{session}) yet; inject a reader with "
+        f"({sys.platform}) yet; inject a reader with "
         "set_html_clipboard_reader for tests"
     )

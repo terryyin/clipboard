@@ -110,21 +110,13 @@ def test_helper_failure_is_content_error(darwin_helper, helper_kwargs, message):
     assert message in str(info.value)
 
 
-@pytest.mark.parametrize(
-    ("platform", "wayland_display"),
-    [("linux", "wayland-0"), ("win32", None)],
-    ids=["linux-wayland", "win32"],
-)
 def test_non_darwin_default_reader_is_not_available(
-    monkeypatch, restore_html_clipboard_reader, platform, wayland_display
+    monkeypatch, restore_html_clipboard_reader
 ):
-    # Linux X11 has a reader (tests/test_paste_html_x11_reader.py); Wayland
-    # and Windows do not yet.
-    monkeypatch.setattr(_html_native.sys, "platform", platform)
-    if wayland_display is None:
-        monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
-    else:
-        monkeypatch.setenv("WAYLAND_DISPLAY", wayland_display)
+    # Linux X11 and Wayland have readers (tests/test_paste_html_x11_reader.py,
+    # tests/test_paste_html_wayland_reader.py); Windows does not yet.
+    monkeypatch.setattr(_html_native.sys, "platform", "win32")
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
 
     def no_helper(*args, **kwargs):
         raise AssertionError("default reader must not run a helper here")

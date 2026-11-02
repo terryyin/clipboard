@@ -96,7 +96,11 @@ assert clipboard.paste_html() == "<b>ok</b>"
 clipboard.set_html_clipboard_reader(lambda: None)
 assert clipboard.paste_html() is None
 clipboard.set_html_clipboard_reader(None)
-sys.platform = "linux"  # default reader must not touch a real pasteboard
+import os
+# The default reader must not touch a real pasteboard: on this pretend Linux
+# no helper (xclip / wl-paste) can be found, whatever the real session is.
+sys.platform = "linux"
+os.environ["PATH"] = "/nonexistent-clipboard-test-path"
 try:
     clipboard.paste_html()
 except clipboard.ClipboardContentError:
