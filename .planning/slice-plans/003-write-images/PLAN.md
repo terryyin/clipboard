@@ -122,7 +122,7 @@ Postcondition: example 7 (macOS branch) or honest limit.
 
 ### 4. Early probe — Linux X11 + `xclip` image write
 Type: Behavior
-Status: planned
+Status: done
 Proof: Implement Linux X11/`xclip` writer; gated probe (`copy_image` → writer
 exits → independent consumer recovers opaque size/colors; alpha recorded);
 add a GitHub Actions job that installs `xclip`, runs under **Xvfb**, and
@@ -217,6 +217,13 @@ helpers; evidence wording is honest.
 - Desktop-free suites remain green (Darwin stub skip expected).
 - Learning: shared `scripts/native_probe_common.py` for macOS/Linux native probes.
 
+## Accepted proof (slice 4)
+
+- Linux `_write_linux_xclip` (detached xclip CLIPBOARD owner after ingest).
+- Gated probe + GHA job `native-linux-x11-copy-image` (Xvfb); green on `c6f6585`.
+- Floors: ubuntu-latest + Xvfb + xclip; Python 3.13 / Pillow 11.3.0 (README).
+- Learning: under Xvfb do not wait for xclip exit; leave it as selection owner.
+
 ## Concern evidence
 
 - Slice-plan refinement: not needed — Behavior/Structure split is one write
@@ -231,8 +238,7 @@ helpers; evidence wording is honest.
 ### G-x11-ci. Linux X11 writer-exit awaits green GHA probe
 Reported: slice 4 — "X11 writer-exit proof is gated on GitHub Actions job native-linux-x11-copy-image under Xvfb; not yet observed green"
 Story clause: "Linux X11 and Wayland writer-exit success are acceptance requirements (issue #5); they are not substitutable by an evidence-limit note."
-Disposition: interim until slices 4
-Commitment: S.9
+Disposition: proved by slice 4: GitHub Actions run on c6f6585 (job native-linux-x11-copy-image PASSED; opaque writer-exit + independent xclip -o consumer)
 
 ### G-interim-stub. Default write raises NotImplementedError
 Reported: slice 1 — "default `_default_writeclipboard` raises `NotImplementedError` until a real writer or contract wrapper lands"

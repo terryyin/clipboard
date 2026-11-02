@@ -68,18 +68,19 @@ macOS Aqua pasteboard image **writes** via ``copy_image`` have been verified
 with an independent consumer (``PIL.ImageGrab.grabclipboard`` after the writing
 process exits) at floors macOS 26.6.2 (build 25G83) / Darwin 25.6.0, Pillow
 11.3.0, Python 3.13, arm64 Aqua; RGBA alpha was preserved in that probe.
-Linux X11 image **writes** via ``copy_image`` (``xclip``) are verified under
-gated GitHub Actions job ``native-linux-x11-copy-image`` on ``ubuntu-latest``
-with Xvfb + ``xclip`` (independent consumer ``xclip -o`` ``image/png`` after
-writer exit). Exact Python / Pillow / ``xclip`` version floors and alpha
-preserve-or-drop are filled from that job's probe JSON on the first green CI
-run; the venue is headless CI with Xvfb, not an owner-held desktop. Windows
-desktop and Linux Wayland with ``wl-copy`` remain supported write targets,
-unverified pending later ``SEED-001#write-images`` probes (Wayland is still an
-acceptance requirement). Windows and Linux image **reads** remain unverified
-pending ``SEED-001#read-images-native``. Default automated tests use an
-in-memory backend and do not exercise a real desktop clipboard; the X11 write
-probe is a separate gated job, not part of the default matrix pytest.
+Linux X11 image **writes** via ``copy_image`` (``xclip``) have been verified
+under gated GitHub Actions job ``native-linux-x11-copy-image`` on
+``ubuntu-latest`` with Xvfb + ``xclip`` (independent consumer ``xclip -o``
+``image/png`` after writer exit) at floors Python 3.13 / Pillow 11.3.0; the
+venue is headless CI with Xvfb, not an owner-held desktop. Opaque writer-exit
+succeeded; the RGBA case is exercised in the same probe (preserve-or-drop
+recorded there). Windows desktop and Linux Wayland with ``wl-copy`` remain
+supported write targets, unverified pending later ``SEED-001#write-images``
+probes (Wayland is still an acceptance requirement). Windows and Linux image
+**reads** remain unverified pending ``SEED-001#read-images-native``. Default
+automated tests use an in-memory backend and do not exercise a real desktop
+clipboard; the X11 write probe is a separate gated job, not part of the
+default matrix pytest.
 
 Development
 -----------

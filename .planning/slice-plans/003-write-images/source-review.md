@@ -49,7 +49,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | S.6 | SSH is not an additional guaranteed desktop |  | G-excl-env |
 | S.7 | Containers are not an additional guaranteed desktop |  | G-excl-env |
 | S.8 | Headless CI is not an additional guaranteed desktop |  | G-excl-env |
-| S.9 | Linux X11 writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit |  | G-x11-ci |
+| S.9 | Linux X11 writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit | slice 4 | observed: GHA job native-linux-x11-copy-image PASSED on c6f6585 (Xvfb + xclip; opaque writer-exit + independent xclip -o) |
 | S.10 | Linux Wayland writer-exit success is an acceptance requirement (issue #5); not substitutable by evidence-limit | slice 5 | |
 | S.11 | Windows requires independent-consumer + writer-exit proof when a session is available | slice 6 | |
 | S.12 | macOS requires independent-consumer + writer-exit proof when a session is available | slice 3 | observed: writer subprocess exits then ImageGrab consume (scripts/probe_macos_native_copy_image.py) |
