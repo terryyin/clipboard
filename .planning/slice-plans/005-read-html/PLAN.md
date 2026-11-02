@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#read-html
 **Source:** [Read HTML fragments copied by desktop applications](../../seeds/SEED-001-clipboard-true-to-its-name.md#read-html)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -80,7 +81,7 @@ interoperability.
 
 ### 1. Injectable `paste_html` read seam
 Type: Structure
-Status: planned
+Status: done
 Proof: Public `paste_html` exists; default path and a `set_*` injection hook
 allow tests to supply a fake HTML reader without a desktop; failures raise
 `ClipboardContentError` (not `ClipboardImageError`); `copy` / `paste` /
@@ -193,10 +194,22 @@ envelopes/helpers; evidence wording is honest.
   round-trip is regression-only.
 - Do not require `clipboard[images]` for `paste_html`; do not overload
   `ClipboardImageError`.
+- Developer decision (2026-11-02, slice 1 refactor stop): `clipboard.py`
+  exceeded the 250-line refactor limit (510 lines); split it now into a
+  `clipboard/` package with cohesive modules and an `__init__` re-exporting the
+  unchanged public API, before slice 2 adds envelope decoding.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: `clipboard` is now a package. HTML read/write seams and
+  `_call_content_backend` live in `clipboard/_html.py`; native HTML helpers in
+  `clipboard/_html_native.py`; tests that patch the platform for HTML target
+  `clipboard._html_native.sys` / `.subprocess`. Keep each module ≤ 250 lines
+  (put envelope decoding in `_html.py` or a new `_html_*` module).
+- Slice 1 accepted proof: `nix develop -c uv run --locked pytest
+  tests/test_paste_html_seam.py tests/test_copy_html_seam.py
+  tests/test_copy_html_contract.py -q` (33 passed); `nix develop -c make check`
+  (82 passed, 6 skipped); `make build` and `make test-package` pass.
 
 ## Concern evidence
 
@@ -205,3 +218,15 @@ _(none yet)_
   precedes the contract Behavior, and native session premises are already
   bounded by authorized early probe slices.
 - Remaining slice-specific concerns: none identified in this review.
+
+## Story obligations
+
+### G1. Default reader raises on every desktop
+Reported: slice 1 — "Default reader: on every platform, including Darwin, it raises `ClipboardContentError` saying there is no native HTML reader for this platform yet"
+Story clause: "returns a Unicode HTML fragment string when the current clipboard offer includes an HTML representation"
+Disposition: interim until slices 3, 4, 5, 6
+
+### G2. Reader value returned without validation or envelope decoding
+Reported: slice 1 — "The return type is unvalidated in this slice: a non-str, non-None value from the reader is returned as-is."
+Story clause: "Extract the **fragment** from platform envelopes"
+Disposition: receiving slice 2

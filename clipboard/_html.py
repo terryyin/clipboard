@@ -1,0 +1,108 @@
+"""HTML clipboard read/write with injectable backends (no Pillow needed)."""
+
+from __future__ import annotations
+
+import sys
+from collections.abc import Callable
+from typing import TypeVar
+
+from ._errors import ClipboardContentError
+from ._html_native import _default_html_clipboard_writer
+
+_T = TypeVar("_T")
+
+
+_html_clipboard_writer: Callable[[str, str], None] = _default_html_clipboard_writer
+
+
+def set_html_clipboard_writer(
+    writer: Callable[[str, str], None] | None,
+) -> None:
+    """Inject an HTML+plain-text dual-offer writer (tests / fakes)."""
+    global _html_clipboard_writer
+    _html_clipboard_writer = (
+        _default_html_clipboard_writer if writer is None else writer
+    )
+
+
+def _call_content_backend(operation: str, backend: Callable[..., _T], *args) -> _T:
+    """Run an HTML/rich clipboard backend; non-content failures become
+    ``ClipboardContentError`` while backend ``ClipboardContentError`` passes as is.
+    """
+    try:
+        return backend(*args)
+    except ClipboardContentError:
+        raise
+    except Exception as exc:
+        raise ClipboardContentError(f"clipboard {operation} failed: {exc}") from exc
+
+
+def _validate_copy_html_args(html: object, text: object) -> tuple[str, str]:
+    """Reject invalid HTML/text before any clipboard replace (fail-before-replace).
+
+    Empty HTML (no usable fragment after strip) is invalid. ``text`` must be a
+    non-empty ``str``; the plain-text alternative is caller-supplied and is not
+    synthesized from HTML.
+    """
+    if not isinstance(html, str) or not isinstance(text, str):
+        raise ClipboardContentError(
+            "copy_html requires html and text as str "
+            f"(got html={type(html).__name__}, text={type(text).__name__})"
+        )
+    if not html.strip():
+        raise ClipboardContentError(
+            "copy_html requires a non-empty HTML fragment "
+            "(empty or whitespace-only HTML is invalid)"
+        )
+    if text == "":
+        raise ClipboardContentError(
+            "copy_html requires a non-empty plain-text alternative"
+        )
+    return html, text
+
+
+def copy_html(html: str, text: str) -> None:
+    """Publish HTML and a matching plain-text alternative as one clipboard offer.
+
+    Does not require the optional ``clipboard[images]`` extra. Failures raise
+    ``ClipboardContentError``. Invalid arguments are rejected before the
+    writer runs. On macOS Aqua the default writer publishes both types as one
+    ``NSPasteboard`` offer (via ``osascript`` / AppKit). Other platforms still
+    need an injected writer via ``set_html_clipboard_writer`` until their
+    native adapters land. Writers must publish both representations together;
+    inability to offer both, or transfer failure, must surface as
+    ``ClipboardContentError`` (not silent text-only success).
+    """
+    html, text = _validate_copy_html_args(html, text)
+    _call_content_backend("HTML+text write", _html_clipboard_writer, html, text)
+
+
+def _default_html_clipboard_reader() -> object:
+    """Platform-selected HTML reader; no native readers have landed yet."""
+    raise ClipboardContentError(
+        "paste_html native HTML reader is not available on this platform "
+        f"({sys.platform}) yet; inject a reader with set_html_clipboard_reader "
+        "for tests"
+    )
+
+
+_html_clipboard_reader: Callable[[], object] = _default_html_clipboard_reader
+
+
+def set_html_clipboard_reader(reader: Callable[[], object] | None) -> None:
+    """Inject an HTML clipboard reader (tests / fakes); ``None`` restores default."""
+    global _html_clipboard_reader
+    _html_clipboard_reader = (
+        _default_html_clipboard_reader if reader is None else reader
+    )
+
+
+def paste_html() -> str | None:
+    """Return the HTML offered on the clipboard, or ``None`` when none is offered.
+
+    Does not require the optional ``clipboard[images]`` extra. Access, helper,
+    or transfer failures raise ``ClipboardContentError`` (not ``None``). Native
+    platform readers are not available yet; tests inject a reader via
+    ``set_html_clipboard_reader``.
+    """
+    return _call_content_backend("HTML read", _html_clipboard_reader)

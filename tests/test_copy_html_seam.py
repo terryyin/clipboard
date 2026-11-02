@@ -24,7 +24,7 @@ def test_default_copy_html_raises_on_non_darwin(
     Darwin's native dual-offer path stays gated to the native probe. Message
     actionability (multi-type helper naming) is covered in the contract suite.
     """
-    monkeypatch.setattr(clipboard.sys, "platform", "linux")
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "linux")
     clipboard.set_html_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.copy_html("<b>hi</b>", "hi")
@@ -46,8 +46,11 @@ def test_injected_writer_receives_both_representations(
 def test_reset_writer_restores_default(restore_html_clipboard_writer, monkeypatch):
     clipboard.set_html_clipboard_writer(lambda html, text: None)
     clipboard.set_html_clipboard_writer(None)
-    assert clipboard._html_clipboard_writer is clipboard._default_html_clipboard_writer
-    monkeypatch.setattr(clipboard.sys, "platform", "linux")
+    assert (
+        clipboard._html._html_clipboard_writer
+        is clipboard._html_native._default_html_clipboard_writer
+    )
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "linux")
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.copy_html("<p>x</p>", "x")
 
