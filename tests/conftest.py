@@ -33,3 +33,15 @@ def restore_html_clipboard_reader():
 
     yield
     clipboard.set_html_clipboard_reader(None)
+
+
+@pytest.fixture
+def fake_html_clipboard(restore_html_clipboard_reader):
+    """In-memory HTML offer model wired in as the paste_html reader."""
+    from html_offer import FakeClipboard
+
+    import clipboard
+
+    board = FakeClipboard()
+    clipboard.set_html_clipboard_reader(board.reader)
+    return board

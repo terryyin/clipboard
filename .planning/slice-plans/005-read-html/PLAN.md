@@ -93,7 +93,7 @@ write APIs; no native read required yet. Enables slice 2 contract Behavior.
 
 ### 2. In-memory `paste_html` contract
 Type: Behavior
-Status: planned
+Status: done
 Proof: Desktop-free tests show: fake HTML fragment offer → returns that
 Unicode fragment; text-only / empty / non-HTML offers → `None`; fake Windows
 `HTML Format` envelope (including non-ASCII) → fragment between offsets only;
@@ -210,6 +210,18 @@ envelopes/helpers; evidence wording is honest.
   tests/test_paste_html_seam.py tests/test_copy_html_seam.py
   tests/test_copy_html_contract.py -q` (33 passed); `nix develop -c make check`
   (82 passed, 6 skipped); `make build` and `make test-package` pass.
+- Slice 2: reader contract — a reader returns `None` (no HTML) or a private
+  offer from `clipboard/_html_envelope.py`: `_cf_html_offer(raw_bytes)` on
+  Windows, `_fragment_offer(str | bytes)` on macOS/Linux. Native readers pass
+  raw data through; decoding/extraction, trailing-NUL stripping, BOM UTF-16,
+  and NUL/encoding refusal live in the envelope module. Empty HTML offer →
+  `""` (coordinator decision: HTML offered ⇒ string; `None` only for absence).
+  Tests reuse `tests/html_offer.py` (`build_cf_html`, `FakeClipboard`,
+  `paste_unchanged`) and the `fake_html_clipboard` fixture.
+- Slice 2 accepted proof: `nix develop -c uv run --locked pytest
+  tests/test_paste_html_seam.py tests/test_paste_html_contract.py
+  tests/test_paste_html_cf_html.py -q` (85 passed); `nix develop -c make
+  check` (157 passed, 6 skipped).
 
 ## Concern evidence
 
@@ -229,4 +241,9 @@ Disposition: interim until slices 3, 4, 5, 6
 ### G2. Reader value returned without validation or envelope decoding
 Reported: slice 1 — "The return type is unvalidated in this slice: a non-str, non-None value from the reader is returned as-is."
 Story clause: "Extract the **fragment** from platform envelopes"
-Disposition: receiving slice 2
+Disposition: proved by slice 2: clipboard/_html_envelope.py::_decode_html_offer; tests/test_paste_html_contract.py::test_unexpected_reader_value_is_contract_failure, test_malformed_offer_value_is_contract_failure
+
+### G3. Native non-HTML offers distinguished only in the fake
+Reported: slice 2 — "The fake can only express \"reader reports no HTML\". Telling HTML apart from image-only or file-list offers in real native type lists is left to slices 3–6."
+Story clause: "Do not treat ordinary text, file-list, or image-only offers as HTML success"
+Disposition: interim until slices 3, 4, 5, 6

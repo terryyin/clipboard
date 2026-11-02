@@ -7,6 +7,7 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from ._errors import ClipboardContentError
+from ._html_envelope import _decode_html_offer
 from ._html_native import _default_html_clipboard_writer
 
 _T = TypeVar("_T")
@@ -90,7 +91,12 @@ _html_clipboard_reader: Callable[[], object] = _default_html_clipboard_reader
 
 
 def set_html_clipboard_reader(reader: Callable[[], object] | None) -> None:
-    """Inject an HTML clipboard reader (tests / fakes); ``None`` restores default."""
+    """Inject an HTML clipboard reader (tests / fakes); ``None`` restores default.
+
+    The reader takes no arguments and returns ``None`` when no HTML is offered,
+    or a package-private offer from ``clipboard._html_envelope``
+    (``_cf_html_offer(bytes)`` / ``_fragment_offer(str | bytes)``).
+    """
     global _html_clipboard_reader
     _html_clipboard_reader = (
         _default_html_clipboard_reader if reader is None else reader
@@ -98,11 +104,16 @@ def set_html_clipboard_reader(reader: Callable[[], object] | None) -> None:
 
 
 def paste_html() -> str | None:
-    """Return the HTML offered on the clipboard, or ``None`` when none is offered.
+    """Return the HTML fragment offered on the clipboard, or ``None`` if none.
 
-    Does not require the optional ``clipboard[images]`` extra. Access, helper,
-    or transfer failures raise ``ClipboardContentError`` (not ``None``). Native
-    platform readers are not available yet; tests inject a reader via
-    ``set_html_clipboard_reader``.
+    Only the selected fragment is returned: a Windows ``HTML Format`` envelope
+    is cut at its UTF-8 ``StartFragment`` / ``EndFragment`` byte offsets, and a
+    fragment-only ``text/html`` body is returned as is. HTML is never
+    synthesized from plain text, the markup is never executed or resolved, and
+    the clipboard is left unchanged. Does not require ``clipboard[images]``.
+    Access, helper, or transfer failures and malformed envelopes raise
+    ``ClipboardContentError`` (not ``None``). Native platform readers are not
+    available yet; tests inject a reader via ``set_html_clipboard_reader``.
     """
-    return _call_content_backend("HTML read", _html_clipboard_reader)
+    offer = _call_content_backend("HTML read", _html_clipboard_reader)
+    return _decode_html_offer(offer)

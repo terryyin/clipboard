@@ -6,6 +6,7 @@ import sys
 import pytest
 
 import clipboard
+from clipboard._html_envelope import _fragment_offer
 
 
 def test_paste_html_public_surface():
@@ -14,7 +15,7 @@ def test_paste_html_public_surface():
 
 
 def test_injected_reader_value_is_returned(restore_html_clipboard_reader):
-    clipboard.set_html_clipboard_reader(lambda: "<b>fragment</b>")
+    clipboard.set_html_clipboard_reader(lambda: _fragment_offer("<b>fragment</b>"))
     assert clipboard.paste_html() == "<b>fragment</b>"
 
 
@@ -24,7 +25,7 @@ def test_injected_reader_absence_is_none(restore_html_clipboard_reader):
 
 
 def test_reset_reader_restores_default(restore_html_clipboard_reader):
-    clipboard.set_html_clipboard_reader(lambda: "<i>x</i>")
+    clipboard.set_html_clipboard_reader(lambda: _fragment_offer("<i>x</i>"))
     clipboard.set_html_clipboard_reader(None)
     html = clipboard._html
     assert html._html_clipboard_reader is html._default_html_clipboard_reader
@@ -78,8 +79,9 @@ def block_pil(name, globals=None, locals=None, fromlist=(), level=0):
 builtins.__import__ = block_pil
 
 import clipboard
+from clipboard._html_envelope import _fragment_offer
 
-clipboard.set_html_clipboard_reader(lambda: "<b>ok</b>")
+clipboard.set_html_clipboard_reader(lambda: _fragment_offer("<b>ok</b>"))
 assert clipboard.paste_html() == "<b>ok</b>"
 clipboard.set_html_clipboard_reader(lambda: None)
 assert clipboard.paste_html() is None
