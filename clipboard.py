@@ -63,15 +63,48 @@ def set_html_clipboard_writer(
     )
 
 
+def _validate_copy_html_args(html: object, text: object) -> tuple[str, str]:
+    """Reject invalid HTML/text before any clipboard replace (fail-before-replace).
+
+    Empty HTML (no usable fragment after strip) is invalid. ``text`` must be a
+    non-empty ``str``; the plain-text alternative is caller-supplied and is not
+    synthesized from HTML.
+    """
+    if not isinstance(html, str) or not isinstance(text, str):
+        raise ClipboardContentError(
+            "copy_html requires html and text as str "
+            f"(got html={type(html).__name__}, text={type(text).__name__})"
+        )
+    if not html.strip():
+        raise ClipboardContentError(
+            "copy_html requires a non-empty HTML fragment "
+            "(empty or whitespace-only HTML is invalid)"
+        )
+    if text == "":
+        raise ClipboardContentError(
+            "copy_html requires a non-empty plain-text alternative"
+        )
+    return html, text
+
+
 def copy_html(html: str, text: str) -> None:
     """Publish HTML and a matching plain-text alternative as one clipboard offer.
 
     Does not require the optional ``clipboard[images]`` extra. Failures raise
-    ``ClipboardContentError``. Native platform writers arrive separately; until
+    ``ClipboardContentError``. Invalid arguments are rejected before the
+    injected writer runs. Native platform writers arrive separately; until
     then the default path fails unless a writer is injected via
-    ``set_html_clipboard_writer``.
+    ``set_html_clipboard_writer``. Writers must publish both representations
+    together; inability to offer both, or transfer failure, must surface as
+    ``ClipboardContentError`` (not silent text-only success).
     """
-    _html_clipboard_writer(html, text)
+    html, text = _validate_copy_html_args(html, text)
+    try:
+        _html_clipboard_writer(html, text)
+    except ClipboardContentError:
+        raise
+    except Exception as exc:
+        raise ClipboardContentError(f"clipboard HTML+text write failed: {exc}") from exc
 
 
 def _raise_image_failure(exc: BaseException) -> NoReturn:

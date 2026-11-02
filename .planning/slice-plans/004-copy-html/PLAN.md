@@ -94,7 +94,7 @@ Behavior.
 
 ### 2. In-memory `copy_html` contract
 Type: Behavior
-Status: planned
+Status: done
 Proof: Desktop-free tests show: valid HTML + text → fake backend receives
 **both** representations in one update; invalid args → error with **no**
 backend replace call (prior fake offer unchanged); backend that can offer only
@@ -208,6 +208,14 @@ envelopes/helpers; evidence wording is honest.
   `nix develop -c uv run --locked --extra images pytest
   tests/test_paste_image.py tests/test_paste_image_failures.py -q` (13 passed);
   no-images import smoke for the new surface.
+- Slice 2: `copy_html` validates args before the writer; empty/whitespace HTML
+  and empty text are invalid; writer transfer failures wrap to
+  `ClipboardContentError`; injectable one-type / partial writers must raise
+  rather than return success after a partial offer.
+- Accepted proof (slice 2): `nix develop -c uv run --locked pytest
+  tests/test_copy_html_seam.py tests/test_copy_html_contract.py
+  tests/test_clipboard.py -q` (25 passed); images paste suites (13 passed);
+  after test-fake refactor, `tests/test_copy_html_contract.py` (15 passed).
 
 ## Concern evidence
 

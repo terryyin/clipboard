@@ -8,15 +8,15 @@
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
 | 1 | Provide an explicit public write API (proposed spelling `copy_html(html, text)`) that accepts a Unicode HTML fragment string and a caller-supplied Unicode plain-text alternative. | slice 1 | observed: `clipboard.copy_html` + `tests/test_copy_html_seam.py::test_copy_html_public_surface` / `test_injected_writer_receives_both_representations` |
-| 2 | Publish both the HTML fragment and the plain-text alternative as one clipboard update (one logical offer). | slice 2 | |
-| 3 | On a successful write, leave neither representation overwriting the other: a rich consumer can obtain the HTML and a text consumer can obtain the alternative from that same offer. | slice 2 | |
-| 4.1 | Reject invalid input before replacing current clipboard contents: wrong types | slice 2 | |
-| 4.2 | Reject invalid input before replacing current clipboard contents: empty HTML with no usable fragment when the contract requires one | slice 2 | |
+| 2 | Publish both the HTML fragment and the plain-text alternative as one clipboard update (one logical offer). | slice 2 | observed: `tests/test_copy_html_contract.py::test_valid_html_and_text_publish_both_in_one_update` (single replace; `kind=html+text`) |
+| 3 | On a successful write, leave neither representation overwriting the other: a rich consumer can obtain the HTML and a text consumer can obtain the alternative from that same offer. | slice 2 | observed: same test — `offer["html"]` and `offer["text"]` both present on one offer |
+| 4.1 | Reject invalid input before replacing current clipboard contents: wrong types | slice 2 | observed: `test_invalid_args_fail_before_replace` (None/bytes/int); writer not invoked; prior intact |
+| 4.2 | Reject invalid input before replacing current clipboard contents: empty HTML with no usable fragment when the contract requires one | slice 2 | observed: `test_invalid_args_fail_before_replace` (empty/whitespace HTML); `_validate_copy_html_args` |
 | 5.1 | Failures other than successful dual publication raise an actionable clipboard content error: missing helper | slice 4 | |
 | 5.2 | Failures other than successful dual publication raise an actionable clipboard content error: denied access | slice 3 | |
-| 5.3 | Failures other than successful dual publication raise an actionable clipboard content error: transfer failure | slice 2 | |
+| 5.3 | Failures other than successful dual publication raise an actionable clipboard content error: transfer failure | slice 2 | observed: `test_transfer_failure_raises_actionable_content_error` (`OSError` → `ClipboardContentError`) |
 | 5.4 | Failures other than successful dual publication raise an actionable clipboard content error: unsupported session | slice 3 | |
-| 5.5 | Failures other than successful dual publication raise an actionable clipboard content error: inability to offer both representations together | slice 2 | |
+| 5.5 | Failures other than successful dual publication raise an actionable clipboard content error: inability to offer both representations together | slice 2 | observed: `test_one_type_only_backend_errors_without_partial_success` / `test_text_only_path_is_not_silent_success` |
 | 6.1 | Document platform HTML envelopes and Linux helper dependencies as needed: `xclip` on X11 | slice 7 | |
 | 6.2 | Document platform HTML envelopes and Linux helper dependencies as needed: Wayland helpers that can offer multiple MIME types (not a one-type-only path that drops the alternative) | slice 7 | |
 | 7 | Keep default automated tests desktop-free via an injectable write backend. | slice 1 | observed: `set_html_clipboard_writer` + `tests/test_copy_html_seam.py` injection/default stub; no desktop required |
@@ -40,13 +40,13 @@
 | Q4 | Native dual-consumer / writer-exit proof remains explicitly gated; default automated tests stay desktop-free via an injectable write backend. | slice 1 | observed: injectable seam + desktop-free seam tests; native gating deferred to probe slices |
 | Q5 | Unavailability of a usable session during execution yields an explicit evidence limit, not a verified claim and not silent success. | slice 3 | |
 | Q6 | The plain-text alternative is caller-supplied; this story does not synthesize it from HTML. | slice 7 | X11 |
-| Q7 | Failures other than successful dual publication surface as actionable clipboard content errors (not silent no-op or partial success). | slice 2 | |
-| Q8 | Invalid input is rejected before any clipboard replacement (fail-before-replace). | slice 2 | |
+| Q7 | Failures other than successful dual publication surface as actionable clipboard content errors (not silent no-op or partial success). | slice 2 | observed: one-type / text-only / transfer-failure contract tests raise `ClipboardContentError` |
+| Q8 | Invalid input is rejected before any clipboard replacement (fail-before-replace). | slice 2 | observed: `test_invalid_args_fail_before_replace` — no writer invocations |
 | E1 | Unicode HTML fragment with a styled link (or small table) and an explicit matching plain-text alternative → `copy_html(html, text)` succeeds → writing process exits → independent rich editor pastes formatting; text editor pastes the alternative; neither representation alone replaced the other. | slice 3 | |
 | E2 | Same pattern including non-ASCII characters in fragment and/or surrounding Windows `HTML Format` context → rich consumer pastes the correct fragment (offsets/encoding hold); text consumer pastes the Unicode alternative. | slice 6 | |
-| E3 | Clipboard currently holds ordinary text (or a prior image) → `copy_html` succeeds → subsequent independent pastes see the new HTML and text alternatives, not the superseded offer as the sole content. | slice 2 | |
-| E4 | Empty or non-string HTML / text arguments that violate the public contract → actionable error before any clipboard replacement; prior offer remains. | slice 2 | |
-| E5 | Session or helper cannot offer HTML and plain text together (e.g. one-type-only helper path) → actionable failure; no silent text-only “success”. | slice 2 | |
+| E3 | Clipboard currently holds ordinary text (or a prior image) → `copy_html` succeeds → subsequent independent pastes see the new HTML and text alternatives, not the superseded offer as the sole content. | slice 2 | observed: `test_successful_write_replaces_prior_sole_content` (text and image seeds → dual offer) |
+| E4 | Empty or non-string HTML / text arguments that violate the public contract → actionable error before any clipboard replacement; prior offer remains. | slice 2 | observed: `test_invalid_args_fail_before_replace` |
+| E5 | Session or helper cannot offer HTML and plain text together (e.g. one-type-only helper path) → actionable failure; no silent text-only “success”. | slice 2 | observed: `test_one_type_only_backend_errors_without_partial_success` / `test_text_only_path_is_not_silent_success` |
 | E6 | Missing Linux helper or denied/unavailable clipboard access → actionable error; no silent empty success. | slice 4 | |
 | E7 | Windows, macOS Aqua, Linux X11, and/or Linux Wayland session available → same dual-consumer + writer-exit success with floors recorded for the named compositor/helper; if a session is unavailable during execution, that desktop keeps an explicit evidence limit instead of a verified claim. | slice 3 | |
 | E8 | After this work, in-memory `copy` / `paste` / `paste_image` contract tests still pass; `VERSION` and text-only callers behave as before; image APIs remain unchanged. | slice 7 | |
