@@ -82,8 +82,17 @@ Evidence / verified platforms:
   method ``osascript`` / AppKit ``NSPasteboardTypeHTML`` +
   ``NSPasteboardTypeString``. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
   the probe script to refresh floors on another host.
-* Windows desktop, Linux X11, and Linux Wayland HTML writes remain
-  unverified (no dual-offer claim yet). Image reads on those desktops remain
+* Linux X11 HTML + plain-text dual-offer writes via ``copy_html`` are an
+  explicit **evidence limit** on this execution host: no usable X11 session
+  with a multi-type-capable helper (for example ``xclip`` offering
+  ``text/html`` and ``text/plain`` together) was available (Darwin checkout;
+  ``xclip`` not on ``PATH``). Do not treat X11 HTML write as verified.
+  ``scripts/probe_linux_x11_native_copy_html.py`` records
+  ``evidence_limit`` / ``verified: false`` (exit 2) rather than silent
+  success. Re-run that gated X11 dual-consumer probe on an owner-held X11
+  session to replace this limit.
+* Linux Wayland and Windows desktop HTML writes also remain unverified for
+  now (see later probe notes). Image reads on those desktops remain
   supported targets, unverified pending ``SEED-001#read-images-native``.
 
 Default automated tests use an in-memory backend and do not exercise a real

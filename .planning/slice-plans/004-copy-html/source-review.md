@@ -12,7 +12,7 @@
 | 3 | On a successful write, leave neither representation overwriting the other: a rich consumer can obtain the HTML and a text consumer can obtain the alternative from that same offer. | slice 2 | observed: same test — `offer["html"]` and `offer["text"]` both present on one offer |
 | 4.1 | Reject invalid input before replacing current clipboard contents: wrong types | slice 2 | observed: `test_invalid_args_fail_before_replace` (None/bytes/int); writer not invoked; prior intact |
 | 4.2 | Reject invalid input before replacing current clipboard contents: empty HTML with no usable fragment when the contract requires one | slice 2 | observed: `test_invalid_args_fail_before_replace` (empty/whitespace HTML); `_validate_copy_html_args` |
-| 5.1 | Failures other than successful dual publication raise an actionable clipboard content error: missing helper | slice 4 | |
+| 5.1 | Failures other than successful dual publication raise an actionable clipboard content error: missing helper | slice 4 | observed: non-Darwin default `ClipboardContentError` names multi-type helper expectation (xclip); `test_unsupported_platform_default_writer_is_content_error` |
 | 5.2 | Failures other than successful dual publication raise an actionable clipboard content error: denied access | slice 3 | observed: `test_macos_denied_pasteboard_write_is_content_error` (nonzero osascript / denial-like stderr → `ClipboardContentError`) |
 | 5.3 | Failures other than successful dual publication raise an actionable clipboard content error: transfer failure | slice 2 | observed: `test_transfer_failure_raises_actionable_content_error` (`OSError` → `ClipboardContentError`) |
 | 5.4 | Failures other than successful dual publication raise an actionable clipboard content error: unsupported session | slice 3 | observed: `test_unsupported_platform_default_writer_is_content_error` + `test_macos_missing_osascript_is_content_error` → `ClipboardContentError` |
@@ -26,7 +26,7 @@
 | 11 | Do not synthesize the plain-text alternative from HTML inside this story. | slice 7 | X11 |
 | 12.1 | Claim support for Windows desktop | slice 6 | |
 | 12.2 | Claim support for macOS Aqua | slice 3 | observed: README floors + probe ok on macOS 26.6.2 / 25G83 arm64 |
-| 12.3 | Claim support for Linux X11 + a multi-type-capable helper | slice 4 | |
+| 12.3 | Claim support for Linux X11 + a multi-type-capable helper | slice 4 | observed: README explicit X11 HTML-write **evidence limit** (no session/helper here); `scripts/probe_linux_x11_native_copy_html.py` refuses verified |
 | 12.4 | Claim support for Linux Wayland + a multi-type-capable helper scoped to the compositor actually proved when one is available | slice 5 | |
 | 13 | Dual publication and writer-exit success are acceptance requirements on each claimed desktop when a session is available. | slice 3 | observed: macOS session available → probe dual+exit success; Linux/Windows later |
 | 14 | When no usable session exists during execution for a claimed desktop, record an explicit unverified/unsupported evidence limit for that desktop rather than claiming verified — never silent success. | slice 3 | observed: README keeps Windows/Linux HTML writes unverified (no silent success); macOS verified only with probe floors |
@@ -47,7 +47,7 @@
 | E3 | Clipboard currently holds ordinary text (or a prior image) → `copy_html` succeeds → subsequent independent pastes see the new HTML and text alternatives, not the superseded offer as the sole content. | slice 2 | observed: `test_successful_write_replaces_prior_sole_content` (text and image seeds → dual offer) |
 | E4 | Empty or non-string HTML / text arguments that violate the public contract → actionable error before any clipboard replacement; prior offer remains. | slice 2 | observed: `test_invalid_args_fail_before_replace` |
 | E5 | Session or helper cannot offer HTML and plain text together (e.g. one-type-only helper path) → actionable failure; no silent text-only “success”. | slice 2 | observed: `test_one_type_only_backend_errors_without_partial_success` / `test_text_only_path_is_not_silent_success` |
-| E6 | Missing Linux helper or denied/unavailable clipboard access → actionable error; no silent empty success. | slice 4 | |
+| E6 | Missing Linux helper or denied/unavailable clipboard access → actionable error; no silent empty success. | slice 4 | observed: default platform error actionable (names helpers); X11 probe exits non-zero with `verified: false` / evidence_limit |
 | E7 | Windows, macOS Aqua, Linux X11, and/or Linux Wayland session available → same dual-consumer + writer-exit success with floors recorded for the named compositor/helper; if a session is unavailable during execution, that desktop keeps an explicit evidence limit instead of a verified claim. | slice 3 | observed: macOS branch verified with floors; Win/Linux evidence limits retained in README (slices 4–6 close or refresh) |
 | E8 | After this work, in-memory `copy` / `paste` / `paste_image` contract tests still pass; `VERSION` and text-only callers behave as before; image APIs remain unchanged. | slice 7 | |
 | X1 | Do not overload `copy()` / `paste()` to accept or return HTML. | slice 1 | observed: `copy`/`paste` remain pyperclip re-exports; HTML write is separate `copy_html` |

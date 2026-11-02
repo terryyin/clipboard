@@ -18,10 +18,11 @@ def test_copy_html_public_surface():
 def test_default_copy_html_raises_on_non_darwin(
     restore_html_clipboard_writer, monkeypatch
 ):
-    """Non-Darwin default still stubs until later platform writers land.
+    """Non-Darwin default raises until later platform writers land.
 
     Force a non-Darwin platform so default pytest never touches the pasteboard;
-    Darwin's native dual-offer path stays gated to the native probe.
+    Darwin's native dual-offer path stays gated to the native probe. Message
+    actionability (multi-type helper naming) is covered in the contract suite.
     """
     monkeypatch.setattr(clipboard.sys, "platform", "linux")
     clipboard.set_html_clipboard_writer(None)

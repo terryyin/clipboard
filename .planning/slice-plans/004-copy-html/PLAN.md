@@ -125,7 +125,7 @@ exit. Postcondition: example 7 (macOS branch) or honest limit.
 
 ### 4. Early probe — Linux X11 multi-type HTML + text write
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable X11 session with a helper that can offer HTML and plain
 text together (document the exact tool/flags), gated probe: `copy_html` →
 writer exits → independent rich and text consumers paste correctly; deps/floors
@@ -224,6 +224,12 @@ envelopes/helpers; evidence wording is honest.
 - Accepted proof (slice 3): probe JSON `ok: true` /
   `writer_exited_before_consume: true`; contract+seam after refactor 23 passed;
   `CLIPBOARD_NATIVE_PROBE=1` native test passed; paste_image suites reused.
+- Slice 4: No usable X11 + multi-type helper on this Darwin host → explicit
+  X11 HTML-write evidence limit in README; gated
+  `scripts/probe_linux_x11_native_copy_html.py` exits with `verified: false`.
+  Non-Darwin default error names multi-type helper expectations.
+- Accepted proof (slice 4): contract+seam 23 passed; X11 probe exit 2 /
+  evidence_limit; paste_image suites reused.
 
 ## Concern evidence
 
