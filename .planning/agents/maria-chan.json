@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Maria-chan",
+  "email": "maria-chan@example.org",
+  "identity": "SEED-001#read-files",
+  "mode": "story-branch",
+  "branch": "cursor/read-file-references-copied-by-file-managers",
+  "host": "cursor",
+  "model": "auto"
+}
