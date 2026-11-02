@@ -110,7 +110,7 @@ passed, 1 skipped. Windows/macOS wording preserved; Wayland still pending.
 
 ### 3. Early probe — Linux Wayland + `wl-paste` native image read
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Wayland session with `wl-paste`, gated independent-producer
 probe; record **compositor name/version** in floors; README marks Wayland
 verified **only for that compositor** (other compositors remain evidence-limited).
@@ -120,6 +120,12 @@ X11 or one unstated compositor.
 Behavior: Pre-condition: delivered `paste_image`; Wayland+`wl-paste` session
 **or** unavailability. Trigger: gated Wayland probe or evidence-limit write.
 Postcondition: Wayland claim is compositor-scoped proof or honest limit.
+
+Accepted: Darwin checkout; no Wayland session and no `wl-paste`.
+README.rst Evidence marks Wayland+`wl-paste` evidence-limited
+(unverified/unsupported for native proof; no compositor generalization).
+Focused desktop-free pytest 18 passed, 1 skipped. Windows/X11 limits and
+macOS verified wording preserved.
 
 ### 4. Evidence summary and regression gate
 Type: Structure
@@ -156,6 +162,9 @@ and text behavior already proved in-memory / macOS.
   session; Windows closed via explicit README evidence limit, not native proof.
 - Slice 2: Same Darwin checkout has no X11 session, empty DISPLAY, and no
   `xclip`; X11+`xclip` closed via explicit README evidence limit.
+- Slice 3: Same Darwin checkout has no Wayland session and no `wl-paste`;
+  Wayland+`wl-paste` closed via explicit README evidence limit (no compositor
+  generalization).
 
 ## Story obligations
 

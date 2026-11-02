@@ -64,8 +64,12 @@ Linux X11 with ``xclip`` image reads remain a supported target but are
 evidence-limited (unverified / unsupported for native proof) because no
 usable Linux X11 + ``xclip`` session was available during this
 verification — never treat X11 + ``xclip`` as natively verified from this
-work. Linux Wayland with ``wl-paste`` remains a supported target,
-unverified pending ``SEED-001#read-images-native``.
+work. Linux Wayland with ``wl-paste`` image reads remain a supported
+target but are evidence-limited (unverified / unsupported for native
+proof) because no usable Linux Wayland + ``wl-paste`` session was
+available during this verification — never treat Wayland + ``wl-paste``
+as natively verified from this work, and never generalize from X11 or
+an unstated compositor.
 Default automated tests use an in-memory backend and do not exercise a
 real desktop clipboard.
 
