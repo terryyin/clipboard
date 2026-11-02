@@ -139,7 +139,7 @@ Type: Behavior
 Status: planned
 Proof: Implement Wayland/`wl-copy` writer; gated probe with writer-exit
 independent consumer; GitHub Actions job under a **named** CI compositor
-(e.g. Weston) with `wl-clipboard`; README marks Wayland write verified for
+(e.g. Sway) with `wl-clipboard`; README marks Wayland write verified for
 that compositor/CI floors only. Failed probe stops Wayland acceptance (not
 an evidence-limit completion).
 
@@ -196,9 +196,8 @@ helpers; evidence wording is honest.
 - Default `_default_writeclipboard` raises `NotImplementedError` until later writers
   or slice-2 failure wrapping (tracked as G-interim-stub).
 - Darwin checkout cannot run Linux probes; owner chose GHA over skipping issue #5.
-- Linux xclip write needs `-quiet` under Xvfb; without it the helper waits for a paste and times out.
-- X11 flake (docs commit after slice 4): tempfile deleted before detached xclip finished reading (0.2s race → `target image/png not available`). Fix: feed PNG on stdin with `xclip -quiet` + `communicate(input=png_bytes)` so foreground exits after ingest/fork; no TemporaryDirectory dependency after return.
-- Wayland prefer `wl-copy` when `XDG_SESSION_TYPE=wayland` or `WAYLAND_DISPLAY` is set; leave xclip for X11. Slice 5 proof venue = gated GHA under named compositor Weston only (do not generalize; S.4/X.8/C.4). S.10 interim: writer + probe + job wired; green CI still required for acceptance.
+- Linux xclip under Xvfb: do not wait for exit (CLIPBOARD owner stays up); feed PNG on stdin and leave the process (`start_new_session`); tempfile races and `-quiet`+`communicate` both failed in CI.
+- Wayland: Weston headless lacks wlr-data-control so `wl-copy` exits 1; proof venue is gated GHA under named compositor **Sway** (`WLR_BACKENDS=headless`) only (S.4/X.8/C.4). Prefer `wl-copy` when Wayland; leave xclip for X11. S.10 interim: writer + probe + Sway job wired; green CI still required.
 
 ## Accepted proof (slice 1)
 
@@ -241,8 +240,8 @@ Reported: slice 4 — "X11 writer-exit proof is gated on GitHub Actions job nati
 Story clause: "Linux X11 and Wayland writer-exit success are acceptance requirements (issue #5); they are not substitutable by an evidence-limit note."
 Disposition: proved by slice 4: GitHub Actions run on c6f6585 (job native-linux-x11-copy-image PASSED; opaque writer-exit + independent xclip -o consumer)
 
-### G-wayland-ci. Linux Wayland writer-exit awaits green GHA Weston probe
-Reported: slice 5 — "Wayland writer-exit proof is gated on GitHub Actions job native-linux-wayland-copy-image under Weston; not yet observed green"
+### G-wayland-ci. Linux Wayland writer-exit awaits green GHA Sway probe
+Reported: slice 5 — "Wayland writer-exit proof is gated on GitHub Actions job native-linux-wayland-copy-image under Sway; not yet observed green"
 Story clause: "Linux X11 and Wayland writer-exit success are acceptance requirements (issue #5); they are not substitutable by an evidence-limit note."
 Disposition: interim until slices 5
 Commitment: S.10

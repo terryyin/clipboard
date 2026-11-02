@@ -1,6 +1,6 @@
 """Optional Linux Wayland + wl-copy native write probe (skipped unless enabled).
 
-Default pytest stays green without a desktop. Enable under Weston with:
+Default pytest stays green without a desktop. Enable under Sway with:
 
   CLIPBOARD_NATIVE_PROBE=1 WAYLAND_DISPLAY=wayland-1 \\
     nix develop -c uv run --locked --extra images \\
@@ -54,6 +54,6 @@ def test_linux_wayland_independent_consumer_copy_image_probe():
     assert report["environment"]["os"] == "Linux"
     assert report["environment"]["pillow_version"]
     assert report["environment"]["helper"] == "wl-copy"
-    assert report["environment"]["compositor"] == "Weston"
+    assert report["environment"]["compositor"] == "Sway"
     assert report["environment"]["wayland_display"]
-    assert report["commitments"]["compositor_scope"] == "Weston"
+    assert report["commitments"]["compositor_scope"] == "Sway"

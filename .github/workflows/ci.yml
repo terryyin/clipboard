@@ -106,7 +106,7 @@ jobs:
           pytest tests/test_copy_image_native_linux_x11.py -v
 
   native-linux-wayland-copy-image:
-    name: Native Linux Wayland copy_image (Weston)
+    name: Native Linux Wayland copy_image (Sway)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -118,12 +118,13 @@ jobs:
           version: '0.11.21'
           python-version: '3.13'
           enable-cache: true
-      - name: Install Wayland clipboard helpers and Weston
+      - name: Install Wayland clipboard helpers and Sway
         run: |
           sudo apt-get update
-          sudo apt-get install -y wl-clipboard weston
+          # wl-clipboard needs wlroots data-control (Sway); Weston lacks it.
+          sudo apt-get install -y wl-clipboard sway
       - run: uv sync --locked --extra images
-      - name: Gated Wayland copy_image probe under Weston
+      - name: Gated Wayland copy_image probe under Sway
         env:
           CLIPBOARD_NATIVE_PROBE: '1'
         run: |
@@ -131,11 +132,13 @@ jobs:
           export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/clipboard-xdg-runtime}"
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
-          # Start Weston before exporting WAYLAND_DISPLAY so it does not nest.
+          printf '%s\n' 'output * bg #000000 solid_color' > /tmp/clipboard-sway.conf
           unset WAYLAND_DISPLAY || true
-          weston --backend=headless-backend.so --socket=wayland-1 --idle-time=0 &
-          WESTON_PID=$!
-          trap 'kill "$WESTON_PID" 2>/dev/null || true' EXIT
+          export WLR_BACKENDS=headless
+          export WLR_LIBINPUT_NO_DEVICES=1
+          sway -c /tmp/clipboard-sway.conf >/tmp/clipboard-sway.log 2>&1 &
+          SWAY_PID=$!
+          trap 'kill "$SWAY_PID" 2>/dev/null || true' EXIT
           export WAYLAND_DISPLAY=wayland-1
           export XDG_SESSION_TYPE=wayland
           for _ in $(seq 1 50); do

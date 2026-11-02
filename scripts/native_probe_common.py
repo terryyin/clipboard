@@ -111,8 +111,8 @@ def linux_wayland_environment(**extra: object) -> dict:
         "os": platform.system(),
         "os_release": platform.release(),
         "machine": platform.machine(),
-        "desktop": "Weston (CI headless) or local Wayland",
-        "compositor": "Weston",
+        "desktop": "Sway (CI headless) or local Wayland",
+        "compositor": "Sway",
         "wayland_display": os.environ.get("WAYLAND_DISPLAY"),
         "xdg_session_type": os.environ.get("XDG_SESSION_TYPE"),
         "helper": "wl-copy",
@@ -157,7 +157,7 @@ def require_linux_wayland_and_images() -> None:
     if not sys.platform.startswith("linux"):
         die(f"probe requires Linux; got {sys.platform!r}")
     if not os.environ.get("WAYLAND_DISPLAY"):
-        die("probe requires WAYLAND_DISPLAY (run under Weston / named compositor)")
+        die("probe requires WAYLAND_DISPLAY (run under Sway / named compositor)")
     if shutil.which("wl-copy") is None or shutil.which("wl-paste") is None:
         die("wl-copy/wl-paste not found on PATH (install wl-clipboard)")
     try:

@@ -3,11 +3,11 @@
 
 Subprocess writer calls copy_image() then exits. Parent recovers the offer via
 ``wl-paste -t image/png`` (not clipboard.paste_image as sole proof). Intended
-venue: gated GitHub Actions under a named Weston compositor.
+venue: gated GitHub Actions under a named Sway compositor.
 
 Prints one JSON object on stdout. Exit 0 on opaque success; non-zero on failure.
 Requires Linux + WAYLAND_DISPLAY + wl-clipboard + optional images extra.
-Not default pytest. Success is scoped to the named compositor (Weston), not
+Not default pytest. Success is scoped to the named compositor (Sway), not
 generalized to all Wayland environments.
 """
 
@@ -34,7 +34,7 @@ from native_probe_common import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONSUMER_API = "wl-paste -t image/png"
-COMPOSITOR = "Weston"
+COMPOSITOR = "Sway"
 
 
 def _grab_independent_wl_paste():

@@ -44,7 +44,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | S.1 | Windows desktop is a supported desktop for this story | slice 6 | |
 | S.2 | macOS Aqua is a supported desktop for this story | slice 3 | observed: README Evidence marks macOS Aqua write verified; probe environment desktop Aqua |
 | S.3 | Linux X11 + `xclip` is a supported desktop for this story | slice 4 | observed: `_write_linux_xclip` on Linux default path; gated GHA job `native-linux-x11-copy-image` (Xvfb); README names X11/`xclip` write helper |
-| S.4 | Linux Wayland + `wl-copy` is a supported desktop, scoped to the compositor actually proved | slice 5 | observed: `_write_linux_wl_copy`; gated GHA job native-linux-wayland-copy-image under Weston; README scopes Wayland write to Weston (CI) only |
+| S.4 | Linux Wayland + `wl-copy` is a supported desktop, scoped to the compositor actually proved | slice 5 | observed: `_write_linux_wl_copy`; gated GHA job native-linux-wayland-copy-image under Sway; README scopes Wayland write to Sway (CI) only |
 | S.5 | WSL is not an additional guaranteed desktop |  | G-excl-env |
 | S.6 | SSH is not an additional guaranteed desktop |  | G-excl-env |
 | S.7 | Containers are not an additional guaranteed desktop |  | G-excl-env |
@@ -62,7 +62,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | X.5 | Do not leave a superseded text representation readable after a successful image write | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster |
 | X.6 | Do not leave a superseded image representation readable after a successful image write | slice 2 | observed: tests/test_copy_image.py::test_valid_rgb_reaches_backend_as_transferable_raster |
 | X.7 | Do not hang the caller indefinitely waiting to serve clipboard data | slice 3 | observed: osascript write timeout 30s; writer subprocess timeout 60s (clipboard.py; probe hang_bound) |
-| X.8 | Do not generalize one Wayland compositor's result to all Wayland environments | slice 5 | observed: README and probe name compositor Weston (CI) only; no all-Wayland claim |
+| X.8 | Do not generalize one Wayland compositor's result to all Wayland environments | slice 5 | observed: README and probe name compositor Sway (CI) only; no all-Wayland claim |
 | D.1 | Path/bytes overloads deferred; callers open to `Image` first |  | G-excl-deferred |
 | D.2.1 | Animated APIs deferred |  | G-excl-deferred |
 | D.2.2 | Multi-frame APIs deferred |  | G-excl-deferred |
@@ -80,7 +80,7 @@ the isolated review). Allocation precedes slice-1 acceptance.
 | C.1 | Invalid image input must not replace current content | slice 2 | observed: tests/test_copy_image_failures.py::test_invalid_input_raises_before_replace (replace_calls stays 0; prior offer intact) |
 | C.2 | Silent success on an unproved desktop is forbidden | slice 3 | observed: macOS write verified with probe+README floors; other desktops still marked unverified |
 | C.3 | Windows-only delivery is forbidden as story completion (issue #5) | slice 7 | |
-| C.4 | Wayland compositor generalization is forbidden | slice 5 | observed: verification wording scoped to Weston (CI) in README Evidence |
+| C.4 | Wayland compositor generalization is forbidden | slice 5 | observed: verification wording scoped to Sway (CI) in README Evidence |
 | E8.1 | In-memory `copy` contract tests still pass | slice 1 | observed: tests/test_clipboard.py under focused regression |
 | E8.2 | In-memory `paste` contract tests still pass | slice 1 | observed: tests/test_clipboard.py under focused regression |
 | E8.3 | In-memory `paste_image` contract tests still pass | slice 1 | observed: tests/test_paste_image.py and tests/test_paste_image_failures.py under focused regression |

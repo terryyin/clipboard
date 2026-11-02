@@ -96,16 +96,14 @@ def _write_macos_pngf(image: Image.Image) -> None:
 def _write_linux_xclip(image: Image.Image) -> None:
     """Publish PNG bytes on X11 CLIPBOARD via ``xclip`` (``image/png``).
 
-    Feeds PNG on stdin with ``-quiet`` so the foreground helper exits after
-    ingest/fork while a background owner keeps the offer pasteable after the
-    writing Python process exits (issue #5 writer-exit). Does not depend on a
-    tempfile still existing after return.
+    Feeds PNG on stdin and leaves ``xclip`` running as the CLIPBOARD owner so
+    the writing Python process can exit while the offer stays pasteable
+    (issue #5 writer-exit). Waiting for ``xclip`` to exit hangs under Xvfb.
     """
     import subprocess
+    import time
 
     png_bytes = _png_bytes(image)
-    # stderr must not be a pipe: -quiet forks a child that would keep it open
-    # and hang communicate(). Errors from a failed foreground exit are rare.
     try:
         proc = subprocess.Popen(
             [
@@ -115,25 +113,27 @@ def _write_linux_xclip(image: Image.Image) -> None:
                 "-t",
                 "image/png",
                 "-i",
-                "-quiet",
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            start_new_session=True,
         )
     except FileNotFoundError as exc:
         raise OSError(
             "xclip is required for clipboard image write on Linux X11; "
             "install xclip and ensure it is on PATH"
         ) from exc
+    assert proc.stdin is not None
     try:
-        proc.communicate(input=png_bytes, timeout=30)
-    except subprocess.TimeoutExpired as exc:
-        proc.kill()
-        proc.wait(timeout=5)
-        raise OSError("xclip clipboard write timed out") from exc
-    if proc.returncode != 0:
-        raise OSError(f"xclip clipboard write failed: exit {proc.returncode}")
+        proc.stdin.write(png_bytes)
+        proc.stdin.close()
+    except BrokenPipeError as exc:
+        raise OSError("xclip clipboard write failed: broken pipe") from exc
+    time.sleep(0.05)
+    exit_code = proc.poll()
+    if exit_code not in (None, 0):
+        raise OSError(f"xclip clipboard write failed: exit {exit_code}")
 
 
 def _is_linux_wayland() -> bool:

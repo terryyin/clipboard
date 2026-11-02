@@ -78,9 +78,8 @@ succeeded; the RGBA case is exercised in the same probe (preserve-or-drop
 recorded there). Linux Wayland image **writes** via ``copy_image`` (``wl-copy``)
 have been verified **only** under gated GitHub Actions job
 ``native-linux-wayland-copy-image`` on ``ubuntu-latest`` with the named
-compositor **Weston** (``weston --backend=headless-backend.so
---socket=wayland-1 --idle-time=0``) + ``wl-clipboard`` (independent consumer
-``wl-paste -t image/png`` after writer exit) at floors Python 3.13 /
+compositor **Sway** (``WLR_BACKENDS=headless``, ``wl-clipboard``; independent
+consumer ``wl-paste -t image/png`` after writer exit) at floors Python 3.13 /
 Pillow 11.3.0; do not generalize that result to other Wayland compositors.
 Opaque writer-exit succeeded; the RGBA case is exercised in the same probe
 (preserve-or-drop recorded there). Windows desktop remains a supported write
