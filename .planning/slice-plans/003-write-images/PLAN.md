@@ -103,7 +103,7 @@ Postcondition: contract examples 4–6 and 8 hold without a real clipboard.
 
 ### 3. Early probe — macOS Aqua image write
 Type: Behavior
-Status: planned
+Status: done
 Proof: On this Darwin checkout (or equivalent Aqua session), gated probe:
 `copy_image` publishes a known opaque PNG; writing process exits; an
 **independent** consumer (e.g. osascript / Preview / grab of pasteboard by a
@@ -199,6 +199,13 @@ helpers; evidence wording is honest.
 - Command: `nix develop -c uv run --locked --extra images pytest tests/test_copy_image.py tests/test_copy_image_failures.py tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py -q` → 41 passed.
 - Observations: transferable RGB/RGBA; mode conversion; fail-before-replace; clear text+image in fake offer; backend/stub → `ClipboardImageError`; text/`paste_image` regression green.
 - Learning: split success vs failure `copy_image` tests; shared `tests/image_offer.py` fake offer stand-in.
+
+## Accepted proof (slice 3)
+
+- Darwin `_write_macos_pngf` via osascript «class PNGf»; gated probe with writer-exit + ImageGrab independent consumer.
+- Native: `CLIPBOARD_NATIVE_PROBE=1 … pytest tests/test_copy_image_native_macos.py` → pass; alpha preserved; floors macOS 26.6.2 / Pillow 11.3.0 recorded in README.
+- Desktop-free suites remain green (Darwin stub skip expected).
+- Learning: shared `scripts/macos_native_probe_common.py` for paste/copy Aqua probes.
 
 ## Concern evidence
 

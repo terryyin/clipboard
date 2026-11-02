@@ -54,10 +54,16 @@ On Linux, image clipboard reads also need a helper on ``PATH``:
 Windows and macOS need a usable desktop clipboard / pasteboard session; image
 reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
-Evidence / verified platforms: macOS Aqua pasteboard image reads have been
+Evidence / verified platforms: macOS Aqua pasteboard image **reads** have been
 verified with an independent producer in this project's native probe work.
-Windows desktop, Linux X11 with ``xclip``, and Linux Wayland with ``wl-paste``
-remain supported targets, unverified pending
+macOS Aqua pasteboard image **writes** via ``copy_image`` have been verified
+with an independent consumer (``PIL.ImageGrab.grabclipboard`` after the writing
+process exits) at floors macOS 26.6.2 (build 25G83) / Darwin 25.6.0, Pillow
+11.3.0, Python 3.13, arm64 Aqua; RGBA alpha was preserved in that probe.
+Windows desktop, Linux X11 with ``xclip`` / ``wl-copy``, and Linux Wayland with
+``wl-paste`` / ``wl-copy`` remain supported write targets, unverified pending
+later ``SEED-001#write-images`` probes (Linux X11/Wayland are acceptance
+requirements). Windows and Linux image **reads** remain unverified pending
 ``SEED-001#read-images-native``. Default automated tests use an in-memory
 backend and do not exercise a real desktop clipboard.
 

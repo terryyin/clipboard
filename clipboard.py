@@ -46,8 +46,40 @@ def set_image_grabclipboard(grabclipboard: Callable | None) -> None:
     _grabclipboard = _default_grabclipboard if grabclipboard is None else grabclipboard
 
 
+def _write_macos_pngf(image: Image.Image) -> None:
+    """Publish a transferable PNG via osascript «class PNGf» (no pyobjc)."""
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory(prefix="clipboard-copy-image-") as raw:
+        path = Path(raw) / "offer.png"
+        image.save(path, format="PNG")
+        # osascript reads the file into the pasteboard before TemporaryDirectory
+        # cleanup; normal macOS pasteboard authorization (no entitlement bypass).
+        posix = str(path.resolve()).replace("\\", "\\\\").replace('"', '\\"')
+        script = f'set the clipboard to (read (POSIX file "{posix}") as «class PNGf»)'
+        try:
+            result = subprocess.run(
+                ["osascript", "-e", script],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise OSError("osascript clipboard write timed out") from exc
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "").strip() or "unknown error"
+            raise OSError(f"osascript clipboard write failed: {detail}")
+
+
 def _default_writeclipboard(image: Image.Image) -> None:
-    # Native publication lands in later slices; injectable for desktop-free tests.
+    """Platform default image write; non-Darwin remains unimplemented for now."""
+    import sys
+
+    if sys.platform == "darwin":
+        _write_macos_pngf(image)
+        return
     raise NotImplementedError("clipboard image write is not implemented yet")
 
 

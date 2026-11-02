@@ -1,5 +1,7 @@
 """copy_image rejects invalid input and surfaces backend failures distinctly."""
 
+import sys
+
 import pytest
 from image_offer import fake_offer
 from PIL import Image
@@ -113,6 +115,10 @@ def test_backend_failure_raises_clipboard_image_error(
     assert offer["image"] is prior
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin",
+    reason="Darwin default write is native; stub NotImplementedError is non-Darwin",
+)
 def test_default_write_stub_wrapped_as_clipboard_image_error(
     restore_image_writeclipboard,
 ):
