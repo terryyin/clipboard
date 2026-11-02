@@ -181,6 +181,17 @@ Behavior: Pre-condition: outcomes from slices 2–6. Trigger: docs + packaging
 updates. Postcondition: callers can install and use HTML write without guessing
 envelopes/helpers; evidence wording is honest.
 
+## Execution complete
+
+Product advice: Keep macOS dual-offer write as the verified floor; treat
+Linux/Windows HTML write as supported targets with honest evidence limits
+(writers not claimed present when unverified). Prefer a follow-up for
+Win/Linux/Wayland writers + dual-consumer proof if four-desktop completeness
+outranks `SEED-001#read-html`; otherwise proceed to HTML read. Optionally
+tighten README so “not verified” is not read as “writer present, session
+missing.” Direction advances rich clipboard content; no process findings
+recorded; no correction plan written.
+
 ## Current decisions
 
 - Reuse North Star explicit-API shape; implement multi-rep writers (pyperclip
