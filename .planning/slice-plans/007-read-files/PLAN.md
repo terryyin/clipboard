@@ -102,7 +102,7 @@ slice 2 contract Behavior.
 
 ### 2. In-memory `paste_files` contract
 Type: Behavior
-Status: planned
+Status: done
 Proof: Desktop-free tests show: fake two-file offer (Unicode + spaces) →
 ordered local path `list[str]`; fake `file://` / path-list payloads decode to
 local paths; path-looking plain text / empty / image-only / HTML-only →
@@ -222,6 +222,15 @@ guessing paths from text; evidence wording is honest.
   `_image`(+native)); public `import clipboard` / `VERSION` unchanged.
 - Accepted proof (reuse for later slices):
   `nix develop -c uv run --locked --extra images pytest tests/test_paste_files_seam.py tests/test_clipboard.py tests/test_paste_image.py tests/test_paste_image_failures.py tests/test_copy_html_contract.py tests/test_copy_html_seam.py -q` → seam + regression green after package split.
+
+
+- Slice 2: `paste_files` normalizes injected raw offers (`list[str]`, structured
+  `uri-list` / `paths`, absence kinds); `file://` decode with percent-encoding;
+  cut/move companion fields ignored by omission (no production recognizer
+  required for in-memory ignore); corrupt/access/helper → ClipboardContentError.
+- Contract proof split across `tests/test_paste_files_contract.py` (decode/absence)
+  and `tests/test_paste_files_failures.py` (cut/corrupt/access/non-mutation) with
+  shared `tests/paste_files_offer.py` fakes.
 
 ## Concern evidence
 
