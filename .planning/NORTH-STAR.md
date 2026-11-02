@@ -34,5 +34,12 @@ Wayland (Sway CI) and Windows (`windows-latest` CI) verified with named
 independent helper producers, browser interoperability there unobserved
 (2026-11-02).
 
+**Text (planned 2026-11-02, SEED-001#portable-text):** `copy` / `paste` keep
+their names and pyperclip stays a dependency, but their default Windows,
+macOS, X11, and Wayland paths move into the package under the same
+absence / value / failure model, because pyperclip 1.11.0 discards Linux
+helper failures and inherits a locale that corrupts macOS text; pyperclip
+remains the delegate for WSL and unowned environments.
+
 **Affects:** Later file and further rich-content stories should follow the same
 explicit-API + optional-extra shape unless evidence forces a revision.
