@@ -39,7 +39,7 @@ the API. Wayland and other file managers retain their evidence limits.
 
 ### 1. Observe Thunar clipboard interoperability in Actions
 Type: Behavior
-Status: planned
+Status: done
 Proof: gated native experiment offers two Unicode/space file URIs using each
 candidate MIME and invokes Thunar's Paste action in an isolated Xvfb/D-Bus
 desktop. A positive control confirms file-manager operation and automation;
@@ -55,6 +55,15 @@ Behavior: Pre-condition: Linux file-manager compatibility is unobserved.
 Trigger: run the dedicated Actions probe. Postcondition: the named
 X11/Thunar combination has real paste evidence for the tested MIME formats,
 or an actionable CI/harness failure is reported; no unobserved platform claim.
+
+## Execution complete
+
+Product advice: preserve the queue and product scope. Keep the planned
+public `copy_files` child-process-to-Thunar regression; the helper-made
+experiment settles its format premise, not the future API implementation.
+Wayland and other file managers retain their evidence limits. Retrospective
+completed without a product correction; the supported workflow-size
+occurrence was added to existing DD-007 in `DearDough.md`.
 
 ## Current decisions
 
@@ -107,6 +116,15 @@ test failed before this repair and passed afterwards (focused proof:
 5 passed, 1 gated skip). No MIME compatibility conclusion follows from the
 failed run; actual GUI proof remains owned by G1.
 
+The repaired producer and real Thunar Paste succeeded at
+`14e9f6de07c0278e3e147ecd4af2cd3c8f7c12cb`,
+[run 41460755116, job 125328858098](https://github.com/terryyin/clipboard/actions/runs/41460755116/job/125328858098).
+Both candidate MIME formats created exact copies with unchanged originals
+after writer-command exit. Ubuntu 24.04.5, Thunar 4.18.8, xclip 0.13,
+Python 3.13.14; full desktop/helper floors and experiment limits are maintained
+in `docs/file-manager-offers.md`. This settles the helper-format premise only;
+the existing API story retains actual writer-to-Thunar proof in slice 5.
+
 ## Plan review
 
 Refinement not needed: one cohesive experiment and proof loop.
@@ -118,10 +136,10 @@ Remaining concerns: none outside the explicitly bounded early probe.
 ### G1. Hosted GUI evidence awaits first progress publication
 Reported: slice 1 — "Actual Thunar GUI evidence requires the new workflow to be published and run in GitHub Actions."
 Story clause: "Publish the workflow on a reviewable branch and run it in GitHub Actions."
-Disposition: return
+Disposition: proved by slice 1: Actions 41460755116/job/125328858098 at 14e9f6d; exact environment and all three per-format copying observations inspected
 
 
 ### G2. Record measured MIME findings in the copy-files plan
 Reported: slice 1 — "The existing copy-files plan still awaits the actual Actions MIME outcomes."
 Story clause: "Record the result where the existing copy-files plan can consume it."
-Disposition: return
+Disposition: proved by slice 1: copy-files PLAN.md slice 2 records actual evidence and slice 5 requires API child-to-Thunar regression; docs/file-manager-offers.md retains floors and limits
