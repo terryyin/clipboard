@@ -40,9 +40,10 @@ desktops; persistence across logout/reboot; changing `copy`/`paste`.
   private desktop module owns session detection, helper-failure detail, and
   `TARGETS` listing; reuse it instead of the current per-module copies.
 - No ADR store exists in this repository; no Accepted ADR constrains this plan.
-- This preparation checkout is Darwin 25.6.0 without `xclip`, `wl-copy`, or a
-  Linux file manager. Windows/Linux offer-level proof runs in gated GitHub
-  Actions; file-manager paste on Linux needs an owner-held desktop.
+- Local development is Darwin; Linux desktop proof runs in gated GitHub
+  Actions. The helper-offer premise is now verified with real Thunar Paste
+  under Xvfb (slice 2). The API writer must repeat that proof in slice 5;
+  X11 evidence does not establish Wayland file-manager behavior.
 - Local gate: `nix develop -c make check` (AGENTS.md); add
   `nix develop -c make lint-workflows` whenever `.github/workflows` changes.
 
@@ -71,7 +72,7 @@ an independent consumer, and file-manager paste for the example 1 claim.
 | Injection and wrapping patterns to mirror exist | Slice 1 seam | `clipboard/_html.py`: `set_html_clipboard_writer`, `_call_content_backend`, `_validate_copy_html_args`; `clipboard/__init__.py` `__getattr__` re-exports | Settled |
 | macOS `NSPasteboard writeObjects:` of file `NSURL`s via `osascript` persists after exit and Finder pastes copies | Slice 3 writer and proof | State-changing on the user's clipboard and needs Finder; not observed in preparation | **Early probe** (slice 3) |
 | Explorer shell can paste a Python-written `CF_HDROP` on `windows-latest` (`Shell.Application` folder `InvokeVerb("Paste")`) | Slice 4 file-manager proof | Needs a Windows session; Darwin here | **Early probe** (slice 4); unavailable → offer-level proof plus Explorer evidence limit |
-| A named Linux file manager pastes a lone `text/uri-list` (or needs `x-special/gnome-copied-files`) from a single-type helper owner | Slices 5–6 MIME choice | Needs an owner-held Linux desktop; none here | **Early probe** (slice 2) |
+| A named Linux file manager pastes a lone `text/uri-list` (or needs `x-special/gnome-copied-files`) from a single-type helper owner | Slices 5–6 MIME choice | Thunar 4.18.8 on Ubuntu 24.04.5/X11 pasted both single-type offers after writer-command exit in [Actions](https://github.com/terryyin/clipboard/actions/runs/41460755116/job/125328858098) | Settled for this X11/Thunar combination; Wayland remains unobserved |
 | `xclip` / `wl-copy` serve one MIME type per owner process | Slices 5–6 approach | wl-clipboard manual (`--type` single); xclip `-t` single target; delivered `copy_image` uses one type each | Settled by documentation and delivered behavior; revisit in slice 2 if a helper offers more |
 
 ## Ordered slices
@@ -98,23 +99,20 @@ the unsupported platform until slices 3–6 replace it per platform.
 ### 2. Early probe — which offer a named Linux file manager pastes
 Type: Behavior
 Status: done
-Proof: developer-operated round on an owner-held Linux desktop (X11 or
-Wayland; record distro, desktop, compositor, file manager and helper
-versions). Question: does the named file manager paste copies from a lone
-`text/uri-list` owner, and if not, from a lone `x-special/gnome-copied-files`
-(`copy\n<uris>`)? Rounds, all in the first request: (a) `printf
-'file:///…/report%20final.pdf\r\n…' | xclip -selection clipboard -t
-text/uri-list` (or `wl-copy --type text/uri-list`), then Ctrl+V in a chosen
-folder; (b) the same with `x-special/gnome-copied-files`. Record results in
-Learnings. No developer Linux desktop → record that, and slices 5–6 offer
-`text/uri-list` (the freedesktop format `paste_files` reads) with a README
-file-manager evidence limit. If the developer requires a file manager that
-neither single-type offer serves, stop slices 5–6 and return the Linux
-coverage decision to the maintainer.
+Proof: independent helper-offer experiment, verified in
+[Actions run 41460755116](https://github.com/terryyin/clipboard/actions/runs/41460755116/job/125328858098)
+at `14e9f6de07c0278e3e147ecd4af2cd3c8f7c12cb`.
+Thunar 4.18.8 on Ubuntu 24.04.5/X11 pasted both a lone `text/uri-list`
+and a lone `x-special/gnome-copied-files` (`copy\n<uris>`).
+Actual destination bytes matched both Unicode/space source files; originals
+were unchanged. The writer command exited first. GNOME-format controls
+bracketed the URI round, and the same copying assertions rejected the
+empty destination before Paste. See [probe documentation and floors](../../../docs/file-manager-offers.md).
 
-Behavior: Pre-condition: slice 1 done. Trigger: developer pastes helper-made
-offers. Postcondition: the Linux MIME choice for slices 5–6 is observed, or
-the evidence limit is recorded.
+Behavior: Pre-condition: helper-made offers need no library API.
+Trigger: the gated Thunar/Xvfb Actions experiment. Postcondition: the
+single-MIME approach is observed on this named X11 environment. This does
+not complete the API writer or verify Wayland/other file managers.
 
 ### 3. macOS Aqua native writer and Finder proof
 Type: Behavior
@@ -159,10 +157,13 @@ slice 2 MIME body (percent-encoded `file://` URIs, CRLF) to a background
 `xclip -selection clipboard -t <type>` owner and waits for the type in
 `TARGETS`, as `copy_image` does; missing `xclip` or display →
 `ClipboardContentError` with install hint, clipboard untouched; gated job
-`native-linux-x11-copy-files` (Xvfb + `xclip`): writer exits, independent
-`xclip -o -t <type>` returns the URIs and `paste_files()` the paths. FM paste
-reuses slice 2's observation when it used X11 and this MIME body; otherwise
-README records the X11 file-manager evidence limit.
+`native-linux-x11-copy-files` (Xvfb + `xclip`): the actual public
+`copy_files` call runs in a child Python that exits, independent
+`xclip -o -t <type>` returns the URIs and `paste_files()` the paths, then
+Thunar Paste creates both copies with matching bytes and unchanged sources.
+Reuse slice 2's isolated desktop and assertions, replacing the helper-only
+producer with the API child. Slice 2 proves the format premise; it does not
+substitute for this implementation proof. Other file managers stay limited.
 
 Behavior: Pre-condition: slices 1–2. Trigger: `copy_files` on X11, writer
 exits. Postcondition: seed examples 1 (offer level) and 6 on X11.
@@ -216,8 +217,11 @@ Disposition: interim until slices 3, 4, 5, 6
 
 ## Learnings
 
-- Slice 1: validation lives in `clipboard/_files.py` `_validate_copy_files_paths`; the default writer dispatch is `clipboard/_files_native.py` `_default_files_clipboard_writer`, where slices 3–6 add per-platform branches. A dangling symlink is rejected as missing (`os.path.exists`), matching "each named path must exist".
-- Slice 2 (2026-11-02): the developer has no owner-held Linux desktop for the probe. No file-manager paste was observed on Linux. Slices 5–6 therefore offer a lone `text/uri-list` (percent-encoded `file://` URIs, CRLF — the freedesktop format `paste_files` reads), and README records the Linux X11/Wayland file-manager evidence limit; slices 5–6 do not claim file-manager paste.
+GitHub Actions can run a real named Linux file manager, so an owner-held
+Linux desktop is no longer a prerequisite for the X11 early probe.
+Both tested single-format offers work with Thunar 4.18.8. Keep
+`text/uri-list` for the planned Linux writer, repeat the actual API-to-Thunar
+journey in slice 5, and retain the Wayland/other-file-manager evidence limits.
 
 ## Plan review
 
