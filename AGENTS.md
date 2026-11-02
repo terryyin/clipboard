@@ -10,7 +10,13 @@ malformed-image failures raise `ClipboardImageError` rather than returning
 `None` (or silently succeeding on write). HTML, file-list, and inspect access,
 helper, transfer, enumeration, or malformed-envelope failures raise
 `ClipboardContentError` (`paste_html` returns `None` only when no HTML is
-offered).
+offered). Linux session detection, helper-failure detail formatting, and
+CLIPBOARD type listing (`xclip` TARGETS / `wl-paste --list-types`) live in
+private `clipboard/_desktop` with per-caller failure modes; content-kind
+modules must not copy those helpers. On a session with both `DISPLAY` and
+`WAYLAND_DISPLAY`, `paste_files` still selects X11 while HTML/inspect/image
+write select Wayland. Gated Windows `paste_html` native proof fails the job
+when the probe reports an evidence limit (no skip).
 
 Use Nix for development tools, as in the neighboring Lizard project. Run tools
 with `nix develop -c <command>`; Git commands can run directly. Nix pins the
