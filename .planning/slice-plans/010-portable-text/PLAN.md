@@ -289,6 +289,15 @@ Postcondition: callers know exactly what is promised and verified where.
   with `env={}`, so a no-locale probe must drop `LANG` / `LC_*` before
   importing `clipboard`. The macOS denial and SSH cases stay unobserved.
   `make check` 368 passed / 17 skipped.
+- Slice 4 (in progress, awaiting `native-linux-x11-text`):
+  `clipboard/_text_native_x11.py` reads `TARGETS` first so absence never
+  depends on stderr wording; the writer waits until the background owner
+  serves exactly the written bytes, because the previous owner usually
+  lists `UTF8_STRING` too (the TARGETS-only wait in `_image_write` shares
+  that latent race). `xvfb-run -a` allocates from `:99`, so the probe picks
+  a free display from `:90` as the dead display. Shared Linux runner:
+  `clipboard/_text_native_linux.py`. Local: `make check` 389 passed / 18
+  skipped.
 
 ## Story obligations
 
