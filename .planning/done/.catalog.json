@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_read-images-native.json",
+      "identity": "SEED-001#read-images-native",
+      "completedAt": "2026-11-02T05:05:16.297Z",
+      "blob": "b6cac434fc9127a0bc3385f32893c47913bd8b13"
+    },
+    {
       "fileName": "SEED-001_read-images.json",
       "identity": "SEED-001#read-images",
       "completedAt": "2026-11-02T04:13:59.485Z",

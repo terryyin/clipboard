@@ -6,8 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Native image-read verification on Windows and Linux](seeds/SEED-001-clipboard-true-to-its-name.md#read-images-native) — SEED-001#read-images-native ([plan](slice-plans/002-read-images-native/PLAN.md))
-
 ## Backlog list
 - [Copy Python images into desktop applications](seeds/SEED-001-clipboard-true-to-its-name.md#write-images) — SEED-001#write-images
 - [Copy HTML with a matching plain-text alternative](seeds/SEED-001-clipboard-true-to-its-name.md#copy-html) — SEED-001#copy-html
