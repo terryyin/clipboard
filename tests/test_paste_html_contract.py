@@ -226,3 +226,20 @@ def test_malformed_offer_value_is_contract_failure(
     clipboard.set_html_clipboard_reader(lambda: offer)
     with pytest.raises(clipboard.ClipboardContentError, match=match):
         clipboard.paste_html()
+
+
+# --- injectable reader reset ----------------------------------------------
+
+
+def test_reset_reader_restores_default(monkeypatch, restore_html_clipboard_reader):
+    # Unsupported platform: default reader must not touch a real pasteboard.
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "sunos5")
+
+    def no_helper(*args, **kwargs):
+        raise AssertionError("default reader must not run a helper here")
+
+    monkeypatch.setattr(clipboard._html_native_macos.subprocess, "run", no_helper)
+    clipboard.set_html_clipboard_reader(lambda: _fragment_offer("<i>x</i>"))
+    clipboard.set_html_clipboard_reader(None)
+    with pytest.raises(clipboard.ClipboardContentError, match="not available"):
+        clipboard.paste_html()

@@ -8,12 +8,11 @@ import base64
 import subprocess
 
 import pytest
+from html_offer import FRAGMENT
 
 import clipboard
 from clipboard import _html_native, _html_native_macos
-from clipboard._html_envelope import _fragment_offer
 
-FRAGMENT = '<a href="https://example.com/caf%C3%A9"><b>café → 日本</b></a>'
 BROWSER_BODY = "<meta charset='utf-8'>" + FRAGMENT
 
 
@@ -59,23 +58,12 @@ def test_darwin_default_reader_returns_fragment(darwin_helper):
     assert kwargs["timeout"] == _html_native_macos._MACOS_HTML_READ_TIMEOUT_SECONDS
 
 
-def test_reader_passes_raw_bytes_through_undecoded(darwin_helper):
-    raw = FRAGMENT.encode("utf-8")
-    darwin_helper(stdout=_html_answer(raw))
-    assert _html_native_macos._macos_html_clipboard_reader() == _fragment_offer(raw)
-
-
 def test_reader_script_only_reads_the_pasteboard(darwin_helper):
     helper = darwin_helper(stdout="NONE\n")
     clipboard.paste_html()
     script = helper.calls[0][0][-1]
     for mutator in ("clearContents", "setData", "setString", "declareTypes"):
         assert mutator not in script
-
-
-def test_empty_html_offer_is_empty_string(darwin_helper):
-    darwin_helper(stdout="HTML:\n")
-    assert clipboard.paste_html() == ""
 
 
 def test_no_html_type_is_none(darwin_helper):

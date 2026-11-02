@@ -7,12 +7,11 @@ touches a real X11 CLIPBOARD or needs DISPLAY / xclip installed.
 import subprocess
 
 import pytest
+from html_offer import FRAGMENT
 
 import clipboard
 from clipboard import _desktop, _html_native, _html_native_linux
-from clipboard._html_envelope import _fragment_offer
 
-FRAGMENT = '<a href="https://example.com/caf%C3%A9"><b>café → naïve 日本</b></a>'
 HTML_TARGETS = b"TIMESTAMP\nTARGETS\nMULTIPLE\ntext/html\nUTF8_STRING\n"
 TEXT_TARGETS = b"TIMESTAMP\nTARGETS\nUTF8_STRING\nSTRING\nTEXT\n"
 IMAGE_TARGETS = b"TIMESTAMP\nTARGETS\nimage/png\n"
@@ -78,7 +77,7 @@ def test_text_html_target_returns_fragment(x11_xclip):
     ]
 
 
-def test_reader_passes_raw_bytes_through_undecoded(x11_xclip):
+def test_utf16_bom_body_decodes_through_paste_html(x11_xclip):
     raw = b"\xff\xfe" + FRAGMENT.encode("utf-16-le")
     x11_xclip(
         answers={
@@ -86,15 +85,7 @@ def test_reader_passes_raw_bytes_through_undecoded(x11_xclip):
             "text/html": _done(stdout=raw),
         }
     )
-    assert _html_native_linux._linux_x11_html_clipboard_reader() == (
-        _fragment_offer(raw)
-    )
     assert clipboard.paste_html() == FRAGMENT
-
-
-def test_empty_html_offer_is_empty_string(x11_xclip):
-    x11_xclip(answers={"TARGETS": _done(stdout=HTML_TARGETS), "text/html": _done()})
-    assert clipboard.paste_html() == ""
 
 
 @pytest.mark.parametrize(

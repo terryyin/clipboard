@@ -119,7 +119,7 @@ kept explicit at one place.
 
 ### 4. Fold duplicated seam and structural tests
 Type: Structure
-Status: planned
+Status: done
 Proof: duplicated seam cases fold into `tests/test_paste_html_contract.py`;
 private-identity and raw-offer equality assertions are removed where a
 `paste_html()` behavior assertion covers the same promise; one parametrized
@@ -165,6 +165,9 @@ Correction: removes F3's duplicated cost without losing a behavior.
   lenient (image), HTML-strict (unowned → None), and inspect-bounded modes.
   Accepted proof: `make check` 310/15; `test_unowned_clipboard_is_none` and
   image lenient polling preserved. Native five-job confirmation deferred to CI.
+- Slice 4: folded paste_html seam into contract; one parametrized
+  `test_no_pillow_extra` replaces seven `block_pil` copies; FRAGMENT one home
+  per side. Accepted proof: `make check` 297 passed, 15 skipped.
 
 ## Concern evidence
 

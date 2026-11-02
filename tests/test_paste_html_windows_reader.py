@@ -10,14 +10,12 @@ import ctypes
 from types import SimpleNamespace
 
 import pytest
-from html_offer import build_cf_html
+from html_offer import FRAGMENT, build_cf_html
 from win32_clipboard_fake import ACCESS_DENIED, FakeWin32
 
 import clipboard
 from clipboard import _html_native, _html_native_windows
-from clipboard._html_envelope import _cf_html_offer
 
-FRAGMENT = '<a href="https://example.com/caf%C3%A9"><b>café → 日本</b></a>'
 ENVELOPE = build_cf_html(
     FRAGMENT,
     before="<html><head><title>Ünïcode 東京</title></head><body><p>ñ context</p>",
@@ -65,13 +63,6 @@ def test_html_format_fragment_is_extracted_by_byte_offsets(win32):
         "CloseClipboard",
     ]
     _assert_released(fake)
-
-
-def test_reader_passes_raw_envelope_bytes_through(win32):
-    win32(padding=b"")
-    assert _html_native_windows._windows_html_clipboard_reader() == (
-        _cf_html_offer(ENVELOPE)
-    )
 
 
 def test_contention_resolved_after_retry(win32):

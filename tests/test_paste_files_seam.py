@@ -1,8 +1,5 @@
 """Structure seam for paste_files: public surface + injectable reader (no desktop)."""
 
-import subprocess
-import sys
-
 import pytest
 
 import clipboard
@@ -79,39 +76,3 @@ def test_reset_reader_restores_default(restore_files_clipboard_reader, monkeypat
     )
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.paste_files()
-
-
-def test_paste_files_importable_without_images_extra():
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            """
-import builtins
-
-real_import = builtins.__import__
-
-def block_pil(name, globals=None, locals=None, fromlist=(), level=0):
-    if name == "PIL" or name.startswith("PIL."):
-        raise ImportError("No module named 'PIL'")
-    return real_import(name, globals, locals, fromlist, level)
-
-builtins.__import__ = block_pil
-
-import clipboard
-
-assert callable(clipboard.paste_files)
-assert issubclass(clipboard.ClipboardContentError, Exception)
-assert clipboard.ClipboardContentError is not clipboard.ClipboardImageError
-assert callable(clipboard.set_files_clipboard_reader)
-
-clipboard.set_files_clipboard_reader(lambda: ["/tmp/no-pillow"])
-assert clipboard.paste_files() == ["/tmp/no-pillow"]
-clipboard.set_files_clipboard_reader(None)
-""",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0

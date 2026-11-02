@@ -12,6 +12,8 @@ from clipboard._html_envelope import _cf_html_offer, _fragment_offer, _HtmlOffer
 
 WINDOWS = "windows"
 FRAGMENT_PLATFORM = "fragment"  # macOS / Linux: fragment-only text/html
+# Desktop-free reader sample (one test-side home; probes use scripts/native_probe_*).
+FRAGMENT = '<a href="https://example.com/caf%C3%A9"><b>café → naïve 日本</b></a>'
 
 
 def build_cf_html(
