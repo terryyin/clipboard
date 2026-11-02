@@ -167,7 +167,7 @@ Postcondition: examples 1–2 (Windows) / example 6 or honest limit.
 
 ### 7. Docs and packaging alignment for HTML read
 Type: Behavior
-Status: planned
+Status: done
 Proof: README (and related install/evidence notes) document `paste_html`,
 absence vs `ClipboardContentError`, non-mutation, Windows fragment-extraction
 rule, Linux HTML-read helpers (`xclip` / `wl-paste`), per-desktop verified
@@ -284,6 +284,14 @@ envelopes/helpers; evidence wording is honest.
   2025 10.0.26100, PowerShell 5.1.26100, CLR 4.0.30319.42000). .NET
   Framework `SetText(Html)` / `Set-Clipboard -AsHtml` write non-ASCII as
   ANSI, so those envelopes raise `ClipboardContentError` (correct refusal).
+- Developer amendment (2026-11-02, recorded in SEED-001): helper producers
+  count as native verification on X11, Wayland, and Windows when named and
+  labelled not-a-browser; browser interop there stays unobserved. Source
+  review replaced with a fresh review of the amended story.
+- Slice 7 accepted proof: README `paste_html` usage, Installation helper
+  list, per-desktop envelope behavior, and evidence wording; AGENTS.md names
+  the HTML APIs. `make check` (216 passed, 10 skipped); `make build` (twine
+  strict, rerun after refactor); `make test-package`; `make lint-workflows`.
 
 ## Concern evidence
 
@@ -313,4 +321,4 @@ Disposition: proved by slice 6: native text-only/image-only (and file-list on ma
 ### G4. Linux X11 native producer is xclip, not a browser or rich editor
 Reported: slice 4 — "The native producer is the helper xclip (`-t text/html -i`), not a browser or rich editor."
 Story clause: "native proof uses an **independent producer** (browser or rich editor — not a same-library `copy_html` round-trip alone)"
-Disposition: interim until slices 5, 6, 7
+Disposition: owner changed "an independent helper producer (for example `xclip`, `wl-copy`, or a PowerShell/.NET writer) counts as native verification on Linux X11, Linux Wayland, and Windows when the evidence names the helper and states that it is not a browser or rich editor"

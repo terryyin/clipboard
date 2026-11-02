@@ -135,6 +135,12 @@ changes what remains available for another consumer.
   unverified/unsupported evidence limit for that desktop rather than claiming
   verified — never silent success. Do not generalize one Wayland compositor's
   result to all Wayland environments.
+- **Developer amendment (2026-11-02, during execution):** an independent
+  helper producer (for example `xclip`, `wl-copy`, or a PowerShell/.NET
+  writer) counts as native verification on Linux X11, Linux Wayland, and
+  Windows when the evidence names the helper and states that it is not a
+  browser or rich editor; browser interoperability on those desktops stays
+  unobserved and is called out.
 - **Required restrictions:** Do not overload `paste()` / `copy()` to return or
   accept HTML. Do not treat ordinary text, file-list, or image-only offers as
   HTML success. Do not bypass OS pasteboard / clipboard authorization. Do not
