@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 12
+- Highest allocated local number: 15
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -178,6 +178,15 @@ A desktop-free test for the Windows unavailable stub used `assert sys.platform !
   - Observed effect: Extra story-branch CI repair between slice-6 Windows evidence-limit publish and tip green; desktop-free suite had encoded a Darwin/non-Windows host assumption
   - Inference: Unavailable-stub / platform-branch tests must force the non-target platform via monkeypatch (or assert exception type only), never require the CI host OS; distinct from stub-message substring coupling (DD-005)
 
+- Execution: SEED-001#portable-text
+  - Timestamp: 2026-11-02T22:40:30+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: run https://github.com/terryyin/clipboard/actions/runs/41471306541 Python 3.10/3.14 windows-latest `tests\test_text_x11.py:31: AttributeError: module 'os' has no attribute 'killpg'` (fixture `monkeypatch.setattr(os, "killpg", …)` without `raising=False`); repair commit c086e20 (fixture `raising=False`, product `_stop_owner` falls back to `proc.kill()`)
+  - Observed effect: One extra story-branch CI repair cycle on slice 4; the product helper would also have raised AttributeError where `os.killpg` is absent
+  - Inference: Same root as the earlier row — a desktop-free test encoded a POSIX host capability; the next slice's delegation brief carried the warning and slice 5 / 6 unit tests had no such failure
+
 ## DD-011 — Stop for authorization before cross-subsystem package split
 When the 250-line refactor check required splitting an oversize module into a package that also moved delivered sibling seams, execution stopped for an explicit developer choice instead of splitting without authority or deferring silently.
 
@@ -206,3 +215,51 @@ cancelled the still-running CI for the superseded implementation SHA.
   - Evidence: commits 237e23d (implementation) then 1b9ed68 (mark slice 1 done); coordinator transcript 0fc04e77… “Slice 1 stayed `planned` under `progress: true`… marking it done while CI keeps observing”; observer event CI_INCOMPLETE cancelled on 237e23d (run 41459230661); coverage success later on 1b9ed68 (run 41459401185)
   - Observed effect: Extra records-only publish before slice 2; cancelled CI on the implementation SHA; ~1 minute between the two commits; later Structure slices proceeded under observation without waiting for tip green
   - Inference: When local proof is the authorized done floor and CI is observation/repair only, publishing Behavior with `progress: true` creates avoidable mid-plan friction; mark done on local proof in the same publish, or treat progress as non-blocking for the next slice without a second commit
+
+## DD-013 — Native probe scaffolding assumptions failed on the first gated run
+New gated probes asserted facts the runner could not supply or used stand-ins
+that did not observe the promise: an Xvfb version floor not readable by
+`Xvfb -version`, a Windows clipboard holder opened with a NULL window (which
+pyperclip's own NULL open shares and closes), and `Get-Clipboard` standing in
+for Notepad. Each cost a full CI round trip although the product passed.
+
+### Occurrences
+- Execution: SEED-001#portable-text
+  - Timestamp: 2026-11-02T23:37:16+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: run 41471306541 (X11 probe all steps ok, wrapper failed `assert env[floor]` on `xvfb_version: null`; repair c086e20 adds `dpkg-query`); run 41483294562 (Windows step 5 `close_ok: false`, held `paste()`/`copy()` succeeded; step 2 both PowerShells report one line; repair 450f786 adds own-window holder with `GetOpenClipboardWindow` evidence and a Notepad `EM_GETLINECOUNT` consumer); run 41484980894 green on both
+  - Observed effect: Slices 4 and 6 each needed one probe-only repair cycle (about 15–25 minutes of CI wait each) before native acceptance; no product code changed for these
+  - Inference: Before the first gated run, check that each asserted floor has a runner-available source (package manager first) and that each stand-in consumer or holder observes the story's own example (here, Notepad and a real ownership hold); slice 4's lesson was carried into slices 5–6 briefs, which then failed only on the Windows-specific holder semantics
+
+## DD-014 — Cancelled CI jobs attributed to supersession before checking runner acquisition
+A failed `CI passed` with cancelled macOS jobs was first reported as
+supersession by the next push; the jobs had zero steps and a GitHub annotation
+"The job was not acquired by Runner of type hosted", which the coordinator
+found only when the same pattern recurred on the next run.
+
+### Occurrences
+- Execution: SEED-001#portable-text
+  - Timestamp: 2026-11-02T23:08:46+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: run 41475927301 (ca8917b, both macOS jobs cancelled, 0 steps, annotation above) first reported as superseded by the 823dcce push; run 41478592764 attempt 1 macOS 3.14 same annotation, rerun with `gh run rerun --failed` → attempt 2 green; correction stated to the developer
+  - Observed effect: One wrong cause stated in a progress report and corrected later; no wrong action followed because the superseded revision changed only planning files
+  - Inference: Classify a cancelled job by its steps / runner / annotations before naming supersession; a zero-step job with that annotation is infrastructure and warrants a rerun of the failed jobs for coverage
+
+## DD-015 — Fresh refactor agent for small CI repairs returned no change
+Delivery required an independent refactor agent before every publication; for
+three small repairs or proof-only changes it reported "none — already clean"
+after reading the same context again.
+
+### Occurrences
+- Execution: SEED-001#portable-text
+  - Timestamp: 2026-11-03T00:07:26+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: refactor agents for slice 3 (60.8k subagent tokens, no edits), slice 4 CI repair c086e20 (47.8k, no edits), bound-clamp repair 43ee728 (50.4k, no edits); agent usage lines in the coordinator transcript
+  - Observed effect: About 160k subagent tokens and several minutes per publication for no code change; other refactor passes in the same execution did make useful edits (owner→function map, shared Linux helper log, docs contradiction)
+  - Inference: A proportionality rule (e.g. coordinator may record "no refactor candidates" for a repair whose diff is a few lines inside one function, or reuse the slice's refactor pass when the repair stays within already-reviewed code) could save cost without losing the passes that found real residue; timestamp is the last occurrence's repair commit 43ee728

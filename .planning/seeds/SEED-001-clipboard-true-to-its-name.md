@@ -194,200 +194,24 @@ probe before building the Linux writers; if no single-type offer serves a
 named file manager, the Linux coverage becomes a scope decision for the
 maintainer instead of a silent reduction.
 
-<a id="portable-text"></a>
+<a id="bounded-x11-text-write"></a>
 
-### Use the text clipboard reliably and diagnose unavailable access
+### Bound the X11 text write for large text on a stalled display
 
-**Identity:** SEED-001#portable-text
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/010-portable-text/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"909f1a736c15214db0489b88ccfe923c709b1caf7ccd2cecd56ca682e0aa82ff","plan":"9ad1b77d74cd6abde7a6c87a114a57a43fa871ba46bbdbeee52a1590494180fd"}}
-```
+**Identity:** SEED-001#bounded-x11-text-write
 
-**Goal:** Existing Python users of `copy(text)` / `paste()` get exact Unicode
-text exchange with independent desktop applications on the supported
-desktops, and a bounded, named failure instead of a silent empty string or
-no-op when the desktop clipboard cannot be reached, so they can trust the
-package's simplest API and recover from session problems without guessing.
-This is the baseline behind the package name; the richer APIs already sit
-beside it.
+**Goal:** Callers of `copy(text)` on Linux X11 get the documented bounded
+`ClipboardContentError` instead of an indefinite hang when the X server stalls
+and the text is larger than a pipe buffer, so SEED-001#portable-text's "never
+an indefinite wait" holds for every text size.
 
-**Scope:**
-
-- *Required behavior.* `copy(text)` replaces the clipboard with exactly
-  `text`, and `paste()` returns exactly the text the clipboard offers, as a
-  `str`: Unicode and emoji, multiline strings, leading/trailing whitespace,
-  and the empty string survive unchanged in both directions, including when
-  the Python process has no UTF-8 locale (launchd, cron, IDE-spawned). Text
-  written stays pasteable after the Python process exits. `paste()` returns
-  `""` for ordinary absence (empty clipboard, or a clipboard with no text
-  representation such as image-only); it never returns `None`. Native line
-  endings pass through untranslated: text copied by a Windows application
-  comes back with `\r\n`, and `paste().splitlines()` is the portable way to
-  split lines.
-- *Diagnosable failure.* Missing helper, no visible desktop session, a
-  display or compositor that no longer answers, denied access, a stalled
-  clipboard owner, and helper or transfer failure raise
-  `ClipboardContentError` naming the cause and the fix where one is known
-  (install hint naming `xclip` / `wl-clipboard`; "no `DISPLAY` or
-  `WAYLAND_DISPLAY`"; the failing helper's message), within a documented
-  bound of seconds, never an indefinite wait, a fabricated `""`, or a silent
-  no-op write. Linux helper exit status and stderr are read, not discarded.
-  Native text the helper returns in a non-UTF-8 declared encoding is decoded
-  by that declaration (X11 `STRING` is Latin-1) or reported as
-  `ClipboardContentError`; `UnicodeDecodeError` never escapes `paste()`.
-- *Required restrictions.* A `str` containing `\x00` raises
-  `ClipboardContentError` **before** the clipboard is replaced: Windows
-  `CF_UNICODETEXT` is NUL-terminated, so the text would be silently
-  truncated (data loss, the shared no-silent-truncation boundary). A `str`
-  that cannot be UTF-8 encoded (lone surrogate) fails the same way before
-  replacing. There is no in-memory fallback presented as the system
-  clipboard; the injection seam used by tests is explicit.
-- *Compatibility preserved.* `copy` / `paste` keep their names, positional
-  signatures, and `str` results; `pyperclip` stays a dependency. Working
-  text access that this story does not own keeps working through pyperclip
-  with only failure translation: WSL (`clip.exe` / PowerShell bridge), a
-  mechanism the caller selected with `pyperclip.set_clipboard`, and X11
-  desktops with only `xsel`, Klipper, or Qt. Those paths carry no new
-  bounded-failure or lifetime promise and are documented as unverified.
-  Non-`str` arguments keep pyperclip's `str()` coercion (`copy(42)` copies
-  `"42"`), as today; see Decisions.
-- *Platform set and selection.* Owned default paths: Windows desktop
-  (`CF_UNICODETEXT`), macOS Aqua (`pbcopy` / `pbpaste` run with a UTF-8
-  locale), Linux X11 (`xclip`, `UTF8_STRING` first), Linux Wayland
-  (`wl-copy` / `wl-paste`, background owner for lifetime, named compositor
-  only). Session selection for text keeps pyperclip's order so no working
-  user changes mechanism: WSL first; then Wayland when `WAYLAND_DISPLAY` is
-  set and both `wl-copy` and `wl-paste` are on `PATH`; otherwise X11 when
-  `DISPLAY` is set.
-- *Proof.* Independent producers and consumers per desktop: X11 and Wayland
-  under the existing gated Xvfb + `xclip` and Sway + `wl-clipboard` jobs
-  (round trip after writer exit, dead `DISPLAY` / stale `WAYLAND_DISPLAY`,
-  helper off `PATH`); Windows under a gated `windows-latest` job with
-  PowerShell `Set-Clipboard` / `Get-Clipboard` (round trip, CRLF, held
-  clipboard); macOS with an owner-desktop probe
-  (`CLIPBOARD_NATIVE_PROBE=1`) using independent `osascript` / `pbpaste`,
-  including a no-locale subprocess. A desktop without that observation is a
-  README evidence limit, not a verified claim. Default pytest stays
-  desktop-free through an explicit text seam.
-- *Scope limits (deferred, not rejected).* Newline normalization on write
-  or read; rejecting `bytes` / `None` / other non-`str` input; PRIMARY
-  selection (SEED-001#primary-selection); clearing other representations
-  (SEED-001#clear-clipboard); waiting for text (SEED-001#wait-for-content);
-  RTF; a macOS AppKit (`pyobjc`) text path; verified support for `xsel`,
-  Klipper, Qt, Cygwin, SSH, containers, headless CI, or remote desktops;
-  persistence across logout or reboot.
-
-**Key examples:**
-
-1. Clipboard holds anything → `copy("  héllo 👋\nline 2 ")` and the script
-   exits → an independent consumer on that desktop (`xclip -o`, `wl-paste`,
-   `Get-Clipboard -Raw`, `pbpaste` in a UTF-8 shell) shows exactly those
-   characters, spaces and newline included; the reverse, an independent
-   producer copying the same text, makes `paste()` return it exactly.
-2. macOS, Python started with no locale variables (as launchd does) →
-   `copy("héllo 👋")` → `pbpaste` in a user terminal shows `héllo 👋`, not
-   `h√©llo üëã`; `paste()` in that process returns `héllo 👋`, not
-   `h?llo ??`.
-3. `copy("")` → `paste()` returns `""` on every supported desktop. Whether
-   other representations remain is platform behavior this story does not
-   promise (Windows and `wl-copy` clear the clipboard; macOS and `xclip`
-   leave an empty text offer).
-4. Clipboard holds `keep` → `copy("a\x00b")` raises `ClipboardContentError`
-   naming the NUL → `paste()` still returns `keep`. Same for `"\ud800"`.
-5. Linux, `DISPLAY=:99` with no server there, `xclip` installed → `paste()`
-   raises `ClipboardContentError` quoting xclip's display failure within the
-   bound, instead of `""`; `copy("x")` raises instead of returning as if
-   written. Same with `WAYLAND_DISPLAY` naming a socket whose compositor is
-   gone.
-6. SSH into Linux with neither `DISPLAY` nor `WAYLAND_DISPLAY` → `paste()`
-   raises `ClipboardContentError` saying no desktop session is visible;
-   with `DISPLAY` set and no `xclip` on `PATH` → the error names `xclip` and
-   its install hint. Neither case returns `""`.
-7. X11 CLIPBOARD owner that never answers → `paste()` raises after the
-   documented bound. Windows clipboard held open by another process past
-   the bound → raises; released within the bound → succeeds as before.
-8. Image-only clipboard → `paste()` returns `""`; `inspect()` reports the
-   image kind. No exception, because text is simply absent.
-9. Windows Notepad copies two lines → `paste()` returns
-   `"line 1\r\nline 2"`; `copy("line 1\nline 2")` pastes into Notepad as
-   two lines.
-10. WSL → `copy` / `paste` keep using the existing Windows bridge; a failing
-    `powershell.exe` raises `ClipboardContentError` rather than returning
-    `""`.
-
-**Investigation (facts, with sources).** pyperclip 1.11.0 (installed; pin
-`>=1.8.2,<2`) runs `xclip` / `xsel` / `wl-copy` / `wl-paste` and discards
-their exit status and stderr, with no timeout, so a dead display yields
-`paste() == ""` and a silent no-op `copy` (source lines 158–236). Its
-Windows path retries `OpenClipboard` for 0.5 s then raises, writes
-`wcslen` characters (truncating at NUL), and `copy("")` empties every
-format (395–462). Its pyobjc path returns `None` for a text-less pasteboard
-(123–126). Observed on this host (macOS 26.6.2 / 25G83, Find pasteboard so
-the live clipboard stayed untouched): with `LC_ALL=C` or an empty
-environment, `pbpaste` turns `héllo 👋 ﾃｽﾄ` into `h\x8ello ?? ???` and
-`pbcopy` stores `h√©llo üëã`; any UTF-8 `LC_ALL`, `LC_CTYPE`, or `LANG`
-restores exact bytes both ways; `pbcopy`/`pbpaste` pass NUL, CRLF, leading
-and trailing whitespace through; an empty `pbcopy` leaves an empty
-`public.utf8-plain-text` offer; a cleared pasteboard reads `""` with exit 0.
-Project tests cover text only through a stubbed `determine_clipboard`; no
-native text proof exists, while the CI already hosts Xvfb + `xclip`,
-Sway + `wl-clipboard`, and a `windows-latest` clipboard session.
-*Hypotheses for planning:* Windows applications deliver `\r\n` and accept
-LF-only writes (settle in the Windows job); `xclip` 0.13 and `wl-paste`
-2.2.1 stderr wording for a dead display is classifiable (settle in the
-Linux jobs); a macOS "Paste from Other Apps" denial may make `pbpaste`
-return `""` with exit 0 (settle only by denying the terminal's permission
-on a macOS 15.4+ desktop; not done here, so denial stays an evidence limit
-if undetectable); `pbcopy` / `pbpaste` behavior in an SSH session without
-WindowServer access is unobserved.
-
-**Considered alternatives.** (a) Keep the bare re-export and document its
-limits: no code risk, but false empties and the macOS locale corruption
-remain, so the purpose fails. (b) Wrap pyperclip only (validate input,
-translate exceptions, check session variables first): fixes NUL, error
-type, and the no-session message, but cannot see helper failure or a dead
-display because pyperclip discards them, and cannot fix the locale without
-mutating process environment. (c) Add `copy_text` / `paste_text` with the
-strong contract beside unchanged `copy` / `paste`: no compatibility risk,
-two text APIs, and the simple API stays untrustworthy. (d) Upstream fixes to
-pyperclip and raise the pin: welcome in parallel, not under this project's
-control. **Recommended:** own the four default text paths in this package,
-reusing its bounded-helper patterns, and delegate everything else to
-pyperclip with failure translation. The decisive challenge is that only this
-option reaches the story's purpose on Linux; its risk, changing mechanism
-for working users, is contained by keeping pyperclip's selection order and
-the delegate fallback. Borrowed mechanism: a stale NFS mount reports
-`ESTALE` rather than an empty directory because the error travels on a
-separate channel from the data; here the helper's exit status and stderr
-are that channel, so empty text and failed access never share the value
-`""`. The analogy breaks where `xclip` exits 1 for both "no owner" and
-"can't open display": classification must read version-dependent stderr
-wording, and unknown wording defaults to failure, not to `""`.
-
-**Architecture.** Text leaves the `__init__` re-export for an owned text
-module with per-platform native modules and an explicit injection seam
-(mirroring `set_html_clipboard_reader`) so default tests stay in-memory;
-the subprocess-stub test is replaced. `ClipboardContentError` grows from
-"rich content" to clipboard content including text; text failures raise it
-with the pyperclip or helper error as `__cause__`, which changes what a
-caller catching `pyperclip.PyperclipException` sees (noted in the README).
-Linux session detection and helper-failure formatting reuse the single
-private desktop module that SEED-001#desktop-helpers introduces when it has
-landed; until then follow its target layout rather than adding a copy. The
-text selection predicate (pyperclip's order) is a third Wayland rule beside
-`paste_html`'s and `paste_files`'; unifying them stays the product decision
-desktop-helpers recorded, not this story's. Writer lifetime on Linux relies
-on the helper's background owner as `copy_image` does; Windows and macOS
-hand data to the system. No ADR store exists in this repository, so no
-Accepted decision was checked.
-
-**Decisions recorded here, reviewable before Take.** Text failures use
-`ClipboardContentError` rather than a new class (one failure type for all
-non-image content, and `copy_html` already raises it for invalid text).
-Non-`str` arguments keep pyperclip's coercion because rejecting them would
-break working call sites; rejecting `bytes` / `None` is a deferred proposal.
-No newline translation on either side. `copy("")` promises only that
-`paste()` then returns `""`.
+**Scope:** Correction of SEED-001#portable-text's owned X11 writer only: feed
+`xclip` its input without a blocking unbounded pipe write, keeping the
+background owner, exact-bytes read-back, stderr quoting and owner cleanup;
+remove the test-only `os.killpg` fallback; make the gated Wayland text wrapper
+fail rather than skip on a missing session or helper. Excludes the same
+pattern in `copy_image` and any change to selection rules.
+[Plan](../slice-plans/012-bounded-x11-text-write/PLAN.md)
 
 <a id="clear-clipboard"></a>
 

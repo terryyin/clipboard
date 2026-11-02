@@ -4,15 +4,19 @@
 Plain ctypes (not ``clipboard``'s reader), run as a separate process. Prints
 JSON: the offered format names/ids, the raw ``HTML Format`` bytes (base64, or
 ``null``) and ``GetClipboardSequenceNumber``; ``open_error`` when the
-clipboard cannot be opened. Reads only: never empties or sets the clipboard.
+clipboard cannot be opened. With ``--text`` it also reports ``text``, the
+``CF_UNICODETEXT`` string up to its NUL (``null`` when not offered). Reads
+only: never empties or sets the clipboard.
 """
 
 import base64
 import ctypes
 import json
+import sys
 import time
 
 HANDLE = ctypes.c_void_p
+CF_UNICODETEXT = 13
 
 
 def main() -> None:
@@ -51,10 +55,19 @@ def main() -> None:
                 raw = base64.b64encode(data).decode("ascii")
             finally:
                 k.GlobalUnlock(handle)
-        seq = u.GetClipboardSequenceNumber()
+        report = {"formats": formats, "html": raw}
+        if "--text" in sys.argv[1:]:
+            report["text"], handle = None, u.GetClipboardData(CF_UNICODETEXT)
+            if handle:
+                pointer = k.GlobalLock(handle)
+                try:
+                    report["text"] = ctypes.wstring_at(pointer)
+                finally:
+                    k.GlobalUnlock(handle)
+        report["seq"] = u.GetClipboardSequenceNumber()
     finally:
         u.CloseClipboard()
-    print(json.dumps({"formats": formats, "html": raw, "seq": seq}))
+    print(json.dumps(report))
 
 
 if __name__ == "__main__":
