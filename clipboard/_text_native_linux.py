@@ -46,8 +46,13 @@ def _text_launch_error(
     return _text_error(desktop, operation, detail)
 
 
-def _remaining(deadline: float) -> float:
-    return max(deadline - time.monotonic(), _MIN_HELPER_TIMEOUT_S)
+def _remaining(deadline: float, bound: float) -> float:
+    """Time left before ``deadline``, never above ``bound`` nor below the floor.
+
+    Clamping to ``bound`` matters: a coarse clock can read the same tick at
+    deadline creation and here, and ``(t + bound) - t`` can round above it.
+    """
+    return max(min(deadline - time.monotonic(), bound), _MIN_HELPER_TIMEOUT_S)
 
 
 def _run_text_helper(
@@ -70,7 +75,7 @@ def _run_text_helper(
             stdin=subprocess.DEVNULL,
             capture_output=True,
             check=False,
-            timeout=_remaining(deadline),
+            timeout=_remaining(deadline, bound),
         )
     except subprocess.TimeoutExpired as exc:
         raise _text_error(

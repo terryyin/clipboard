@@ -104,7 +104,7 @@ def _owner_serves(data: bytes, deadline: float) -> bool:
             stdin=subprocess.DEVNULL,
             capture_output=True,
             check=False,
-            timeout=min(_X11_TEXT_READBACK_TIMEOUT_S, _remaining(deadline)),
+            timeout=_remaining(deadline, _X11_TEXT_READBACK_TIMEOUT_S),
         )
     except (OSError, subprocess.TimeoutExpired):
         return False

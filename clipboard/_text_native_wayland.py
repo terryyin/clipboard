@@ -146,7 +146,9 @@ def _run_wl_copy(cmd: list[str], data: bytes | None) -> None:
         except OSError as exc:
             raise _text_launch_error(_DESKTOP, "write", cmd[0], _PACKAGE, exc) from exc
         try:
-            proc.communicate(input=data, timeout=_remaining(deadline))
+            proc.communicate(
+                input=data, timeout=_remaining(deadline, _WAYLAND_TEXT_WRITE_TIMEOUT_S)
+            )
         except subprocess.TimeoutExpired as exc:
             proc.kill()
             try:

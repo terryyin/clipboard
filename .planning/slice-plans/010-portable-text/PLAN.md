@@ -327,7 +327,7 @@ Postcondition: callers know exactly what is promised and verified where.
   first but still offers `text/plain`. The macOS jobs in runs 41475927301 and
   41478592764 were cancelled because no hosted macOS arm64 runner was
   acquired (GitHub annotation; 0 steps); not a code failure.
-- Slice 6 (in progress, awaiting `native-windows-text`): proof only; no
+- Slice 6: proof only; no
   product change. `scripts/probe_windows_native_text.py` with an
   independent ctypes holder (`scripts/windows_clipboard_holder.py`) and
   consumer (`scripts/windows_clipboard_consumer.py --text`). pyperclip's
@@ -342,6 +342,15 @@ Postcondition: callers know exactly what is promised and verified where.
   observes Notepad itself for example 9. The first holder used
   `OpenClipboard(NULL)`, which pyperclip's own NULL open shares and then
   closes, so the hold never held; the holder now opens with its own window.
+  Second run 41484980894: native-windows-text passed every step. Classic
+  Notepad 10.0.26100.32860 shows the LF-only write as two lines (its Edit
+  buffer holds `\r\n`), settling example 9 without newline translation;
+  the held clipboard raised after about 0.5 s with `PyperclipWindowsException`
+  and recovered. The same run exposed float rounding in the Linux text
+  deadline (`(t + 10.0) - t > 10.0` on Windows' coarse clock), repaired by
+  clamping `_remaining(deadline, bound)` to the bound
+  (`tests/test_text_native_linux_bound.py`). macOS jobs again were not
+  acquired by a hosted runner.
 
 ## Story obligations
 
