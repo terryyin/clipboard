@@ -76,8 +76,8 @@ jobs:
           version: '0.11.21'
           python-version: ${{ matrix.python }}
           enable-cache: true
-      - run: uv sync --locked
-      - run: uv run --locked pytest
+      - run: uv sync --locked --extra images
+      - run: uv run --locked --extra images pytest
 
   ci-passed:
     name: CI passed

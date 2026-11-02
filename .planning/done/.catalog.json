@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "fileName": "SEED-001_read-images.json",
+      "identity": "SEED-001#read-images",
+      "completedAt": "2026-11-02T04:13:59.485Z",
+      "blob": "2952039f60cfea999680b591fe6a3cd0f516d9a2"
+    }
+  ],
+  "unreadable": []
+}

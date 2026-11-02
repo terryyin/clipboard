@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#read-images",
+  "title": "Read images copied by desktop applications",
+  "completedAt": "2026-11-02T04:13:59.485Z",
+  "developer": "Terry Yin",
+  "agent": "Akiho-chan",
+  "host": "cursor",
+  "model": "auto"
+}
