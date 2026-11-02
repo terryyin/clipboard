@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-images = ["pillow>=10,<12"]
+images = ["pillow>=10,<13"]
 
 [project.urls]
 Homepage = "https://github.com/terryyin/clipboard"
