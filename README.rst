@@ -102,9 +102,19 @@ Evidence / verified platforms:
   ``compositor_generalization: false`` (exit 2) rather than silent success.
   Re-run that gated Wayland dual-consumer probe on an owner-held Wayland
   session to replace this limit for that compositor only.
-* Windows desktop HTML writes also remain unverified for now (see later
-  probe notes). Image reads on remaining desktops remain supported targets,
-  unverified pending ``SEED-001#read-images-native``.
+* Windows desktop HTML + Unicode text dual-offer writes via ``copy_html``
+  (interoperable ``HTML Format`` with UTF-8 fragment/context byte offsets for
+  non-ASCII content) are an explicit **evidence limit** on this execution
+  host: no usable Windows desktop session was available (Darwin checkout).
+  Do not treat Windows HTML write as verified.
+  ``scripts/probe_windows_native_copy_html.py`` records
+  ``evidence_limit`` / ``verified: false`` /
+  ``non_ascii_case_required_for_verification: true`` (exit 2) rather than
+  silent success. Re-run that gated Windows dual-consumer probe on an
+  owner-held Windows desktop to replace this limit, including a non-ASCII
+  fragment/context case.
+* Image reads on remaining desktops remain supported targets, unverified
+  pending ``SEED-001#read-images-native``.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard.

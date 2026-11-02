@@ -154,7 +154,7 @@ limit.
 
 ### 6. Early probe — Windows desktop HTML Format + Unicode text
 Type: Behavior
-Status: planned
+Status: done
 Proof: On a usable Windows desktop session, gated probe publishes
 interoperable `HTML Format` (UTF-8 fragment/context byte offsets) plus Unicode
 text; non-ASCII fragment/context case included; writer exits; independent rich
@@ -235,6 +235,11 @@ envelopes/helpers; evidence wording is honest.
   `scripts/probe_linux_wayland_native_copy_html.py` refuses verified.
 - Accepted proof (slice 5): Wayland probe exit 2 / evidence_limit /
   compositor_generalization false.
+- Slice 6: No Windows desktop session → explicit Windows HTML Format +
+  Unicode text evidence limit; non-ASCII offset case required for future
+  verification; gated `scripts/probe_windows_native_copy_html.py`.
+- Accepted proof (slice 6): Windows probe exit 2 / evidence_limit /
+  verified false / non_ascii_case_required_for_verification true.
 
 ## Concern evidence
 
