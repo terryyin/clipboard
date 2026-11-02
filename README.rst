@@ -2,7 +2,9 @@ clipboard
 =========
 
 A cross platform clipboard library for Python (Windows, macOS, Linux). Text
-``copy`` / ``paste`` re-export pyperclip; richer APIs sit beside them.
+``copy`` / ``paste`` follow this package's own contract: it owns the macOS
+and Linux helper paths, uses pyperclip's Windows backend, and delegates other
+environments to pyperclip; richer APIs sit beside them.
 
 Usage
 -----
@@ -14,6 +16,93 @@ Text (no optional extras):
    import clipboard
    clipboard.copy("abc")
    text = clipboard.paste()
+
+``copy(text)`` replaces the clipboard with exactly ``text``; ``paste()``
+returns exactly the text the clipboard offers, as a ``str``. Unicode and emoji,
+multiline strings, leading/trailing whitespace, and ``""`` survive unchanged
+in both directions, including on macOS when the Python process has no UTF-8
+locale (launchd, cron, IDE-spawned). Text written stays pasteable after the
+Python process exits: on Linux a background helper (``xclip`` / ``wl-copy``)
+keeps owning the selection, and Windows and macOS hand the text to the system;
+delegated paths (below) carry no lifetime promise. Persistence across logout
+or reboot is not promised.
+
+``paste()`` returns ``""`` for ordinary absence (an empty clipboard, or one
+with no text representation such as image-only); it never returns ``None``.
+Native line endings pass through untranslated in both directions: text copied
+by a Windows application comes back with ``\r\n``, so use
+``paste().splitlines()`` as the portable way to split lines. ``copy("")``
+promises only that ``paste()`` then returns ``""``; whether other
+representations remain is platform behavior (Windows and ``wl-copy --clear``
+empty the clipboard; macOS and ``xclip`` leave an empty text offer).
+Non-``str`` arguments keep pyperclip's ``str()`` coercion: ``copy(42)``
+copies ``"42"``.
+
+A ``str`` containing ``"\x00"`` (Windows ``CF_UNICODETEXT`` would silently
+truncate it) or one that cannot be UTF-8 encoded (a lone surrogate such as
+``"\ud800"``) raises ``clipboard.ClipboardContentError`` **before** the
+clipboard is replaced. Every other text failure also raises
+``ClipboardContentError`` naming the cause, never a fabricated ``""`` or a
+silent no-op write; when an underlying helper or pyperclip error exists it is
+the exception's ``__cause__``:
+
+* missing helper: the message names ``xclip`` (X11) / ``wl-clipboard``
+  (Wayland) with an install hint;
+* no visible desktop session: Linux with neither ``DISPLAY`` nor
+  ``WAYLAND_DISPLAY`` set;
+* a display or compositor that no longer answers (a dead ``DISPLAY``, a
+  stale ``WAYLAND_DISPLAY``), quoting the helper's own message;
+* a stalled clipboard owner or a clipboard held by another process;
+* helper exit failure, undecodable helper output, or another transfer
+  failure.
+
+Bounds: on Linux each ``paste()`` and each ``copy()`` shares one 10 s bound
+across its helper runs (an X11 ``copy()`` returns only once the new
+background owner serves exactly the written bytes); on macOS each
+``pbcopy`` / ``pbpaste`` run is bounded at 15 s; on Windows pyperclip retries
+``OpenClipboard`` for about 0.5 s while another process holds the clipboard
+and then raises (no other bound is added there). Delegated paths carry no
+bound promise.
+
+The default backend is chosen per call, in pyperclip's order, so no working
+user changes mechanism (except macOS pyobjc users, below):
+
+* a mechanism already resolved in pyperclip (selected with
+  ``pyperclip.set_clipboard``, or by earlier direct ``pyperclip.copy`` /
+  ``paste`` use in the process) is used through pyperclip;
+* Windows: pyperclip's ``CF_UNICODETEXT`` backend (ctypes);
+* macOS Aqua (owned): ``pbcopy`` / ``pbpaste`` run with ``LC_ALL=en_US.UTF-8``
+  in the helper's environment (the process environment is not changed).
+  macOS users with pyobjc installed now go through ``pbcopy`` / ``pbpaste``
+  rather than pyperclip's AppKit path;
+* Linux under WSL (``/proc/version`` mentions ``microsoft``): pyperclip's
+  ``clip.exe`` / PowerShell bridge;
+* Linux Wayland (owned) when ``WAYLAND_DISPLAY`` is set and both ``wl-copy``
+  and ``wl-paste`` are on ``PATH``: wl-clipboard, reading the first offered
+  text type (``text/plain;charset=utf-8`` first) and writing
+  ``text/plain;charset=utf-8``;
+* otherwise Linux X11 (owned) when ``DISPLAY`` is set and ``xclip`` is on
+  ``PATH``: the CLIPBOARD selection, ``UTF8_STRING`` first, then ``STRING``
+  decoded as Latin-1;
+* X11 with only ``xsel``, Klipper, or Qt, and other platforms: pyperclip.
+
+Delegated paths (an already resolved pyperclip mechanism, WSL, X11 without
+``xclip``, other platforms) get failure translation only — pyperclip errors,
+a missing executable, or a non-``str`` result become
+``ClipboardContentError``, and a ``None`` result becomes ``""`` — and are
+unverified (see Evidence).
+
+**Compatibility note:** ``copy`` / ``paste`` no longer let
+``pyperclip.PyperclipException`` (or ``PyperclipWindowsException``) escape. A
+caller catching ``pyperclip.PyperclipException`` must catch
+``clipboard.ClipboardContentError`` instead; the pyperclip exception is its
+``__cause__``.
+
+For desktop-free tests, inject fakes with
+``clipboard.set_text_clipboard_writer(writer)`` and
+``clipboard.set_text_clipboard_reader(reader)``; pass ``None`` to restore the
+default. A writer receives the already validated ``str``; a reader takes no
+arguments and returns a ``str`` (or ``None`` when no text is offered).
 
 Image read/write needs the optional ``images`` extra (Pillow):
 
@@ -165,9 +254,13 @@ headless CI are not additional guaranteed desktops.
 Installation
 ------------
 
-``python -m pip install clipboard`` (Python 3.10+). Text needs a working
-desktop clipboard backend on Linux; see
-`pyperclip <https://pyperclip.readthedocs.io/>`_. Images:
+``python -m pip install clipboard`` (Python 3.10+). Text needs nothing extra
+on Windows or macOS. On Linux text needs a desktop session and a helper on
+``PATH``: ``xclip`` for X11 (for example ``apt install xclip``) or
+``wl-clipboard`` (``wl-copy`` and ``wl-paste``) for Wayland (for example
+``apt install wl-clipboard``); without ``xclip``, an X11 session may still
+use pyperclip's ``xsel`` / Klipper / Qt fallbacks (see
+`pyperclip <https://pyperclip.readthedocs.io/>`_; unverified). Images:
 ``python -m pip install 'clipboard[images]'``. ``copy_html``, ``paste_html``,
 ``paste_files``, and ``inspect`` do **not** need that extra.
 
@@ -199,6 +292,67 @@ or display raises ``ClipboardContentError``.
 Evidence / verified platforms (native probes gated via
 ``CLIPBOARD_NATIVE_PROBE=1``; default tests are in-memory):
 
+* Text ``copy`` / ``paste``, each desktop proved with independent producers
+  and consumers in other processes and a ``copy()`` in a child Python that
+  exits before the consumer reads (sample ``"  héllo 👋 ﾃｽﾄ\nline 2 "``):
+
+  * macOS Aqua **verified** on the owner's desktop by
+    ``scripts/probe_macos_native_text.py`` (wrapper
+    ``tests/test_text_native_macos.py``; independent ``osascript`` and
+    ``pbpaste`` producers / consumers): exact round trips both ways, a child
+    Python with an empty environment copied and pasted exactly, ``copy("")``
+    read ``""``, a refused ``copy("a\x00b")`` left the prior text readable,
+    and cleared and image-only pasteboards read ``""``. Floors: macOS 26.6.2
+    (build 25G83) / Darwin 25.6.0, arm64, Python 3.13.17. Evidence limits: a
+    macOS "Paste from Other Apps" privacy denial is unobserved and may make
+    ``pbpaste`` return ``""`` with exit 0, so ``paste()`` could return
+    ``""`` rather than raise; ``pbcopy`` / ``pbpaste`` in an SSH session into
+    macOS (no WindowServer access) are unobserved.
+  * Linux X11 **verified** under gated GitHub Actions job
+    ``native-linux-x11-text`` (runs 41471306541 and 41473939537; Ubuntu
+    26.04.1, Xvfb ``2:21.1.22-1ubuntu1.3``, xclip 0.13, Python 3.13.14;
+    independent ``xclip -i`` producers and ``xclip -o`` consumer): exact
+    round trips, ``copy("")`` read ``""``, a ``STRING``-only owner read as
+    Latin-1, image-only and unowned clipboards read ``""``, a dead display made both operations raise in under 0.1 s quoting
+    ``Error: Can't open display``, and ``PATH`` without ``xclip`` gave the
+    install hint. A stalled owner is proved by desktop-free tests only.
+  * Linux Wayland **verified only** under gated job
+    ``native-linux-wayland-text`` (run 41478592764) with the named compositor
+    **Sway** 1.11 and ``wl-clipboard`` 2.2.1 (Ubuntu 26.04.1, Python 3.13.14;
+    independent ``wl-copy`` producers and ``wl-paste`` consumer): exact round
+    trips, ``copy("")`` read ``""``, image-only and cleared selections read
+    ``""``, a stale ``WAYLAND_DISPLAY`` made both
+    operations raise quoting ``Failed to connect to a Wayland server``, and
+    ``PATH`` without ``wl-paste`` gave the install hint. Other Wayland
+    compositors are unverified.
+  * Windows **verified** under gated job ``native-windows-text`` (run
+    41484980894; Windows Server 2025 Datacenter 10.0.26100, Windows PowerShell
+    5.1.26100 and PowerShell 7.6.7, Python 3.13.16, pyperclip 1.11.0;
+    independent PowerShell ``Set-Clipboard`` / ``Get-Clipboard``, .NET
+    ``SetImage``, ctypes reader, and classic Notepad 10.0.26100.32860): a
+    ``Set-Clipboard`` producer of ``"  héllo 👋 ﾃｽﾄ\r\nline 2 "`` made
+    ``paste()`` return it exactly with ``\r\n``; a child's
+    ``copy("héllo 👋\nline 2")`` exited and ``Get-Clipboard -Raw`` read it
+    exactly, stored LF-only (no translation); Notepad pastes that LF-only
+    text as two lines, while array-form ``Get-Clipboard`` (both PowerShells)
+    splits only on CRLF and reports it as one line;
+    ``copy("")`` left ``Get-Clipboard`` empty and ``paste()`` ``""``;
+    image-only read ``""`` with ``inspect()`` kinds ``image``; a clipboard
+    held open by another process made ``paste()`` raise
+    ``ClipboardContentError`` (cause ``PyperclipWindowsException``) after
+    about 0.5 s, and it succeeded after release.
+
+  The Linux and Windows venues are headless CI runner sessions, not
+  owner-held desktops. Unverified: delegated paths (``xsel``, Klipper, Qt,
+  WSL, an already resolved pyperclip mechanism), Cygwin, SSH sessions,
+  containers, headless environments other than those jobs, and remote
+  desktops. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` and
+  ``tests/test_text_native_macos.py``,
+  ``tests/test_text_native_linux_x11.py`` (under ``xvfb-run -a``),
+  ``tests/test_text_native_linux_wayland.py`` (inside Sway), or
+  ``tests/test_text_native_windows.py``; each wrapper runs its
+  ``scripts/probe_*_native_text.py`` probe and fails rather than skips on an
+  evidence limit.
 * Image **reads**: macOS Aqua verified (``scripts/probe_macos_native_paste_image.py``).
   Windows / X11 / Wayland reads remain evidence-limited (no usable session in
   that verification); do not generalize Wayland from X11 or an unstated compositor.
@@ -316,7 +470,8 @@ targets. Windows: ``uv sync --locked``, ``uv run --locked --extra images
 pytest``, ``uv run --locked ruff check .``. Do not install into system Python.
 GHA covers Nix plus Python 3.10–3.14, installs wheel/sdist outside the tree,
 and uses an in-memory clipboard (no desktop). X11/Wayland image-write probes
-and the X11, Wayland, and Windows ``paste_html`` probes are separate gated jobs.
+and the X11, Wayland, and Windows ``paste_html`` and text probes are separate
+gated jobs.
 
 Publishing
 ----------

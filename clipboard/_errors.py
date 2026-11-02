@@ -13,7 +13,12 @@ class ClipboardImageError(Exception):
 
 
 class ClipboardContentError(Exception):
-    """Clipboard content operation failed (text, HTML, file-list, inspect, …)."""
+    """Clipboard content operation failed (text, HTML, file-list, inspect, …).
+
+    Raised instead of ordinary absence (``""`` / ``None``) or a silent no-op;
+    the underlying helper or pyperclip error, when there is one, is
+    ``__cause__``.
+    """
 
 
 def _call_content_backend(operation: str, backend: Callable[..., _T], *args) -> _T:

@@ -224,7 +224,7 @@ desktop. Postcondition: seed examples 1, 3, 7, 8, 9 on Windows.
 
 ### 7. Document the text contract and its evidence
 Type: Behavior
-Status: planned
+Status: done
 Proof: README Usage states the text contract (exact text, `""` absence,
 never `None`, untranslated line endings with `splitlines()`, NUL and
 unencodable refusal before replacing, `ClipboardContentError` with bounds and
@@ -352,6 +352,14 @@ Postcondition: callers know exactly what is promised and verified where.
   (`tests/test_text_native_linux_bound.py`). macOS jobs again were not
   acquired by a hosted runner.
   Run 41488138280 on 43ee728 passed every job, macOS included.
+- Slice 7: README Usage › Text, Installation and Evidence, AGENTS.md, the
+  `ClipboardContentError` / `paste` docstrings and the North Star text
+  evidence paragraph state the contract and per-desktop evidence; Windows is
+  described as pyperclip's `CF_UNICODETEXT` backend with a bound, separate
+  from the delegated (translation-only, unverified) paths. The North Star
+  topic title and opening sentence still say "text re-exports" (direction
+  wording, left for wrap-up). `make check` 432 passed / 20 skipped;
+  `make build` twine check passed.
 
 ## Story obligations
 

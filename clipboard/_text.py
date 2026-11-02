@@ -146,10 +146,11 @@ def copy(text) -> None:
 
 
 def paste() -> str:
-    """Return the clipboard's text as ``str`` (``""`` when no text is offered).
+    """Return the clipboard's text as ``str`` (``""`` when no text is offered,
+    never ``None``).
 
-    Line endings are returned untranslated. Backend failures raise
-    ``ClipboardContentError``.
+    Line endings are returned untranslated (``splitlines()`` splits portably).
+    Backend failures raise ``ClipboardContentError``.
     """
     value = _call_content_backend("text read", _text_clipboard_reader)
     if value is None:
