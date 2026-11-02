@@ -14,9 +14,12 @@ failure model. In-memory fakes prove the contract in CI; native
 interoperability needs independent producers and documented evidence limits.
 
 **Evidence:** SEED-001 Shared Boundaries; delivered `paste_image` /
-`clipboard[images]` contract (2026-11-02); domain research reuse of Pillow
-`ImageGrab.grabclipboard`.
+`clipboard[images]` contract (2026-11-02); delivered `copy_image` write path
+with macOS Aqua verified, Linux X11 (Xvfb CI) and Wayland (Sway CI) writer-exit
+proofs, Windows write evidence-limited (2026-11-02); domain research reuse of
+Pillow `ImageGrab.grabclipboard`.
 
-**Affects:** Later image write and HTML stories should follow the same
-explicit-API + optional-extra shape unless evidence forces a revision;
-`SEED-001#read-images-native` continues desktop verification under that shape.
+**Affects:** Later HTML and file stories should follow the same explicit-API +
+optional-extra shape unless evidence forces a revision;
+`SEED-001#read-images-native` continues desktop read verification under that
+shape.
