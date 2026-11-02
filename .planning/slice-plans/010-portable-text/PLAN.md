@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#portable-text
 **Source:** [Use the text clipboard reliably and diagnose unavailable access](../../seeds/SEED-001-clipboard-true-to-its-name.md#portable-text)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -101,7 +102,7 @@ claims need an independent producer or consumer in another process.
 
 ### 1. Owned text contract behind an explicit seam
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests through public `clipboard.copy` / `clipboard.paste`
 with a fake writer and reader injected by new `clipboard.set_text_clipboard_writer`
 / `clipboard.set_text_clipboard_reader`: Unicode, emoji, whitespace,
@@ -254,7 +255,17 @@ Postcondition: callers know exactly what is promised and verified where.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: pyperclip 1.11.0 coerces every argument with plain `str()` and
+  never rejects a type (older allowed versions did), so `clipboard/_text.py`
+  owns `str()` coercion above the seam; the default backend reads
+  `pyperclip.copy` / `pyperclip.paste` at call time because pyperclip swaps
+  those globals on first use. A reader returning a non-`str` (e.g. `bytes`)
+  raises `ClipboardContentError`.
+- Slice 1 accepted proof: `tests/test_clipboard.py` seam, coercion,
+  fail-before-write, `None` → `""`, `__cause__` translation, restore, and
+  lazy-pyperclip subprocess tests; `nix develop -c make check` 335 passed /
+  16 skipped; `nix develop -c make test-package` pass. README line 5 and
+  AGENTS.md still say text re-exports pyperclip (slice 7).
 
 ## Plan review
 
