@@ -15,8 +15,9 @@ interoperability needs independent producers and documented evidence limits.
 
 **Evidence:** SEED-001 Shared Boundaries; delivered `paste_image` /
 `clipboard[images]` contract (2026-11-02); domain research reuse of Pillow
-`ImageGrab.grabclipboard`.
+`ImageGrab.grabclipboard`; macOS Aqua independently verified; Windows,
+X11+`xclip`, and Wayland+`wl-paste` documented with explicit evidence limits
+when no usable native session was available (README Evidence).
 
 **Affects:** Later image write and HTML stories should follow the same
-explicit-API + optional-extra shape unless evidence forces a revision;
-`SEED-001#read-images-native` continues desktop verification under that shape.
+explicit-API + optional-extra shape unless evidence forces a revision.

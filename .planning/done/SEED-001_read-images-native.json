@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#read-images-native",
+  "title": "Native image-read verification on Windows and Linux",
+  "completedAt": "2026-11-02T05:05:16.297Z",
+  "developer": "Terry Yin",
+  "agent": "Yua-chan",
+  "host": "cursor",
+  "model": "auto"
+}

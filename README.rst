@@ -55,11 +55,18 @@ Windows and macOS need a usable desktop clipboard / pasteboard session; image
 reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
 Evidence / verified platforms: macOS Aqua pasteboard image reads have been
-verified with an independent producer in this project's native probe work.
-Windows desktop, Linux X11 with ``xclip``, and Linux Wayland with ``wl-paste``
-remain supported targets, unverified pending
-``SEED-001#read-images-native``. Default automated tests use an in-memory
-backend and do not exercise a real desktop clipboard.
+verified with an independent producer via the gated native probe
+(``CLIPBOARD_NATIVE_PROBE=1`` /
+``scripts/probe_macos_native_paste_image.py``). Windows desktop, Linux
+X11 + ``xclip``, and Linux Wayland + ``wl-paste`` remain supported
+targets but are each evidence-limited (unverified / unsupported for
+native proof): no usable desktop clipboard session for those
+environments was available during this verification. Do not treat any
+of them as natively verified from this work, and do not generalize a
+Wayland claim from X11 or an unstated compositor. Default automated
+tests use an in-memory backend and do not exercise a real desktop
+clipboard; native probes stay explicitly gated and are not part of the
+default suite.
 
 Development
 -----------
