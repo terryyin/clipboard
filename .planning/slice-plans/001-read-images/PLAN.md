@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#read-images
 **Source:** [Read images copied by desktop applications](../../seeds/SEED-001-clipboard-true-to-its-name.md#read-images)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -60,7 +61,7 @@ producer; same-library round-trips alone do not establish interoperability.
 
 ### 1. Optional images extra and explicit `paste_image` contract
 Type: Behavior
-Status: planned
+Status: done
 Proof: With `clipboard[images]` installable from the project metadata, a
 subprocess (or equivalent) that stubs the image backend: text-only →
 `paste_image()` is `None` and `paste()` still returns text; stubbed raster →
@@ -140,7 +141,10 @@ from a single Wayland result.
 
 ## Learnings
 
-(none yet)
+- Slice 1: Default `ImageGrab.grabclipboard` stays behind `set_image_grabclipboard`
+  so CI never needs a pasteboard. Non-`Image` backend results currently normalize
+  to `None` (prepares slice 2; not yet proved with a filename-list open spy).
+- Accepted proof (slice 1): `nix develop -c uv run --locked --extra images pytest tests/test_paste_image.py tests/test_clipboard.py -v` — pass; also `nix develop -c make check` — pass (16 tests).
 
 ## Concern evidence
 
@@ -150,3 +154,77 @@ from a single Wayland result.
   requiring a refinement pass within this outcome.
 - Remaining slice-specific concerns: **none** beyond the early-probe-bounded
   native premise in the Decisive premises table (slices 5–6).
+
+## Story obligations
+
+### X14. WSL, SSH, containers, and headless CI are not guaranteed desktops
+Reported: slice 1 — "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Story clause: "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Disposition: excluded "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Commitment: 14
+
+### X19.1. Animation deferred
+Reported: slice 1 — "Out of scope / deferred: Animation."
+Story clause: "Animation"
+Disposition: excluded "Animation"
+Commitment: 19.1
+
+### X19.2. Screenshot capture deferred
+Reported: slice 1 — "Out of scope / deferred: Screenshot capture."
+Story clause: "screenshot capture"
+Disposition: excluded "screenshot capture"
+Commitment: 19.2
+
+### X19.3. Image writing deferred
+Reported: slice 1 — "Out of scope / deferred: Image writing."
+Story clause: "image writing"
+Disposition: excluded "image writing"
+Commitment: 19.3
+
+### X19.4. Automatic URL fetch deferred
+Reported: slice 1 — "Out of scope / deferred: Automatic URL fetch."
+Story clause: "automatic URL fetch"
+Disposition: excluded "automatic URL fetch"
+Commitment: 19.4
+
+### X19.5. Opening file-manager references deferred
+Reported: slice 1 — "Out of scope / deferred: Opening file-manager references."
+Story clause: "opening file-manager references"
+Disposition: excluded "opening file-manager references"
+Commitment: 19.5
+
+### X19.6. RTF deferred
+Reported: slice 1 — "Out of scope / deferred: RTF."
+Story clause: "RTF"
+Disposition: excluded "RTF"
+Commitment: 19.6
+
+### X19.7. Arbitrary typed bytes deferred
+Reported: slice 1 — "Out of scope / deferred: Arbitrary typed bytes."
+Story clause: "arbitrary typed bytes"
+Disposition: excluded "arbitrary typed bytes"
+Commitment: 19.7
+
+### X19.8. History deferred
+Reported: slice 1 — "Out of scope / deferred: History."
+Story clause: "history"
+Disposition: excluded "history"
+Commitment: 19.8
+
+### X19.9. Cloud sync deferred
+Reported: slice 1 — "Out of scope / deferred: Cloud sync."
+Story clause: "cloud sync"
+Disposition: excluded "cloud sync"
+Commitment: 19.9
+
+### X19.10. PNG-bytes-only APIs deferred
+Reported: slice 1 — "Out of scope / deferred: PNG-bytes-only APIs."
+Story clause: "PNG-bytes-only APIs"
+Disposition: excluded "PNG-bytes-only APIs"
+Commitment: 19.10
+
+### X19.11. Library-owned non-Pillow buffers deferred
+Reported: slice 1 — "Out of scope / deferred: Library-owned non-Pillow buffers."
+Story clause: "library-owned non-Pillow buffers"
+Disposition: excluded "library-owned non-Pillow buffers"
+Commitment: 19.11

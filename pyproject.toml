@@ -27,6 +27,9 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+[project.optional-dependencies]
+images = ["pillow>=10,<12"]
+
 [project.urls]
 Homepage = "https://github.com/terryyin/clipboard"
 Issues = "https://github.com/terryyin/clipboard/issues"

@@ -19,7 +19,7 @@ format:
 	uv run --locked ruff format .
 
 tests:
-	uv run --locked pytest
+	uv run --locked --extra images pytest
 
 build:
 	rm -rf dist
