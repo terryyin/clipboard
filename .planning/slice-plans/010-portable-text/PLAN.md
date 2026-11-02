@@ -141,7 +141,7 @@ on its bridge, and each desktop has a named owner for slices 3–5.
 
 ### 3. macOS Aqua owned path and local probe
 Type: Behavior
-Status: planned
+Status: done
 Proof: default Darwin reader / writer run `pbpaste` / `pbcopy` with
 `LC_ALL=en_US.UTF-8` on the child environment and a bounded timeout (reader
 15 s as `_offer_macos`), classify a non-zero exit or timeout as
@@ -278,6 +278,17 @@ Postcondition: callers know exactly what is promised and verified where.
   `_owned_text_path_pending` until slices 3–5 (G1); the story branch must not
   land before then. Proof: `tests/test_text_session.py`,
   `tests/test_text_dispatch.py`; `make check` 355 passed / 16 skipped.
+- Slice 3: `clipboard/_text_native_macos.py` owns macOS text (pbcopy /
+  pbpaste, child env plus `LC_ALL=en_US.UTF-8`, 15 s bounds, strict UTF-8
+  decode). `scripts/probe_macos_native_text.py` (wrapper
+  `tests/test_text_native_macos.py`) passed on macOS 26.6.2 / 25G83 / Darwin
+  25.6.0 / arm64 / Python 3.13.17 with no evidence limits; removing `LC_ALL`
+  made the no-locale steps fail. Probe learnings: AppleScript `the clipboard`
+  coerces LF to CR, so exactness is judged on `the clipboard as «class
+  utf8»`; Python's PEP 538 injects `LC_CTYPE=C.UTF-8` into a child started
+  with `env={}`, so a no-locale probe must drop `LANG` / `LC_*` before
+  importing `clipboard`. The macOS denial and SSH cases stay unobserved.
+  `make check` 368 passed / 17 skipped.
 
 ## Story obligations
 

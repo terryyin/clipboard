@@ -17,7 +17,7 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 1c.2 | Multiline strings survive unchanged in both directions | slice 7 | |
 | 1c.3 | Leading and trailing whitespace survives unchanged in both directions | slice 7 | |
 | 1c.4 | The empty string survives in both directions (per D4: `paste()` then returns `""`) | slice 7 | |
-| 1d | 1c holds when the Python process has no UTF-8 locale (launchd, cron, IDE-spawned) | slice 3 | |
+| 1d | 1c holds when the Python process has no UTF-8 locale (launchd, cron, IDE-spawned) | slice 3 | observed: observed: scripts/probe_macos_native_text.py steps 2_empty_env_child_copy_to_independent_consumers and 3_empty_env_child_paste exact (macOS 26.6.2 25G83 arm64, 2026-11-02); mutation without LC_ALL turned both into evidence limits |
 | 1e | Text written stays pasteable after the Python process exits (Linux via helper background owner; delegated paths carry no lifetime promise) | slice 7 | |
 | 1f | `paste()` returns `""` for ordinary absence: empty clipboard or no text representation (image-only) | slice 6 | |
 | 1g | `paste()` never returns `None` | slice 1 | observed: observed: tests/test_clipboard.py test_paste_returns_empty_string_when_reader_offers_no_text (reader None → "" str) |
@@ -60,7 +60,7 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 4e | Non-`str` arguments keep pyperclip's `str()` coercion (`copy(42)` copies `"42"`) | slice 1 | observed: observed: tests/test_clipboard.py test_copy_coerces_non_str_like_pyperclip (42 → writer gets "42") |
 | 4f | README notes that a caller catching `pyperclip.PyperclipException` now sees a change | slice 7 | |
 | 5a.1 | Owned default path: Windows desktop (`CF_UNICODETEXT`) | slice 6 | |
-| 5a.2 | Owned default path: macOS Aqua (`pbcopy` / `pbpaste` with a UTF-8 locale) | slice 3 | |
+| 5a.2 | Owned default path: macOS Aqua (`pbcopy` / `pbpaste` with a UTF-8 locale) | slice 3 | observed: observed: clipboard/_text_native_macos.py pbcopy/pbpaste with LC_ALL=en_US.UTF-8, 15 s bounds; tests/test_text_macos.py |
 | 5a.3 | Owned default path: Linux X11 (`xclip`, `UTF8_STRING` first) | slice 4 | |
 | 5a.4 | Owned default path: Linux Wayland (`wl-copy` / `wl-paste`, background owner), named compositor only | slice 5 | |
 | 5b | Session selection keeps pyperclip's order so no working user changes mechanism | slice 2 | observed: observed: clipboard/_desktop_text.py _text_session_owner mirrors pyperclip 1.11.0 determine_clipboard lines 497–565; tests/test_text_session.py test_session_selects_pyperclip_order_owner |
@@ -75,17 +75,17 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 6b.1 | Round trip | slice 6 | |
 | 6b.2 | CRLF | slice 6 | |
 | 6b.3 | Held clipboard | slice 6 | |
-| 6c | macOS proven with an owner-desktop probe (`CLIPBOARD_NATIVE_PROBE=1`) using independent `osascript` / `pbpaste` | slice 3 | |
-| 6c.1 | The macOS probe includes a no-locale subprocess | slice 3 | |
+| 6c | macOS proven with an owner-desktop probe (`CLIPBOARD_NATIVE_PROBE=1`) using independent `osascript` / `pbpaste` | slice 3 | observed: observed: tests/test_text_native_macos.py wrapping scripts/probe_macos_native_text.py (CLIPBOARD_NATIVE_PROBE=1, osascript producer/consumer and independent pbpaste), 1 passed, evidence_limits [] |
+| 6c.1 | The macOS probe includes a no-locale subprocess | slice 3 | observed: observed: scripts/probe_macos_native_text.py _empty_env_child (env={}, PEP 538 LC_CTYPE removed before import), steps 2 and 3 |
 | 6d | A desktop without that observation is a README evidence limit, not a verified claim | slice 7 | |
 | 6e | Default pytest stays desktop-free through an explicit text seam | slice 1 | observed: observed: make check 335 passed / 16 skipped desktop-free; in-process text tests use tests/conftest.py fake_text_clipboard |
 | E1a | `copy("  héllo 👋\nline 2 ")` then exit → independent consumer shows exactly those characters, spaces and newline | slice 7 | |
 | E1b | Independent producer copies the same text → `paste()` returns it exactly | slice 7 | |
-| E2a | macOS no-locale process `copy("héllo 👋")` → `pbpaste` in user terminal shows `héllo 👋` | slice 3 | |
-| E2b | Same no-locale process → `paste()` returns `héllo 👋` | slice 3 | |
+| E2a | macOS no-locale process `copy("héllo 👋")` → `pbpaste` in user terminal shows `héllo 👋` | slice 3 | observed: observed: scripts/probe_macos_native_text.py step 2: empty-env child copy → /usr/bin/pbpaste under LANG=en_US.UTF-8 bytes equal expected UTF-8 |
+| E2b | Same no-locale process → `paste()` returns `héllo 👋` | slice 3 | observed: observed: scripts/probe_macos_native_text.py step 3: empty-env child paste() == text exactly |
 | E3 | `copy("")` → `paste()` returns `""` on every supported desktop (other representations not promised) | slice 7 | |
-| E4a | Clipboard holds `keep` → `copy("a\x00b")` raises naming the NUL → `paste()` still returns `keep` | slice 3 | |
-| E4b | Same for `"\ud800"`: raises, clipboard keeps `keep` | slice 3 | |
+| E4a | Clipboard holds `keep` → `copy("a\x00b")` raises naming the NUL → `paste()` still returns `keep` | slice 3 | observed: observed: scripts/probe_macos_native_text.py step 5a_nul_refused_keeps_prior: error names NUL, osascript consumer reads keep |
+| E4b | Same for `"\ud800"`: raises, clipboard keeps `keep` | slice 3 | observed: observed: scripts/probe_macos_native_text.py step 5b_lone_surrogate_refused_keeps_prior: error names surrogate, osascript consumer reads keep |
 | E5a | Linux `DISPLAY=:99` with no server, `xclip` installed → `paste()` raises quoting xclip's display failure within the bound | slice 4 | |
 | E5b | Same setup → `copy("x")` raises instead of returning as if written | slice 4 | |
 | E5c | Same with `WAYLAND_DISPLAY` naming a socket whose compositor is gone | slice 5 | |
