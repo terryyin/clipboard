@@ -8,9 +8,8 @@ session (see the ``native-windows-paste-html`` CI job) with:
 
 Producers are Windows PowerShell 5.1 / .NET Framework processes (not
 copy_html); the probe overwrites the Windows clipboard and leaves it cleared.
-When the probe reports an evidence limit (exit 2: no usable clipboard session
-or no Windows PowerShell) this test is **skipped** with that reason, never
-passed; wrong fragments, mutation or a wrong ``None`` still fail.
+An evidence-limit probe report (exit 2) fails this wrapper, matching
+X11/Wayland/macOS native paste_html tests — never skip or pass as verified.
 """
 
 from __future__ import annotations
@@ -31,15 +30,12 @@ FRAGMENT = (
     "<b>café → naïve 日本</b></a>"
 )
 
-pytestmark = [
-    pytest.mark.skipif(sys.platform != "win32", reason="Windows desktop probe only"),
-    pytest.mark.skipif(
-        os.environ.get("CLIPBOARD_NATIVE_PROBE") != "1",
-        reason="set CLIPBOARD_NATIVE_PROBE=1 to run native Windows read probe",
-    ),
-]
 
-
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows desktop probe only")
+@pytest.mark.skipif(
+    os.environ.get("CLIPBOARD_NATIVE_PROBE") != "1",
+    reason="set CLIPBOARD_NATIVE_PROBE=1 to run native Windows read probe",
+)
 def test_windows_independent_producer_paste_html_probe():
     result = subprocess.run(
         [sys.executable, str(PROBE)],
@@ -50,10 +46,6 @@ def test_windows_independent_producer_paste_html_probe():
         timeout=300,
     )
     print(result.stdout)
-    if result.returncode == EVIDENCE_LIMIT_EXIT:
-        report = json.loads(result.stdout)
-        assert report["evidence_limit"] is True and report["verified"] is False
-        pytest.skip(f"Windows HTML read evidence limit: {report['reason']}")
     assert result.returncode == 0, result.stderr or result.stdout
     report = json.loads(result.stdout)
     assert report["ok"] is True
@@ -83,3 +75,29 @@ def test_windows_independent_producer_paste_html_probe():
     assert env["windows_build"]
     assert env["powershell"]
     assert env["python"]
+
+
+def test_evidence_limit_report_fails_windows_paste_html_wrapper(monkeypatch):
+    """Desktop-free: exit-2 evidence_limit must fail the gated wrapper.
+
+    Without removing the former ``pytest.skip`` on exit 2, this check would
+    see a skip instead of an assertion failure and would not establish the
+    CI-fail promise for ``native-windows-paste-html`` / ``ci-passed``.
+    """
+    limit_stdout = json.dumps(
+        {
+            "ok": False,
+            "evidence_limit": True,
+            "verified": False,
+            "reason": "synthetic: no usable Windows clipboard session",
+        }
+    )
+    fake = subprocess.CompletedProcess(
+        args=[sys.executable, str(PROBE)],
+        returncode=EVIDENCE_LIMIT_EXIT,
+        stdout=limit_stdout,
+        stderr="",
+    )
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: fake)
+    with pytest.raises(AssertionError):
+        test_windows_independent_producer_paste_html_probe()

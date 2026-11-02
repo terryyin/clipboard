@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#desktop-helpers
 **Source:** [Keep native HTML-read proof strict and desktop helper knowledge single-homed](../../seeds/SEED-001-clipboard-true-to-its-name.md#desktop-helpers)
+**Source review:** [source-review.md](source-review.md)
 
 ## Correction input
 
@@ -142,7 +143,17 @@ Correction: removes F3's duplicated cost without losing a behavior.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: module-level `pytestmark` blocked a same-file desktop-free
+  evidence-limit check; per-test `skipif` on the gated probe keeps the
+  ungated wrapper collectable off Windows. Expecting `AssertionError` (not
+  `Skipped`) is what makes the desktop-free check reject skip-on-exit-2.
+- Accepted proof (slice 1, pre-publish): removed exit-2 `pytest.skip` from
+  `tests/test_paste_html_native_windows.py`; assert `returncode == 0` and
+  `verified is True`; `test_evidence_limit_report_fails_windows_paste_html_wrapper`
+  fails on synthetic exit-2. `nix develop -c make check` → 310 passed, 15
+  skipped. Live `native-windows-paste-html` with `verified: true` remains
+  observation on the published revision (settled premise: master run
+  41433380766).
 
 ## Concern evidence
 
@@ -151,3 +162,36 @@ _(none yet)_
   have their own proof loop; each slice is one proof loop with no hidden
   preparation.
 - Remaining slice-specific concerns: none identified in this review.
+
+
+## Story obligations
+
+### X1. Older image/copy_html evidence-limit retirement
+Reported: slice 1 — "source review 1e — exclusion of retiring older image/copy_html evidence limits"
+Story clause: "Python developers relying on the README's verified desktop claims keep a CI signal that fails when a verified native HTML-read probe stops proving anything"
+Disposition: no user cost "keep a CI signal that fails when a verified native HTML-read probe stops proving anything": retiring older image/copy_html evidence limits is correction out-of-scope and does not weaken the Windows paste_html fail-not-skip CI signal
+Commitment: 1e, 29
+
+### X2. Unifying Wayland session rules out of scope
+Reported: slice 1 — "source review 3b"
+Story clause: "Unifying the divergent Wayland session rules is a product decision outside this correction."
+Disposition: excluded "Unifying the divergent Wayland session rules is a product decision outside this correction."
+Commitment: 3b, 28
+
+### X3. DISPLAY+WAYLAND_DISPLAY split preserved
+Reported: slice 1 — "source review 9"
+Story clause: "Unifying the divergent Wayland session rules is a product decision outside this correction."
+Disposition: excluded "Unifying the divergent Wayland session rules is a product decision outside this correction."
+Commitment: 9
+
+### X4. Sway bootstrap dedup out of scope
+Reported: slice 1 — "source review 30 — ci.yml Sway bootstrap dedup"
+Story clause: "Python developers relying on the README's verified desktop claims keep a CI signal that fails when a verified native HTML-read probe stops proving anything"
+Disposition: no user cost "keep a CI signal that fails when a verified native HTML-read probe stops proving anything": Sway bootstrap deduplication in ci.yml is correction out-of-scope and does not affect the Windows HTML-read fail-not-skip CI signal
+Commitment: 30
+
+### X5. Shared error base class out of scope
+Reported: slice 1 — "source review 31 — shared error base class"
+Story clause: "Public API, results, error messages, and install hints stay unchanged."
+Disposition: no user cost "Public API, results, error messages, and install hints stay unchanged": a shared error base class is correction out-of-scope and public error types/messages stay as they are
+Commitment: 31
