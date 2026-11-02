@@ -109,7 +109,7 @@ real clipboard.
 
 ### 3. Early probe — macOS Aqua HTML + text write
 Type: Behavior
-Status: planned
+Status: done
 Proof: On this Darwin checkout (or equivalent Aqua session), gated probe:
 `copy_html` publishes a known Unicode fragment + alternative; writing process
 exits; an **independent** rich consumer recovers formatting and an independent
@@ -216,6 +216,14 @@ envelopes/helpers; evidence wording is honest.
   tests/test_copy_html_seam.py tests/test_copy_html_contract.py
   tests/test_clipboard.py -q` (25 passed); images paste suites (13 passed);
   after test-fake refactor, `tests/test_copy_html_contract.py` (15 passed).
+- Slice 3: Darwin default writer publishes NSPasteboard HTML+string via
+  osascript/AppKit; gated `scripts/probe_macos_native_copy_html.py` proves
+  independent AppKit HTML + `pbpaste` consumers after writer-process exit.
+  Floors: macOS 26.6.2 / 25G83 / arm64. README marks macOS HTML write verified;
+  Win/Linux HTML write remain unverified.
+- Accepted proof (slice 3): probe JSON `ok: true` /
+  `writer_exited_before_consume: true`; contract+seam after refactor 23 passed;
+  `CLIPBOARD_NATIVE_PROBE=1` native test passed; paste_image suites reused.
 
 ## Concern evidence
 

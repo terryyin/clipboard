@@ -15,7 +15,16 @@ def test_copy_html_public_surface():
     assert callable(clipboard.set_html_clipboard_writer)
 
 
-def test_default_copy_html_raises_content_error():
+def test_default_copy_html_raises_on_non_darwin(
+    restore_html_clipboard_writer, monkeypatch
+):
+    """Non-Darwin default still stubs until later platform writers land.
+
+    Force a non-Darwin platform so default pytest never touches the pasteboard;
+    Darwin's native dual-offer path stays gated to the native probe.
+    """
+    monkeypatch.setattr(clipboard.sys, "platform", "linux")
+    clipboard.set_html_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.copy_html("<b>hi</b>", "hi")
 
@@ -33,9 +42,11 @@ def test_injected_writer_receives_both_representations(
     assert received == [("<i>styled</i>", "styled")]
 
 
-def test_reset_writer_restores_default_stub(restore_html_clipboard_writer):
+def test_reset_writer_restores_default(restore_html_clipboard_writer, monkeypatch):
     clipboard.set_html_clipboard_writer(lambda html, text: None)
     clipboard.set_html_clipboard_writer(None)
+    assert clipboard._html_clipboard_writer is clipboard._default_html_clipboard_writer
+    monkeypatch.setattr(clipboard.sys, "platform", "linux")
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.copy_html("<p>x</p>", "x")
 

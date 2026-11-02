@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from dataclasses import dataclass, field
 from typing import Any, NoReturn
 
@@ -192,3 +193,48 @@ def test_successful_write_replaces_prior_sole_content(
         "html": "<table><tr><td>cell</td></tr></table>",
         "text": "cell",
     }
+
+
+def test_macos_denied_pasteboard_write_is_content_error(
+    restore_html_clipboard_writer, monkeypatch
+):
+    """Denied/unavailable pasteboard write surfaces as ClipboardContentError."""
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args=args[0] if args else [],
+            returncode=1,
+            stdout="",
+            stderr="osascript: pasteboard access denied",
+        )
+
+    monkeypatch.setattr(clipboard.sys, "platform", "darwin")
+    monkeypatch.setattr(clipboard.subprocess, "run", fake_run)
+    clipboard.set_html_clipboard_writer(None)
+    with pytest.raises(clipboard.ClipboardContentError) as raised:
+        clipboard.copy_html("<b>x</b>", "x")
+    assert "pasteboard write failed" in str(raised.value).lower()
+
+
+def test_macos_missing_osascript_is_content_error(
+    restore_html_clipboard_writer, monkeypatch
+):
+    def boom(*args, **kwargs):
+        raise FileNotFoundError("osascript")
+
+    monkeypatch.setattr(clipboard.sys, "platform", "darwin")
+    monkeypatch.setattr(clipboard.subprocess, "run", boom)
+    clipboard.set_html_clipboard_writer(None)
+    with pytest.raises(clipboard.ClipboardContentError) as raised:
+        clipboard.copy_html("<b>x</b>", "x")
+    assert raised.value.__cause__ is not None
+
+
+def test_unsupported_platform_default_writer_is_content_error(
+    restore_html_clipboard_writer, monkeypatch
+):
+    monkeypatch.setattr(clipboard.sys, "platform", "linux")
+    clipboard.set_html_clipboard_writer(None)
+    with pytest.raises(clipboard.ClipboardContentError) as raised:
+        clipboard.copy_html("<b>x</b>", "x")
+    assert "not available" in str(raised.value).lower()

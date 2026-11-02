@@ -32,6 +32,22 @@ clipboard, empty clipboard, or a file-reference / filename-list offer) returns
 ``clipboard.ClipboardImageError`` instead of returning ``None``. Calling
 ``paste_image`` without the extra raises ``ImportError``.
 
+To publish an HTML fragment with a matching plain-text alternative as one
+clipboard offer, call ``copy_html`` (no ``clipboard[images]`` extra required):
+
+::
+
+   import clipboard
+   clipboard.copy_html(
+       '<a href="https://example.com"><b>café</b></a>',
+       'café → https://example.com',
+   )
+
+Failures other than a successful dual offer raise
+``clipboard.ClipboardContentError``. On macOS Aqua the default writer uses the
+system pasteboard (``NSPasteboard`` HTML + string types via ``osascript``).
+Linux and Windows native HTML writers are not claimed verified yet.
+
 Installation
 ------------
 
@@ -54,12 +70,24 @@ On Linux, image clipboard reads also need a helper on ``PATH``:
 Windows and macOS need a usable desktop clipboard / pasteboard session; image
 reading is not guaranteed under WSL, SSH, containers, or headless CI.
 
-Evidence / verified platforms: macOS Aqua pasteboard image reads have been
-verified with an independent producer in this project's native probe work.
-Windows desktop, Linux X11 with ``xclip``, and Linux Wayland with ``wl-paste``
-remain supported targets, unverified pending
-``SEED-001#read-images-native``. Default automated tests use an in-memory
-backend and do not exercise a real desktop clipboard.
+Evidence / verified platforms:
+
+* macOS Aqua pasteboard image reads have been verified with an independent
+  producer in this project's native probe work.
+* macOS Aqua HTML + plain-text dual-offer writes via ``copy_html`` have been
+  verified with independent rich (``NSPasteboardTypeHTML``) and text
+  (``pbpaste``) consumers after the writing process exits. Floors recorded by
+  ``scripts/probe_macos_native_copy_html.py`` on this work: macOS
+  ProductVersion 26.6.2, BuildVersion 25G83, machine arm64 (Apple Silicon),
+  method ``osascript`` / AppKit ``NSPasteboardTypeHTML`` +
+  ``NSPasteboardTypeString``. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
+  the probe script to refresh floors on another host.
+* Windows desktop, Linux X11, and Linux Wayland HTML writes remain
+  unverified (no dual-offer claim yet). Image reads on those desktops remain
+  supported targets, unverified pending ``SEED-001#read-images-native``.
+
+Default automated tests use an in-memory backend and do not exercise a real
+desktop clipboard.
 
 Development
 -----------
