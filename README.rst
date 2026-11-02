@@ -18,19 +18,32 @@ Text copy and paste (no optional extras required):
    clipboard.copy("abc")  # now the clipboard content will be string "abc"
    text = clipboard.paste()  # text will have the content of clipboard
 
-To read a static raster image from the clipboard as a Pillow ``Image``, install
-the optional ``images`` extra (Pillow) and call ``paste_image``:
+To read or write a static raster image on the clipboard as a Pillow ``Image``,
+install the optional ``images`` extra (Pillow) and call ``paste_image`` /
+``copy_image``:
 
 ::
 
    import clipboard
+   from PIL import Image
+
    image = clipboard.paste_image()  # Pillow Image, or None when none is offered
+   clipboard.copy_image(Image.new("RGB", (8, 8), (255, 0, 0)))
 
 ``paste_image`` leaves clipboard contents unchanged. Ordinary absence (text-only
 clipboard, empty clipboard, or a file-reference / filename-list offer) returns
 ``None``. Access, missing-helper, transfer, or malformed-image failures raise
-``clipboard.ClipboardImageError`` instead of returning ``None``. Calling
-``paste_image`` without the extra raises ``ImportError``.
+``clipboard.ClipboardImageError`` instead of returning ``None``.
+
+``copy_image`` publishes one static raster offer (Pillow ``Image`` only; open
+path/bytes yourself first). Non-RGB(A) modes are converted to a transferable
+RGB or RGBA raster before the offer; animated / multi-frame / path overloads
+are out of scope. Invalid or unloadable input raises
+``clipboard.ClipboardImageError`` **before** replacing current clipboard
+contents. Missing helper, denied access, transfer failure, or an unsupported
+session raise ``ClipboardImageError`` (no silent success). A successful write
+replaces prior text and image representations for that clipboard. Calling
+``paste_image`` or ``copy_image`` without the extra raises ``ImportError``.
 
 To publish an HTML fragment with a matching plain-text alternative as one
 clipboard offer, call ``copy_html``:
@@ -69,7 +82,8 @@ supports Python 3.10 and newer. Text ``copy`` / ``paste`` need a working desktop
 clipboard backend on Linux; see the
 `pyperclip documentation <https://pyperclip.readthedocs.io/>`_.
 
-For ``paste_image``, install the optional extra so Pillow is available:
+For ``paste_image`` and ``copy_image``, install the optional extra so Pillow is
+available:
 
 ::
 
@@ -77,7 +91,7 @@ For ``paste_image``, install the optional extra so Pillow is available:
 
 ``copy_html`` does **not** require the ``clipboard[images]`` extra.
 
-On Linux, image clipboard reads also need a helper on ``PATH``:
+On Linux, image clipboard **reads** also need a helper on ``PATH``:
 
 * X11: ``xclip``
 * Wayland: ``wl-paste`` (from wl-clipboard)
@@ -98,6 +112,17 @@ same update. Windows and macOS need a usable desktop clipboard / pasteboard
 session; rich clipboard writes are not guaranteed under WSL, SSH, containers,
 or headless CI.
 
+Image **writes** via ``copy_image`` on Linux need:
+
+* X11: ``xclip`` (publishes ``image/png`` on CLIPBOARD; ``xclip -quiet`` may
+  keep a background owner so the offer stays pasteable after the writing
+  process exits)
+* Wayland: ``wl-copy`` (from wl-clipboard; publishes ``image/png``; may keep a
+  background owner so the offer stays pasteable after the writing process
+  exits)
+
+Windows and macOS need a usable desktop clipboard / pasteboard session; image read/write and rich clipboard writes are not guaranteed under WSL, SSH, containers, or headless CI.
+
 Evidence / verified platforms:
 
 * macOS Aqua pasteboard image reads have been verified with an independent
@@ -110,6 +135,36 @@ Evidence / verified platforms:
   verification. Do not treat any of them as natively verified from that
   work, and do not generalize a Wayland claim from X11 or an unstated
   compositor.
+* macOS Aqua pasteboard image **writes** via ``copy_image`` have been verified
+  with an independent consumer (``PIL.ImageGrab.grabclipboard`` after the writing
+  process exits) at floors macOS 26.6.2 (build 25G83) / Darwin 25.6.0, Pillow
+  11.3.0, Python 3.13, arm64 Aqua; RGBA alpha was preserved in that probe.
+  Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` /
+  ``scripts/probe_macos_native_copy_image.py`` to refresh floors on another host.
+* Linux X11 image **writes** via ``copy_image`` (``xclip``) have been verified
+  under gated GitHub Actions job ``native-linux-x11-copy-image`` on
+  ``ubuntu-latest`` with Xvfb + ``xclip`` (independent consumer ``xclip -o``
+  ``image/png`` after writer exit) at floors Python 3.13 / Pillow 11.3.0; the
+  venue is headless CI with Xvfb, not an owner-held desktop. Opaque writer-exit
+  succeeded; the RGBA case is exercised in the same probe (preserve-or-drop
+  recorded there).
+* Linux Wayland image **writes** via ``copy_image`` (``wl-copy``) have been
+  verified **only** under gated GitHub Actions job
+  ``native-linux-wayland-copy-image`` on ``ubuntu-latest`` with the named
+  compositor **Sway** (``WLR_BACKENDS=headless``, ``wl-clipboard``; independent
+  consumer ``wl-paste -t image/png`` after writer exit) at floors Python 3.13 /
+  Pillow 11.3.0; do not generalize that result to other Wayland compositors.
+  Opaque writer-exit succeeded; the RGBA case is exercised in the same probe
+  (preserve-or-drop recorded there).
+* Windows desktop remains a supported write target, but image **writes** via
+  ``copy_image`` are **unverified**: no usable Windows desktop session was
+  available during ``SEED-001#write-images`` execution (developer checkout is
+  Darwin; GitHub Actions ``windows-latest`` matrix jobs are headless pytest
+  only and are not a desktop clipboard probe venue). This is an explicit
+  evidence limit — not a verified claim. Image-write story acceptance is
+  **not** Windows-only: Linux X11 (Xvfb CI) and Wayland (Sway CI) writer-exit
+  proofs above are required and already observed (issue #5); Windows remains
+  evidence-limited beside them.
 * macOS Aqua HTML + plain-text dual-offer writes via ``copy_html`` have been
   verified with independent rich (``NSPasteboardTypeHTML``) and text
   (``pbpaste``) consumers after the writing process exits. Floors recorded by
@@ -152,7 +207,8 @@ Evidence / verified platforms:
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the
-default suite.
+default suite. The X11 and Wayland image-write probes are separate gated jobs,
+not part of the default matrix pytest.
 
 Development
 -----------

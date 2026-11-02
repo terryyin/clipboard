@@ -1,10 +1,10 @@
 # Clipboard
 
 A small Python library exposing `copy`, `paste`, and `VERSION` through
-pyperclip, plus optional image reading via `paste_image` when the
-`clipboard[images]` extra (Pillow) is installed. Access, helper, transfer, or
-malformed-image failures raise `ClipboardImageError` rather than returning
-`None`.
+pyperclip, plus optional image read/write via `paste_image` / `copy_image`
+when the `clipboard[images]` extra (Pillow) is installed. Access, helper,
+transfer, or malformed-image failures raise `ClipboardImageError` rather than
+returning `None` (or silently succeeding on write).
 
 Use Nix for development tools, as in the neighboring Lizard project. Run tools
 with `nix develop -c <command>`; Git commands can run directly. Nix pins the

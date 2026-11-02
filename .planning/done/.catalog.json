@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_write-images.json",
+      "identity": "SEED-001#write-images",
+      "completedAt": "2026-11-02T07:52:04.793Z",
+      "blob": "82859a0feaa8c1e5b4a44be2f0b0d129e72e707c"
+    },
+    {
       "fileName": "SEED-001_copy-html.json",
       "identity": "SEED-001#copy-html",
       "completedAt": "2026-11-02T05:51:23.882Z",

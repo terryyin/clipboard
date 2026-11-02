@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#write-images",
+  "title": "Copy Python images into desktop applications",
+  "completedAt": "2026-11-02T07:52:04.793Z",
+  "developer": "Terry Yin",
+  "agent": "Kirara-chan",
+  "host": "cursor",
+  "model": "auto"
+}

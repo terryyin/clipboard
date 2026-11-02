@@ -79,10 +79,86 @@ jobs:
       - run: uv sync --locked --extra images
       - run: uv run --locked --extra images pytest
 
+  native-linux-x11-copy-image:
+    name: Native Linux X11 copy_image (Xvfb)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install X11 clipboard helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xclip xvfb
+      - run: uv sync --locked --extra images
+      - name: Gated X11 copy_image probe under Xvfb
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: >
+          xvfb-run -a
+          uv run --locked --extra images
+          pytest tests/test_copy_image_native_linux_x11.py -v
+
+  native-linux-wayland-copy-image:
+    name: Native Linux Wayland copy_image (Sway)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install Wayland clipboard helpers and Sway
+        run: |
+          sudo apt-get update
+          # wl-clipboard needs wlroots data-control (Sway); Weston lacks it.
+          sudo apt-get install -y wl-clipboard sway
+      - run: uv sync --locked --extra images
+      - name: Gated Wayland copy_image probe under Sway
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: |
+          set -euo pipefail
+          export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/clipboard-xdg-runtime}"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          printf '%s\n' 'output * bg #000000 solid_color' > /tmp/clipboard-sway.conf
+          unset WAYLAND_DISPLAY || true
+          export WLR_BACKENDS=headless
+          export WLR_LIBINPUT_NO_DEVICES=1
+          sway -c /tmp/clipboard-sway.conf >/tmp/clipboard-sway.log 2>&1 &
+          SWAY_PID=$!
+          trap 'kill "$SWAY_PID" 2>/dev/null || true' EXIT
+          export WAYLAND_DISPLAY=wayland-1
+          export XDG_SESSION_TYPE=wayland
+          for _ in $(seq 1 50); do
+            if [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; then
+              break
+            fi
+            sleep 0.1
+          done
+          test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+          uv run --locked --extra images \
+            pytest tests/test_copy_image_native_linux_wayland.py -v
+
   ci-passed:
     name: CI passed
     if: always()
-    needs: [quality, tests]
+    needs:
+      - quality
+      - tests
+      - native-linux-x11-copy-image
+      - native-linux-wayland-copy-image
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -90,4 +166,10 @@ jobs:
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           TEST_RESULT: ${{ needs.tests.result }}
-        run: test "$QUALITY_RESULT" = success && test "$TEST_RESULT" = success
+          NATIVE_X11_RESULT: ${{ needs.native-linux-x11-copy-image.result }}
+          NATIVE_WAYLAND_RESULT: ${{ needs.native-linux-wayland-copy-image.result }}
+        run: >-
+          test "$QUALITY_RESULT" = success
+          && test "$TEST_RESULT" = success
+          && test "$NATIVE_X11_RESULT" = success
+          && test "$NATIVE_WAYLAND_RESULT" = success

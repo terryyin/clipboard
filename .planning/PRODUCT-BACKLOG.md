@@ -6,8 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Copy Python images into desktop applications](seeds/SEED-001-clipboard-true-to-its-name.md#write-images) — SEED-001#write-images ([plan](slice-plans/003-write-images/PLAN.md))
-
 ## Backlog list
 
 - [Read HTML fragments copied by desktop applications](seeds/SEED-001-clipboard-true-to-its-name.md#read-html) — SEED-001#read-html
