@@ -75,7 +75,7 @@ shared error base class.
 
 ### 1. Fail the Windows native probe when it cannot verify
 Type: Behavior
-Status: planned
+Status: done
 Proof: `tests/test_paste_html_native_windows.py` asserts `verified is True`
 (evidence limit fails, as on X11/Wayland/macOS); a desktop-free check shows the
 wrapper fails on an evidence-limit report and fails without the change;
