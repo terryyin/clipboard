@@ -132,6 +132,16 @@ document each remaining target. Postcondition: every supported desktop has
 either native proof or a written evidence limit; no compositor generalization
 from a single Wayland result.
 
+## Execution complete
+
+Product advice:
+1. Keep SEED-001#read-images native follow-up (Windows image+DIB, native CF_HDROP,
+   X11+xclip, Wayland+wl-paste, alpha/helper floors) ahead of or tightly before
+   SEED-001#write-images — four-desktop promise still open; North Star pattern holds.
+2. Assimilate public API text in AGENTS.md (paste_image, ClipboardImageError,
+   optional clipboard[images]).
+3. VERSION bump remains a release decision; not required by this plan's delivery.
+
 ## Current decisions
 
 - API name: `paste_image` (explicit; does not overload `paste`).
