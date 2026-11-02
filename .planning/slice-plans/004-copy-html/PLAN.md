@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#copy-html
 **Source:** [Copy HTML with a matching plain-text alternative](../../seeds/SEED-001-clipboard-true-to-its-name.md#copy-html)
+**Source review:** [source-review.md](./source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -80,7 +81,7 @@ interoperability.
 
 ### 1. Injectable `copy_html` write seam
 Type: Structure
-Status: planned
+Status: done
 Proof: Public `copy_html` exists; dedicated HTML/content error type is
 importable and distinct from `ClipboardImageError`; default path and a
 `set_*` injection hook allow tests to supply a fake dual-offer writer without
@@ -197,7 +198,16 @@ envelopes/helpers; evidence wording is honest.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: Public seam uses `ClipboardContentError`, `copy_html(html, text)`,
+  and `set_html_clipboard_writer` mirroring `set_image_grabclipboard`. Default
+  stub fails with `ClipboardContentError` until a writer is injected; no
+  `clipboard[images]` / Pillow requirement. Native dual-offer writers remain
+  for later slices.
+- Accepted proof (slice 1): `nix develop -c uv run --locked pytest
+  tests/test_clipboard.py tests/test_copy_html_seam.py -q` (10 passed);
+  `nix develop -c uv run --locked --extra images pytest
+  tests/test_paste_image.py tests/test_paste_image_failures.py -q` (13 passed);
+  no-images import smoke for the new surface.
 
 ## Concern evidence
 
@@ -208,3 +218,125 @@ _(none yet)_
 - Remaining slice-specific concerns: none beyond the authorized early probes
   in slices 3–6 (owner-held native sessions; absence → evidence limit per
   desktop rather than silent success).
+
+## Story obligations
+
+### X11. No HTML-to-text synthesis
+Reported: slice 1 — "Do not synthesize the plain-text alternative from HTML inside this story."
+Story clause: "Do not synthesize the plain-text alternative from HTML inside this story."
+Disposition: excluded "Do not synthesize the plain-text alternative from HTML inside this story."
+Commitment: 11, Q6
+
+### Q1. Non-desktop environments not guaranteed
+Reported: slice 1 — "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Story clause: "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Disposition: excluded "WSL, SSH, containers, and headless CI are not additional guaranteed desktops."
+Commitment: Q1
+
+### X2. Sequential writes are not dual success
+Reported: slice 1 — "Do not treat two sequential text (or text-then-HTML) writes as fulfilling this story."
+Story clause: "Do not treat two sequential text (or text-then-HTML) writes as fulfilling this story."
+Disposition: excluded "Do not treat two sequential text (or text-then-HTML) writes as fulfilling this story."
+Commitment: X2
+
+### X10. Sequential single-format dual-success claim forbidden
+Reported: slice 1 — "Sequential single-format writes claiming dual success are forbidden."
+Story clause: "Sequential single-format writes claiming dual success are forbidden."
+Disposition: excluded "Sequential single-format writes claiming dual success are forbidden."
+Commitment: X10
+
+### X3. No authorization bypass
+Reported: slice 1 — "Do not bypass OS pasteboard / clipboard authorization."
+Story clause: "Do not bypass OS pasteboard / clipboard authorization."
+Disposition: excluded "Do not bypass OS pasteboard / clipboard authorization."
+Commitment: X3
+
+### X4. No single-representation success claim
+Reported: slice 1 — "Do not leave only one of the two promised representations after claiming success."
+Story clause: "Do not leave only one of the two promised representations after claiming success."
+Disposition: excluded "Do not leave only one of the two promised representations after claiming success."
+Commitment: X4
+
+### X8. Partial offer must not present as success
+Reported: slice 1 — "A call that cannot publish HTML and plain text together must not replace current content with a partial offer presented as success"
+Story clause: "A call that cannot publish HTML and plain text together must not replace current content with a partial offer presented as success"
+Disposition: excluded "A call that cannot publish HTML and plain text together must not replace current content with a partial offer presented as success"
+Commitment: X8
+
+### X5. No indefinite hang serving clipboard data
+Reported: slice 1 — "Do not hang the caller indefinitely waiting to serve clipboard data."
+Story clause: "Do not hang the caller indefinitely waiting to serve clipboard data."
+Disposition: excluded "Do not hang the caller indefinitely waiting to serve clipboard data."
+Commitment: X5
+
+### X6. No markup execution / remote fetch / pixel-identical layout promise
+Reported: slice 1 — "Do not execute markup, fetch remote resources, or promise pixel-identical layout across applications."
+Story clause: "Do not execute markup, fetch remote resources, or promise pixel-identical layout across applications."
+Disposition: excluded "Do not execute markup, fetch remote resources, or promise pixel-identical layout across applications."
+Commitment: X6
+
+### X7.1. Deferred automatic HTML-to-text
+Reported: slice 1 — "Automatic HTML-to-text conversion"
+Story clause: "Automatic HTML-to-text conversion"
+Disposition: excluded "Automatic HTML-to-text conversion"
+Commitment: X7.1
+
+### X7.2. Deferred HTML read
+Reported: slice 1 — "reading HTML (`SEED-001#read-html`)"
+Story clause: "reading HTML (`SEED-001#read-html`)"
+Disposition: excluded "reading HTML (`SEED-001#read-html`)"
+Commitment: X7.2
+
+### X7.3. Deferred RTF / other rich formats
+Reported: slice 1 — "RTF or other rich formats"
+Story clause: "RTF or other rich formats"
+Disposition: excluded "RTF or other rich formats"
+Commitment: X7.3
+
+### X7.4. Deferred full HTML documents contract
+Reported: slice 1 — "full HTML documents as a distinct contract from fragments"
+Story clause: "full HTML documents as a distinct contract from fragments"
+Disposition: excluded "full HTML documents as a distinct contract from fragments"
+Commitment: X7.4
+
+### X7.5. Deferred embedded resource packaging
+Reported: slice 1 — "embedded resource packaging"
+Story clause: "embedded resource packaging"
+Disposition: excluded "embedded resource packaging"
+Commitment: X7.5
+
+### X7.6. Deferred bundling GUI toolkits / win32clipboard
+Reported: slice 1 — "bundling GUI toolkits or `win32clipboard` as a required public dependency"
+Story clause: "bundling GUI toolkits or `win32clipboard` as a required public dependency"
+Disposition: excluded "bundling GUI toolkits or `win32clipboard` as a required public dependency"
+Commitment: X7.6
+
+### X7.7. Deferred default pytest/CI real desktop
+Reported: slice 1 — "making default pytest / CI require a real desktop"
+Story clause: "making default pytest / CI require a real desktop"
+Disposition: excluded "making default pytest / CI require a real desktop"
+Commitment: X7.7
+
+### X7.8. Deferred expanding beyond four-desktop set
+Reported: slice 1 — "expanding beyond the four-desktop set"
+Story clause: "expanding beyond the four-desktop set"
+Disposition: excluded "expanding beyond the four-desktop set"
+Commitment: X7.8
+
+### X7.9. Deferred rollback/atomicity beyond fail-before-replace
+Reported: slice 1 — "inventing rollback/atomicity guarantees beyond fail-before-replace"
+Story clause: "inventing rollback/atomicity guarantees beyond fail-before-replace"
+Disposition: excluded "inventing rollback/atomicity guarantees beyond fail-before-replace"
+Commitment: X7.9
+
+### X7.10. Deferred same-library round-trip as sole native proof
+Reported: slice 1 — "same- library HTML round-trip as sole native proof"
+Story clause: "same- library HTML round-trip as sole native proof"
+Disposition: excluded "same- library HTML round-trip as sole native proof"
+Commitment: X7.10
+
+### X9. Silent success on unproved desktop forbidden
+Reported: slice 1 — "Silent success on an unproved desktop is forbidden."
+Story clause: "Silent success on an unproved desktop is forbidden."
+Disposition: excluded "Silent success on an unproved desktop is forbidden."
+Commitment: X9
