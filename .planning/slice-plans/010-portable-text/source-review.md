@@ -38,7 +38,7 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 2d.2 | Never a fabricated `""` | slice 5 | |
 | 2d.3 | Never a silent no-op write | slice 5 | |
 | 2e | Linux helper exit status and stderr are read, not discarded | slice 5 | |
-| 2f | Non-UTF-8 declared native text is decoded by that declaration (X11 `STRING` Latin-1) or reported as `ClipboardContentError` | slice 4 | |
+| 2f | Non-UTF-8 declared native text is decoded by that declaration (X11 `STRING` Latin-1) or reported as `ClipboardContentError` | slice 4 | observed: observed: CI runs 41471306541/41473939537 job native-linux-x11-text (scripts/probe_linux_x11_native_text.py) step 4a_string_only_owner_decoded_latin_1 (TARGETS [TARGETS, STRING] → paste "café ½ naïve"); tests/test_text_x11.py |
 | 2g | `UnicodeDecodeError` never escapes `paste()` | slice 5 | |
 | 2h | Empty text and failed access never share `""`; unknown helper stderr wording defaults to failure | slice 5 | |
 | 2i | Text failures carry the pyperclip or helper error as `__cause__` | slice 1 | observed: observed: tests/test_clipboard.py test_backend_failures_become_content_errors (__cause__ is original), test_default_backend_translates_pyperclip_failure |
@@ -61,7 +61,7 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | 4f | README notes that a caller catching `pyperclip.PyperclipException` now sees a change | slice 7 | |
 | 5a.1 | Owned default path: Windows desktop (`CF_UNICODETEXT`) | slice 6 | |
 | 5a.2 | Owned default path: macOS Aqua (`pbcopy` / `pbpaste` with a UTF-8 locale) | slice 3 | observed: observed: clipboard/_text_native_macos.py pbcopy/pbpaste with LC_ALL=en_US.UTF-8, 15 s bounds; tests/test_text_macos.py |
-| 5a.3 | Owned default path: Linux X11 (`xclip`, `UTF8_STRING` first) | slice 4 | |
+| 5a.3 | Owned default path: Linux X11 (`xclip`, `UTF8_STRING` first) | slice 4 | observed: observed: clipboard/_text_native_x11.py (TARGETS, UTF8_STRING first, STRING Latin-1); CI runs 41471306541/41473939537 job native-linux-x11-text (scripts/probe_linux_x11_native_text.py) steps 1–4c ok |
 | 5a.4 | Owned default path: Linux Wayland (`wl-copy` / `wl-paste`, background owner), named compositor only | slice 5 | |
 | 5b | Session selection keeps pyperclip's order so no working user changes mechanism | slice 2 | observed: observed: clipboard/_desktop_text.py _text_session_owner mirrors pyperclip 1.11.0 determine_clipboard lines 497–565; tests/test_text_session.py test_session_selects_pyperclip_order_owner |
 | 5b.1 | WSL first | slice 2 | observed: observed: tests/test_text_session.py test_session_selects_pyperclip_order_owner[wsl-before-desktop] |
@@ -86,12 +86,12 @@ Return: retained below verbatim in substance (commitment text condensed where th
 | E3 | `copy("")` → `paste()` returns `""` on every supported desktop (other representations not promised) | slice 7 | |
 | E4a | Clipboard holds `keep` → `copy("a\x00b")` raises naming the NUL → `paste()` still returns `keep` | slice 3 | observed: observed: scripts/probe_macos_native_text.py step 5a_nul_refused_keeps_prior: error names NUL, osascript consumer reads keep |
 | E4b | Same for `"\ud800"`: raises, clipboard keeps `keep` | slice 3 | observed: observed: scripts/probe_macos_native_text.py step 5b_lone_surrogate_refused_keeps_prior: error names surrogate, osascript consumer reads keep |
-| E5a | Linux `DISPLAY=:99` with no server, `xclip` installed → `paste()` raises quoting xclip's display failure within the bound | slice 4 | |
-| E5b | Same setup → `copy("x")` raises instead of returning as if written | slice 4 | |
+| E5a | Linux `DISPLAY=:99` with no server, `xclip` installed → `paste()` raises quoting xclip's display failure within the bound | slice 4 | observed: observed: CI runs 41471306541/41473939537 job native-linux-x11-text (scripts/probe_linux_x11_native_text.py) step 5: dead display :90 → paste() ClipboardContentError quoting "Error: Can't open display: :90" in 0.005 s (bound 10 s) |
+| E5b | Same setup → `copy("x")` raises instead of returning as if written | slice 4 | observed: observed: CI runs 41471306541/41473939537 job native-linux-x11-text (scripts/probe_linux_x11_native_text.py) step 5: copy() ClipboardContentError quoting "Error: Can't open display: :90" in 0.055 s |
 | E5c | Same with `WAYLAND_DISPLAY` naming a socket whose compositor is gone | slice 5 | |
 | E6a | Neither `DISPLAY` nor `WAYLAND_DISPLAY` → `paste()` raises saying no desktop session is visible | slice 2 | observed: observed: tests/test_text_dispatch.py test_no_desktop_session_is_diagnosed_not_empty (paste() raises "no desktop session is visible", never "") |
-| E6b | `DISPLAY` set and no `xclip` on `PATH` → error names `xclip` and its install hint | slice 4 | |
-| E7a | X11 CLIPBOARD owner that never answers → `paste()` raises after the documented bound | slice 4 | |
+| E6b | `DISPLAY` set and no `xclip` on `PATH` → error names `xclip` and its install hint | slice 4 | observed: observed: CI runs 41471306541/41473939537 job native-linux-x11-text (scripts/probe_linux_x11_native_text.py) step 6: PATH without xclip → error names xclip and `sudo apt-get install xclip` |
+| E7a | X11 CLIPBOARD owner that never answers → `paste()` raises after the documented bound | slice 4 | observed: observed: tests/test_text_x11.py timeout tests (stalled owner → ClipboardContentError after the 10 s bound, fake subprocess) |
 | E7b | Windows clipboard held open past the bound → raises | slice 6 | |
 | E7c | Windows clipboard released within the bound → succeeds as before | slice 6 | |
 | E8 | Image-only clipboard → `paste()` returns `""` and `inspect()` reports the image kind; no exception | slice 6 | |

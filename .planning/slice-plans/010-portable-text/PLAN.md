@@ -163,7 +163,7 @@ examples 1, 2, 3, 4, 8 verified on macOS or limited.
 
 ### 4. Linux X11 owned path and gated Xvfb job
 Type: Behavior
-Status: planned
+Status: done
 Proof: owned X11 reader runs `xclip -selection clipboard -o -t UTF8_STRING`
 (10 s bound), falls back to `-t STRING` decoded as Latin-1 when the owner
 offers no `UTF8_STRING`, returns `""` when there is no owner or no text
@@ -289,7 +289,7 @@ Postcondition: callers know exactly what is promised and verified where.
   with `env={}`, so a no-locale probe must drop `LANG` / `LC_*` before
   importing `clipboard`. The macOS denial and SSH cases stay unobserved.
   `make check` 368 passed / 17 skipped.
-- Slice 4 (in progress, awaiting `native-linux-x11-text`):
+- Slice 4:
   `clipboard/_text_native_x11.py` reads `TARGETS` first so absence never
   depends on stderr wording; the writer waits until the background owner
   serves exactly the written bytes, because the previous owner usually
@@ -306,7 +306,8 @@ Postcondition: callers know exactly what is promised and verified where.
   Latin-1 bytes, which confirms listing TARGETS first; `copy("")` leaves an
   empty `UTF8_STRING` offer. Repaired in the same slice: Windows unit runs
   lacked `os.killpg` (test fixture and `_stop_owner` fallback) and the probe's
-  `xvfb_version` floor was empty (now `dpkg-query` first).
+  `xvfb_version` floor was empty (now `dpkg-query` first). Run 41473939537
+  green on every job (Xvfb `2:21.1.22-1ubuntu1.3`).
 
 ## Story obligations
 
