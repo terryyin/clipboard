@@ -108,9 +108,11 @@ def paste_html() -> str | None:
     ``ClipboardContentError`` (not ``None``). On macOS Aqua the default reader
     reads the pasteboard's ``public.html`` type (via ``osascript`` / AppKit);
     on Linux X11 it requests CLIPBOARD ``text/html`` via ``xclip -o`` (a
-    missing ``xclip`` raises ``ClipboardContentError``). Other platforms'
-    native readers are not available yet. Tests inject a reader via
-    ``set_html_clipboard_reader``.
+    missing ``xclip`` raises ``ClipboardContentError``); on Linux Wayland via
+    ``wl-paste``; on Windows it reads the registered ``HTML Format`` through
+    user32 (``ctypes``), retrying briefly (about 1 s) while another process
+    holds the clipboard before raising ``ClipboardContentError``. Tests inject
+    a reader via ``set_html_clipboard_reader``.
     """
     offer = _call_content_backend("HTML read", _html_clipboard_reader)
     return _decode_html_offer(offer)

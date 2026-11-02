@@ -223,6 +223,25 @@ jobs:
           uv run --locked \
             pytest tests/test_paste_html_native_linux_wayland.py -v -rP
 
+  native-windows-paste-html:
+    name: Native Windows paste_html (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Gated Windows paste_html probe (skips on an evidence limit)
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: uv run --locked pytest tests/test_paste_html_native_windows.py -v -rsP
+
   ci-passed:
     name: CI passed
     if: always()
@@ -233,6 +252,7 @@ jobs:
       - native-linux-x11-paste-html
       - native-linux-wayland-copy-image
       - native-linux-wayland-paste-html
+      - native-windows-paste-html
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -244,6 +264,7 @@ jobs:
           NATIVE_X11_PASTE_HTML_RESULT: ${{ needs.native-linux-x11-paste-html.result }}
           NATIVE_WAYLAND_RESULT: ${{ needs.native-linux-wayland-copy-image.result }}
           NATIVE_WAYLAND_PASTE_HTML_RESULT: ${{ needs.native-linux-wayland-paste-html.result }}
+          NATIVE_WINDOWS_PASTE_HTML_RESULT: ${{ needs.native-windows-paste-html.result }}
         run: >-
           test "$QUALITY_RESULT" = success
           && test "$TEST_RESULT" = success
@@ -251,3 +272,4 @@ jobs:
           && test "$NATIVE_X11_PASTE_HTML_RESULT" = success
           && test "$NATIVE_WAYLAND_RESULT" = success
           && test "$NATIVE_WAYLAND_PASTE_HTML_RESULT" = success
+          && test "$NATIVE_WINDOWS_PASTE_HTML_RESULT" = success

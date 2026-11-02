@@ -97,10 +97,13 @@ def _fragment_range(
     if (html_start == -1) != (html_end == -1):
         raise _envelope_error("only one of StartHTML / EndHTML is present")
     if html_start != -1:
-        if not header_end <= html_start <= html_end <= length:
+        # StartHTML may point into the header block: Windows PowerShell's
+        # ``Set-Clipboard -AsHtml`` sets it at its header's own line break.
+        # Only the fragment (checked above) must start after the header.
+        if not 0 <= html_start <= html_end <= length:
             raise _envelope_error(
                 f"HTML range {html_start}..{html_end} is outside the envelope "
-                f"body {header_end}..{length} or reversed"
+                f"0..{length} or reversed"
             )
         if not html_start <= start <= end <= html_end:
             raise _envelope_error(

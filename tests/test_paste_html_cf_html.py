@@ -102,6 +102,47 @@ def test_raw_utf8_source_url_does_not_shift_fragment(windows_board):
     assert "例え" not in result and "SourceURL" not in result
 
 
+def _powershell_as_html_envelope(fragment: str, title: str) -> bytes:
+    """Mimic Windows PowerShell ``Set-Clipboard -AsHtml`` (SetClipboardCommand).
+
+    ``sb.AppendLine(Header)`` then ``StartHTML = Header.Length``: StartHTML
+    points at the header's own CRLF, inside the header block, while the
+    fragment offsets are correct UTF-8 byte counts.
+    """
+    names = ("StartHTML", "EndHTML", "StartFragment", "EndFragment")
+    names += ("StartSelection", "EndSelection")
+
+    def header(values: dict[str, int]) -> str:
+        lines = ["Version:0.9"] + [f"{n}:{values.get(n, 0):09d}" for n in names]
+        return "\r\n".join(lines)
+
+    head_chars = len(header({}))
+    pre = (
+        '\r\n<!DOCTYPE HTML  PUBLIC "-//W3C//DTD HTML 4.0  Transitional//EN">\r\n'
+        f"<html><head><title>{title}</title></head><body><!--StartFragment-->"
+    ).encode()
+    frag = fragment.encode()
+    post = b"<!--EndFragment--></body></html>"
+    start = head_chars + len(pre)
+    values = {
+        "StartHTML": head_chars,
+        "EndHTML": start + len(frag) + len(post),
+        "StartFragment": start,
+        "EndFragment": start + len(frag),
+    }
+    values["StartSelection"] = values["StartFragment"]
+    values["EndSelection"] = values["EndFragment"]
+    return header(values).encode() + pre + frag + post
+
+
+def test_start_html_inside_header_like_powershell_as_html(windows_board):
+    envelope = _powershell_as_html_envelope(FRAGMENT, "Ünïcödé 東京 context")
+    head_end = envelope.index(b"\r\n<!DOCTYPE") + 2
+    assert _offset(envelope, "StartHTML") == head_end - 2  # at the header CRLF
+    offer(windows_board, envelope)
+    assert paste_unchanged(windows_board) == FRAGMENT
+
+
 def test_nul_inside_fragment_range_raises(windows_board):
     offer(windows_board, build_cf_html("<b>a\x00b</b>", before=CONTEXT_BEFORE))
     error = paste_fails(windows_board, "fragment bytes .* contain NUL characters")
@@ -113,7 +154,7 @@ def _good() -> bytes:
 
 
 def _offset(envelope: bytes, name: str) -> int:
-    return int(envelope.split(name.encode() + b":")[1][:10])
+    return int(envelope.split(name.encode() + b":")[1].split(b"\r\n")[0])
 
 
 CORRUPTIONS = {
@@ -160,6 +201,10 @@ CORRUPTIONS = {
     "fragment-after-html": (
         lambda e: set_header(e, "EndHTML", str(_offset(e, "EndFragment") - 1)),
         "outside the HTML range",
+    ),
+    "html-range-reversed": (
+        lambda e: set_header(e, "StartHTML", str(_offset(e, "EndHTML") + 1)),
+        "HTML range .* is outside the envelope .* or reversed",
     ),
     "html-beyond-envelope": (
         lambda e: set_header(e, "EndHTML", str(len(e) + 1)),

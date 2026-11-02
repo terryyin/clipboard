@@ -113,9 +113,9 @@ def test_helper_failure_is_content_error(darwin_helper, helper_kwargs, message):
 def test_non_darwin_default_reader_is_not_available(
     monkeypatch, restore_html_clipboard_reader
 ):
-    # Linux X11 and Wayland have readers (tests/test_paste_html_x11_reader.py,
-    # tests/test_paste_html_wayland_reader.py); Windows does not yet.
-    monkeypatch.setattr(_html_native.sys, "platform", "win32")
+    # Windows, Linux X11 and Wayland have readers (tests/test_paste_html_*
+    # _reader.py); an unsupported platform such as Solaris does not.
+    monkeypatch.setattr(_html_native.sys, "platform", "sunos5")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
 
     def no_helper(*args, **kwargs):

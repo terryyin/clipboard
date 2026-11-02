@@ -1,4 +1,4 @@
-"""Shared fixtures and paste_html() runners for gated Linux paste_html probes."""
+"""Shared fixtures and paste_html() runners for gated native paste_html probes."""
 
 from __future__ import annotations
 

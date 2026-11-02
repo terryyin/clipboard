@@ -242,6 +242,25 @@ Evidence / verified platforms:
   wl-clipboard 2.2.1. The producer is an independent helper, **not** a
   browser or rich editor; the venue is headless CI; the result covers Sway
   only and does not generalize to other Wayland compositors.
+* Windows desktop HTML **reads** via ``paste_html`` (default reader: the
+  registered ``HTML Format`` through user32 / kernel32 via ``ctypes``, no
+  pywin32; the fragment is cut at the envelope's UTF-8 ``StartFragment`` /
+  ``EndFragment`` byte offsets; ``OpenClipboard`` is retried for about 1 s
+  while another process holds the clipboard, then ``ClipboardContentError``)
+  are **pending** native evidence — an explicit **evidence limit**, not yet
+  verified. Earlier work judged ``windows-latest`` not to be a desktop
+  clipboard venue; gated GitHub Actions job ``native-windows-paste-html``
+  now attempts that observation with
+  ``scripts/probe_windows_native_paste_html.py``: independent Windows
+  PowerShell 5.1 / .NET Framework producers (a hand-built byte-offset
+  envelope placed via ``DataObject`` + ``MemoryStream``; ``Set-Clipboard
+  -AsHtml``, whose ``StartHTML`` points at its own header line break and is
+  tolerated, checked whenever its offsets are UTF-8 bytes; and a recorded
+  ``Clipboard.SetText(..., Html)`` envelope — helpers, **not** a browser or
+  rich editor) offer a non-ASCII fragment with non-ASCII unselected context. When the runner has no usable clipboard
+  session the probe reports ``evidence_limit`` / ``verified: false`` (exit 2)
+  and the job **skips** with that reason. Until that job is observed passing,
+  treat Windows HTML read as unverified.
 
 Default automated tests use an in-memory backend and do not exercise a real
 desktop clipboard; native probes stay explicitly gated and are not part of the

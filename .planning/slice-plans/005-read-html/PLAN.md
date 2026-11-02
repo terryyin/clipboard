@@ -268,6 +268,15 @@ envelopes/helpers; evidence wording is honest.
   a9539fa: `native-linux-wayland-paste-html` PASSED (Sway 1.11,
   wl-clipboard 2.2.1 printing "Nothing is copied" when empty) and
   `native-linux-x11-paste-html` PASSED again after the probe refactor.
+- Slice 6: Windows reader in `clipboard/_html_native_windows.py` (ctypes
+  only, `_win32_api()` seam, bounded `OpenClipboard` retry, read-only,
+  returns `_cf_html_offer(raw)`). Coordinator decision: `StartHTML` may point
+  into the header (PowerShell `Set-Clipboard -AsHtml` shape) because the
+  fragment offsets still yield a trustworthy fragment; `StartFragment` must
+  still be past the header. Native venue: gated CI job
+  `native-windows-paste-html` on `windows-latest`, which skips (evidence
+  limit) when the runner has no usable clipboard session. README.rst and
+  ci.yml were already over 250 lines before this story; not split here.
 
 ## Concern evidence
 

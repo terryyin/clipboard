@@ -25,9 +25,9 @@ def test_injected_reader_absence_is_none(restore_html_clipboard_reader):
 
 
 def test_reset_reader_restores_default(monkeypatch, restore_html_clipboard_reader):
-    # A platform with no native reader yet, and no helper may run, so the
-    # default reader never touches a real pasteboard or X11 CLIPBOARD.
-    monkeypatch.setattr(clipboard._html_native.sys, "platform", "win32")
+    # A platform with no native reader, and no helper may run, so the default
+    # reader never touches a real pasteboard, CLIPBOARD or Windows clipboard.
+    monkeypatch.setattr(clipboard._html_native.sys, "platform", "sunos5")
 
     def no_helper(*args, **kwargs):
         raise AssertionError("default reader must not run a helper here")
@@ -39,7 +39,7 @@ def test_reset_reader_restores_default(monkeypatch, restore_html_clipboard_reade
         clipboard._html._html_clipboard_reader
         is clipboard._html_native._default_html_clipboard_reader
     )
-    with pytest.raises(clipboard.ClipboardContentError):
+    with pytest.raises(clipboard.ClipboardContentError, match="not available"):
         clipboard.paste_html()
 
 
@@ -96,15 +96,13 @@ assert clipboard.paste_html() == "<b>ok</b>"
 clipboard.set_html_clipboard_reader(lambda: None)
 assert clipboard.paste_html() is None
 clipboard.set_html_clipboard_reader(None)
-import os
-# The default reader must not touch a real pasteboard: on this pretend Linux
-# no helper (xclip / wl-paste) can be found, whatever the real session is.
-sys.platform = "linux"
-os.environ["PATH"] = "/nonexistent-clipboard-test-path"
+# The default reader must not touch a real clipboard: this pretend platform
+# has no native reader, whatever the real host (including Windows) is.
+sys.platform = "sunos5"
 try:
     clipboard.paste_html()
-except clipboard.ClipboardContentError:
-    pass
+except clipboard.ClipboardContentError as exc:
+    assert "not available" in str(exc), exc
 else:
     raise AssertionError("default reader should raise ClipboardContentError")
 assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
