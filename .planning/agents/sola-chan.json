@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Sola-chan",
+  "email": "sola-chan@example.org",
+  "identity": "SEED-001#shared-native-clear-proof",
+  "mode": "story-branch",
+  "branch": "claude/define-cleared-once-across-the-native-clear-prob",
+  "host": "claude",
+  "model": "opus"
+}
