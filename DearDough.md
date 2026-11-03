@@ -403,7 +403,7 @@ pass then stopped at the subsystem gate on the new duplication.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.82
-  - Evidence: `.planning/slice-plans/012-bounded-x11-text-write/PLAN.md` Current decisions ("Correction stays inside the text subsystem"; "Feed `xclip` a temp-file `stdin`"); `clipboard/_files_native_x11_writer.py` `_start_owner` from d74c178 (SEED-001#bounded-x11-file-write); slice 1 refactor report ending `## REFACTOR JIDOKA STOP`, coordinator AskUserQuestion, maintainer chose "Defer as follow-up"; plan Learnings slice 1 entry
+  - Evidence: `.planning/slice-plans/012-bounded-x11-text-write/PLAN.md` at before-cleanup commit 6d26a2f, Current decisions ("Correction stays inside the text subsystem"; "Feed `xclip` a temp-file `stdin`"); `clipboard/_files_native_x11_writer.py` `_start_owner` from d74c178 (SEED-001#bounded-x11-file-write); slice 1 refactor report ending `## REFACTOR JIDOKA STOP`, coordinator AskUserQuestion, maintainer chose "Defer as follow-up" (queued as SEED-001#bounded-helper-owner-write); plan Learnings slice 1 entry
   - Observed effect: One human interruption and a resumed refactor agent (~62k subagent tokens across both turns) for zero edits; the share-or-defer choice was made mid-execution instead of at planning
   - Inference: A PFE pass during slice planning (the plan names `dough-pfe` for relocating responsibility) would likely have found the sibling launcher and let the plan record share-or-defer up front
 

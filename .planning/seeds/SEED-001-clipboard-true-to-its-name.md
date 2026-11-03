@@ -85,31 +85,6 @@ platform distinctions, reuse candidates, and uncertainty.
 
 ## Story Decomposition
 
-<a id="bounded-x11-text-write"></a>
-
-### Bound the X11 text write for large text on a stalled display
-
-**Identity:** SEED-001#bounded-x11-text-write
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/012-bounded-x11-text-write/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"49c53cff5acac2714373807928aa4b62d600b74bef85fa96a4a9d0ceba954949","plan":"8d26bef174c6eed0b88d31dd7bac3ba67fae7f39b5aad6797a599bae6167feb2"}}
-```
-
-**Goal:** Callers of `copy(text)` on Linux X11 get the documented bounded
-`ClipboardContentError` instead of an indefinite hang when the X server stalls
-and the text is larger than a pipe buffer, so SEED-001#portable-text's "never
-an indefinite wait" holds for every text size.
-
-**Scope:** Correction of SEED-001#portable-text's owned X11 writer only: feed
-`xclip` its input without a blocking unbounded pipe write, keeping the
-background owner, exact-bytes read-back, stderr quoting and owner cleanup;
-remove the test-only `os.killpg` fallback; make the gated Wayland text wrapper
-fail rather than skip on a missing session or helper. Excludes the same
-pattern in `copy_image` and any change to selection rules.
-[Plan](../slice-plans/012-bounded-x11-text-write/PLAN.md)
-
-The maintainer accepted keeping this correction first in the queue on
-2026-11-03.
-
 <a id="clear-clipboard"></a>
 
 ### Clear every representation from the current clipboard
