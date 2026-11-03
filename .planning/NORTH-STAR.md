@@ -54,5 +54,14 @@ translation only. Verified with independent producers / consumers on macOS
 Aqua (local probe), X11 (Xvfb CI), Wayland (Sway CI), and Windows
 (`windows-latest` CI); delegated paths unverified (README Evidence).
 
+**Clear (delivered 2026-11-03):** explicit `clear()` (no extra) leaves no
+offer at all, unlike `copy("")`, with native clears on macOS Aqua
+(`clearContents`), Wayland (`wl-copy --clear`), X11 (libX11
+`XSetSelectionOwner(None)`) and Windows (`EmptyClipboard`). Each was verified
+with independent producers of text, HTML, image, file list and unknown types
+and independent consumers: macOS by local probe, X11 / Sway /
+`windows-latest` in CI. An unowned or nothing-copied Linux clipboard now reads
+as an empty `inspect()` snapshot (README Evidence).
+
 **Affects:** Later file and further rich-content stories should follow the same
 explicit-API + optional-extra shape unless evidence forces a revision.
