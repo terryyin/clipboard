@@ -101,7 +101,7 @@ claims need an independent producer and consumer in other processes.
 | Real `xclip` no-owner wording on CI is the `_XCLIP_NO_TARGETS` marker | Slice 3 classification; slices 5's proof | CI run 41649816028: xclip 0.13 on ubuntu-26.04 Xvfb → exit 1, `Error: target TARGETS not available`; newer wording `There is no owner for the` also recognized | Settled |
 | macOS `clearContents` removes every type and repeats cleanly | Slice 2 clearer | macOS 26.6.2, private named pasteboard via `osascript` / AppKit: `public.html`, `Apple HTML pasteboard type`, `public.utf8-plain-text`, `NSStringPboardType` → `clearContents` → 0 types; second `clearContents` → 0 types; change count 1 → 2 → 3; `stringForType` nil | Settled for the call; general pasteboard and any privacy prompt in slice 2's gated probe |
 | `copy("")` leaves an empty text offer on macOS and X11 and truly clears on Windows / Wayland | Example 4 contrast, README wording | pyperclip 1.11.0 source: Windows `EmptyClipboard` without data (418–440), Wayland `wl-copy --clear` (210–230), X11 pipes `""` to `xclip` (157–167); macOS empty `pbcopy` leaves `public.utf8-plain-text` (SEED-001#portable-text observation) | Settled |
-| `wl-copy --clear` empties the selection on Sway and ends a `wl-copy` owner | Slice 4 clearer | Needs Sway | **Early probe** at the start of slice 4 |
+| `wl-copy --clear` empties the selection on Sway and ends a `wl-copy` owner | Slice 4 clearer | CI run 41651498162: raw `wl-copy --clear` exit 0 in 0.002 s, then `Nothing is copied`, owner exited | Settled |
 | A non-owner `XSetSelectionOwner(CLIPBOARD, None)` empties CLIPBOARD under Xvfb and makes an `xclip` owner exit; libX11 loads by `ctypes` on `ubuntu-latest` | Slice 5 mechanism | Needs Xvfb | **Early probe** at the start of slice 5; false → `xsel --clear` fallback per Assumptions |
 | `OpenClipboard(NULL)` + `EmptyClipboard` removes every format for an independent consumer on `windows-latest` | Slice 6 clearer | Needs a Windows session | **Early probe** at the start of slice 6 |
 | CI hosts Xvfb + `xclip`, Sway + `wl-clipboard`, and a `windows-latest` clipboard session | Slices 3–6 venues | `ci.yml` jobs `native-linux-x11-*`, `native-linux-wayland-*`, `native-windows-paste-html` | Settled for venues |
@@ -175,7 +175,7 @@ is observable through the library.
 
 ### 4. Linux Wayland clear (Sway)
 Type: Behavior
-Status: planned
+Status: done
 Proof: first, the early probe in the Sway job. A `wl-copy` owner of
 `text/html`, then `wl-copy --clear`, then `wl-paste -l` reports nothing
 copied and the owner PID exits. Then desktop-free tests: Wayland dispatch
@@ -294,8 +294,9 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   `native-linux-wayland-clear` (`native-wayland-clear.yml`) record the fresh
   session's raw helper wording, then run `scripts/probe_linux_{x11,wayland}_native_clear.py`
   step 1; slices 4–5 append clear steps to each probe's `_probe`.
-- Slice 4 (desktop-free proof accepted 2026-11-03; native proof pending the
-  published revision's CI): `clipboard/_clear_wayland.py` runs `wl-copy
+- Slice 4 (accepted 2026-11-03; native CI run 41651498162 on 0da29c3, Sway
+  1.11 + wl-clipboard 2.2.1: raw `wl-copy --clear` exit 0 emptied an
+  independent owner; all 7 probe steps ok, library image owner PID exited): `clipboard/_clear_wayland.py` runs `wl-copy
   --clear` (stdin closed, stderr to a temp file, 10 s bound); `_clear.py`
   Linux dispatch: Wayland via `_is_linux_wayland`, no session raises,
   X11-only still "not available". Probe steps 2–7 in

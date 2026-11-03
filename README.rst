@@ -529,14 +529,18 @@ Evidence / verified platforms (native probes gated via
   Evidence limits: whether a macOS privacy prompt appeared on screen is
   unobserved (the probe cannot capture the screen); every ``clear()``
   finished within its bound without blocking. Linux Wayland (``wl-copy
-  --clear``) **pending CI**: ``scripts/probe_linux_wayland_native_clear.py``
+  --clear``) **verified** in CI run 41651498162:
+  ``scripts/probe_linux_wayland_native_clear.py``
   (wrapper ``tests/test_clear_native_linux_wayland.py``, job
   ``native-linux-wayland-clear``) on headless Sway 1.11 with wl-clipboard
   2.2.1 on ``ubuntu-26.04`` first records the raw ``wl-copy --clear`` against
   an independent ``text/html`` owner, then has independent ``wl-copy``
   producers of ``text/html`` and ``text/plain;charset=utf-8`` and a
   ``copy_image()`` owner each followed by a child ``clear()``, ``clear()``
-  twice, and a ``PATH`` without ``wl-copy``. Evidence limits: other Wayland
+  twice, and a ``PATH`` without ``wl-copy``. Each time ``wl-paste -l`` then
+  said ``Nothing is copied``, every reader read absence, the library's
+  background ``wl-copy`` image owner exited within 5 s, and the ``PATH``
+  case raised ``ClipboardContentError`` naming ``wl-clipboard``. Evidence limits: other Wayland
   compositors, and desktops with clipboard managers (GNOME, KDE Plasma /
   Klipper) that may re-offer a saved entry, are unverified. Linux X11 and
   Windows clears are not available yet.

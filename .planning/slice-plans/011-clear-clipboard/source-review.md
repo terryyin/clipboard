@@ -43,9 +43,9 @@
 | 2.2b | The retry stays within a documented bound | slice 6 | |
 | 2.3 | Linux X11: give up CLIPBOARD ownership so no owner remains | slice 5 | |
 | 2.3a | `xclip` has no clear operation; planning chooses the X11 mechanism (qualification) | slice 5 | |
-| 2.4 | Linux Wayland: `wl-copy --clear` | slice 4 | |
-| 2.5 | Session selection uses the existing writer rule: Wayland when `WAYLAND_DISPLAY` or the session type says so | slice 4 | |
-| 2.5a | This matches how image write, HTML and inspect choose a session (qualification) | slice 4 | |
+| 2.4 | Linux Wayland: `wl-copy --clear` | slice 4 | observed: clipboard/_clear_wayland.py runs wl-copy --clear; CI run 41651498162 native-linux-wayland-clear steps 2-6 ok |
+| 2.5 | Session selection uses the existing writer rule: Wayland when `WAYLAND_DISPLAY` or the session type says so | slice 4 | observed: clipboard/_clear.py uses _desktop._is_linux_wayland; tests/test_clear.py::test_wayland_default_clearer_runs_bounded_wl_copy_clear [wayland-only, both-sessions, xdg-session-type] |
+| 2.5a | This matches how image write, HTML and inspect choose a session (qualification) | slice 4 | observed: same _desktop._is_linux_wayland rule as image write / HTML / inspect; tests/test_clear.py both-sessions case selects Wayland |
 | 3.1 | On X11, `inspect()` returns an empty snapshot when CLIPBOARD has no owner (`xclip` "target TARGETS not available") instead of raising | slice 3 | observed: CI run 41649816028 (342f12c) native-linux-x11-clear step 1: xclip 0.13 exit 1 'target TARGETS not available', inspect() empty; tests/test_inspect_x11.py::test_unowned_clipboard_inspects_as_empty_snapshot (both wordings) |
 | 3.2 | On Wayland, `inspect()` returns an empty snapshot when nothing is copied (`wl-paste` "Nothing is copied" / "No selection") instead of raising | slice 3 | observed: CI run 41649816028 (342f12c) native-linux-wayland-clear step 1: wl-paste -l exit 1 'Nothing is copied', inspect() empty; tests/test_inspect_wayland.py::test_nothing_copied_inspects_as_empty_snapshot (both wordings) |
 | 3.3 | Reason: inspect's contract already says an empty offer gives an empty snapshot (qualification) | slice 3 | observed: clipboard/_desktop.py _xclip_targets_inspect / _wl_paste_list_types_inspect return () on no owner / nothing copied |
@@ -76,7 +76,7 @@
 | 6.3.1 | macOS: gated owner-desktop probe (`CLIPBOARD_NATIVE_PROBE=1`), `osascript` producer, type list and `pbpaste` consumers | slice 2 | observed: tests/test_clear_native_macos.py + scripts/probe_macos_native_clear.py passed under CLIPBOARD_NATIVE_PROBE=1 on macOS 26.6.2 (osascript producers, JXA types + pbpaste consumers) |
 | 6.3.2 | Windows: gated `windows-latest` job, PowerShell `Set-Clipboard` producer, format enumeration / `Get-Clipboard` consumers | slice 6 | |
 | 6.3.3 | X11: the existing Xvfb + `xclip` job, with no clipboard manager | slice 5 | |
-| 6.3.4 | Wayland: the existing Sway + `wl-clipboard` job | slice 4 | |
+| 6.3.4 | Wayland: the existing Sway + `wl-clipboard` job | slice 4 | observed: CI run 41651498162 native-linux-wayland-clear (Sway 1.11, wl-clipboard 2.2.1): tests/test_clear_native_linux_wayland.py PASSED |
 | 6.4 | The README names those sessions and their helper versions | slice 6 | |
 | 6.5 | GNOME, KDE and any desktop with a clipboard manager are evidence limits, not verified claims (exclusion) | slice 6 | |
 | 6.6 | Default pytest stays desktop-free through an explicit injection seam | slice 1 | observed: clipboard/_clear.py set_clipboard_clearer seam; tests/test_clear.py fakes only, desktop-free |
