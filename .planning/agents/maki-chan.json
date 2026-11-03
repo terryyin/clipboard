@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "agent": "Maki-chan",
+  "email": "maki-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-001#bounded-x11-text-write",
+  "host": "claude"
+}
