@@ -38,9 +38,6 @@ class FakeUriListOwner:
     def poll(self):
         return self.status
 
-    def kill(self):
-        self.x11.killed.append(self.pid)
-
 
 class FakeX11Files:
     def __init__(self):

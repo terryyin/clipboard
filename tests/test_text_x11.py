@@ -200,16 +200,6 @@ def test_owner_that_never_offers_raises_after_the_bound(x11, monkeypatch):
     assert x11.killed == [4242]
 
 
-def test_owner_is_killed_directly_where_process_groups_do_not_exist(x11, monkeypatch):
-    monkeypatch.setattr(_text_native_x11, "_X11_TEXT_WRITE_TIMEOUT_S", 0.2)
-    monkeypatch.delattr(_text_native_x11.os, "killpg")
-    x11.never_offers = True
-
-    with pytest.raises(clipboard.ClipboardContentError, match="0.2s bound"):
-        clipboard.copy("x")
-    assert x11.killed == [4242]
-
-
 @pytest.mark.parametrize(
     ("error", "expected"),
     [

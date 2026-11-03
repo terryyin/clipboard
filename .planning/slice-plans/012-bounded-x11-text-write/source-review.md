@@ -23,6 +23,6 @@ changes to the writer, with commitments 5 and 6 explicitly listed by Scope.
 | 4.2 | keeping exact-bytes read-back | slice 1 | observed: _owner_serves compares UTF8_STRING to exact bytes; FakeOwner data read from stdin file; tests/test_text_x11.py writer tests pass |
 | 4.3 | keeping stderr quoting | slice 1 | observed: tests/test_text_x11.py::test_owner_exiting_early_raises_quoting_its_stderr |
 | 4.4 | keeping owner cleanup | slice 1 | observed: tests/test_text_x11_write_stall.py signalled == [owner.pid]; tests/test_text_x11.py::test_owner_that_never_offers_raises_after_the_bound |
-| 5 | remove the test-only `os.killpg` fallback | slice 2 | |
+| 5 | remove the test-only `os.killpg` fallback | slice 2 | observed: clipboard/_text_native_x11.py _stop_owner calls os.killpg directly (no getattr/proc.kill branch); fallback test and FakeOwner.kill removed; tests/test_text_x11.py::test_owner_that_never_offers_raises_after_the_bound still asserts group kill |
 | 6.1 | make the gated Wayland text wrapper fail rather than skip on a missing session | slice 3 | |
 | 6.2 | make the gated Wayland text wrapper fail rather than skip on a missing helper | slice 3 | |

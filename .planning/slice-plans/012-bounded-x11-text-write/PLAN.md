@@ -91,7 +91,7 @@ Windows has no `os.killpg` and slice 2 removes the fallback.
 
 ### 2. Remove the test-only process-group fallback
 Type: Structure
-Status: planned
+Status: done
 Proof: row 4 above.
 
 Correction: `_stop_owner` calls `os.killpg` directly; the `proc.kill()`

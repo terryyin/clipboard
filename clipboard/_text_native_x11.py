@@ -114,16 +114,9 @@ def _owner_serves(data: bytes, deadline: float) -> bool:
 
 
 def _stop_owner(proc: subprocess.Popen) -> None:
-    """Best effort: stop an owner that never offered (its whole session).
-
-    ``os.killpg`` is POSIX-only; without it, kill the owner process itself.
-    """
-    killpg = getattr(os, "killpg", None)
+    """Best effort: stop an owner that never offered (its whole session)."""
     try:
-        if killpg is None:
-            proc.kill()
-        else:
-            killpg(proc.pid, signal.SIGTERM)
+        os.killpg(proc.pid, signal.SIGTERM)
     except (ProcessLookupError, PermissionError):
         pass
 
