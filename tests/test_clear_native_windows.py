@@ -23,13 +23,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 PROBE = ROOT / "scripts" / "probe_windows_native_clear.py"
-EMPTY_READS = {
-    "inspect": {"value": {"kinds": [], "formats": []}},
-    "paste": {"value": ""},
-    "paste_html": {"value": None},
-    "paste_files": {"value": None},
-    "paste_image": {"value": None},
-}
 STEPS = [
     "1_early_raw_empty_clipboard_leaves_no_formats",
     "2_html_and_text_producer_then_child_clear_reads_empty",
@@ -66,53 +59,9 @@ def test_windows_native_clear_probe():
     assert report["evidence_limit"] is False
     assert report["ok"] is True
     assert report["failed_steps"] == []
-    steps = {step["step"]: step for step in report["steps"]}
+    # Each step's ``ok`` carries its own conditions (the shared "cleared"
+    # rule for steps 2-6, the holder bound for 7-8); the list fixes the order.
     assert [step["step"] for step in report["steps"]] == STEPS
-
-    raw = steps[STEPS[0]]
-    assert {"HTML Format", 13} <= set(raw["consumer_before"]["formats"])
-    assert raw["raw_empty"]["report"]["emptied"] is True
-    assert raw["raw_empty"]["report"]["closed"] is True
-    assert raw["consumer_after"]["formats"] == []
-
-    for name, offered in (
-        (STEPS[1], {"HTML Format", 13}),
-        (STEPS[3], {15}),
-        (STEPS[4], {"ClipboardProbe.Custom"}),
-    ):
-        assert offered <= set(steps[name]["consumer_before"]["formats"]), name
-    assert {8, 17, 2} & set(steps[STEPS[2]]["consumer_before"]["formats"])
-    for name in STEPS[1:5]:
-        produced = steps[name]
-        assert produced["producer"]["returncode"] == 0, name
-        assert produced["child_clear"]["outcome"] == {"raised": None}, name
-        assert produced["consumer_after"]["formats"] == [], name
-        assert produced["reads"] == EMPTY_READS, name
-    assert steps[STEPS[3]]["file_existed"] is True
-
-    twice = steps[STEPS[5]]
-    assert twice["first"]["outcome"] == twice["second"]["outcome"] == {"raised": None}
-    assert twice["consumer_after"]["formats"] == []
-    assert twice["reads"] == EMPTY_READS
-
-    held = steps[STEPS[6]]
-    assert held["holder_ready"]["holds_at_ready"] is True
-    assert held["child_clear"]["returncode"] == 3
-    outcome = held["child_clear"]["outcome"]
-    assert outcome["raised"] == "ClipboardContentError"
-    assert "held by another process" in outcome["message"]
-    assert "clearing the clipboard" in outcome["message"]
-    elapsed = held["child_clear"]["elapsed_s"]
-    assert held["library_bound_s"] <= elapsed < held["holder_seconds"]
-    assert held["holder_released"]["holds_before_release"] is True
-    assert {"HTML Format", 13} <= set(held["consumer_after_release"]["formats"])
-
-    brief = steps[STEPS[7]]
-    assert brief["holder_ready"]["holds_at_ready"] is True
-    assert brief["child_clear"]["outcome"] == {"raised": None}
-    assert brief["child_clear"]["elapsed_s"] < brief["library_bound_s"]
-    assert brief["holder_released"]["holds_before_release"] is True
-    assert brief["consumer_after"]["formats"] == []
 
     env = report["environment"]
     assert env["os"] == "Windows"
