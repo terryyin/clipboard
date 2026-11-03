@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Anri-chan",
+  "email": "anri-chan@example.org",
+  "identity": "SEED-001#bounded-x11-file-write",
+  "mode": "story-branch",
+  "branch": "cursor/bound-the-x11-file-list-write-and-prove-director",
+  "host": "cursor"
+}
