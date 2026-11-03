@@ -32,7 +32,14 @@ with explicit evidence limits when no usable native session was available
 macOS Aqua verified by a real browser producer and Linux X11 (Xvfb CI),
 Wayland (Sway CI) and Windows (`windows-latest` CI) verified with named
 independent helper producers, browser interoperability there unobserved
-(2026-11-02).
+(2026-11-02); delivered `copy_files` local file-list copy offers (no
+`clipboard[images]` required, validation before replacing, copy not cut,
+reference not snapshot) with native offers read by independent consumers
+after the writer exits on macOS Aqua (local probe), Windows
+(`windows-latest` CI), X11 (Xvfb CI) and Wayland (Sway CI), file-manager
+paste verified only with the Explorer shell Paste verb (Windows CI) and
+Thunar (X11 CI), and Finder and Wayland file-manager paste evidence-limited
+(README Evidence) (2026-11-03).
 
 **Text (delivered 2026-11-03, SEED-001#portable-text):** `copy` / `paste` keep
 their names and pyperclip stays a dependency, but they are no longer bare

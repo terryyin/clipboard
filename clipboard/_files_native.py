@@ -1,4 +1,4 @@
-"""Platform dispatch for native file-list clipboard readers."""
+"""Platform dispatch for native file-list clipboard readers and writers."""
 
 from __future__ import annotations
 
@@ -10,8 +10,14 @@ from ._files_native_linux import (
     _linux_wayland_files_clipboard_reader,
     _linux_x11_files_clipboard_reader,
 )
-from ._files_native_macos import _macos_files_clipboard_reader
+from ._files_native_macos import (
+    _macos_files_clipboard_reader,
+    _macos_files_clipboard_writer,
+)
+from ._files_native_wayland_writer import _wayland_files_clipboard_writer
 from ._files_native_windows import _windows_files_clipboard_reader
+from ._files_native_windows_writer import _windows_files_clipboard_writer
+from ._files_native_x11_writer import _x11_files_clipboard_writer
 
 
 def _unavailable_native_reader_message() -> str:
@@ -35,3 +41,37 @@ def _default_files_clipboard_reader() -> object:
     if sys.platform == "win32":
         return _windows_files_clipboard_reader()
     raise ClipboardContentError(_unavailable_native_reader_message())
+
+
+def _unavailable_native_writer_message() -> str:
+    return (
+        "copy_files native file-list writer is not available on this platform "
+        f"({sys.platform}); no file-list copy offer adapter exists here yet "
+        "(macOS Aqua, Windows desktop, Linux X11 and Linux Wayland are "
+        "supported), so inject a writer with set_files_clipboard_writer for tests"
+    )
+
+
+def _default_files_clipboard_writer(paths: list[str]) -> None:
+    """Platform-selected file-list copy writer.
+
+    Darwin publishes file ``NSURL`` items through ``osascript`` / AppKit;
+    Windows publishes ``CF_HDROP`` plus ``Preferred DropEffect`` copy through
+    ``ctypes``; Linux X11 leaves a background ``xclip`` ``text/uri-list``
+    owner, and a Wayland session without X11 ``DISPLAY`` (same session rule as
+    the file-list reader) a background ``wl-copy`` server with the same body.
+    Other platforms raise ``ClipboardContentError`` naming the platform.
+    """
+    if sys.platform == "darwin":
+        _macos_files_clipboard_writer(paths)
+        return
+    if sys.platform == "win32":
+        _windows_files_clipboard_writer(paths)
+        return
+    if sys.platform.startswith("linux"):
+        if _linux_wayland_without_x11():
+            _wayland_files_clipboard_writer(paths)
+        else:
+            _x11_files_clipboard_writer(paths)
+        return
+    raise ClipboardContentError(_unavailable_native_writer_message())

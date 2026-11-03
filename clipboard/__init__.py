@@ -7,7 +7,12 @@ import sys as sys  # noqa: F401 — tests monkeypatch ``clipboard.sys.platform``
 
 from clipboard import _files, _html, _offer, _text
 from clipboard._errors import ClipboardContentError, ClipboardImageError
-from clipboard._files import paste_files, set_files_clipboard_reader
+from clipboard._files import (
+    copy_files,
+    paste_files,
+    set_files_clipboard_reader,
+    set_files_clipboard_writer,
+)
 from clipboard._html import (
     copy_html,
     paste_html,
@@ -38,6 +43,7 @@ __all__ = [
     "ClipboardKind",
     "ClipboardOfferSnapshot",
     "copy",
+    "copy_files",
     "copy_html",
     "copy_image",
     "inspect",
@@ -47,6 +53,7 @@ __all__ = [
     "paste_image",
     "set_clipboard_inspector",
     "set_files_clipboard_reader",
+    "set_files_clipboard_writer",
     "set_html_clipboard_reader",
     "set_html_clipboard_writer",
     "set_image_grabclipboard",
@@ -67,6 +74,8 @@ _INJECTION_GLOBAL_OWNERS = {
     "_default_clipboard_inspector": _offer,
     "_files_clipboard_reader": _files,
     "_default_files_clipboard_reader": _files,
+    "_files_clipboard_writer": _files,
+    "_default_files_clipboard_writer": _files,
     "_html_clipboard_writer": _html,
     "_default_html_clipboard_writer": _html,
     "_html_clipboard_reader": _html,

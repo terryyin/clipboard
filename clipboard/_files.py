@@ -1,13 +1,22 @@
-"""File-list clipboard read with injectable backends (no Pillow needed)."""
+"""File-list clipboard read and copy write with injectable backends.
+
+No Pillow needed: ``paste_files`` reads local file-list offers and
+``copy_files`` validates local paths before handing them to a writer that
+publishes one copy (not cut) file-list offer, so a desktop file manager can
+paste copies. Both raise ``ClipboardContentError`` on failure.
+"""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from typing import Any, NoReturn
-from urllib.parse import unquote, urlparse
+import os
+from collections.abc import Callable, Iterable
 
 from ._errors import ClipboardContentError, _call_content_backend
-from ._files_native import _default_files_clipboard_reader
+from ._files_native import (
+    _default_files_clipboard_reader,
+    _default_files_clipboard_writer,
+)
+from ._files_offer import _normalize_files_offer
 
 _files_clipboard_reader: Callable[[], object] = _default_files_clipboard_reader
 
@@ -34,135 +43,6 @@ def set_files_clipboard_reader(reader: Callable[[], object] | None) -> None:
     )
 
 
-def _raise_files_failure(detail: str) -> NoReturn:
-    raise ClipboardContentError(f"clipboard file-list read failed: {detail}")
-
-
-def _local_path_from_file_uri(uri: str) -> str | None:
-    """Decode one ``file://`` URI to a local path, or ``None`` if non-local.
-
-    Non-``file`` schemes are skipped (not fetched). Malformed ``file://``
-    references that cannot yield a trustworthy path raise
-    ``ClipboardContentError``.
-    """
-    stripped = uri.strip()
-    if not stripped or stripped.startswith("#"):
-        return None
-    if "\x00" in stripped:
-        _raise_files_failure(f"malformed file URI {stripped!r}")
-
-    parsed = urlparse(stripped)
-    scheme = parsed.scheme.lower()
-    if scheme != "file":
-        # Remote / non-file URI: skip without fetching (ordinary non-local).
-        return None
-
-    host = parsed.netloc.lower()
-    if host not in ("", "localhost", "localhost."):
-        return None
-
-    path = unquote(parsed.path)
-    if not path or path == "/":
-        _raise_files_failure(f"malformed file URI {stripped!r}")
-    if "\x00" in path:
-        _raise_files_failure(f"malformed file URI {stripped!r}")
-    return path
-
-
-def _paths_from_uri_list(payload: object) -> list[str] | None:
-    """Decode a ``text/uri-list`` payload to ordered local paths, or ``None``."""
-    if not isinstance(payload, str):
-        _raise_files_failure(
-            f"uri-list payload must be str, got {type(payload).__name__}"
-        )
-    if "\x00" in payload:
-        _raise_files_failure("corrupt uri-list metadata")
-
-    paths: list[str] = []
-    for line in payload.splitlines():
-        local = _local_path_from_file_uri(line)
-        if local is not None:
-            paths.append(local)
-    return paths or None
-
-
-def _paths_from_path_list(paths: object) -> list[str] | None:
-    """Accept a CF_HDROP-style path list; empty → ordinary absence."""
-    if not isinstance(paths, list):
-        _raise_files_failure(f"path list must be list, got {type(paths).__name__}")
-    if not paths:
-        return None
-    if not all(isinstance(item, str) for item in paths):
-        _raise_files_failure("corrupt path-list metadata (entries must be str)")
-    if any("\x00" in item for item in paths):
-        _raise_files_failure("corrupt path-list metadata")
-    # Return a new list so callers cannot mutate the offer through the result.
-    return list(paths)
-
-
-def _uri_list_payload(offer: Mapping[str, Any]) -> object:
-    if "uri_list" in offer:
-        return offer["uri_list"]
-    if "uri-list" in offer:
-        return offer["uri-list"]
-    return offer.get("data")
-
-
-def _paths_from_structured_offer(offer: Mapping[str, Any]) -> list[str] | None:
-    """Normalize a structured fake / adapter offer to local paths or ``None``.
-
-    Recognized kinds: ``uri-list`` / ``text/uri-list``, ``paths``, and absence
-    kinds ``text`` / ``text/plain``, ``image``, ``html`` / ``text/html``,
-    ``empty``. Cut/move companion fields are ignored for all library behavior
-    (no move/delete and no cut reissue).
-    """
-    kind = offer.get("kind")
-
-    if kind in ("corrupt", "invalid"):
-        detail = (
-            offer.get("message") or offer.get("detail") or "corrupt file-list metadata"
-        )
-        _raise_files_failure(str(detail))
-
-    if kind in ("uri-list", "text/uri-list"):
-        return _paths_from_uri_list(_uri_list_payload(offer))
-
-    if kind == "paths":
-        return _paths_from_path_list(offer.get("paths"))
-
-    if kind in ("text", "text/plain", "image", "html", "text/html", "empty"):
-        return None
-
-    # kind missing: infer from payload keys (cut-only / empty → absence).
-    if "uri_list" in offer or "uri-list" in offer:
-        return _paths_from_uri_list(_uri_list_payload(offer))
-    if "paths" in offer:
-        return _paths_from_path_list(offer.get("paths"))
-    if kind is None:
-        return None
-
-    _raise_files_failure(f"unrecognized file-list offer kind {kind!r}")
-
-
-def _normalize_files_offer(offer: object) -> list[str] | None:
-    """Map a raw reader result to ``list[str]`` local paths or ordinary ``None``."""
-    if offer is None:
-        return None
-
-    if isinstance(offer, list):
-        return _paths_from_path_list(offer)
-
-    if isinstance(offer, Mapping):
-        return _paths_from_structured_offer(offer)
-
-    # Bare strings are plain-text (or other non-file-list) offers — never parse
-    # path-looking text as a file-list success.
-    if isinstance(offer, str):
-        return None
-
-    _raise_files_failure(f"unrecognized file-list offer type {type(offer).__name__}")
-
-
 def paste_files() -> list[str] | None:
     """Return local filesystem paths from a file-list clipboard offer, or None.
 
@@ -183,3 +63,118 @@ def paste_files() -> list[str] | None:
     """
     raw = _call_content_backend("file-list read", _files_clipboard_reader)
     return _normalize_files_offer(raw)
+
+
+_files_clipboard_writer: Callable[[list[str]], None] = _default_files_clipboard_writer
+
+
+def set_files_clipboard_writer(
+    writer: Callable[[list[str]], None] | None,
+) -> None:
+    """Inject a file-list copy writer (tests / fakes); ``None`` restores default.
+
+    The writer receives one ``list[str]`` of absolute local paths, already
+    validated by ``copy_files``, and must publish them as one copy (not cut)
+    file-list offer or raise. ``ClipboardContentError`` passes through; other
+    exceptions are wrapped as ``ClipboardContentError``. The default writer is
+    the platform's native one described in ``copy_files``.
+    """
+    global _files_clipboard_writer
+    _files_clipboard_writer = (
+        _default_files_clipboard_writer if writer is None else writer
+    )
+
+
+def _validate_copy_files_paths(paths: object) -> list[str]:
+    """Reject invalid input before any clipboard replace (fail-before-replace).
+
+    Returns absolute ``str`` paths in caller order, duplicates kept. Relative
+    paths are made absolute against the current directory without resolving
+    symlinks (``os.path.abspath``). Every path must exist now.
+    """
+    if isinstance(paths, (str, bytes, bytearray, memoryview)):
+        raise ClipboardContentError(
+            "copy_files requires an iterable of paths, not a bare "
+            f"{type(paths).__name__} (wrap a single path in a list)"
+        )
+    if not isinstance(paths, Iterable):
+        raise ClipboardContentError(
+            "copy_files requires an iterable of str / os.PathLike paths "
+            f"(got {type(paths).__name__})"
+        )
+    items = list(paths)
+    if not items:
+        raise ClipboardContentError(
+            "copy_files requires at least one path "
+            "(an empty file list would clear the clipboard)"
+        )
+
+    given_paths: list[str] = []
+    absolute: list[str] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, (str, os.PathLike)):
+            raise ClipboardContentError(
+                f"copy_files path at index {index} must be str or os.PathLike "
+                f"(got {type(item).__name__})"
+            )
+        path = os.fspath(item)
+        if not isinstance(path, str):
+            raise ClipboardContentError(
+                f"copy_files path at index {index} must be a str path "
+                f"(got {type(path).__name__} from os.fspath)"
+            )
+        if path == "" or "\x00" in path:
+            raise ClipboardContentError(
+                f"copy_files path at index {index} is not a valid path ({path!r})"
+            )
+        given_paths.append(path)
+        absolute.append(os.path.abspath(path))
+
+    missing = [
+        given
+        for given, full in zip(given_paths, absolute, strict=True)
+        if not os.path.exists(full)
+    ]
+    if missing:
+        names = ", ".join(repr(given) for given in missing)
+        raise ClipboardContentError(f"copy_files path does not exist: {names}")
+    return absolute
+
+
+def copy_files(paths: Iterable[str | os.PathLike[str]]) -> None:
+    """Replace the clipboard with one copy (not cut) file-list offer.
+
+    ``paths`` is an ordered, non-empty iterable of ``str`` / ``os.PathLike``
+    local paths to existing files or directories. Relative paths are made
+    absolute against the current directory at call time (symlinks are kept,
+    not resolved); order and duplicates pass through. Does not require the
+    optional ``clipboard[images]`` extra.
+
+    Invalid input (empty iterable, a bare ``str`` / ``bytes``, a non-path
+    item, or a path that does not exist) raises ``ClipboardContentError``
+    before the writer runs, so the current clipboard is left untouched.
+    Writer, helper, access, or transfer failures also raise
+    ``ClipboardContentError``. On macOS Aqua the default writer publishes one
+    file-URL ``NSPasteboard`` item per path via ``osascript`` / AppKit; on
+    Windows desktop it sets ``CF_HDROP`` with ``Preferred DropEffect`` copy via
+    ``ctypes``; on Linux X11 it feeds a CRLF ``text/uri-list`` of ``file://``
+    URIs to a background ``xclip`` owner (missing ``DISPLAY`` / ``xclip``
+    raises with an install hint before the clipboard is replaced); on Linux
+    Wayland without X11 ``DISPLAY`` it pipes the same body to ``wl-copy --type
+    text/uri-list`` and confirms it with ``wl-paste`` (missing
+    ``WAYLAND_DISPLAY`` / wl-clipboard raises likewise); other platforms raise
+    ``ClipboardContentError`` naming the platform. Tests inject one via
+    ``set_files_clipboard_writer``.
+
+    There is no text fallback. The offer stays pasteable after the Python
+    process exits (macOS / Windows system clipboard; on Linux only while the
+    background ``xclip`` / ``wl-copy`` owner or the session lasts; persistence
+    across logout or reboot is not promised). It is a reference, not a
+    snapshot: files are neither locked nor copied, a file manager copies what
+    exists at paste time, and a source removed afterwards is reported or
+    skipped by the file manager with nothing raised here. Linux offers only
+    ``text/uri-list`` (one type per helper owner, so no GNOME copied-files
+    type).
+    """
+    absolute = _validate_copy_files_paths(paths)
+    _call_content_backend("file-list write", _files_clipboard_writer, absolute)

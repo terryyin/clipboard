@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 15
+- Highest allocated local number: 18
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -187,6 +187,15 @@ A desktop-free test for the Windows unavailable stub used `assert sys.platform !
   - Observed effect: One extra story-branch CI repair cycle on slice 4; the product helper would also have raised AttributeError where `os.killpg` is absent
   - Inference: Same root as the earlier row — a desktop-free test encoded a POSIX host capability; the next slice's delegation brief carried the warning and slice 5 / 6 unit tests had no such failure
 
+- Execution: SEED-001#copy-files
+  - Timestamp: 2026-11-03T08:20:26+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: runs 41558761684 (5787804: 12 setup errors `OSError: [Errno 22] Invalid argument` for the fixture file named with `"` and `\` on windows-latest) and 41559117116 (5df300b: 8 failures `No module named '_scproxy'` because the darwin_helper fixture patched the shared `sys.platform` to darwin on Windows, sending `Path.as_uri` into urllib's macOS branch); repairs 5df300b and 152faa2
+  - Observed effect: Two consecutive story-branch CI repair cycles right after slice 3 (about 5 minutes of CI wait each); product code unchanged
+  - Inference: Same root as the earlier rows: desktop-free tests encoded a POSIX host (file-name characters, platform faking on the shared `sys`); after the slice 4–6 briefs warned about it, the X11 and Wayland writer tests faked only a module-local `sys` and passed on every matrix OS first time
+
 ## DD-011 — Stop for authorization before cross-subsystem package split
 When the 250-line refactor check required splitting an oversize module into a package that also moved delivered sibling seams, execution stopped for an explicit developer choice instead of splitting without authority or deferring silently.
 
@@ -233,6 +242,15 @@ for Notepad. Each cost a full CI round trip although the product passed.
   - Observed effect: Slices 4 and 6 each needed one probe-only repair cycle (about 15–25 minutes of CI wait each) before native acceptance; no product code changed for these
   - Inference: Before the first gated run, check that each asserted floor has a runner-available source (package manager first) and that each stand-in consumer or holder observes the story's own example (here, Notepad and a real ownership hold); slice 4's lesson was carried into slices 5–6 briefs, which then failed only on the Windows-specific holder semantics
 
+- Execution: SEED-001#copy-files
+  - Timestamp: 2026-11-03T08:40:19+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: run 41560847952 job native-windows-copy-files: Explorer `Shell.Application` paste copies matched, drop effect 01-00-00-00, `GetFileDropList` exact, but `independent_paths_equal` failed because `Get-Clipboard -Format FileDropList | ForEach-Object { $_.FullName }` in PowerShell 5.1 yielded one space-joined string; probe-only repair ab913cf; run 41561268655 green
+  - Observed effect: One probe-only CI round trip (about 5 minutes) before slice 4's native acceptance; product passed on the first run
+  - Inference: A second independent reader added for robustness carried an unverified PowerShell collection assumption; the slice 5 and 6 probes passed on their first gated run
+
 ## DD-014 — Cancelled CI jobs attributed to supersession before checking runner acquisition
 A failed `CI passed` with cancelled macOS jobs was first reported as
 supersession by the next push; the jobs had zero steps and a GitHub annotation
@@ -263,3 +281,59 @@ after reading the same context again.
   - Evidence: refactor agents for slice 3 (60.8k subagent tokens, no edits), slice 4 CI repair c086e20 (47.8k, no edits), bound-clamp repair 43ee728 (50.4k, no edits); agent usage lines in the coordinator transcript
   - Observed effect: About 160k subagent tokens and several minutes per publication for no code change; other refactor passes in the same execution did make useful edits (owner→function map, shared Linux helper log, docs contradiction)
   - Inference: A proportionality rule (e.g. coordinator may record "no refactor candidates" for a repair whose diff is a few lines inside one function, or reuse the slice's refactor pass when the repair stays within already-reviewed code) could save cost without losing the passes that found real residue; timestamp is the last occurrence's repair commit 43ee728
+
+- Execution: SEED-001#copy-files
+  - Timestamp: 2026-11-03T08:40:19+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: coordinator delivered CI repairs 5df300b, 152faa2 and ab913cf (each a few lines in one test file or probe script) and the plan-only slice 2 commits without the required fresh refactor agent; every slice implementation increment did get one (slices 1, 3–7)
+  - Observed effect: The delivery contract's refactor step was skipped for small repairs, a compliance deviation rather than an authorized rule; no residue from those repairs has been reported
+  - Inference: The coordinator applied the proportionality this finding proposes without an authorizing rule; adopting the rule or keeping the step would stop silent skips
+
+## DD-016 — Source-freshness check chained into delivery ignored a conflict
+The Story Branch source-freshness check ran in the same shell command as the
+guarded delivery, so its `conflict` result was printed but not acted on, and a
+plan record contradicting trunk's newer evidence was published.
+
+### Occurrences
+- Execution: SEED-001#copy-files
+  - Timestamp: 2026-11-02T21:33:33+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: one coordinator Bash call ran `source-freshness.mjs check … | cut -c1-40` (printed `{"result":"conflict"`), then story-obligations and `execution-increment-delivery.mjs fresh`; published d503c8e recorded "no Linux desktop, X11 file-manager evidence limit" while trunk cc86951 had completed slice 2 with real Thunar evidence; correction 085b6d9 after a developer decision
+  - Observed effect: One wrong published plan record, one extra correction commit and one developer question; no product code affected
+  - Inference: Run the freshness check as its own gating call and branch on its result before any delivery command, as the coordinator did for every later delivery (`[ "$r" = unchanged ] || exit 1`)
+
+## DD-017 — Branch plan notes next to trunk-amended lines kept freshness in conflict
+Branch-only plan additions placed directly after a trunk-rewritten Learnings
+paragraph made the three-way freshness comparison report `overlapping-edit`
+even after trunk's text was taken verbatim, twice in one execution.
+
+### Occurrences
+- Execution: SEED-001#copy-files
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: between commits 085b6d9 (2026-11-02T21:36:14+07:00) and 5787804 (2026-11-03T08:17:17+07:00): after taking trunk's plan text, `source-freshness.mjs check` still reported plan `conflict` until the branch's slice 1 learning bullet adjacent to trunk's Learnings paragraph was dropped; later the slice 3 learning in the same position again forced `conflict` and was moved to a separate `## Execution learnings` section, after which the result was `amended` and `absorb` succeeded
+  - Observed effect: Two diagnosis detours reading `source-freshness.mjs` and its comparison module, and one dropped plan learning
+  - Inference: Keep branch-only plan notes in sections trunk is unlikely to rewrite, or separated from trunk-edited hunks by unchanged lines; the containment search treats adjacent additions as overlapping
+
+## DD-018 — Developer-operated desktop rounds requested while the developer was away
+Slice 3's Finder paste was planned as a developer-operated round. Three
+question rounds were sent; the developer later said they were not at the
+computer and asked the agent to proceed itself, and the screen was locked
+(`CGSSessionScreenIsLocked: true`), so Finder ignored Apple Events and the
+paste could not be observed.
+
+### Occurrences
+- Execution: SEED-001#copy-files
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: between commits 085b6d9 (2026-11-02T21:36:14+07:00) and 5787804 (2026-11-03T08:17:17+07:00): Finder rounds 1–2 answered "Only one / none" (round 1 overwritten by a PNG; round 2 pasteboard types empty at an unchanged changeCount); round 3 rejected with "I am not on the computer right now … Please proceed this without me"; the coordinator then found the session locked, `screencapture` "could not create image from display", and Finder Apple Events timing out; a slice 3 rework agent (about 150k subagent tokens) could not reproduce a vanish
+  - Observed effect: The macOS file-manager claim ended as an evidence limit (G2) after one rework delegation and several investigation turns on a pasteboard hypothesis that the lock state may explain
+  - Inference: Before asking for a developer-operated desktop round, check the session lock state and try host automation first; treat answers to remote prompts as possibly not observed at the machine (the developer's preference is now in agent memory)

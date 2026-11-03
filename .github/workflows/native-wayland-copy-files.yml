@@ -1,0 +1,71 @@
+name: Native Wayland copy-files
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  native-linux-wayland-copy-files:
+    name: Native Linux Wayland copy_files (wl-copy on Sway)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install Wayland clipboard helpers, Sway and the Thunar attempt
+        run: |
+          sudo apt-get update
+          # wl-clipboard needs wlroots data-control (Sway); Weston lacks it.
+          # thunar and wtype serve only the recorded (non-gating) paste attempt.
+          sudo apt-get install -y wl-clipboard sway dbus thunar wtype
+      - run: uv sync --locked
+      - name: Gated Wayland copy_files probe under Sway (writer exits first)
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+          CLIPBOARD_FILE_MANAGER_ISOLATED: '1'
+          CLIPBOARD_PROBE_ARTIFACTS: artifacts/copy-files-wayland
+        run: |
+          set -euo pipefail
+          mkdir -p "$CLIPBOARD_PROBE_ARTIFACTS"
+          export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/clipboard-xdg-runtime}"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          printf '%s\n' 'output * bg #000000 solid_color' > /tmp/clipboard-sway.conf
+          # copy_files selects X11 whenever DISPLAY is set; prove Wayland only.
+          unset WAYLAND_DISPLAY DISPLAY || true
+          export WLR_BACKENDS=headless
+          export WLR_LIBINPUT_NO_DEVICES=1
+          sway -c /tmp/clipboard-sway.conf \
+            >"$CLIPBOARD_PROBE_ARTIFACTS/sway.log" 2>&1 &
+          SWAY_PID=$!
+          trap 'kill "$SWAY_PID" 2>/dev/null || true' EXIT
+          export WAYLAND_DISPLAY=wayland-1
+          export XDG_SESSION_TYPE=wayland
+          for _ in $(seq 1 50); do
+            if [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; then
+              break
+            fi
+            sleep 0.1
+          done
+          test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+          # The probe wrapper skips without these; never let CI pass on a skip.
+          command -v wl-copy
+          command -v wl-paste
+          # Own D-Bus session, so the recorded Thunar attempt is isolated.
+          dbus-run-session -- uv run --locked \
+            pytest tests/test_copy_files_native_linux_wayland.py -v -rsP
+      - name: Retain copy_files Wayland interoperability evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: copy-files-wayland-${{ github.run_attempt }}
+          path: artifacts/copy-files-wayland/
+          if-no-files-found: error

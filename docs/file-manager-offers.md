@@ -27,6 +27,11 @@ Each writer command exited before Paste. These helper-offer results settle
 format interoperability for this environment; a library writer still needs
 to repeat the file-manager proof through its public API.
 
+That API-level proof is the separate `native-linux-x11-copy-files` job
+(`tests/test_copy_files_native_linux_x11.py`): the public `copy_files` writes
+`text/uri-list` from a child process that exits, then Thunar pastes it. Its
+result is recorded in the README Evidence section.
+
 ## What the probe checks
 
 Each round creates two files with spaces and Unicode in their names, waits

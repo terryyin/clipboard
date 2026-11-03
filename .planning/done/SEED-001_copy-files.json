@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#copy-files",
+  "title": "Copy local file references into file managers",
+  "completedAt": "2026-11-03T02:57:42.085Z",
+  "developer": "Terry Yin",
+  "agent": "Shunka-chan",
+  "host": "claude",
+  "model": "opus"
+}

@@ -251,6 +251,63 @@ from a **named** file manager; Linux Wayland + ``wl-paste`` ``text/uri-list``
 from a **named** FM on a **named** compositor. WSL, SSH, containers, and
 headless CI are not additional guaranteed desktops.
 
+File-list copy, so a desktop file manager can paste the files (no
+``clipboard[images]`` required):
+
+::
+
+   import clipboard
+   clipboard.copy_files(["out/report final.pdf", "out/données é.csv"])
+   # the script may exit; the user pastes copies of both in a file manager
+
+``copy_files(paths)`` takes an ordered, non-empty iterable of ``str`` /
+``os.PathLike`` local paths to existing files or directories and replaces the
+current clipboard with one native file-list offer. Relative paths are made
+absolute against the current directory at call time, without resolving
+symlinks (working directory ``/home/u/proj``: ``copy_files(["out/a.txt"])``
+offers ``/home/u/proj/out/a.txt``); order and duplicates pass through. The
+offer is marked **copy**, not cut: a file manager pastes copies and leaves the
+sources in place (Windows sets ``Preferred DropEffect`` to copy; the macOS and
+Linux offers carry no cut marker). It returns ``None``.
+
+Invalid input — an empty iterable (which would clear the clipboard), a bare
+``str`` / ``bytes`` (wrap one path in a list), a non-path item, or a path that
+does not exist at call time — raises ``clipboard.ClipboardContentError``
+naming the problem **before** the clipboard is replaced, so earlier text
+stays pasteable. A missing helper, no usable desktop session, denied access,
+or transfer failure also raises ``ClipboardContentError``; there is no
+text-only fallback and no silent success.
+
+The offer stays pasteable after the Python process exits: macOS and Windows
+hand it to the system clipboard; on Linux a background helper (``xclip`` /
+``wl-copy``) keeps serving it, so it lasts only as long as that helper or the
+desktop session. Persistence across logout or reboot is not promised.
+
+The offer is a **reference, not a snapshot**: the library neither locks nor
+copies the files, and a file manager copies what exists when the user pastes.
+If ``out/a.txt`` is deleted after a successful ``copy_files``, pasting makes
+the file manager report or skip the missing item in its own way; nothing is
+raised in Python and no other file is touched.
+
+Native offers: macOS Aqua one ``NSPasteboard`` file-URL item per path (via
+``osascript`` / AppKit); Windows desktop ``CF_HDROP`` plus ``Preferred
+DropEffect`` copy (``ctypes``, no pywin32); Linux one ``text/uri-list`` of
+``file://`` URIs, served by ``xclip`` on X11 or ``wl-copy`` on Wayland. The
+helpers serve one type per owner, so the GNOME ``x-special/gnome-copied-files``
+convention is not also offered. As for ``paste_files``, a Linux session uses
+Wayland only when ``WAYLAND_DISPLAY`` is set without an X11 ``DISPLAY``.
+Other platforms raise ``ClipboardContentError`` naming the platform. Out of
+scope for ``copy_files``: a plain-text alternative in the same offer, cut /
+move, virtual or promised files, non-``file:`` URIs, the X11 PRIMARY
+selection, and WSL, SSH sessions, containers, or headless CI as guaranteed
+desktops.
+
+For desktop-free tests, inject a fake writer with
+``clipboard.set_files_clipboard_writer(writer)`` and restore the default with
+``clipboard.set_files_clipboard_writer(None)``. The writer receives one
+already validated ``list[str]`` of absolute paths and must publish it as one
+copy offer or raise.
+
 Installation
 ------------
 
@@ -262,14 +319,20 @@ on Windows or macOS. On Linux text needs a desktop session and a helper on
 use pyperclip's ``xsel`` / Klipper / Qt fallbacks (see
 `pyperclip <https://pyperclip.readthedocs.io/>`_; unverified). Images:
 ``python -m pip install 'clipboard[images]'``. ``copy_html``, ``paste_html``,
-``paste_files``, and ``inspect`` do **not** need that extra.
+``paste_files``, ``copy_files``, and ``inspect`` do **not** need that extra.
 
 Linux image **reads**: X11 ``xclip``; Wayland ``wl-paste``. Linux file-list
 **reads** (``paste_files``): X11 ``xclip -o -selection clipboard -t
 text/uri-list``; Wayland ``wl-paste -t text/uri-list`` (missing helper →
-``ClipboardContentError``, not silent ``None``). Linux HTML **writes** need a
-multi-MIME helper (X11 multi-type ``xclip``; Wayland e.g. ``wl-copy`` on a
-**named** compositor — do not generalize). Linux image **writes**: X11
+``ClipboardContentError``, not silent ``None``). Linux file-list **writes**
+(``copy_files``): X11 ``xclip`` (for example ``apt install xclip``) and a
+usable ``DISPLAY``; Wayland ``wl-copy`` and ``wl-paste`` from
+``wl-clipboard`` (for example ``apt install wl-clipboard``); the helper keeps
+running in the background as the offer's owner, and a missing helper raises
+``ClipboardContentError`` with an install hint before the clipboard is
+replaced. Linux HTML **writes** need a multi-MIME helper (X11 multi-type
+``xclip``; Wayland e.g. ``wl-copy`` on a **named** compositor — do not
+generalize). Linux image **writes**: X11
 ``xclip`` / Wayland ``wl-copy`` (may keep a background owner). Windows/macOS
 need a usable desktop session; rich/image/file-list APIs are not guaranteed
 under WSL, SSH, containers, or headless CI.
@@ -453,6 +516,59 @@ Evidence / verified platforms (native probes gated via
   session/helpers) — never verified; do not generalize one FM or compositor.
   Probes ``scripts/probe_{linux_x11,linux_wayland,windows}_native_paste_files.py``
   exit 2 with ``verified: false``.
+* ``copy_files``: each desktop was checked with two sources whose names
+  contain Unicode and spaces, copied by the public ``copy_files`` in a child
+  Python process that **exits** before an independent consumer (not this
+  library) reads the offer. ``paste_files()`` agreement is recorded only as a
+  consistency check, not as interoperability proof. A file-manager paste is
+  claimed only where one was observed; one file manager or compositor is not
+  generalized to others.
+
+  * macOS Aqua **offer verified; Finder paste not observed** by
+    ``scripts/probe_macos_native_copy_files.py`` (wrapper
+    ``tests/test_copy_files_native_macos.py``): an independent ``osascript``
+    consumer read ``public.file-url`` items equal to the absolute paths, in
+    order, after the writer exited and again on rechecks; a refused copy
+    (missing path) left the prior text readable via ``pbpaste``. Floors:
+    macOS 26.6.2 (build 25G83) / Darwin 25.6.0, arm64, Python 3.13.17.
+    Evidence limit: Finder Paste of this offer is **unobserved** (developer
+    rounds pasted nothing, cause unexplained, and one round ran against a
+    locked screen), so pasting into Finder is not a verified claim.
+  * Windows **verified** under gated job ``native-windows-copy-files`` (run
+    41561268655; ``windows-latest`` image win25-vs2026 20261030.294.1,
+    Windows NT 10.0.26100, Windows PowerShell 5.1.26100.33648, Python
+    3.13.17, AMD64): an independent PowerShell consumer read the exact
+    ``CF_HDROP`` path list and ``Preferred DropEffect`` 1 (copy) after the
+    writer exited, with rechecks at 0 / 5 / 10 s, and the Explorer shell's
+    ``Shell.Application`` Paste verb copied both files byte-equal into a
+    folder with the sources unchanged. Evidence limit: that is the Explorer
+    shell verb in a CI runner session, not a paste in an interactive Explorer
+    window on an owner-held desktop.
+  * Linux X11 **verified with Thunar only** under gated job
+    ``native-linux-x11-copy-files`` (run 41562962489; Ubuntu 24.04.5 LTS,
+    Thunar 4.18.8, xclip 0.13, Python 3.13.14, Xvfb with Openbox): an
+    independent ``xclip`` read the exact CRLF ``text/uri-list`` body after
+    the writer exited, with rechecks; Thunar Paste copied both files
+    byte-equal with the sources unchanged; with ``xclip`` off ``PATH``,
+    ``copy_files`` raised ``ClipboardContentError`` with the install hint and
+    the prior text survived. Other X11 file managers (GNOME Files, Dolphin,
+    and so on) are unverified; the venue is headless CI, not an owner-held
+    desktop.
+  * Linux Wayland **offer verified only on Sway; no file-manager paste
+    observed** under gated job ``native-linux-wayland-copy-files`` (run
+    41564513429; headless **Sway** 1.9, ``wl-clipboard`` 2.2.1, Ubuntu
+    24.04, Python 3.13.14): an independent ``wl-paste`` read the exact body
+    after the writer exited, with rechecks; with ``wl-copy`` off ``PATH``,
+    ``copy_files`` raised with the install hint and the prior text survived.
+    Evidence limit: a Thunar-on-Sway paste attempt pasted nothing (cause
+    undiagnosed), so pasting into any Wayland file manager is not a verified
+    claim, and other compositors are unverified.
+
+  Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` and
+  ``tests/test_copy_files_native_{macos,windows,linux_x11,linux_wayland}.py``;
+  each runs its ``scripts/probe_*_native_copy_files.py`` probe. The earlier
+  helper-only Thunar format experiment is recorded in
+  ``docs/file-manager-offers.md``.
 
 Development
 -----------
@@ -470,8 +586,8 @@ targets. Windows: ``uv sync --locked``, ``uv run --locked --extra images
 pytest``, ``uv run --locked ruff check .``. Do not install into system Python.
 GHA covers Nix plus Python 3.10–3.14, installs wheel/sdist outside the tree,
 and uses an in-memory clipboard (no desktop). X11/Wayland image-write probes
-and the X11, Wayland, and Windows ``paste_html`` and text probes are separate
-gated jobs.
+and the X11, Wayland, and Windows ``paste_html``, ``copy_files``, and text
+probes are separate gated jobs.
 
 Publishing
 ----------
