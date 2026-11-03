@@ -52,7 +52,7 @@ its numbered return is recorded below verbatim or close.
 | 14a | A clear is proven when a child `clear()` returned, the desktop's independent listing classifies as empty, and every public reader reads absence | slice 4 | |
 | 14a.1 | Desktops differ only by listing, empty predicate, producer and owner helper | slice 4 | |
 | 14a.2 | Platform-only steps stay per desktop: dead `DISPLAY`, missing `wl-copy`, Windows holder bound, macOS `copy("")` contrast, raw early mechanism steps | slice 4 | |
-| 14b | The shared producer step requires producer-owner exit on Wayland as on X11 | slice 2 | |
+| 14b | The shared producer step requires producer-owner exit on Wayland as on X11 | slice 2 | observed: CI run 41741871109 (f071961) Native Linux Wayland clear (Sway): steps 3,4,8,9 record producer_owner_pids and owner_exit.exited true; failed_steps [] |
 | 14c | Shared Linux steps go in a new script module rather than `native_clear_support.py` | slice 2 | observed: new module scripts/linux_native_clear_steps.py; native_clear_support.py holds only the shared cleared_step rule |
 | X1 | EXCLUSION: how X11 `clear()` launches its relinquish helper in frozen or zipped applications (separate human decision) | slice 4 | |
 | X2 | EXCLUSION: a `make test-package` check of the installed `_x11_relinquish.py` | slice 4 | |

@@ -143,7 +143,7 @@ behavior: public `clear` / `set_clipboard_clearer` surface and messages.
 
 ### 2. One "cleared" rule and one Linux step set behind the X11 and Wayland probes
 Type: Structure
-Status: planned
+Status: done
 Proof: rows "1 (rule)" and "1 (Linux)" above.
 
 Correction (finding 1, Linux and the shared rule):
@@ -178,6 +178,15 @@ Correction (finding 1, Linux and the shared rule):
   observation with fake listings and reads.
 
 Every touched file ≤ 250 lines. Publish, then accept the two Linux CI jobs.
+
+Accepted proof (f071961): `nix develop -c make check` 606 passed, 27 skipped
+(includes `tests/test_native_clear_support.py`); both Linux probes exit 2
+with `evidence_limit` on Darwin; step lists identical to 9eb5a3c; CI run
+41741871109 `Native Linux X11 clear (Xvfb)` and `Native Linux Wayland clear
+(Sway)` success, `failed_steps: []`, all nine followed owners (four new
+Wayland producer owners included) `exited: true`. Learning: the shared rule
+keeps `waited_s <= bound_s` in `ok` because the old X11 wrapper asserted it
+for the `copy_image` step; dropping it would loosen that step.
 
 ### 3. Windows clear probe on the shared rule
 Type: Structure
