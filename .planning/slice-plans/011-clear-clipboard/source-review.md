@@ -35,14 +35,14 @@
 | 1.6 | `clear()` returns `None` | slice 1 | observed: tests/test_clear.py::test_clear_calls_injected_clearer_once_and_returns_none (clear() is None) |
 | 1.7 | Calling `clear()` on a clipboard that is already empty succeeds with no error | slice 6 | |
 | 1.8 | Calling `clear()` twice in a row succeeds with no error | slice 6 | |
-| 1.9 | When this library's own Linux background owner (from `copy_image`, or later writers) is serving the old offer, clearing ends that offer | slice 5 | |
-| 1.9a | No helper process keeps serving the old offer | slice 5 | |
+| 1.9 | When this library's own Linux background owner (from `copy_image`, or later writers) is serving the old offer, clearing ends that offer | slice 5 | observed: CI run 41654014945 native-linux-x11-clear step 4 (copy_image xclip owner exits after child clear) and CI run 41651498162 native-linux-wayland-clear step 5 (wl-copy image owner exits) |
+| 1.9a | No helper process keeps serving the old offer | slice 5 | observed: CI run 41654014945 native-linux-x11-clear step 4 and CI run 41651498162 native-linux-wayland-clear step 5: library owner PIDs exited within 5 s |
 | 2.1 | macOS Aqua: clear the `NSPasteboard` general pasteboard with `clearContents` | slice 2 | observed: clipboard/_clear_macos.py generalPasteboard() clearContents(); tests/test_clear_macos.py::test_darwin_default_clearer_runs_bounded_osascript_clear; native probe html_and_text types_after == [] |
 | 2.2 | Windows desktop: call `OpenClipboard` / `EmptyClipboard` / `CloseClipboard` through user32 | slice 6 | |
 | 2.2a | Windows retries the open while another process holds the clipboard | slice 6 | |
 | 2.2b | The retry stays within a documented bound | slice 6 | |
-| 2.3 | Linux X11: give up CLIPBOARD ownership so no owner remains | slice 5 | |
-| 2.3a | `xclip` has no clear operation; planning chooses the X11 mechanism (qualification) | slice 5 | |
+| 2.3 | Linux X11: give up CLIPBOARD ownership so no owner remains | slice 5 | observed: clipboard/_clear_x11.py + _x11_relinquish.py XSetSelectionOwner(CLIPBOARD, None); CI run 41654014945 native-linux-x11-clear steps 2-5 TARGETS no owner |
+| 2.3a | `xclip` has no clear operation; planning chooses the X11 mechanism (qualification) | slice 5 | observed: plan chose libX11 ctypes; CI run 41654014945 native-linux-x11-clear step 2 settled it (no xsel needed) |
 | 2.4 | Linux Wayland: `wl-copy --clear` | slice 4 | observed: clipboard/_clear_wayland.py runs wl-copy --clear; CI run 41651498162 native-linux-wayland-clear steps 2-6 ok |
 | 2.5 | Session selection uses the existing writer rule: Wayland when `WAYLAND_DISPLAY` or the session type says so | slice 4 | observed: clipboard/_clear.py uses _desktop._is_linux_wayland; tests/test_clear_wayland.py::test_wayland_default_clearer_runs_bounded_wl_copy_clear [wayland-only, both-sessions, xdg-session-type] |
 | 2.5a | This matches how image write, HTML and inspect choose a session (qualification) | slice 4 | observed: same _desktop._is_linux_wayland rule as image write / HTML / inspect; tests/test_clear_wayland.py both-sessions case selects Wayland |
@@ -51,8 +51,8 @@
 | 3.3 | Reason: inspect's contract already says an empty offer gives an empty snapshot (qualification) | slice 3 | observed: clipboard/_desktop.py _xclip_targets_inspect / _wl_paste_list_types_inspect return () on no owner / nothing copied |
 | 3.4 | Other non-zero helper exits still raise (exclusion) | slice 3 | observed: tests/test_inspect_x11.py test_xclip_helper_failure_raises_* and tests/test_inspect_wayland.py test_wl_paste_helper_failure_raises_* still raise |
 | 4.1 | A failed clear raises `ClipboardContentError` naming the cause, never a silent success, for each listed cause | slice 6 | |
-| 4.1.1 | No visible desktop session | slice 5 | |
-| 4.1.2 | Missing helper: `wl-clipboard` install hint on Wayland; names whatever the chosen mechanism needs on X11 | slice 5 | |
+| 4.1.1 | No visible desktop session | slice 5 | observed: tests/test_clear.py no-session test: 'no desktop session is visible' |
+| 4.1.2 | Missing helper: `wl-clipboard` install hint on Wayland; names whatever the chosen mechanism needs on X11 | slice 5 | observed: CI run 41651498162 native-linux-wayland-clear step 7 names wl-clipboard; tests/test_clear_x11.py libx11 failure names libx11-6; CI run 41654014945 native-linux-x11-clear step 6 names DISPLAY |
 | 4.1.3 | Windows clipboard held past the bound | slice 6 | |
 | 4.1.4 | Access denied | slice 6 | |
 | 4.1.5 | A helper or native call fails | slice 6 | |
@@ -75,7 +75,7 @@
 | 6.3 | Proof sessions, one per platform | slice 6 | |
 | 6.3.1 | macOS: gated owner-desktop probe (`CLIPBOARD_NATIVE_PROBE=1`), `osascript` producer, type list and `pbpaste` consumers | slice 2 | observed: tests/test_clear_native_macos.py + scripts/probe_macos_native_clear.py passed under CLIPBOARD_NATIVE_PROBE=1 on macOS 26.6.2 (osascript producers, JXA types + pbpaste consumers) |
 | 6.3.2 | Windows: gated `windows-latest` job, PowerShell `Set-Clipboard` producer, format enumeration / `Get-Clipboard` consumers | slice 6 | |
-| 6.3.3 | X11: the existing Xvfb + `xclip` job, with no clipboard manager | slice 5 | |
+| 6.3.3 | X11: the existing Xvfb + `xclip` job, with no clipboard manager | slice 5 | observed: CI run 41654014945 native-linux-x11-clear (Xvfb 2:21.1.22, xclip 0.13): tests/test_clear_native_linux_x11.py PASSED |
 | 6.3.4 | Wayland: the existing Sway + `wl-clipboard` job | slice 4 | observed: CI run 41651498162 native-linux-wayland-clear (Sway 1.11, wl-clipboard 2.2.1): tests/test_clear_native_linux_wayland.py PASSED |
 | 6.4 | The README names those sessions and their helper versions | slice 6 | |
 | 6.5 | GNOME, KDE and any desktop with a clipboard manager are evidence limits, not verified claims (exclusion) | slice 6 | |
@@ -93,9 +93,9 @@
 | 8.2 | Image from another app, `clear()`; `paste_image()` `None`, no independent consumer can read it | slice 6 | |
 | 8.3 | Already empty: `clear()` returns `None`, and again returns `None` | slice 6 | |
 | 8.4 | macOS `copy("")` leaves `inspect().kinds == {"text"}`; `clear()` leaves `inspect().formats == ()` on every supported desktop | slice 6 | |
-| 8.5 | X11: `copy_image` background `xclip` owner; after `clear()` it stops serving and exits; `xclip -o -t TARGETS` reports no owner | slice 5 | |
+| 8.5 | X11: `copy_image` background `xclip` owner; after `clear()` it stops serving and exits; `xclip -o -t TARGETS` reports no owner | slice 5 | observed: CI run 41654014945 native-linux-x11-clear step 4: copy_image xclip owner exits after clear(), xclip -o -t TARGETS reports no owner |
 | 8.6 | X11 no owner: `inspect()` empty snapshot instead of raising; same on Wayland when nothing is copied | slice 3 | observed: CI run 41649816028 (342f12c) both clear jobs step 1: inspect() empty, paste() '', paste_html/paste_files/paste_image None on fresh Xvfb and fresh Sway |
-| 8.7 | Linux with neither `DISPLAY` nor `WAYLAND_DISPLAY`: `clear()` raises saying no desktop session is visible; Wayland without `wl-copy`: error names `wl-clipboard` | slice 5 | |
+| 8.7 | Linux with neither `DISPLAY` nor `WAYLAND_DISPLAY`: `clear()` raises saying no desktop session is visible; Wayland without `wl-copy`: error names `wl-clipboard` | slice 5 | observed: tests/test_clear.py no-session test; CI run 41651498162 native-linux-wayland-clear step 7 (PATH without wl-copy names wl-clipboard) |
 | 8.8 | Windows held past the bound: raises naming the held clipboard, previous content still there; released within the bound: succeeds | slice 6 | |
 | 8.9 | KDE Klipper re-offer after `clear()` is a newer offer outside the promise; the README names it | slice 2 | observed: README.rst clear() Boundary paragraph names KDE Klipper prevent empty clipboard as a newer offer |
 | 9.1 | `clear()` means "no offer at all"; an empty placeholder does not count (qualification) | slice 6 | |

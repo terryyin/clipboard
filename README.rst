@@ -550,7 +550,7 @@ Evidence / verified platforms (native probes gated via
   case raised ``ClipboardContentError`` naming ``wl-clipboard``. Evidence limits: other Wayland
   compositors, and desktops with clipboard managers (GNOME, KDE Plasma /
   Klipper) that may re-offer a saved entry, are unverified. Linux X11
-  (libX11 ``XSetSelectionOwner``) is **pending CI** in
+  (libX11 ``XSetSelectionOwner``) is **verified** in CI run 41654014945 by
   ``scripts/probe_linux_x11_native_clear.py`` (wrapper
   ``tests/test_clear_native_linux_x11.py``, job ``native-linux-x11-clear``)
   on a fresh Xvfb 2:21.1.22 with xclip 0.13 on ``ubuntu-26.04``: the raw
@@ -558,7 +558,11 @@ Evidence / verified platforms (native probes gated via
   independent ``xclip -t text/html`` owner, then an independent ``xclip``
   ``text/html`` producer and a ``copy_image()`` owner each followed by a
   child ``clear()``, ``clear()`` twice, and a ``DISPLAY`` naming no server.
-  Evidence limits: real X11 desktops, and those with clipboard managers that
+  The raw call left ``XGetSelectionOwner`` at 0 and the ``xclip`` owner
+  exited; after each library ``clear()`` ``xclip -o -t TARGETS`` reported no
+  owner, every reader read absence, and the library's background ``xclip``
+  image owner exited within 5 s; the dead ``DISPLAY`` raised
+  ``ClipboardContentError`` naming ``DISPLAY=':1987'``. Evidence limits: real X11 desktops, and those with clipboard managers that
   may re-offer a saved entry, are unverified. Windows clears are not
   available yet.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the

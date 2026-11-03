@@ -102,7 +102,7 @@ claims need an independent producer and consumer in other processes.
 | macOS `clearContents` removes every type and repeats cleanly | Slice 2 clearer | macOS 26.6.2, private named pasteboard via `osascript` / AppKit: `public.html`, `Apple HTML pasteboard type`, `public.utf8-plain-text`, `NSStringPboardType` → `clearContents` → 0 types; second `clearContents` → 0 types; change count 1 → 2 → 3; `stringForType` nil | Settled for the call; general pasteboard and any privacy prompt in slice 2's gated probe |
 | `copy("")` leaves an empty text offer on macOS and X11 and truly clears on Windows / Wayland | Example 4 contrast, README wording | pyperclip 1.11.0 source: Windows `EmptyClipboard` without data (418–440), Wayland `wl-copy --clear` (210–230), X11 pipes `""` to `xclip` (157–167); macOS empty `pbcopy` leaves `public.utf8-plain-text` (SEED-001#portable-text observation) | Settled |
 | `wl-copy --clear` empties the selection on Sway and ends a `wl-copy` owner | Slice 4 clearer | CI run 41651498162: raw `wl-copy --clear` exit 0 in 0.002 s, then `Nothing is copied`, owner exited | Settled |
-| A non-owner `XSetSelectionOwner(CLIPBOARD, None)` empties CLIPBOARD under Xvfb and makes an `xclip` owner exit; libX11 loads by `ctypes` on `ubuntu-latest` | Slice 5 mechanism | Needs Xvfb | **Early probe** at the start of slice 5; false → `xsel --clear` fallback per Assumptions |
+| A non-owner `XSetSelectionOwner(CLIPBOARD, None)` empties CLIPBOARD under Xvfb and makes an `xclip` owner exit; libX11 loads by `ctypes` on `ubuntu-latest` | Slice 5 mechanism | CI run 41654014945: `libX11.so.6` loaded, owner 2097153 → 0, xclip owner exited, TARGETS no owner | Settled (no `xsel` fallback) |
 | `OpenClipboard(NULL)` + `EmptyClipboard` removes every format for an independent consumer on `windows-latest` | Slice 6 clearer | Needs a Windows session | **Early probe** at the start of slice 6 |
 | CI hosts Xvfb + `xclip`, Sway + `wl-clipboard`, and a `windows-latest` clipboard session | Slices 3–6 venues | `ci.yml` jobs `native-linux-x11-*`, `native-linux-wayland-*`, `native-windows-paste-html` | Settled for venues |
 | The macOS probe route runs in this checkout | Slice 2 proof route | `osascript` AppKit script ran here (premise above) | Settled for the route; it changes the live clipboard, so it runs only at slice 2 execution |
@@ -195,7 +195,7 @@ session. Postcondition: seed examples 1, 2, 3, 5, and 7 hold on Sway.
 
 ### 5. Linux X11 clear (Xvfb)
 Type: Behavior
-Status: planned
+Status: done
 Proof: first, the early probe in the X11 job. An `xclip` owner of
 `text/html`. A separate Python process loads libX11 via `ctypes`, opens
 `DISPLAY`, interns `CLIPBOARD`, calls
@@ -303,8 +303,10 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   `scripts/probe_linux_wayland_native_clear.py`; slice 5 should reuse
   `linux_native_clear_support.helper_pids` / `wait_pids_exit` / `child_clear`
   and revisit `_desktop._linux_desktop_session_visible` once X11 dispatches.
-- Slice 5 (desktop-free proof accepted 2026-11-03; native proof pending the
-  published revision's CI): `clipboard/_clear_x11.py` runs
+- Slice 5 (accepted 2026-11-03; native CI run 41654014945 on c16d2c1, Xvfb
+  2:21.1.22 + xclip 0.13: raw non-owner `XSetSelectionOwner(None)` left owner 0
+  and the xclip owner exited; all 6 probe steps ok; the run's only failure
+  was a macOS 3.10 test job that never got a runner; attempt 2 passed): `clipboard/_clear_x11.py` runs
   `clipboard/_x11_relinquish.py` as a bounded (10 s) `python -I` child that
   calls libX11 `XOpenDisplay` / `XInternAtom(CLIPBOARD)` /
   `XSetSelectionOwner(None, CurrentTime)` / `XSync`; `_desktop._linux_x11_display`
