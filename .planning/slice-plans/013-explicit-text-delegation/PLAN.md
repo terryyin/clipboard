@@ -85,3 +85,7 @@ observed. No remaining slice-specific concerns were identified.
 ## Learnings
 
 - Slice 1: the three-line removal held as predicted. Proof: `nix develop -c make check` (532 passed, 24 skipped); the six new/replaced tests in `tests/test_text_dispatch.py` and `tests/test_clipboard.py` fail without the `_text.py` change and pass with it. Refactor pass found nothing further.
+
+## Execution complete
+
+Product advice: no change. The rule change matches the seed; owned backends are unchanged and the new tests discriminate the old behavior.
