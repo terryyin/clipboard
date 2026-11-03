@@ -1,7 +1,9 @@
 """File-list clipboard read and copy write with injectable backends.
 
 No Pillow needed: ``paste_files`` reads local file-list offers and
-``copy_files`` validates local paths before handing them to a writer.
+``copy_files`` validates local paths before handing them to a writer that
+publishes one copy (not cut) file-list offer, so a desktop file manager can
+paste copies. Both raise ``ClipboardContentError`` on failure.
 """
 
 from __future__ import annotations
@@ -73,8 +75,9 @@ def set_files_clipboard_writer(
 
     The writer receives one ``list[str]`` of absolute local paths, already
     validated by ``copy_files``, and must publish them as one copy (not cut)
-    file-list offer or raise. Other exceptions are wrapped as
-    ``ClipboardContentError``.
+    file-list offer or raise. ``ClipboardContentError`` passes through; other
+    exceptions are wrapped as ``ClipboardContentError``. The default writer is
+    the platform's native one described in ``copy_files``.
     """
     global _files_clipboard_writer
     _files_clipboard_writer = (
@@ -162,6 +165,16 @@ def copy_files(paths: Iterable[str | os.PathLike[str]]) -> None:
     ``WAYLAND_DISPLAY`` / wl-clipboard raises likewise); other platforms raise
     ``ClipboardContentError`` naming the platform. Tests inject one via
     ``set_files_clipboard_writer``.
+
+    There is no text fallback. The offer stays pasteable after the Python
+    process exits (macOS / Windows system clipboard; on Linux only while the
+    background ``xclip`` / ``wl-copy`` owner or the session lasts; persistence
+    across logout or reboot is not promised). It is a reference, not a
+    snapshot: files are neither locked nor copied, a file manager copies what
+    exists at paste time, and a source removed afterwards is reported or
+    skipped by the file manager with nothing raised here. Linux offers only
+    ``text/uri-list`` (one type per helper owner, so no GNOME copied-files
+    type).
     """
     absolute = _validate_copy_files_paths(paths)
     _call_content_backend("file-list write", _files_clipboard_writer, absolute)

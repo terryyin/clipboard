@@ -185,7 +185,7 @@ Sway.
 
 ### 7. Document `copy_files` and its evidence
 Type: Behavior
-Status: planned
+Status: done
 Proof: README Usage documents `copy_files`, accepted inputs, absolute-path and
 order rule, copy-not-cut, fail-before-replace, writer-exit lifetime,
 reference-not-snapshot (example 5), no `clipboard[images]`; Installation lists
@@ -218,7 +218,7 @@ Disposition: proved by slice 6: native offers on macOS (gated probe), Windows (r
 ### G2. Finder paste of the macOS offer not observed (first reported in slice 3)
 Reported: slice 3 — "The Finder paste is still not shown to work, and the cause of round 2's failure is unknown."
 Story clause: "a platform without that observation is an evidence limit in the README, not a verified claim"
-Disposition: receiving slice 7
+Disposition: proved by slice 7: README.rst Evidence copy_files macOS bullet records Finder paste as an evidence limit, not a verified claim
 
 ## Learnings
 
