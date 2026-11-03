@@ -131,7 +131,7 @@ README says so for each platform not yet delivered.
 
 ### 2. macOS Aqua clear
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests with a fake `subprocess.run`. Darwin dispatch
 reaches the `osascript` clearer, which runs with a timeout. A non-zero exit,
 a timeout, or `OSError` raises `ClipboardContentError` with the helper detail.
@@ -258,6 +258,11 @@ Reported: slice 1 — "No native clearer is implemented. When slices 2, 4, 5 and
 Story clause: "with one call whose result is the same on every supported desktop"
 Disposition: interim until slices 2, 4, 5, 6
 
+### G2. macOS privacy prompt on clear() is unobserved
+Reported: slice 2 — "Privacy prompt: not observable, so it is recorded as an evidence limit"
+Story clause: "within a bound of seconds, never a silent success"
+Disposition: no user cost "A failed clear is reported, so the user never believes content is gone when it is not": clearContents reads nothing; every child clear() in the native probe returned in under 0.5 s with types emptied, so no prompt blocked or failed the call; the README Evidence records the limit.
+
 ## Learnings
 
 - Slice 1 (accepted 2026-11-03): `clipboard/_clear.py` holds the seam;
@@ -269,8 +274,19 @@ Disposition: interim until slices 2, 4, 5, 6
   `nix develop -c make check` (544 passed, 24 skipped; the 302 baseline
   in Decisive premises predates later merges), `nix develop -c make
   test-package` (asserts `clear` / `set_clipboard_clearer` callable).
-- `AGENTS.md`'s public-API summary does not name `clear` yet; slice 2 (or
-  wrap-up) adds it with the first native path.
+- Slice 2 (accepted 2026-11-03): `clipboard/_clear_macos.py` clears the
+  general pasteboard via `osascript` AppKit `clearContents` (15 s bound).
+  Native probe `scripts/probe_macos_native_clear.py` (support
+  `scripts/macos_native_clear_support.py`, wrapper
+  `tests/test_clear_native_macos.py`) passed twice on macOS 26.6.2 / 25G83:
+  HTML+text and PNG producers emptied to `[]`, `pbpaste` empty, all readers
+  absent; `copy("")` left `public.utf8-plain-text`. On-screen privacy prompts
+  are not observable from agent sessions (`screencapture` has no display
+  access); recorded as G2. A PNG offer is listed with system-added TIFF types,
+  so producer checks test inclusion. AGENTS.md now names `clear`.
+- The per-module osascript runners (`_offer_macos`, `_html_native_macos`,
+  `_clear_macos`) keep separate failure messages and bounds; consolidating
+  them is a cross-module refactor outside this story.
 
 ## Concern evidence
 

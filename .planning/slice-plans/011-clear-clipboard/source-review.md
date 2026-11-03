@@ -16,7 +16,7 @@
 | G1a.4 | file list | slice 6 | |
 | G1a.5 | unknown types | slice 6 | |
 | G2 | The result of the call is the same on every supported desktop | slice 6 | |
-| G3 | Users no longer rely on `copy("")`, which empties the clipboard on Windows and `wl-copy` but leaves an empty text offer on macOS and `xclip` (qualification) | slice 2 | |
+| G3 | Users no longer rely on `copy("")`, which empties the clipboard on Windows and `wl-copy` but leaves an empty text offer on macOS and `xclip` (qualification) | slice 2 | observed: README.rst clear() section contrasts copy("") empty text offer; probe copy_empty_vs_clear case |
 | G4 | A failed clear is reported, so the user never believes content is gone when it is not | slice 6 | |
 | G5 | Adds the ordinary clipboard "clear" action beside the read and write operations | slice 1 | observed: clipboard/__init__.py __all__ has clear beside copy/paste; tests/test_clear.py::test_clear_is_public_without_images_extra |
 | G6 | Clear keeps its meaning as more content kinds are added | slice 6 | |
@@ -37,7 +37,7 @@
 | 1.8 | Calling `clear()` twice in a row succeeds with no error | slice 6 | |
 | 1.9 | When this library's own Linux background owner (from `copy_image`, or later writers) is serving the old offer, clearing ends that offer | slice 5 | |
 | 1.9a | No helper process keeps serving the old offer | slice 5 | |
-| 2.1 | macOS Aqua: clear the `NSPasteboard` general pasteboard with `clearContents` | slice 2 | |
+| 2.1 | macOS Aqua: clear the `NSPasteboard` general pasteboard with `clearContents` | slice 2 | observed: clipboard/_clear_macos.py generalPasteboard() clearContents(); tests/test_clear.py::test_darwin_default_clearer_runs_bounded_osascript_clear; native probe html_and_text types_after == [] |
 | 2.2 | Windows desktop: call `OpenClipboard` / `EmptyClipboard` / `CloseClipboard` through user32 | slice 6 | |
 | 2.2a | Windows retries the open while another process holds the clipboard | slice 6 | |
 | 2.2b | The retry stays within a documented bound | slice 6 | |
@@ -58,22 +58,22 @@
 | 4.1.5 | A helper or native call fails | slice 6 | |
 | 4.2 | Failures are reported within a bound of seconds | slice 6 | |
 | 4.3 | A failed clear promises nothing about what is on the clipboard afterwards beyond what the platform did (exclusion) | slice 6 | |
-| 5.1 | Clearing acts on the current CLIPBOARD once (qualification) | slice 2 | |
-| 5.2 | Content offered after the clear is a newer copy, not a failed clear (exclusion) | slice 2 | |
-| 5.2.1 | Another application copying (example) | slice 2 | |
-| 5.2.2 | A clipboard manager immediately offering its saved entry again (KDE Klipper, compositor persistence) (example) | slice 2 | |
-| 5.2.3 | A sync service (example) | slice 2 | |
-| 5.3 | `clear()` does not check the clipboard again afterwards (exclusion) | slice 2 | |
-| 5.4 | `clear()` does not report such a re-offer (exclusion) | slice 2 | |
-| 5.5 | `clear()` does not erase any of the following (exclusion) | slice 2 | |
+| 5.1 | Clearing acts on the current CLIPBOARD once (qualification) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.2 | Content offered after the clear is a newer copy, not a failed clear (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.2.1 | Another application copying (example) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.2.2 | A clipboard manager immediately offering its saved entry again (KDE Klipper, compositor persistence) (example) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.2.3 | A sync service (example) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.3 | `clear()` does not check the clipboard again afterwards (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.4 | `clear()` does not report such a re-offer (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.5 | `clear()` does not erase any of the following (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
 | 5.5.1 | OS clipboard history (Windows Win+V, managers' saved entries) (exclusion) | slice 6 | |
-| 5.5.2 | Cloud or Universal Clipboard copies (exclusion) | slice 2 | |
-| 5.5.3 | Remote devices (exclusion) | slice 2 | |
-| 5.6 | `clear()` claims no secure deletion (exclusion) | slice 2 | |
+| 5.5.2 | Cloud or Universal Clipboard copies (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.5.3 | Remote devices (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
+| 5.6 | `clear()` claims no secure deletion (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |
 | 6.1 | An independent producer puts HTML + text on the clipboard; after `clear()`, an independent consumer sees no types | slice 6 | |
 | 6.2 | Separately, an independent image producer; after `clear()`, an independent consumer sees no types | slice 6 | |
 | 6.3 | Proof sessions, one per platform | slice 6 | |
-| 6.3.1 | macOS: gated owner-desktop probe (`CLIPBOARD_NATIVE_PROBE=1`), `osascript` producer, type list and `pbpaste` consumers | slice 2 | |
+| 6.3.1 | macOS: gated owner-desktop probe (`CLIPBOARD_NATIVE_PROBE=1`), `osascript` producer, type list and `pbpaste` consumers | slice 2 | observed: tests/test_clear_native_macos.py + scripts/probe_macos_native_clear.py passed under CLIPBOARD_NATIVE_PROBE=1 on macOS 26.6.2 (osascript producers, JXA types + pbpaste consumers) |
 | 6.3.2 | Windows: gated `windows-latest` job, PowerShell `Set-Clipboard` producer, format enumeration / `Get-Clipboard` consumers | slice 6 | |
 | 6.3.3 | X11: the existing Xvfb + `xclip` job, with no clipboard manager | slice 5 | |
 | 6.3.4 | Wayland: the existing Sway + `wl-clipboard` job | slice 4 | |
@@ -81,8 +81,8 @@
 | 6.5 | GNOME, KDE and any desktop with a clipboard manager are evidence limits, not verified claims (exclusion) | slice 6 | |
 | 6.6 | Default pytest stays desktop-free through an explicit injection seam | slice 1 | observed: clipboard/_clear.py set_clipboard_clearer seam; tests/test_clear.py fakes only, desktop-free |
 | 7.1 | Clearing PRIMARY (SEED-001#primary-selection) (exclusion) | slice 6 | |
-| 7.2 | Clearing the macOS Find pasteboard (exclusion) | slice 2 | |
-| 7.3 | Clearing other named pasteboards (exclusion) | slice 2 | |
+| 7.2 | Clearing the macOS Find pasteboard (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph: only the general pasteboard, not the Find pasteboard; _clear_macos.py generalPasteboard only |
+| 7.3 | Clearing other named pasteboards (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph: not other named pasteboards; _clear_macos.py generalPasteboard only |
 | 7.4 | Clearing only one kind while keeping others (exclusion) | slice 6 | |
 | 7.5 | Snapshot and restore (exclusion) | slice 6 | |
 | 7.6 | Erasing history, clipboard managers, or synced copies (exclusion) | slice 6 | |
@@ -97,7 +97,7 @@
 | 8.6 | X11 no owner: `inspect()` empty snapshot instead of raising; same on Wayland when nothing is copied | slice 3 | |
 | 8.7 | Linux with neither `DISPLAY` nor `WAYLAND_DISPLAY`: `clear()` raises saying no desktop session is visible; Wayland without `wl-copy`: error names `wl-clipboard` | slice 5 | |
 | 8.8 | Windows held past the bound: raises naming the held clipboard, previous content still there; released within the bound: succeeds | slice 6 | |
-| 8.9 | KDE Klipper re-offer after `clear()` is a newer offer outside the promise; the README names it | slice 2 | |
+| 8.9 | KDE Klipper re-offer after `clear()` is a newer offer outside the promise; the README names it | slice 2 | observed: README.rst clear() Boundary paragraph names KDE Klipper prevent empty clipboard as a newer offer |
 | 9.1 | `clear()` means "no offer at all"; an empty placeholder does not count (qualification) | slice 6 | |
 | 9.2 | The Linux inspect empty-offer change is included in this story (qualification) | slice 3 | |
-| 9.3 | A clipboard manager's re-offer after the clear is outside the promise and is not detected (exclusion) | slice 2 | |
+| 9.3 | A clipboard manager's re-offer after the clear is outside the promise and is not detected (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |

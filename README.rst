@@ -327,13 +327,36 @@ Clear the clipboard (no ``clipboard[images]`` required):
    import clipboard
    clipboard.clear()
 
-``clear()`` is public API and returns ``None``; failures raise
-``clipboard.ClipboardContentError``. No platform's native clear is available
-yet (macOS Aqua, Linux Wayland, Linux X11, and Windows desktop are planned),
-so for now the default raises ``ClipboardContentError`` naming the platform.
+``clear()`` removes every representation from the current clipboard, so it
+holds no offer at all: afterwards ``paste()`` returns ``""``, ``paste_html()``,
+``paste_image()`` and ``paste_files()`` return ``None``, ``inspect()`` is
+empty, and other applications see no types. It returns ``None``. Clearing an
+already empty clipboard, or clearing twice in a row, succeeds. This is not the
+same as ``copy("")``, which on macOS and ``xclip`` leaves an empty text offer
+behind (a ``public.utf8-plain-text`` type on macOS). Failures (no usable
+session, a helper or native call failing, a timeout) raise
+``clipboard.ClipboardContentError``.
+
+Platforms: macOS Aqua clears the general pasteboard with ``NSPasteboard
+clearContents`` through the built-in ``osascript`` (bounded at 15 s; see
+Evidence). Linux Wayland, Linux X11, and Windows desktop clears are not
+available yet: there ``clear()`` raises ``ClipboardContentError`` saying the
+native clearer is not available on that platform.
+
+Boundary: ``clear()`` acts once on the current clipboard. A later offer is a
+newer copy, not a failed clear, and is not detected: another application
+copying, a clipboard manager re-offering its saved entry (for example KDE
+Klipper's "prevent empty clipboard" or compositor clipboard persistence), or
+a sync service. ``clear()`` does not erase OS clipboard history, clipboard
+managers' saved entries, cloud or Universal Clipboard copies, or other
+devices, and it claims no secure deletion of the former contents. On macOS it
+clears only the general pasteboard, not the Find pasteboard or other named
+pasteboards; the X11 PRIMARY selection is out of scope.
+
 For desktop-free tests, inject a fake with
 ``clipboard.set_clipboard_clearer(clearer)`` and restore the default with
-``clipboard.set_clipboard_clearer(None)``.
+``clipboard.set_clipboard_clearer(None)``. The clearer takes no arguments and
+must leave the clipboard with no offer at all or raise.
 
 Installation
 ------------
@@ -470,6 +493,25 @@ Evidence / verified platforms (native probes gated via
   ``scripts/probe_windows_native_inspect.py`` record ``evidence_limit`` /
   ``verified: false`` (Wayland also ``compositor_generalization: false``;
   exit 2). Re-run on owner-held desktops to replace limits.
+* ``clear()``: macOS Aqua **verified** by ``scripts/probe_macos_native_clear.py``
+  (wrapper ``tests/test_clear_native_macos.py``, run with ``--extra images``)
+  on the owner's unlocked console session, macOS 26.6.2 (build 25G83) /
+  Darwin 25.6.0, arm64, Python 3.13.17, Pillow 11.3.0. Independent
+  ``osascript`` / AppKit producers offered HTML + text (``public.html``,
+  ``Apple HTML pasteboard type``, ``public.utf8-plain-text``,
+  ``NSStringPboardType``) and, separately, a PNG (listed as ``public.png``,
+  ``Apple PNG pasteboard type``, ``public.tiff``, ``NeXT TIFF v4.0 pasteboard
+  type``); a child Python called ``clear()`` and exited (about 0.3 s); an
+  independent JXA ``NSPasteboard types`` listing was then empty, ``pbpaste``
+  printed nothing, and the probe's own ``paste()`` was ``""``,
+  ``paste_html()`` / ``paste_image()`` / ``paste_files()`` were ``None`` and
+  ``inspect()`` had no kinds or formats. ``clear()`` twice on the cleared
+  pasteboard succeeded; ``copy("")`` left ``public.utf8-plain-text`` and
+  ``NSStringPboardType`` listed, and a following ``clear()`` left none.
+  Evidence limits: whether a macOS privacy prompt appeared on screen is
+  unobserved (the probe cannot capture the screen); every ``clear()``
+  finished within its bound without blocking. Linux Wayland, Linux X11, and
+  Windows clears are not available yet.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
   been verified with an independent **browser** producer: Google Chrome

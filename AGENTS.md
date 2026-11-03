@@ -13,11 +13,13 @@ never `None`). It also offers optional image read/write via `paste_image` /
 dual-offer writes and fragment reads via `copy_html` / `paste_html`, local file-list
 reads via `paste_files`, local file-list copy offers via `copy_files` (writer
 seam `set_files_clipboard_writer`; validation before the clipboard is
-replaced), and non-mutating offer inspection via `inspect`
-(kinds + native formats; no images extra). Image access/helper/transfer or
+replaced), non-mutating offer inspection via `inspect`
+(kinds + native formats; no images extra), and `clear` (clearer seam
+`set_clipboard_clearer`; no offer at all afterwards; native on macOS Aqua
+only so far, other platforms raise "not available"). Image access/helper/transfer or
 malformed-image failures raise `ClipboardImageError` rather than returning
 `None` (or silently succeeding on write). HTML, file-list (`paste_files` and
-`copy_files`), and inspect invalid-input, access, helper, transfer,
+`copy_files`), inspect, and clear invalid-input, access, helper, transfer,
 enumeration, or malformed-envelope failures raise
 `ClipboardContentError` (`paste_html` returns `None` only when no HTML is
 offered). Linux session detection, helper-failure detail formatting, and
@@ -44,7 +46,8 @@ Default tests use an in-memory clipboard backend so CI needs no desktop
 session; optional native text / pasteboard / file-list probes stay gated via
 `CLIPBOARD_NATIVE_PROBE` (see README Evidence, e.g.
 `scripts/probe_macos_native_paste_image.py`, the text probes
-`tests/test_text_native_{macos,linux_x11,linux_wayland,windows}.py`, and the
+`tests/test_text_native_{macos,linux_x11,linux_wayland,windows}.py`, the
+`clear` probe `tests/test_clear_native_macos.py`, and the
 `copy_files` probes
 `scripts/probe_{macos,windows,linux_x11,linux_wayland}_native_copy_files.py`).
 Release setup and maintainer steps are documented in `docs/releasing.md`.

@@ -23,11 +23,17 @@ def _unavailable_native_clearer_message() -> str:
 def _default_clipboard_clearer() -> None:
     """Platform-selected native clearer.
 
-    No platform has a native clearer yet, so every platform raises
-    ``ClipboardContentError``. Native adapters (macOS Aqua, Linux Wayland,
-    Linux X11, Windows desktop) dispatch on ``sys.platform`` here before the
-    fallback raise.
+    macOS Aqua clears the general pasteboard through ``osascript`` / AppKit.
+    Other platforms have no native clearer yet and raise
+    ``ClipboardContentError``; later adapters (Linux Wayland, Linux X11,
+    Windows desktop) dispatch on ``sys.platform`` here before the fallback
+    raise.
     """
+    if sys.platform == "darwin":
+        from clipboard._clear_macos import _macos_clipboard_clearer
+
+        _macos_clipboard_clearer()
+        return
     raise ClipboardContentError(_unavailable_native_clearer_message())
 
 
@@ -51,8 +57,9 @@ def clear() -> None:
     Does not require the optional ``clipboard[images]`` extra. Clearing an
     already empty clipboard, or clearing twice in a row, succeeds. Failures
     raise ``ClipboardContentError`` (the underlying error, if any, is
-    ``__cause__``). No platform has a native clearer yet, so the default
-    raises ``ClipboardContentError`` naming the platform; tests inject a fake
-    via ``set_clipboard_clearer``.
+    ``__cause__``). The default clears the macOS general pasteboard; other
+    platforms have no native clearer yet, so the default raises
+    ``ClipboardContentError`` naming the platform. Tests inject a fake via
+    ``set_clipboard_clearer``.
     """
     _call_content_backend("clear", _clipboard_clearer)
