@@ -174,7 +174,10 @@ error. Denied access, missing helper, or enumeration failure raises
 clipboard. The snapshot is a point-in-time view and can race with other
 writers. Linux helpers: X11 ``xclip -selection clipboard -o -t TARGETS``;
 Wayland ``wl-paste -l`` (verified claims stay **named-compositor-scoped**).
-WSL, SSH, containers, and headless CI are not additional guaranteed desktops
+On Linux an unowned X11 CLIPBOARD (``xclip``'s no-owner error, in either its
+``target TARGETS not available`` or ``There is no owner for the`` wording) and
+a nothing-copied Wayland selection (``Nothing is copied`` / ``No selection``)
+give an empty snapshot; any other helper failure still raises. WSL, SSH, containers, and headless CI are not additional guaranteed desktops
 for ``inspect``.
 
 To read the HTML fragment of a selection another application copied (for
@@ -492,7 +495,12 @@ Evidence / verified platforms (native probes gated via
   ``scripts/probe_linux_wayland_native_inspect.py``,
   ``scripts/probe_windows_native_inspect.py`` record ``evidence_limit`` /
   ``verified: false`` (Wayland also ``compositor_generalization: false``;
-  exit 2). Re-run on owner-held desktops to replace limits.
+  exit 2). Re-run on owner-held desktops to replace limits. Empty Linux
+  CLIPBOARD → empty ``inspect()``, ``paste_html()`` / ``paste_files()``
+  ``None``: desktop-free tests only so far; native evidence on a fresh Xvfb
+  (``native-linux-x11-clear``) and a fresh headless Sway
+  (``native-linux-wayland-clear``) is **pending CI** (helper versions and
+  observed no-owner wording to be recorded here).
 * ``clear()``: macOS Aqua **verified** by ``scripts/probe_macos_native_clear.py``
   (wrapper ``tests/test_clear_native_macos.py``, run with ``--extra images``)
   on the owner's unlocked console session, macOS 26.6.2 (build 25G83) /

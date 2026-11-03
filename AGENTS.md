@@ -22,9 +22,11 @@ malformed-image failures raise `ClipboardImageError` rather than returning
 `copy_files`), inspect, and clear invalid-input, access, helper, transfer,
 enumeration, or malformed-envelope failures raise
 `ClipboardContentError` (`paste_html` returns `None` only when no HTML is
-offered). Linux session detection, helper-failure detail formatting, and
-CLIPBOARD type listing (`xclip` TARGETS / `wl-paste --list-types`) live in
-private `clipboard/_desktop` with per-caller failure modes; content-kind
+offered). Linux session detection, helper-failure detail formatting,
+CLIPBOARD type listing (`xclip` TARGETS / `wl-paste --list-types`), and
+empty-clipboard classification (`xclip` no-owner / `wl-paste` nothing-copied
+wordings, which read as absence) live in private `clipboard/_desktop` with
+per-caller failure modes; content-kind
 modules must not copy those helpers. On a session with both `DISPLAY` and
 `WAYLAND_DISPLAY`, `paste_files` and `copy_files` still select X11 while
 HTML/inspect/image write select Wayland. Gated Windows `paste_html` native proof fails the job

@@ -99,8 +99,11 @@ def test_linux_wayland_reader_uri_list_uses_contract_normalize(
     ]
 
 
+@pytest.mark.parametrize(
+    "stderr", ["No mime type offered\n", "Nothing is copied\n", "No selection\n"]
+)
 def test_linux_wayland_reader_missing_uri_list_target_is_absence(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, monkeypatch, stderr
 ):
     monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
     monkeypatch.delenv("DISPLAY", raising=False)
@@ -110,11 +113,7 @@ def test_linux_wayland_reader_missing_uri_list_target_is_absence(
         "which",
         lambda name: "/usr/bin/wl-paste",
     )
-    completed = MagicMock(
-        returncode=1,
-        stdout="",
-        stderr="No mime type offered\n",
-    )
+    completed = MagicMock(returncode=1, stdout="", stderr=stderr)
     monkeypatch.setattr(
         clipboard._files_native_linux.subprocess,
         "run",

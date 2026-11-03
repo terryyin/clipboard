@@ -90,8 +90,15 @@ def test_linux_x11_reader_uri_list_uses_contract_normalize(
     ]
 
 
+@pytest.mark.parametrize(
+    "stderr",
+    [
+        "Error: target text/uri-list not available\n",
+        "xclip: Error: There is no owner for the CLIPBOARD selection\n",
+    ],
+)
 def test_linux_x11_reader_missing_uri_list_target_is_absence(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, monkeypatch, stderr
 ):
     monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
     monkeypatch.setenv("DISPLAY", ":99")
@@ -99,11 +106,7 @@ def test_linux_x11_reader_missing_uri_list_target_is_absence(
     monkeypatch.setattr(
         clipboard._files_native_linux.shutil, "which", lambda name: "/usr/bin/xclip"
     )
-    completed = MagicMock(
-        returncode=1,
-        stdout="",
-        stderr="Error: target text/uri-list not available\n",
-    )
+    completed = MagicMock(returncode=1, stdout="", stderr=stderr)
     monkeypatch.setattr(
         clipboard._files_native_linux.subprocess,
         "run",

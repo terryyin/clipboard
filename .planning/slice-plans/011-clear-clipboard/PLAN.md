@@ -284,6 +284,14 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   are not observable from agent sessions (`screencapture` has no display
   access); recorded as G2. A PNG offer is listed with system-added TIFF types,
   so producer checks test inclusion. AGENTS.md now names `clear`.
+- Slice 3 (desktop-free proof accepted 2026-11-03; native proof pending the
+  published revision's CI): `_desktop._xclip_reports_no_owner` /
+  `_wl_paste_reports_nothing_copied` are now the one home for empty-clipboard
+  wording (both xclip wordings, both wl-paste wordings), used by inspect,
+  HTML, file-list, and text readers. New CI jobs `native-linux-x11-clear` and
+  `native-linux-wayland-clear` (`native-wayland-clear.yml`) record the fresh
+  session's raw helper wording, then run `scripts/probe_linux_{x11,wayland}_native_clear.py`
+  step 1; slices 4–5 append clear steps to each probe's `_probe`.
 - The per-module osascript runners (`_offer_macos`, `_html_native_macos`,
   `_clear_macos`) keep separate failure messages and bounds; consolidating
   them is a cross-module refactor outside this story.

@@ -6,7 +6,11 @@ import os
 import shutil
 import subprocess
 
-from ._desktop import _helper_failure_detail
+from ._desktop import (
+    _helper_failure_detail,
+    _wl_paste_reports_nothing_copied,
+    _xclip_reports_no_owner,
+)
 from ._errors import ClipboardContentError
 
 # Contended clipboard must not hang callers indefinitely (commitment 78).
@@ -53,14 +57,19 @@ def _linux_wayland_helper_missing_message() -> str:
 
 
 def _uri_list_target_absent(stderr: str, stdout: str) -> bool:
-    """Whether helper failure looks like ordinary missing text/uri-list offer."""
+    """Whether helper failure looks like ordinary missing text/uri-list offer.
+
+    An empty clipboard (xclip no owner / wl-paste nothing copied, as
+    ``_desktop`` classifies them) is absence too.
+    """
+    if _xclip_reports_no_owner(stderr) or _wl_paste_reports_nothing_copied(stderr):
+        return True
     detail = f"{stderr}\n{stdout}".lower()
     markers = (
         "not available",
         "no data types",
         "error: target",
         "cannot convert",
-        "nothing is copied",
         "no mime",
     )
     return any(marker in detail for marker in markers)
