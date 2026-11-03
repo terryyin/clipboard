@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-003_host-independent-desktop-free-tests.json",
+      "identity": "SEED-003#host-independent-desktop-free-tests",
+      "completedAt": "2026-11-03T14:57:53.756Z",
+      "blob": "a5b2b89455265d2becce303d1067cfb8de97e136"
+    },
+    {
       "fileName": "SEED-001_bounded-x11-file-write.json",
       "identity": "SEED-001#bounded-x11-file-write",
       "completedAt": "2026-11-03T13:57:59.927Z",

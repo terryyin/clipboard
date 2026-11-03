@@ -34,9 +34,8 @@ until a follow-up assertion fix.
 
 Responsibility (triage 2026-11-03): project — a Clipboard test coupled to
 copied stub wording. Repaired for that test by c5e10c3; the general
-rule is in scope of queued
-[SEED-003#host-independent-desktop-free-tests](.planning/seeds/SEED-003-host-independent-tests.md#host-independent-desktop-free-tests)
-(queued, not resolved). Related to DD-010, distinct cause.
+rule was delivered by `SEED-003#host-independent-desktop-free-tests`
+(2026-11-03; story history at 066dae4; recurrence not yet observed). Related to DD-010, distinct cause.
 
 ### Occurrences
 - Execution: SEED-001#write-images
@@ -53,9 +52,9 @@ A desktop-free test for the Windows unavailable stub used `assert sys.platform !
 Responsibility (triage 2026-11-03): project — Clipboard's desktop-free tests
 and fixtures encode host assumptions (the shared `text_session` fixture in
 `tests/conftest.py` still patches the global `sys.platform`). Response:
-queued
-[SEED-003#host-independent-desktop-free-tests](.planning/seeds/SEED-003-host-independent-tests.md#host-independent-desktop-free-tests)
-(queued, not resolved).
+delivered
+`SEED-003#host-independent-desktop-free-tests` (2026-11-03; story history at
+066dae4; recurrence not yet observed).
 
 ### Occurrences
 - Execution: SEED-001#read-files
