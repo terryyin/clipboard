@@ -73,6 +73,10 @@ def test_reset_writer_restores_default(restore_files_clipboard_writer):
 @pytest.fixture
 def darwin_helper(monkeypatch, restore_files_clipboard_writer):
     """Default writer on a pretend Darwin with a scripted osascript."""
+    if sys.platform == "win32":
+        # Patching the shared ``sys.platform`` to darwin on Windows sends
+        # ``Path.as_uri`` into urllib's macOS-only ``_scproxy`` import.
+        pytest.skip("pretend-Darwin writer tests need a POSIX host")
     monkeypatch.setattr(clipboard._files_native.sys, "platform", "darwin")
     clipboard.set_files_clipboard_writer(None)
 

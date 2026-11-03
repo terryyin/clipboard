@@ -255,3 +255,5 @@ types. Unlocked, a Finder round can still upgrade the macOS limit (G2).
 
 CI repair after slice 3 (run 41558761684): desktop-free writer tests must use
 file names valid on Windows (`"` and `\` are rejected there).
+A second repair (run 41559117116): pretend-Darwin writer tests patch the
+shared `sys.platform`, so they skip on Windows hosts.
