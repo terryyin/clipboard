@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 18
+- Highest allocated local number: 19
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -337,3 +337,18 @@ paste could not be observed.
   - Evidence: between commits 085b6d9 (2026-11-02T21:36:14+07:00) and 5787804 (2026-11-03T08:17:17+07:00): Finder rounds 1–2 answered "Only one / none" (round 1 overwritten by a PNG; round 2 pasteboard types empty at an unchanged changeCount); round 3 rejected with "I am not on the computer right now … Please proceed this without me"; the coordinator then found the session locked, `screencapture` "could not create image from display", and Finder Apple Events timing out; a slice 3 rework agent (about 150k subagent tokens) could not reproduce a vanish
   - Observed effect: The macOS file-manager claim ended as an evidence limit (G2) after one rework delegation and several investigation turns on a pasteboard hypothesis that the lock state may explain
   - Inference: Before asking for a developer-operated desktop round, check the session lock state and try host automation first; treat answers to remote prompts as possibly not observed at the machine (the developer's preference is now in agent memory)
+
+## DD-019 — CI observer budget expired while the next slice was still open
+After slice-1 publish, the retained CI observer's budget expired during a long
+or interrupted next-slice delegation, so the coordinator continued delivery
+without promised monitoring on the prior SHA until the next publish reattached
+observation.
+
+### Occurrences
+- Execution: SEED-001#bounded-x11-file-write
+  - Timestamp: unknown
+  - Tool: Cursor
+  - Open Dough release: 0.3.82
+  - Evidence: slice-1 publish d74c178 (2026-11-03T11:02:43+07:00) with observer attached; coordinator transcript after interrupted slice-2 delegation: "CI observation budget expired — continuing without promising monitoring"; slice-2 publish a73a418 (2026-11-03T20:48:37+07:00) reattached observer `/tmp/dough-ci-501/watch-MvPeuG` (coverage state pending for a73a418, run 41647699400)
+  - Observed effect: Intermediate gated coverage for d74c178 was not retained as a known green; native X11/Wayland/Windows proof conclusions for the story rest on the later tip's still-pending observation
+  - Inference: A long next-slice turn can outlive the prior increment's observation budget; treat mid-story budget expiry as lost coverage (report once, continue) and keep final acceptance conditional on the tip observer, not on an assumed earlier green

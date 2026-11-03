@@ -168,3 +168,7 @@ concern remains. No remaining slice-specific concerns were identified.
 - Live macOS: `CLIPBOARD_NATIVE_PROBE=1 … scripts/probe_macos_native_copy_files.py` → ok, three absolute paths (directory + duplicate + relative) agree
 - Expected paths use `Path.resolve()` so `/tmp` vs `/private/tmp` matches writers
 - Gated X11/Wayland/Windows native jobs left to CI after publish
+
+## Execution complete
+
+Product advice: no-change
