@@ -1,6 +1,6 @@
 """Desktop-free tests for copy_files' Linux Wayland ``wl-copy`` default writer.
 
-Only ``clipboard._files_native``'s own ``sys`` reference is replaced (not the
+The package platform is faked through the ``fake_platform`` fixture (not the
 shared ``sys.platform``), and ``subprocess.run`` / ``Popen``, ``shutil.which``
 and the session variables are faked, so these run on every CI host without a
 compositor, wl-clipboard, or a real clipboard.
@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import types
 from pathlib import Path
 
 import pytest
 from fake_wl_copy_files import LIST_TYPES, READ, URI_LIST, FakeWaylandFiles
 
 import clipboard
-from clipboard import _files_native, _files_native_wayland_writer
+from clipboard import _files_native_wayland_writer
 from clipboard._files_offer import _uri_list_body
 
 NAMES = ["report final.pdf", "données é.csv"]
@@ -36,10 +35,10 @@ def sources(tmp_path):
 
 
 @pytest.fixture
-def wayland(monkeypatch, restore_files_clipboard_writer):
+def wayland(monkeypatch, restore_files_clipboard_writer, fake_platform):
     """Default writer on a pretend Linux Wayland-only session."""
     fake = FakeWaylandFiles()
-    monkeypatch.setattr(_files_native, "sys", types.SimpleNamespace(platform="linux"))
+    fake_platform("linux")
     clipboard.set_files_clipboard_writer(None)
     monkeypatch.setattr(subprocess, "run", fake.run)
     monkeypatch.setattr(subprocess, "Popen", fake.popen)

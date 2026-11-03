@@ -1,6 +1,49 @@
 """Shared pytest fixtures for clipboard contract tests."""
 
+import sys
+
 import pytest
+
+# Captured once at import so the guard compares against the real host.
+_HOST_PLATFORM = sys.platform
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_call(item):
+    """Fail a test whose call phase leaves ``sys.platform`` changed.
+
+    The standard library also reads the shared ``sys.platform``, so faking it
+    globally can change stdlib behavior on some hosts. Fake the product's
+    platform through the ``fake_platform`` fixture instead.
+    """
+    try:
+        result = yield
+    finally:
+        observed = sys.platform
+        sys.platform = _HOST_PLATFORM
+    if observed != _HOST_PLATFORM:
+        pytest.fail(
+            f"test left sys.platform={observed!r} (host {_HOST_PLATFORM!r}); "
+            "fake the product platform with the fake_platform fixture",
+            pytrace=False,
+        )
+    return result
+
+
+@pytest.fixture
+def fake_platform(monkeypatch):
+    """Return a setter that fakes the platform the package reads.
+
+    ``fake_platform("win32")`` patches the private ``clipboard._platform``
+    seam only; the shared ``sys.platform`` (and stdlib behavior) stays the
+    host's.
+    """
+    from clipboard import _platform
+
+    def configure(platform):
+        monkeypatch.setattr(_platform, "current", lambda: platform)
+
+    return configure
 
 
 @pytest.fixture
@@ -107,7 +150,7 @@ _TEXT_SESSION_VARS = ("DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE")
 
 
 @pytest.fixture
-def text_session(monkeypatch, tmp_path, restore_text_clipboard):
+def text_session(monkeypatch, tmp_path, restore_text_clipboard, fake_platform):
     """Configure a text desktop session shape on the default backend.
 
     ``text_session(platform, env, helpers, proc_version, qt)`` patches the
@@ -115,7 +158,6 @@ def text_session(monkeypatch, tmp_path, restore_text_clipboard):
     and Qt discovery so no real clipboard or desktop is touched.
     """
     import shutil
-    import sys
 
     import clipboard
     from clipboard import _desktop_text
@@ -130,7 +172,7 @@ def text_session(monkeypatch, tmp_path, restore_text_clipboard):
         proc_version="Linux version 6.8.0-generic (gcc)",
         qt=False,
     ):
-        monkeypatch.setattr(sys, "platform", platform)
+        fake_platform(platform)
         for name in _TEXT_SESSION_VARS:
             monkeypatch.delenv(name, raising=False)
         for name, value in (env or {}).items():

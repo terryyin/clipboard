@@ -8,10 +8,10 @@ Standard CF_* ids map to stable names; registered formats (e.g.
 
 from __future__ import annotations
 
-import sys
 import time
 from collections.abc import Callable
 
+from clipboard import _platform
 from clipboard._errors import ClipboardContentError
 from clipboard._offer import ClipboardOfferSnapshot, snapshot_from_native_formats
 
@@ -63,11 +63,12 @@ def format_label_for_id(
 
 def _load_user32():
     """Load ``user32`` with clipboard-enum prototypes (win32 only)."""
-    if sys.platform != "win32":
+    platform = _platform.current()
+    if platform != "win32":
         raise ClipboardContentError(
             "Windows clipboard inspect requires win32 "
             "(EnumClipboardFormats via user32); "
-            f"current platform is {sys.platform!r}, or inject an inspector "
+            f"current platform is {platform!r}, or inject an inspector "
             "with set_clipboard_inspector for tests"
         )
     import ctypes

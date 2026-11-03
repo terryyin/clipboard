@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import sys
-
+from . import _platform
 from ._desktop import _linux_wayland_without_x11
 from ._errors import ClipboardContentError
 from ._files_native_linux import (
@@ -23,7 +22,7 @@ from ._files_native_x11_writer import _x11_files_clipboard_writer
 def _unavailable_native_reader_message() -> str:
     return (
         "paste_files native file-list reader is not available on this platform "
-        f"({sys.platform}); need a usable desktop session with a file-list "
+        f"({_platform.current()}); need a usable desktop session with a file-list "
         "helper (Linux X11: text/uri-list via xclip or equivalent; Wayland: "
         "text/uri-list via wl-paste on a named compositor; Windows desktop: "
         "CF_HDROP), or inject a reader with set_files_clipboard_reader for tests"
@@ -32,13 +31,14 @@ def _unavailable_native_reader_message() -> str:
 
 def _default_files_clipboard_reader() -> object:
     """Platform-selected file-list reader (Darwin; Linux; Windows CF_HDROP)."""
-    if sys.platform == "darwin":
+    platform = _platform.current()
+    if platform == "darwin":
         return _macos_files_clipboard_reader()
-    if sys.platform.startswith("linux"):
+    if platform.startswith("linux"):
         if _linux_wayland_without_x11():
             return _linux_wayland_files_clipboard_reader()
         return _linux_x11_files_clipboard_reader()
-    if sys.platform == "win32":
+    if platform == "win32":
         return _windows_files_clipboard_reader()
     raise ClipboardContentError(_unavailable_native_reader_message())
 
@@ -46,7 +46,7 @@ def _default_files_clipboard_reader() -> object:
 def _unavailable_native_writer_message() -> str:
     return (
         "copy_files native file-list writer is not available on this platform "
-        f"({sys.platform}); no file-list copy offer adapter exists here yet "
+        f"({_platform.current()}); no file-list copy offer adapter exists here yet "
         "(macOS Aqua, Windows desktop, Linux X11 and Linux Wayland are "
         "supported), so inject a writer with set_files_clipboard_writer for tests"
     )
@@ -62,13 +62,14 @@ def _default_files_clipboard_writer(paths: list[str]) -> None:
     the file-list reader) a background ``wl-copy`` server with the same body.
     Other platforms raise ``ClipboardContentError`` naming the platform.
     """
-    if sys.platform == "darwin":
+    platform = _platform.current()
+    if platform == "darwin":
         _macos_files_clipboard_writer(paths)
         return
-    if sys.platform == "win32":
+    if platform == "win32":
         _windows_files_clipboard_writer(paths)
         return
-    if sys.platform.startswith("linux"):
+    if platform.startswith("linux"):
         if _linux_wayland_without_x11():
             _wayland_files_clipboard_writer(paths)
         else:

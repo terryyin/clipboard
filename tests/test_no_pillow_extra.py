@@ -32,7 +32,8 @@ assert clipboard.paste_html() == "<b>ok</b>"
 clipboard.set_html_clipboard_reader(lambda: None)
 assert clipboard.paste_html() is None
 clipboard.set_html_clipboard_reader(None)
-sys.platform = "sunos5"
+from clipboard import _platform
+_platform.current = lambda: "sunos5"
 try:
     clipboard.paste_html()
 except clipboard.ClipboardContentError as exc:

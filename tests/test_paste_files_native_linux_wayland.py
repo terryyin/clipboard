@@ -49,9 +49,9 @@ def test_linux_wayland_paste_files_probe_records_evidence_limit():
 
 
 def test_linux_wayland_reader_missing_helper_raises_content_error(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, monkeypatch, fake_platform
 ):
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setattr(
@@ -70,9 +70,9 @@ def test_linux_wayland_reader_missing_helper_raises_content_error(
 
 
 def test_linux_wayland_reader_uri_list_uses_contract_normalize(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, monkeypatch, fake_platform
 ):
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setattr(
@@ -100,9 +100,9 @@ def test_linux_wayland_reader_uri_list_uses_contract_normalize(
 
 
 def test_linux_wayland_reader_missing_uri_list_target_is_absence(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, monkeypatch, fake_platform
 ):
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setattr(

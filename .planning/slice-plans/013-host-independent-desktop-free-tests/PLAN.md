@@ -2,6 +2,7 @@
 
 **Identity:** SEED-003#host-independent-desktop-free-tests
 **Source:** [Make desktop-free platform tests pass on every matrix OS](../../seeds/SEED-003-host-independent-tests.md#host-independent-desktop-free-tests)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -38,7 +39,7 @@ at call time keeps today's selection behavior.
 
 ### 1. Module-local platform faking with a global-fake guard
 Type: Structure
-Status: planned
+Status: done
 Proof: rows 1–3 above.
 
 Correction (test-suite weakness, DD-010): add one private platform seam in
@@ -57,6 +58,17 @@ subprocess scenarios in `tests/test_clipboard.py` and
 whose call phase leaves `sys.platform` different from the host's value.
 Preserved behavior: every existing desktop-free test still passes with the
 same assertions on this host.
+
+Accepted proof (Darwin, 2026-11-03): seam `clipboard/_platform.py`
+`current()`, read once per dispatch function in the eight modules; fixture
+`fake_platform` and `pytest_runtest_call` guard in `tests/conftest.py`.
+`nix develop -c make check` 538 passed, 24 skipped (baseline counts); after
+refactor `nix develop -c uv run --locked --extra images pytest -q` over every
+covering test file 510 passed, 22 skipped. A scratch
+`monkeypatch.setattr(sys, "platform", "win32")` test failed under the guard
+and passed with `fake_platform("win32")` (deleted). `grep -rn sys.platform`:
+product reads only in `_platform.py`; tests and scripts read the real host for
+capability gates only. Source review ids: [source-review.md](source-review.md).
 
 ### 2. Pretend-platform tests run on every matrix OS, with the project rule
 Type: Behavior
@@ -131,4 +143,9 @@ No remaining slice-specific concerns were identified.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: `darwin_helper` now fakes only the seam, so its Windows skip's
+  stated cause (shared `sys.platform` sending `Path.as_uri` into `_scproxy`)
+  no longer applies; slice 2 removes it and watches the Windows cell for any
+  remaining file-name or URI host difference.
+- Subprocess scenarios assign `clipboard._platform.current` after import; this
+  relies on every product platform read happening at call time.

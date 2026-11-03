@@ -8,11 +8,11 @@ from types import SimpleNamespace
 import pytest
 
 import clipboard
-from clipboard import _desktop, _offer
+from clipboard import _desktop
 
 
 def test_missing_wl_paste_raises_clipboard_content_error_not_empty(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """Missing wl-paste → ClipboardContentError, never empty success."""
 
@@ -20,7 +20,7 @@ def test_missing_wl_paste_raises_clipboard_content_error_not_empty(
         raise FileNotFoundError(2, "No such file or directory", "wl-paste")
 
     monkeypatch.setattr(_desktop.subprocess, "run", boom)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
     clipboard.set_clipboard_inspector(None)
@@ -36,10 +36,10 @@ def test_missing_wl_paste_raises_clipboard_content_error_not_empty(
 
 
 def test_missing_wayland_display_raises_clipboard_content_error_not_empty(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """Unavailable Wayland session (no WAYLAND_DISPLAY) → ClipboardContentError."""
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     clipboard.set_clipboard_inspector(None)
@@ -54,7 +54,7 @@ def test_missing_wayland_display_raises_clipboard_content_error_not_empty(
 
 
 def test_wl_paste_helper_failure_raises_clipboard_content_error_not_empty(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """Non-zero wl-paste -l → ClipboardContentError, not empty snapshot."""
 
@@ -66,7 +66,7 @@ def test_wl_paste_helper_failure_raises_clipboard_content_error_not_empty(
         )
 
     monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
     clipboard.set_clipboard_inspector(None)
@@ -80,7 +80,7 @@ def test_wl_paste_helper_failure_raises_clipboard_content_error_not_empty(
 
 
 def test_wl_paste_mime_list_maps_to_kinds_via_snapshot(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """MIME ids from wl-paste -l map through snapshot_from_native_formats."""
 
@@ -93,7 +93,7 @@ def test_wl_paste_mime_list_maps_to_kinds_via_snapshot(
         )
 
     monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
     clipboard.set_clipboard_inspector(None)
@@ -106,13 +106,13 @@ def test_wl_paste_mime_list_maps_to_kinds_via_snapshot(
 
 
 def test_wl_paste_timeout_raises_clipboard_content_error(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     def boom(*_args, **_kwargs):
         raise subprocess.TimeoutExpired(cmd="wl-paste", timeout=15)
 
     monkeypatch.setattr(_desktop.subprocess, "run", boom)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     clipboard.set_clipboard_inspector(None)
 

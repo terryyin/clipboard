@@ -231,9 +231,11 @@ def test_malformed_offer_value_is_contract_failure(
 # --- injectable reader reset ----------------------------------------------
 
 
-def test_reset_reader_restores_default(monkeypatch, restore_html_clipboard_reader):
+def test_reset_reader_restores_default(
+    monkeypatch, restore_html_clipboard_reader, fake_platform
+):
     # Unsupported platform: default reader must not touch a real pasteboard.
-    monkeypatch.setattr(clipboard._html_native.sys, "platform", "sunos5")
+    fake_platform("sunos5")
 
     def no_helper(*args, **kwargs):
         raise AssertionError("default reader must not run a helper here")

@@ -10,7 +10,7 @@ import pytest
 from html_offer import FRAGMENT
 
 import clipboard
-from clipboard import _desktop, _html_native, _html_native_linux
+from clipboard import _desktop, _html_native_linux
 
 HTML_TARGETS = b"TIMESTAMP\nTARGETS\nMULTIPLE\ntext/html\nUTF8_STRING\n"
 TEXT_TARGETS = b"TIMESTAMP\nTARGETS\nUTF8_STRING\nSTRING\nTEXT\n"
@@ -46,9 +46,9 @@ class _Xclip:
 
 
 @pytest.fixture
-def x11_xclip(monkeypatch, restore_html_clipboard_reader):
+def x11_xclip(monkeypatch, restore_html_clipboard_reader, fake_platform):
     """Default reader on a pretend Linux X11 session with a scripted xclip."""
-    monkeypatch.setattr(_html_native.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
     clipboard.set_html_clipboard_reader(None)

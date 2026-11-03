@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import subprocess as subprocess  # noqa: F401 — tests monkeypatch ``clipboard.subprocess``
-import sys as sys  # noqa: F401 — tests monkeypatch ``clipboard.sys.platform``
 
 from clipboard import _files, _html, _offer, _text
 from clipboard._errors import ClipboardContentError, ClipboardImageError

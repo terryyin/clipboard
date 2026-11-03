@@ -13,7 +13,7 @@ def test_copy_html_public_surface():
 
 
 def test_default_copy_html_raises_on_non_darwin(
-    restore_html_clipboard_writer, monkeypatch
+    restore_html_clipboard_writer, fake_platform
 ):
     """Non-Darwin default raises until later platform writers land.
 
@@ -21,7 +21,7 @@ def test_default_copy_html_raises_on_non_darwin(
     Darwin's native dual-offer path stays gated to the native probe. Message
     actionability (multi-type helper naming) is covered in the contract suite.
     """
-    monkeypatch.setattr(clipboard.sys, "platform", "linux")
+    fake_platform("linux")
     clipboard.set_html_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.copy_html("<b>hi</b>", "hi")
@@ -40,10 +40,10 @@ def test_injected_writer_receives_both_representations(
     assert received == [("<i>styled</i>", "styled")]
 
 
-def test_reset_writer_restores_default(restore_html_clipboard_writer, monkeypatch):
+def test_reset_writer_restores_default(restore_html_clipboard_writer, fake_platform):
     clipboard.set_html_clipboard_writer(lambda html, text: None)
     clipboard.set_html_clipboard_writer(None)
     assert clipboard._html_clipboard_writer is clipboard._default_html_clipboard_writer
-    monkeypatch.setattr(clipboard.sys, "platform", "linux")
+    fake_platform("linux")
     with pytest.raises(clipboard.ClipboardContentError):
         clipboard.copy_html("<p>x</p>", "x")

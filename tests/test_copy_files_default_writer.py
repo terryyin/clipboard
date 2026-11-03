@@ -50,9 +50,9 @@ def sources(tmp_path):
 # tests/test_copy_files_wayland_writer.py.
 @pytest.mark.parametrize("platform", ["aix", "freebsd14"])
 def test_default_writer_raises_naming_platform(
-    sources, restore_files_clipboard_writer, monkeypatch, platform
+    sources, restore_files_clipboard_writer, platform, fake_platform
 ):
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", platform)
+    fake_platform(platform)
     clipboard.set_files_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.copy_files([str(sources / AWKWARD_NAMES[0])])
@@ -73,13 +73,13 @@ def test_reset_writer_restores_default(restore_files_clipboard_writer):
 
 
 @pytest.fixture
-def darwin_helper(monkeypatch, restore_files_clipboard_writer):
+def darwin_helper(monkeypatch, restore_files_clipboard_writer, fake_platform):
     """Default writer on a pretend Darwin with a scripted osascript."""
     if sys.platform == "win32":
         # Patching the shared ``sys.platform`` to darwin on Windows sends
         # ``Path.as_uri`` into urllib's macOS-only ``_scproxy`` import.
         pytest.skip("pretend-Darwin writer tests need a POSIX host")
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "darwin")
+    fake_platform("darwin")
     clipboard.set_files_clipboard_writer(None)
 
     def install(**kwargs):

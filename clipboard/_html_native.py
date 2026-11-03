@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import sys
-
+from clipboard import _platform
 from clipboard._desktop import _is_linux_wayland
 from clipboard._errors import ClipboardContentError
 from clipboard._html_envelope import _HtmlOffer
@@ -23,17 +22,18 @@ def _default_html_clipboard_reader() -> _HtmlOffer | None:
     ``text/html`` via ``xclip -o``; Windows reads the registered ``HTML
     Format`` via user32/kernel32 (``ctypes``).
     """
-    if sys.platform == "darwin":
+    platform = _platform.current()
+    if platform == "darwin":
         return _macos_html_clipboard_reader()
-    if sys.platform == "win32":
+    if platform == "win32":
         return _windows_html_clipboard_reader()
-    if sys.platform.startswith("linux"):
+    if platform.startswith("linux"):
         if _is_linux_wayland():
             return _linux_wayland_html_clipboard_reader()
         return _linux_x11_html_clipboard_reader()
     raise ClipboardContentError(
         "paste_html native HTML reader is not available on this platform "
-        f"({sys.platform}); supported: Windows, macOS, Linux X11 / Wayland; "
+        f"({platform}); supported: Windows, macOS, Linux X11 / Wayland; "
         "inject a reader with "
         "set_html_clipboard_reader for tests"
     )
