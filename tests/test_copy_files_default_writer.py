@@ -46,7 +46,8 @@ def sources(tmp_path):
     return tmp_path
 
 
-@pytest.mark.parametrize("platform", ["linux", "aix"])
+# Linux X11 and Wayland-only sessions: tests/test_copy_files_x11_writer.py.
+@pytest.mark.parametrize("platform", ["aix", "freebsd14"])
 def test_default_writer_raises_naming_platform(
     sources, restore_files_clipboard_writer, monkeypatch, platform
 ):

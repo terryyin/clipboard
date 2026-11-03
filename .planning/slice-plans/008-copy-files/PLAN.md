@@ -274,3 +274,10 @@ Slice 4 accepted on run 41561268655 (windows-latest image win25-vs2026
 and `Shell.Application` Explorer-shell Paste copying both files byte-equal
 with sources unchanged. This is the Explorer shell verb, not an interactive
 Explorer window.
+
+Slice 5 (in progress): X11 writer `clipboard/_files_native_x11_writer.py`
+(background `xclip -t text/uri-list`, TARGETS wait plus body read-back, since
+a previous owner may already list the type); native proof is CI job
+`native-linux-x11-copy-files` (API child exits, independent xclip read with
+rechecks, Thunar Paste, missing-xclip hint with prior text kept). Shared
+Thunar harness moved to `scripts/linux_x11_thunar_support.py`.

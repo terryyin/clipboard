@@ -154,9 +154,11 @@ def copy_files(paths: Iterable[str | os.PathLike[str]]) -> None:
     ``ClipboardContentError``. On macOS Aqua the default writer publishes one
     file-URL ``NSPasteboard`` item per path via ``osascript`` / AppKit; on
     Windows desktop it sets ``CF_HDROP`` with ``Preferred DropEffect`` copy via
-    ``ctypes``; other platforms raise ``ClipboardContentError`` naming the
-    platform until their writers land. Tests inject one via
-    ``set_files_clipboard_writer``.
+    ``ctypes``; on Linux X11 it feeds a CRLF ``text/uri-list`` of ``file://``
+    URIs to a background ``xclip`` owner (missing ``DISPLAY`` / ``xclip``
+    raises with an install hint before the clipboard is replaced); other
+    platforms raise ``ClipboardContentError`` naming the platform until their
+    writers land. Tests inject one via ``set_files_clipboard_writer``.
     """
     absolute = _validate_copy_files_paths(paths)
     _call_content_backend("file-list write", _files_clipboard_writer, absolute)

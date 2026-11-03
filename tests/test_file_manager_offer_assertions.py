@@ -3,15 +3,14 @@
 import subprocess
 import sys
 from pathlib import Path
-from runpy import run_path
 
 import pytest
 
-PROBE = (
-    Path(__file__).resolve().parents[1]
-    / "scripts/probe_linux_x11_file_manager_offers.py"
-)
-assert_copies = run_path(str(PROBE))["_assert_copies"]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import linux_x11_thunar_support as thunar  # noqa: E402
+import probe_linux_x11_file_manager_offers as probe  # noqa: E402
+
+assert_copies = thunar.assert_copies
 
 
 @pytest.mark.parametrize("damage", ["missing", "corrupt-copy", "changed-source", None])
@@ -43,13 +42,12 @@ def test_failed_file_manager_launch_reports_exit_before_searching_windows(
 ):
     launched = subprocess.Popen([sys.executable, "-c", "raise SystemExit(2)"])
     launched.wait(timeout=5)
-    round_ = assert_copies.__globals__["_round"]
     monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: launched)
-    monkeypatch.setitem(round_.__globals__, "_run", lambda *args, **kwargs: None)
+    monkeypatch.setattr(thunar, "run", lambda *args, **kwargs: None)
 
     def search_after_failed_launch(*args, **kwargs):
         pytest.fail("window search ran after the file-manager launch failed")
 
     monkeypatch.setattr(subprocess, "run", search_after_failed_launch)
     with pytest.raises(RuntimeError, match="Thunar exited with status 2"):
-        round_(tmp_path, "failed-launch", "text/uri-list", None)
+        probe._round(tmp_path, "failed-launch", "text/uri-list", None)

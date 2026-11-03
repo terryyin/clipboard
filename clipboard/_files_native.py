@@ -16,6 +16,7 @@ from ._files_native_macos import (
 )
 from ._files_native_windows import _windows_files_clipboard_reader
 from ._files_native_windows_writer import _windows_files_clipboard_writer
+from ._files_native_x11_writer import _x11_files_clipboard_writer
 
 
 def _unavailable_native_reader_message() -> str:
@@ -45,8 +46,9 @@ def _unavailable_native_writer_message() -> str:
     return (
         "copy_files native file-list writer is not available on this platform "
         f"({sys.platform}); no file-list copy offer adapter exists here yet "
-        "(macOS Aqua and Windows desktop are supported), so inject a writer with "
-        "set_files_clipboard_writer for tests"
+        "(macOS Aqua, Windows desktop and Linux X11 are supported; a Linux "
+        "Wayland session without X11 DISPLAY is not yet), so inject a writer "
+        "with set_files_clipboard_writer for tests"
     )
 
 
@@ -55,7 +57,9 @@ def _default_files_clipboard_writer(paths: list[str]) -> None:
 
     Darwin publishes file ``NSURL`` items through ``osascript`` / AppKit;
     Windows publishes ``CF_HDROP`` plus ``Preferred DropEffect`` copy through
-    ``ctypes``. Other platforms raise ``ClipboardContentError`` naming the
+    ``ctypes``; Linux X11 (same session rule as the file-list reader) leaves a
+    background ``xclip`` ``text/uri-list`` owner. Other platforms, and a
+    Wayland session without X11, raise ``ClipboardContentError`` naming the
     platform until their writers land.
     """
     if sys.platform == "darwin":
@@ -63,5 +67,8 @@ def _default_files_clipboard_writer(paths: list[str]) -> None:
         return
     if sys.platform == "win32":
         _windows_files_clipboard_writer(paths)
+        return
+    if sys.platform.startswith("linux") and not _linux_wayland_without_x11():
+        _x11_files_clipboard_writer(paths)
         return
     raise ClipboardContentError(_unavailable_native_writer_message())
