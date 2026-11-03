@@ -320,6 +320,21 @@ For desktop-free tests, inject a fake writer with
 already validated ``list[str]`` of absolute paths and must publish it as one
 copy offer or raise.
 
+Clear the clipboard (no ``clipboard[images]`` required):
+
+::
+
+   import clipboard
+   clipboard.clear()
+
+``clear()`` is public API and returns ``None``; failures raise
+``clipboard.ClipboardContentError``. No platform's native clear is available
+yet (macOS Aqua, Linux Wayland, Linux X11, and Windows desktop are planned),
+so for now the default raises ``ClipboardContentError`` naming the platform.
+For desktop-free tests, inject a fake with
+``clipboard.set_clipboard_clearer(clearer)`` and restore the default with
+``clipboard.set_clipboard_clearer(None)``.
+
 Installation
 ------------
 

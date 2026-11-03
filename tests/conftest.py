@@ -44,6 +44,14 @@ def restore_clipboard_inspector():
 
 
 @pytest.fixture
+def restore_clipboard_clearer():
+    import clipboard
+
+    yield
+    clipboard.set_clipboard_clearer(None)
+
+
+@pytest.fixture
 def restore_image_writeclipboard():
     import clipboard
 

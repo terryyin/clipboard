@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#clear-clipboard
 **Source:** [Clear every representation from the current clipboard](../../seeds/SEED-001-clipboard-true-to-its-name.md#clear-clipboard)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -110,7 +111,7 @@ claims need an independent producer and consumer in other processes.
 
 ### 1. `clear()` contract behind an explicit seam
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests through public `clipboard.clear` with a fake
 clearer injected by new `clipboard.set_clipboard_clearer`. The fake is
 called once per call and `clear()` returns `None`. Two calls in a row both
@@ -250,9 +251,26 @@ README notes that Win+V history and cloud clipboard are not erased.
   `xsel`.
 - Public names: `clear` and `set_clipboard_clearer`, added to `__all__`.
 
+## Story obligations
+
+### G1. Default clearer raises "not available" on every platform
+Reported: slice 1 — "No native clearer is implemented. When slices 2, 4, 5 and 6 add a native clearer, each must drop its platform from that parametrize list."
+Story clause: "with one call whose result is the same on every supported desktop"
+Disposition: interim until slices 2, 4, 5, 6
+
 ## Learnings
 
-None yet.
+- Slice 1 (accepted 2026-11-03): `clipboard/_clear.py` holds the seam;
+  `_default_clipboard_clearer` is the one place later slices add
+  `sys.platform` dispatch before the fallback raise. Each native slice drops
+  its platform from `tests/test_clear.py::test_default_clearer_names_platform_and_seam`.
+  Accepted proof: `nix develop -c uv run --locked --extra images pytest
+  tests/test_clear.py tests/test_no_pillow_extra.py -q` (19 passed),
+  `nix develop -c make check` (544 passed, 24 skipped; the 302 baseline
+  in Decisive premises predates later merges), `nix develop -c make
+  test-package` (asserts `clear` / `set_clipboard_clearer` callable).
+- `AGENTS.md`'s public-API summary does not name `clear` yet; slice 2 (or
+  wrap-up) adds it with the first native path.
 
 ## Concern evidence
 
