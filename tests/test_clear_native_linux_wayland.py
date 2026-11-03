@@ -96,6 +96,35 @@ def test_linux_wayland_native_clear_probe():
     assert missing["wl_copy_on_child_path"] is None
     assert missing["child_clear"]["outcome"]["raised"] == "ClipboardContentError"
     assert "wl-clipboard" in missing["child_clear"]["outcome"]["message"]
+    for name, mime_type in (
+        ("8_file_list_producer_then_child_clear_reads_empty", "text/uri-list"),
+        (
+            "9_unknown_type_producer_then_child_clear_reads_empty",
+            "application/x-clipboard-probe",
+        ),
+    ):
+        produced = steps[name]
+        assert produced["producer"]["returncode"] == 0
+        assert mime_type in produced["producer"]["cmd"]
+        assert produced["offered_before"]["offered"] is True
+        assert produced["child_clear"]["outcome"] == {"raised": None}
+        assert produced["classified_nothing_copied"] is True
+        assert produced["reads"] == EMPTY_READS
+    files = steps["8_file_list_producer_then_child_clear_reads_empty"]
+    assert files["file_uri"].startswith("file:///")
+    assert files["file_existed"] is True
+    assert files["reads"]["paste_files"] == {"value": None}
+    assert [step["step"] for step in report["steps"]] == [
+        "1_fresh_nothing_copied_reads_empty",
+        "2_early_raw_wl_copy_clear_ends_html_owner",
+        "3_html_producer_then_child_clear_reads_empty",
+        "4_text_producer_then_child_clear_reads_empty",
+        "5_copy_image_owner_ends_after_child_clear",
+        "6_clear_twice_on_cleared_succeeds",
+        "7_path_without_wl_copy_names_wl_clipboard",
+        "8_file_list_producer_then_child_clear_reads_empty",
+        "9_unknown_type_producer_then_child_clear_reads_empty",
+    ]
     env = report["environment"]
     assert env["compositor_version"], "sway version"
     assert env["wl_clipboard_version"], "wl-clipboard version"

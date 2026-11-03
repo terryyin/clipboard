@@ -16,8 +16,9 @@ from ._errors import ClipboardContentError, _call_content_backend
 def _unavailable_native_clearer_message() -> str:
     return (
         "clear native clipboard clearer is not available on this platform "
-        f"({sys.platform}); no native clear adapter exists here yet, so "
-        "inject a clearer with set_clipboard_clearer for tests"
+        f"({sys.platform}); native clear covers macOS, Windows, and Linux "
+        "X11 / Wayland desktops, so inject a clearer with "
+        "set_clipboard_clearer for tests"
     )
 
 
@@ -36,14 +37,20 @@ def _default_clipboard_clearer() -> None:
     both ``DISPLAY`` and ``WAYLAND_DISPLAY`` are set) runs ``wl-copy
     --clear``; otherwise ``DISPLAY`` (``_desktop._linux_x11_display``)
     relinquishes X11 CLIPBOARD through libX11 ``XSetSelectionOwner``; no
-    visible session raises ``ClipboardContentError``. Other platforms have no
-    native clearer yet and raise ``ClipboardContentError``; later adapters
-    (Windows desktop) dispatch here before the fallback raise.
+    visible session raises ``ClipboardContentError``. Windows (``win32``) runs
+    user32 ``EmptyClipboard`` after a bounded ``OpenClipboard``. Other
+    platforms (no desktop clipboard this package knows) raise
+    ``ClipboardContentError``.
     """
     if sys.platform == "darwin":
         from clipboard._clear_macos import _macos_clipboard_clearer
 
         _macos_clipboard_clearer()
+        return
+    if sys.platform == "win32":
+        from clipboard._clear_windows import _windows_clipboard_clearer
+
+        _windows_clipboard_clearer()
         return
     if sys.platform.startswith("linux"):
         if _desktop._is_linux_wayland():
@@ -82,8 +89,9 @@ def clear() -> None:
     raise ``ClipboardContentError`` (the underlying error, if any, is
     ``__cause__``). The default clears the macOS general pasteboard, the
     Linux Wayland selection (``wl-copy --clear``, needs wl-clipboard) and
-    Linux X11 CLIPBOARD (libX11 ``XSetSelectionOwner``); other platforms
-    have no native clearer yet, so the default raises
+    Linux X11 CLIPBOARD (libX11 ``XSetSelectionOwner``), and the Windows
+    clipboard (user32 ``EmptyClipboard``, open retried up to 15 s); other
+    platforms have no native clearer, so the default raises
     ``ClipboardContentError`` naming the platform. Tests inject a fake via
     ``set_clipboard_clearer``.
     """

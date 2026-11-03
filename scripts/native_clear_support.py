@@ -1,4 +1,4 @@
-"""Shared steps for the gated Linux X11 / Wayland ``clear`` probes.
+"""Shared steps for the gated Linux X11 / Wayland and Windows ``clear`` probes.
 
 ``read_everything`` reads the clipboard through every public reader in this
 process, recording each value or error, so a probe can show that an empty
@@ -7,9 +7,10 @@ CLIPBOARD reads as absence (``inspect()`` empty, ``paste()`` ``""``,
 error. ``helper`` records an independent helper run (exit code, stdout,
 stderr) so the observed helper wording lands in the report. ``child_clear``
 runs ``clipboard.clear()`` in a separate Python process that exits before the
-clipboard is observed, and ``helper_pids`` / ``wait_pids_exit`` follow a
-clipboard owner process (for example a background ``wl-copy`` or ``xclip``)
-until it ends.
+clipboard is observed. ``helper_pids`` / ``wait_pids_exit`` (Linux
+``/proc`` only) follow a clipboard owner process (for example a background
+``wl-copy`` or ``xclip``) until it ends, and ``distro`` names the Linux
+distribution.
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 """Desktop-free contract for clipboard.clear behind set_clipboard_clearer.
 
-Platform clearers are covered in ``test_clear_{macos,wayland,x11}.py``; here
+Platform clearers are covered in ``test_clear_{macos,wayland,x11,windows}.py``; here
 the seam, the fallback for platforms without a native clearer, and Linux with
 no visible session. No test touches the real clipboard.
 """
@@ -8,7 +8,7 @@ no visible session. No test touches the real clipboard.
 import pytest
 
 import clipboard
-from clipboard import _clear_macos, _clear_wayland, _clear_x11
+from clipboard import _clear_macos, _clear_wayland, _clear_x11, _offer_windows
 
 
 def test_clear_is_public_without_images_extra():
@@ -73,11 +73,11 @@ def test_set_clipboard_clearer_none_restores_default(restore_clipboard_clearer):
     assert clipboard._clipboard_clearer is clipboard._default_clipboard_clearer
 
 
-@pytest.mark.parametrize("platform", ["win32", "sunos5"])
 def test_default_clearer_names_platform_and_seam(
-    restore_clipboard_clearer, monkeypatch, platform
+    restore_clipboard_clearer, monkeypatch
 ):
-    """Platforms without a native clearer yet say so and run no helper."""
+    """Only non-desktop platforms lack a native clearer; they run no helper."""
+    platform = "sunos5"
     monkeypatch.setattr(clipboard.sys, "platform", platform)
     monkeypatch.setenv("DISPLAY", ":0")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
@@ -89,6 +89,7 @@ def test_default_clearer_names_platform_and_seam(
     monkeypatch.setattr(_clear_macos.subprocess, "run", no_helper)
     monkeypatch.setattr(_clear_wayland.subprocess, "run", no_helper)
     monkeypatch.setattr(_clear_x11.subprocess, "run", no_helper)
+    monkeypatch.setattr(_offer_windows, "_load_user32", no_helper)
     clipboard.set_clipboard_clearer(None)
     with pytest.raises(clipboard.ClipboardContentError) as excinfo:
         clipboard.clear()

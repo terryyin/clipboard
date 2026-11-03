@@ -301,7 +301,7 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   Linux dispatch: Wayland via `_is_linux_wayland`, no session raises,
   X11-only still "not available". Probe steps 2–7 in
   `scripts/probe_linux_wayland_native_clear.py`; slice 5 should reuse
-  `linux_native_clear_support.helper_pids` / `wait_pids_exit` / `child_clear`
+  `native_clear_support.helper_pids` (renamed from `linux_native_clear_support` in slice 6) / `wait_pids_exit` / `child_clear`
   and revisit `_desktop._linux_desktop_session_visible` once X11 dispatches.
 - Slice 5 (accepted 2026-11-03; native CI run 41654014945 on c16d2c1, Xvfb
   2:21.1.22 + xclip 0.13: raw non-owner `XSetSelectionOwner(None)` left owner 0
@@ -313,6 +313,13 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   replaces `_linux_desktop_session_visible`. Clear tests are now split per
   platform (`tests/test_clear{,_macos,_wayland,_x11}.py`,
   `tests/test_x11_relinquish.py`, fakes in `tests/fake_clear_helpers.py`).
+- Slice 6 (desktop-free proof and macOS file-URL / custom-type probe cases
+  accepted 2026-11-03; Windows and Linux native proof pending the published
+  revision's CI): `clipboard/_clear_windows.py` reuses `_offer_windows`
+  `_load_user32` and `_open_clipboard_bounded(operation=, seam=)` (15 s), then
+  `EmptyClipboard` / `CloseClipboard`. Probe support shared by Linux and
+  Windows probes is `scripts/native_clear_support.py`. Every platform's
+  probe now also clears a file-list offer and an unknown custom type.
 - The per-module osascript runners (`_offer_macos`, `_html_native_macos`,
   `_clear_macos`) keep separate failure messages and bounds; consolidating
   them is a cross-module refactor outside this story.

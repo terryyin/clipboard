@@ -38,10 +38,10 @@ JSON.stringify({
 """
 
 
-def _jxa(script: str, *, failure: str) -> dict:
+def _jxa(script: str, *args: str, failure: str) -> dict:
     try:
         result = subprocess.run(
-            ["osascript", "-l", "JavaScript", "-e", script],
+            ["osascript", "-l", "JavaScript", "-e", script, *args],
             capture_output=True,
             text=True,
             check=False,
@@ -55,6 +55,46 @@ def _jxa(script: str, *, failure: str) -> dict:
         return json.loads(result.stdout)
     except json.JSONDecodeError as exc:
         die(f"{failure}: non-JSON output {result.stdout!r} ({exc})")
+
+
+_JXA_FILE_URL = """
+ObjC.import("AppKit");
+function run(argv) {
+  var pb = $.NSPasteboard.generalPasteboard;
+  pb.clearContents;
+  var ok = pb.writeObjects($([$.NSURL.fileURLWithPath(argv[0])]));
+  return JSON.stringify({written: ok === true || ok === 1});
+}
+"""
+
+_JXA_CUSTOM_TYPE = """
+ObjC.import("AppKit");
+function run(argv) {
+  var pb = $.NSPasteboard.generalPasteboard;
+  pb.clearContents;
+  var data = $(argv[1]).dataUsingEncoding($.NSUTF8StringEncoding);
+  var ok = pb.setDataForType(data, argv[0]);
+  return JSON.stringify({written: ok === true || ok === 1});
+}
+"""
+
+
+def _jxa_write(script: str, *args: str, failure: str) -> None:
+    written = _jxa(script, *args, failure=failure)
+    if not isinstance(written, dict) or written.get("written") is not True:
+        die(f"{failure}: the pasteboard refused the write ({written!r})")
+
+
+def produce_file_url_independent(path: str) -> None:
+    """Independent producer: JXA ``writeObjects([NSURL fileURLWithPath:])``."""
+    _jxa_write(_JXA_FILE_URL, path, failure="independent JXA file-URL write failed")
+
+
+def produce_custom_type_independent(uti: str, payload: str) -> None:
+    """Independent producer: JXA ``setData:forType:`` of an unknown UTI only."""
+    _jxa_write(
+        _JXA_CUSTOM_TYPE, uti, payload, failure="independent JXA custom write failed"
+    )
 
 
 def list_types_independent() -> dict:

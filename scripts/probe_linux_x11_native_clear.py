@@ -22,7 +22,11 @@ background ``xclip`` owner; a child ``clear()`` ends it within the bound and
 ``paste_image()`` is ``None``. Step 5: ``clear()`` twice on the cleared
 clipboard succeeds. Step 6: with ``DISPLAY`` naming a display that does not
 exist, a child ``clear()`` raises ``ClipboardContentError`` naming
-``DISPLAY`` within the library's bound.
+``DISPLAY`` within the library's bound. Step 7: an independent background
+``xclip -t text/uri-list`` owner of a ``file://`` URI naming an existing temp
+file, then a child ``clear()``, then no owner, the producer exits, and every
+reader (``paste_files()`` included) reads absence. Step 8: the same with an
+unknown ``application/x-clipboard-probe`` type.
 
 Prints one JSON object on stdout. Exit 0 when every step holds, 1 naming the
 failed steps, and 2 with ``evidence_limit`` when no X11-only session or no
@@ -36,8 +40,20 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 
-from linux_native_clear_support import (
+from linux_x11_native_clear_support import (
+    HTML_BODY,
+    HTML_TYPE,
+    XCLIP_TARGETS,
+    absent_display,
+    raw_relinquish_ends_html_owner,
+    wait_targeted,
+    xclip_no_owner,
+)
+from linux_x11_native_text_support import xvfb_version
+from native_clear_support import (
     child_clear,
     child_cleared,
     child_python,
@@ -50,18 +66,11 @@ from linux_native_clear_support import (
     step,
     wait_pids_exit,
 )
-from linux_x11_native_clear_support import (
-    HTML_BODY,
-    HTML_TYPE,
-    XCLIP_TARGETS,
-    absent_display,
-    raw_relinquish_ends_html_owner,
-    wait_targeted,
-    xclip_no_owner,
-)
-from linux_x11_native_text_support import xvfb_version
 from native_probe_common import linux_x11_environment
 
+URI_LIST_TYPE = "text/uri-list"
+UNKNOWN_TYPE = "application/x-clipboard-probe"
+UNKNOWN_BODY = b"clear probe custom bytes"
 COPY_IMAGE_CHILD = """
 from PIL import Image
 import clipboard
@@ -70,15 +79,16 @@ clipboard.copy_image(Image.new("RGB", (4, 4), (255, 0, 0)))
 """
 
 
-def _html_producer_then_child_clear() -> dict:
+def _xclip_producer_then_child_clear(name: str, mime_type: str, body: bytes) -> dict:
+    """An independent background ``xclip`` owner of one type, then child clear."""
     before = helper_pids("xclip")
-    cmd = ["xclip", "-selection", "clipboard", "-t", HTML_TYPE, "-i"]
+    cmd = ["xclip", "-selection", "clipboard", "-t", mime_type, "-i"]
     try:
         # xclip forks a background owner and the foreground process exits;
         # no pipes, so the forked owner cannot hold this run open.
         producer = subprocess.run(
             cmd,
-            input=HTML_BODY,
+            input=body,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=15,
@@ -88,15 +98,15 @@ def _html_producer_then_child_clear() -> dict:
         produced = {"cmd": cmd, "returncode": producer.returncode}
     except (OSError, subprocess.TimeoutExpired) as exc:
         produced = {"cmd": cmd, "error": f"{type(exc).__name__}: {exc}"}
-    offered = wait_targeted(HTML_TYPE)
-    owners = helper_pids("xclip", argv_contains=HTML_TYPE) - before
+    offered = wait_targeted(mime_type)
+    owners = helper_pids("xclip", argv_contains=mime_type) - before
     cleared = child_clear()
     owner_exit = wait_pids_exit(owners)
     after = helper(XCLIP_TARGETS)
     reads = read_everything()
     no_owner = xclip_no_owner(after)
     return step(
-        "3_html_producer_then_child_clear_reads_empty",
+        name,
         produced.get("returncode") == 0
         and offered["offered"]
         and child_cleared(cleared)
@@ -112,6 +122,23 @@ def _html_producer_then_child_clear() -> dict:
         classified_no_owner=no_owner,
         reads=reads,
     )
+
+
+def _file_list_producer_then_child_clear() -> dict:
+    """``text/uri-list`` naming an existing temp file, then child clear."""
+    with tempfile.TemporaryDirectory(prefix="clipboard-clear-probe-") as raw:
+        listed = Path(raw) / "clear probe file.txt"
+        listed.write_text("clear probe file\n", encoding="utf-8")
+        body = (listed.as_uri() + "\r\n").encode("ascii")
+        result = _xclip_producer_then_child_clear(
+            "7_file_list_producer_then_child_clear_reads_empty",
+            URI_LIST_TYPE,
+            body,
+        )
+        result["file_uri"] = listed.as_uri()
+        result["file_existed"] = listed.is_file()
+        result["ok"] = result["ok"] and result["file_existed"]
+        return result
 
 
 def _copy_image_owner_ends() -> dict:
@@ -200,10 +227,22 @@ def _probe(observed: dict) -> list[dict]:
         )
     )
     steps.append(raw_relinquish_ends_html_owner(observed))
-    steps.append(_html_producer_then_child_clear())
+    steps.append(
+        _xclip_producer_then_child_clear(
+            "3_html_producer_then_child_clear_reads_empty", HTML_TYPE, HTML_BODY
+        )
+    )
     steps.append(_copy_image_owner_ends())
     steps.append(_clear_twice_on_cleared())
     steps.append(_unopenable_display_names_display())
+    steps.append(_file_list_producer_then_child_clear())
+    steps.append(
+        _xclip_producer_then_child_clear(
+            "8_unknown_type_producer_then_child_clear_reads_empty",
+            UNKNOWN_TYPE,
+            UNKNOWN_BODY,
+        )
+    )
     return steps
 
 

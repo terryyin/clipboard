@@ -352,6 +352,27 @@ jobs:
           CLIPBOARD_NATIVE_PROBE: '1'
         run: uv run --locked pytest tests/test_copy_files_native_windows.py -v -rP
 
+  native-windows-clear:
+    name: Native Windows clear (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - run: uv sync --locked --extra images
+      - name: Gated Windows clear probe (fails on an evidence limit)
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: >
+          uv run --locked --extra images
+          pytest tests/test_clear_native_windows.py -v -rP
+
   ci-passed:
     name: CI passed
     if: always()
@@ -372,6 +393,7 @@ jobs:
       - native-windows-paste-html
       - native-windows-text
       - native-windows-copy-files
+      - native-windows-clear
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -393,6 +415,7 @@ jobs:
           NATIVE_WINDOWS_PASTE_HTML_RESULT: ${{ needs.native-windows-paste-html.result }}
           NATIVE_WINDOWS_TEXT_RESULT: ${{ needs.native-windows-text.result }}
           NATIVE_WINDOWS_COPY_FILES_RESULT: ${{ needs.native-windows-copy-files.result }}
+          NATIVE_WINDOWS_CLEAR_RESULT: ${{ needs.native-windows-clear.result }}
         run: >-
           test "$QUALITY_RESULT" = success
           && test "$TEST_RESULT" = success
@@ -410,3 +433,4 @@ jobs:
           && test "$NATIVE_WINDOWS_PASTE_HTML_RESULT" = success
           && test "$NATIVE_WINDOWS_TEXT_RESULT" = success
           && test "$NATIVE_WINDOWS_COPY_FILES_RESULT" = success
+          && test "$NATIVE_WINDOWS_CLEAR_RESULT" = success

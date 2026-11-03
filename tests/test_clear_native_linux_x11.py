@@ -111,6 +111,27 @@ def test_linux_x11_native_clear_probe():
     assert f"DISPLAY={bad['child_display']!r}" in outcome["message"]
     assert bad["child_clear"]["elapsed_s"] < bad["library_bound_s"]
 
+    for name, mime_type in (
+        ("7_file_list_producer_then_child_clear_reads_empty", "text/uri-list"),
+        (
+            "8_unknown_type_producer_then_child_clear_reads_empty",
+            "application/x-clipboard-probe",
+        ),
+    ):
+        produced = steps[name]
+        assert produced["producer"]["returncode"] == 0
+        assert mime_type in produced["producer"]["cmd"]
+        assert produced["offered_before"]["offered"] is True
+        assert produced["producer_xclip_owner_pids"]
+        assert produced["child_clear"]["outcome"] == {"raised": None}
+        assert produced["owner_exit"]["exited"] is True
+        assert produced["classified_no_owner"] is True
+        assert produced["reads"] == EMPTY_READS
+    files = steps["7_file_list_producer_then_child_clear_reads_empty"]
+    assert files["file_uri"].startswith("file:///")
+    assert files["file_existed"] is True
+    assert files["reads"]["paste_files"] == {"value": None}
+
     assert [step["step"] for step in report["steps"]] == [
         "1_fresh_unowned_clipboard_reads_empty",
         "2_early_raw_xsetselectionowner_none_ends_html_owner",
@@ -118,6 +139,8 @@ def test_linux_x11_native_clear_probe():
         "4_copy_image_owner_ends_after_child_clear",
         "5_clear_twice_on_cleared_succeeds",
         "6_unopenable_display_raises_naming_display",
+        "7_file_list_producer_then_child_clear_reads_empty",
+        "8_unknown_type_producer_then_child_clear_reads_empty",
     ]
     env = report["environment"]
     assert env["xclip_version"], "xclip version"

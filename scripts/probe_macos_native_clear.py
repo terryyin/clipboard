@@ -8,7 +8,11 @@ An **independent** consumer (JXA ``NSPasteboard types``, a different script
 stack from the library's AppleScriptObjC) then lists the types, and ``pbpaste``
 reads text. This process's public readers run afterwards as a consistency
 check. Also probes ``clear()`` twice on a cleared pasteboard and the
-``copy("")`` versus ``clear()`` contrast.
+``copy("")`` versus ``clear()`` contrast. Then an independent JXA producer
+writes a ``public.file-url`` (``NSURL fileURLWithPath:`` of an existing temp
+file) and, separately, only an unknown ``com.example.clipboard-probe`` type;
+each is followed by a child ``clear()``, the independent type list is empty
+and ``paste_files()`` is ``None``.
 
 Privacy prompts: the probe cannot see the screen. It records the screen-lock
 state, whether each child ``clear()`` finished within its bound, and how long
@@ -23,12 +27,16 @@ default pytest. **Replaces the live clipboard.**
 from __future__ import annotations
 
 import json
+import tempfile
+from pathlib import Path
 
 from macos_native_clear_support import (
     CHILD_TIMEOUT_S,
     clear_in_child,
     copy_empty_in_child,
     list_types_independent,
+    produce_custom_type_independent,
+    produce_file_url_independent,
     session_state,
 )
 from macos_native_inspect_support import (
@@ -128,6 +136,32 @@ def _copy_empty_contrast_case() -> dict:
     }
 
 
+CUSTOM_UTI = "com.example.clipboard-probe"
+
+
+def _file_url_case() -> dict:
+    with tempfile.TemporaryDirectory(prefix="clipboard-clear-probe-") as raw:
+        listed = Path(raw) / "clear probe file.txt"
+        listed.write_text("clear probe file\n", encoding="utf-8")
+        case = _produced_case(
+            "file_url",
+            lambda: produce_file_url_independent(str(listed)),
+            ("public.file-url",),
+        )
+        case["file_path"] = str(listed)
+        case["file_existed"] = listed.is_file()
+        case["ok"] = case["ok"] and case["file_existed"]
+        return case
+
+
+def _custom_type_case() -> dict:
+    return _produced_case(
+        "unknown_custom_type",
+        lambda: produce_custom_type_independent(CUSTOM_UTI, "clear probe bytes"),
+        (CUSTOM_UTI,),
+    )
+
+
 def main() -> None:
     require_darwin_and_images()
     session_before = session_state()
@@ -140,12 +174,16 @@ def main() -> None:
         _produced_case("png_only", produce_image_only_independent, ("public.png",)),
         _twice_case(),
         _copy_empty_contrast_case(),
+        _file_url_case(),
+        _custom_type_case(),
     ]
     session_after = session_state()
     env = macos_environment(
         producer=(
             "osascript AppKit NSPasteboardTypeHTML + NSPasteboardTypeString; "
-            "osascript AppKit NSPasteboardTypePNG (independent of clipboard.*)"
+            "osascript AppKit NSPasteboardTypePNG; JXA writeObjects NSURL "
+            "file URL and setData:forType: com.example.clipboard-probe "
+            "(independent of clipboard.*)"
         ),
         library_under_test="clipboard.clear() in a child Python that exits",
         type_consumer="osascript -l JavaScript NSPasteboard.generalPasteboard.types",

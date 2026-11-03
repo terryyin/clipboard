@@ -19,7 +19,11 @@ nothing copied and every public reader reads absence. Step 5: a child's
 ``clear()`` ends that owner within the bound and ``paste_image()`` is
 ``None``. Step 6: ``clear()`` twice on the cleared selection succeeds. Step 7:
 with ``PATH`` lacking ``wl-copy``, ``clear()`` raises
-``ClipboardContentError`` naming ``wl-clipboard``.
+``ClipboardContentError`` naming ``wl-clipboard``. Step 8: an independent
+``wl-copy --type text/uri-list`` producer of a ``file://`` URI naming an
+existing temp file, then a child ``clear()``, then nothing copied and every
+reader (``paste_files()`` included) reads absence. Step 9: the same with an
+unknown ``application/x-clipboard-probe`` type.
 
 Prints one JSON object on stdout. Exit 0 when every step holds, 1 naming the
 failed steps, and 2 with ``evidence_limit`` when no Wayland session, no
@@ -35,8 +39,9 @@ import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 
-from linux_native_clear_support import (
+from native_clear_support import (
     OWNER_EXIT_BOUND_S,
     child_clear,
     child_cleared,
@@ -58,6 +63,9 @@ HTML_TYPE = "text/html"
 TEXT_TYPE = "text/plain;charset=utf-8"
 HTML_BODY = b"<p><b>clear probe</b> html</p>"
 TEXT_BODY = b"clear probe text"
+URI_LIST_TYPE = "text/uri-list"
+UNKNOWN_TYPE = "application/x-clipboard-probe"
+UNKNOWN_BODY = b"clear probe custom bytes"
 OFFER_WAIT_S = 5.0
 COPY_IMAGE_CHILD = """
 from PIL import Image
@@ -203,6 +211,23 @@ def _producer_then_child_clear(name: str, mime_type: str, body: bytes) -> dict:
     )
 
 
+def _file_list_producer_then_child_clear() -> dict:
+    """``text/uri-list`` naming an existing temp file, then child clear."""
+    with tempfile.TemporaryDirectory(prefix="clipboard-clear-probe-") as raw:
+        listed = Path(raw) / "clear probe file.txt"
+        listed.write_text("clear probe file\n", encoding="utf-8")
+        body = (listed.as_uri() + "\r\n").encode("ascii")
+        result = _producer_then_child_clear(
+            "8_file_list_producer_then_child_clear_reads_empty",
+            URI_LIST_TYPE,
+            body,
+        )
+        result["file_uri"] = listed.as_uri()
+        result["file_existed"] = listed.is_file()
+        result["ok"] = result["ok"] and result["file_existed"]
+        return result
+
+
 def _copy_image_owner_ends() -> dict:
     before = helper_pids("wl-copy")
     writer = child_python(COPY_IMAGE_CHILD)
@@ -309,6 +334,14 @@ def _probe(observed: dict) -> list[dict]:
     steps.append(_copy_image_owner_ends())
     steps.append(_clear_twice_on_cleared())
     steps.append(_path_without_wl_copy_names_wl_clipboard())
+    steps.append(_file_list_producer_then_child_clear())
+    steps.append(
+        _producer_then_child_clear(
+            "9_unknown_type_producer_then_child_clear_reads_empty",
+            UNKNOWN_TYPE,
+            UNKNOWN_BODY,
+        )
+    )
     return steps
 
 

@@ -86,8 +86,11 @@ def test_open_clipboard_failure_raises_clipboard_content_error_not_empty(
         clipboard.inspect()
 
     message = str(raised.value)
-    assert "OpenClipboard" in message
-    assert "locked" in message.lower() or "timed out" in message.lower()
+    assert "OpenClipboard failed while enumerating formats" in message
+    assert "last_error=5" in message
+    assert "timed out after 0.01s" in message
+    assert "locked" in message and "held by another process" in message
+    assert "set_clipboard_inspector" in message
     assert not isinstance(raised.value, clipboard.ClipboardImageError)
 
 

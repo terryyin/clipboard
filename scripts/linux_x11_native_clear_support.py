@@ -17,7 +17,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from linux_native_clear_support import OWNER_EXIT_BOUND_S, child_python, helper, step
+from native_clear_support import OWNER_EXIT_BOUND_S, child_python, helper, step
 
 XCLIP_TARGETS = ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"]
 OFFER_WAIT_S = 5.0

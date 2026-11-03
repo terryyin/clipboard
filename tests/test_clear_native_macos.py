@@ -76,3 +76,17 @@ def test_macos_clear_independent_producer_and_consumer_probe():
     contrast = cases["copy_empty_vs_clear"]
     assert "public.utf8-plain-text" in contrast["types_after_copy_empty"]
     assert contrast["types_after_clear"] == []
+
+    files = cases["file_url"]
+    assert "public.file-url" in files["types_before"]
+    assert files["file_existed"] is True
+    assert files["child_clear"]["exited"] is True
+    assert files["types_after"] == []
+    assert files["readers_after"]["paste_files_is_none"] is True
+    assert files["readers_after"] == _EMPTY_READERS
+
+    custom = cases["unknown_custom_type"]
+    assert "com.example.clipboard-probe" in custom["types_before"]
+    assert custom["child_clear"]["exited"] is True
+    assert custom["types_after"] == []
+    assert custom["readers_after"] == _EMPTY_READERS
