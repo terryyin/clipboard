@@ -3,7 +3,7 @@
 ## Retention
 
 - Highest allocated local number: 23
-- Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners. DD-019 awaits local triage.
+- Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
 - Ownership: project-owned findings (cause in Clipboard's own code, tests, configuration or CI workflow) live in [ProjectFindings.md](ProjectFindings.md); DD-001, DD-005 and DD-010 moved there on 2026-11-03 (recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`). `DD-NNN` numbering is shared across both files; the highest allocated local number above covers both.
 
@@ -261,6 +261,13 @@ After slice-1 publish, the retained CI observer's budget expired during a long
 or interrupted next-slice delegation, so the coordinator continued delivery
 without promised monitoring on the prior SHA until the next publish reattached
 observation.
+
+Ownership assessment (2026-11-04): shared observer lifecycle. Open Dough
+0.3.82's CI notification guidance defines budget expiry as ended coverage.
+The execution supplies no evidence of a Clipboard-specific observer override
+or failure to follow that contract. [Run 41647699400](https://github.com/terryyin/clipboard/actions/runs/41647699400)
+later confirmed the three gated native copy-files jobs and CI passed on
+`a73a418`; the earlier `d74c178` observation remains unconfirmed.
 
 ### Occurrences
 - Execution: SEED-001#bounded-x11-file-write

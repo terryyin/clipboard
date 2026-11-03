@@ -4,6 +4,14 @@ Project-owned retrospective follow-ups: findings whose cause lies in Clipboard's
 
 Maintenance assessment, 2026-11-03: DD-001, DD-005 and DD-010 moved here from DearDough.md as project-owned records, with their occurrence rows, responsibility assessments and response links unchanged. Exact source recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
 
+DD-005 retired on 2026-11-04. The Windows-only image-write stub assertion that
+broke after a wording edit was corrected by `c5e10c3`; the adopted
+`SEED-003#host-independent-desktop-free-tests` response (`5380548`, recorded at
+`663dca6`) exercises that stub on every host through `fake_platform` and
+asserts the error and its cause types. [CI run 41656910713](https://github.com/terryyin/clipboard/actions/runs/41656910713)
+passed all desktop-free matrix jobs on that revision. Full finding and
+original occurrence recovery: `2c4149d49df4a08fac54932eef1d72ef67a774f4:ProjectFindings.md`.
+
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
 Makefile/local `uv run --extra …` alone left the GitHub Actions matrix `tests`
@@ -26,35 +34,19 @@ occurrence.
   - Observed effect: Story-branch matrix jobs failed after slice 1 publish; WIP stash + dedicated CI repair before continuing slice 2; quality/Nix path had already passed.
   - Inference: Dual local-vs-matrix verification seams need an explicit extras checklist when optional dependencies first enter pytest; Makefile green did not prove the matrix path.
 
-## DD-005 — Platform stub wording change broke Windows-only assertion
-Editing the shared default `NotImplementedError` message for honesty on
-unimplemented platforms invalidated a substring assertion that only runs off
-Darwin/Linux, so the Windows matrix failed after the evidence-limit commit
-until a follow-up assertion fix.
-
-Responsibility (triage 2026-11-03): project — a Clipboard test coupled to
-copied stub wording. Repaired for that test by c5e10c3; the general
-rule was delivered by `SEED-003#host-independent-desktop-free-tests`
-(2026-11-03; story history at 066dae4; recurrence not yet observed). Related to DD-010, distinct cause.
-
-### Occurrences
-- Execution: SEED-001#write-images
-  - Timestamp: 2026-11-02T14:37:42+07:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.79
-  - Evidence: d408685 (message → “not implemented for this platform”); Windows matrix failure noted in transcript ed9de93f…; repair c5e10c3 (assertion → matching substring)
-  - Observed effect: Extra CI cycle between slice-6 evidence-limit publish and tip green; docs slice absorbed the assertion repair.
-  - Inference: Platform-gated message assertions are coupled to shared stub wording; change both in one publish or assert on exception type only.
-
 ## DD-010 — Desktop-free unavailable-path test asserted host OS
 A desktop-free test for the Windows unavailable stub used `assert sys.platform != "win32"` so the path was only exercised off Windows; the windows-latest matrix failed until the assertion was replaced with a platform monkeypatch.
 
 Responsibility (triage 2026-11-03): project — Clipboard's desktop-free tests
-and fixtures encode host assumptions (the shared `text_session` fixture in
-`tests/conftest.py` still patches the global `sys.platform`). Response:
-delivered
-`SEED-003#host-independent-desktop-free-tests` (2026-11-03; story history at
-066dae4; recurrence not yet observed).
+and fixtures encoded host assumptions, including global `sys.platform`
+patching in `text_session`. The adopted
+`SEED-003#host-independent-desktop-free-tests` response (`05d2e02`, `5380548`;
+completion at `066dae4`) replaces the global patch with `fake_platform` and
+guards against future global fakes. [CI run 41656910713](https://github.com/terryyin/clipboard/actions/runs/41656910713)
+passed all desktop-free matrix jobs, including the pretend-Darwin writer and
+X11 owner-shutdown tests on Windows. Keep the wider host-independence finding
+open through the next newly added platform-branch test that exercises the
+adopted guard and the desktop-free matrix.
 
 ### Occurrences
 - Execution: SEED-001#read-files
