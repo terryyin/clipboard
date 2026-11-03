@@ -7,7 +7,6 @@ Make the clipboard project true to its name.
 ## Taken
 
 - [Clear every representation from the current clipboard](seeds/SEED-001-clipboard-true-to-its-name.md#clear-clipboard) — SEED-001#clear-clipboard ([plan](slice-plans/011-clear-clipboard/PLAN.md))
-- [Make desktop-free platform tests pass on every matrix OS](seeds/SEED-003-host-independent-tests.md#host-independent-desktop-free-tests) — SEED-003#host-independent-desktop-free-tests ([plan](slice-plans/013-host-independent-desktop-free-tests/PLAN.md))
 
 ## Backlog list
 

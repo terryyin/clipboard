@@ -10,8 +10,8 @@ from __future__ import annotations
 import importlib.util
 import os
 import shutil
-import sys
 
+from clipboard import _platform
 from clipboard._errors import ClipboardContentError
 
 # Text session owners (see ``_text_session_owner``).
@@ -67,11 +67,12 @@ def _text_session_owner() -> str:
     ``_TEXT_OWNER_PYPERCLIP``. Raises ``ClipboardContentError`` when Linux
     shows no desktop session or a session without any text helper.
     """
-    if sys.platform == "win32":
+    platform = _platform.current()
+    if platform == "win32":
         return _TEXT_OWNER_PYPERCLIP
-    if sys.platform == "darwin":
+    if platform == "darwin":
         return _TEXT_OWNER_MACOS
-    if not sys.platform.startswith("linux"):
+    if not platform.startswith("linux"):
         return _TEXT_OWNER_PYPERCLIP
     if "microsoft" in _read_proc_version().lower():
         return _TEXT_OWNER_PYPERCLIP

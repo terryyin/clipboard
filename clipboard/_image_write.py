@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import subprocess
-import sys
 import tempfile
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -11,6 +10,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from clipboard import _platform
 from clipboard._desktop import (
     _helper_failure_detail,
     _is_linux_wayland,
@@ -150,10 +150,11 @@ def _write_linux_wl_copy(image: Image.Image) -> None:
 
 def _default_writeclipboard(image: Image.Image) -> None:
     """Platform default image write; Windows stays unimplemented (evidence-limited)."""
-    if sys.platform == "darwin":
+    platform = _platform.current()
+    if platform == "darwin":
         _write_macos_pngf(image)
         return
-    if sys.platform.startswith("linux"):
+    if platform.startswith("linux"):
         if _is_linux_wayland():
             _write_linux_wl_copy(image)
         else:

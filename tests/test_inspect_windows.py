@@ -46,7 +46,7 @@ def test_windows_format_names_map_to_kinds_via_snapshot():
 
 
 def test_open_clipboard_failure_raises_clipboard_content_error_not_empty(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """OpenClipboard timeout/fail → ClipboardContentError, never empty."""
 
@@ -79,7 +79,7 @@ def test_open_clipboard_failure_raises_clipboard_content_error_not_empty(
     )
     monkeypatch.setattr(_offer_windows, "_OPEN_CLIPBOARD_TIMEOUT_S", 0.01)
     monkeypatch.setattr(_offer_windows, "_OPEN_RETRY_SLEEP_S", 0.001)
-    monkeypatch.setattr(_offer.sys, "platform", "win32")
+    fake_platform("win32")
     clipboard.set_clipboard_inspector(None)
 
     with pytest.raises(clipboard.ClipboardContentError) as raised:
@@ -91,8 +91,8 @@ def test_open_clipboard_failure_raises_clipboard_content_error_not_empty(
     assert not isinstance(raised.value, clipboard.ClipboardImageError)
 
 
-def test_non_win32_load_user32_raises_actionable_error(monkeypatch):
-    monkeypatch.setattr(_offer_windows.sys, "platform", "darwin")
+def test_non_win32_load_user32_raises_actionable_error(fake_platform):
+    fake_platform("darwin")
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         _offer_windows._load_user32()
     message = str(raised.value)
@@ -129,7 +129,7 @@ def test_enumerate_open_maps_cf_ids_and_html_format_name():
 
 
 def test_enumerated_formats_map_through_inspector(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """Mocked EnumClipboardFormats labels → inspect() kinds + formats."""
 
@@ -143,7 +143,7 @@ def test_enumerated_formats_map_through_inspector(
             "CF_HDROP",
         ),
     )
-    monkeypatch.setattr(_offer.sys, "platform", "win32")
+    fake_platform("win32")
     clipboard.set_clipboard_inspector(None)
 
     snapshot = clipboard.inspect()
@@ -157,14 +157,14 @@ def test_enumerated_formats_map_through_inspector(
 
 
 def test_empty_windows_enumeration_yields_empty_snapshot(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     monkeypatch.setattr(
         _offer_windows,
         "_enumerate_windows_clipboard_formats",
         lambda: (),
     )
-    monkeypatch.setattr(_offer.sys, "platform", "win32")
+    fake_platform("win32")
     clipboard.set_clipboard_inspector(None)
 
     snapshot = clipboard.inspect()

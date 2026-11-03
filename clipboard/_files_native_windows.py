@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import sys
 import time
 from ctypes import create_unicode_buffer
 
+from . import _platform
 from ._errors import ClipboardContentError
 
 # Contended clipboard must not hang callers indefinitely (commitment 78).
@@ -115,6 +115,6 @@ def _windows_files_clipboard_reader() -> object:
     absence of CF_HDROP is ``None``. Non-Windows hosts raise
     ``ClipboardContentError`` (never silent ``None``).
     """
-    if sys.platform != "win32":
+    if _platform.current() != "win32":
         raise ClipboardContentError(_windows_unavailable_message())
     return _read_cf_hdrop_offer()

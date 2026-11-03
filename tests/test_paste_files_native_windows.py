@@ -41,24 +41,24 @@ def test_windows_paste_files_probe_records_evidence_limit():
     assert "52" in report["commitments"]
 
 
-def test_windows_reader_non_windows_raises_content_error(monkeypatch):
+def test_windows_reader_non_windows_raises_content_error(fake_platform):
     """Non-win32 platform forces the unavailable stub (desktop-free)."""
-    monkeypatch.setattr(clipboard._files_native_windows.sys, "platform", "darwin")
+    fake_platform("darwin")
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard._files_native_windows._windows_files_clipboard_reader()
 
     assert raised.value.__class__ is clipboard.ClipboardContentError
     assert not isinstance(raised.value, clipboard.ClipboardImageError)
-    message = str(raised.value).lower()
-    assert "cf_hdrop" in message or "windows" in message
-    assert "unavailable" in message
+    assert (
+        str(raised.value)
+        == clipboard._files_native_windows._windows_unavailable_message()
+    )
 
 
 def test_windows_reader_path_list_uses_contract_normalize(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, monkeypatch, fake_platform
 ):
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "win32")
-    monkeypatch.setattr(clipboard._files_native_windows.sys, "platform", "win32")
+    fake_platform("win32")
     paths = [r"C:\tmp\plain.txt", r"C:\tmp\café space.txt"]
     monkeypatch.setattr(
         clipboard._files_native_windows,
@@ -71,10 +71,9 @@ def test_windows_reader_path_list_uses_contract_normalize(
 
 
 def test_windows_reader_missing_cf_hdrop_is_absence(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, monkeypatch, fake_platform
 ):
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "win32")
-    monkeypatch.setattr(clipboard._files_native_windows.sys, "platform", "win32")
+    fake_platform("win32")
     monkeypatch.setattr(
         clipboard._files_native_windows,
         "_read_cf_hdrop_offer",

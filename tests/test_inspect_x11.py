@@ -8,11 +8,11 @@ from types import SimpleNamespace
 import pytest
 
 import clipboard
-from clipboard import _desktop, _offer
+from clipboard import _desktop
 
 
 def test_missing_xclip_raises_clipboard_content_error_not_empty(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """14.2: missing xclip → ClipboardContentError, never empty success."""
 
@@ -20,7 +20,7 @@ def test_missing_xclip_raises_clipboard_content_error_not_empty(
         raise FileNotFoundError(2, "No such file or directory", "xclip")
 
     monkeypatch.setattr(_desktop.subprocess, "run", boom)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
     monkeypatch.setenv("DISPLAY", ":99")
@@ -37,10 +37,10 @@ def test_missing_xclip_raises_clipboard_content_error_not_empty(
 
 
 def test_missing_display_raises_clipboard_content_error_not_empty(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """Unavailable X11 session (no DISPLAY) → ClipboardContentError."""
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
     monkeypatch.delenv("DISPLAY", raising=False)
@@ -57,7 +57,7 @@ def test_missing_display_raises_clipboard_content_error_not_empty(
 
 
 def test_xclip_helper_failure_raises_clipboard_content_error_not_empty(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """Non-zero xclip TARGETS → ClipboardContentError, not empty snapshot."""
 
@@ -69,7 +69,7 @@ def test_xclip_helper_failure_raises_clipboard_content_error_not_empty(
         )
 
     monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
     monkeypatch.setenv("DISPLAY", ":99")
@@ -85,7 +85,7 @@ def test_xclip_helper_failure_raises_clipboard_content_error_not_empty(
 
 
 def test_xclip_targets_map_to_kinds_via_snapshot(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """11.3: TARGETS MIME/atom ids map through snapshot_from_native_formats."""
 
@@ -100,7 +100,7 @@ def test_xclip_targets_map_to_kinds_via_snapshot(
         )
 
     monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
     monkeypatch.setenv("DISPLAY", ":99")
@@ -115,7 +115,7 @@ def test_xclip_targets_map_to_kinds_via_snapshot(
 
 
 def test_wayland_session_does_not_use_x11_enumerator(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     """Wayland-only session stays off the X11 path (routes to wl-paste -l)."""
     called = {"xclip": False}
@@ -127,7 +127,7 @@ def test_wayland_session_does_not_use_x11_enumerator(
         raise FileNotFoundError(2, "No such file or directory", "wl-paste")
 
     monkeypatch.setattr(_desktop.subprocess, "run", boom)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
     monkeypatch.delenv("DISPLAY", raising=False)
@@ -143,13 +143,13 @@ def test_wayland_session_does_not_use_x11_enumerator(
 
 
 def test_xclip_timeout_raises_clipboard_content_error(
-    monkeypatch, restore_clipboard_inspector
+    monkeypatch, restore_clipboard_inspector, fake_platform
 ):
     def boom(*_args, **_kwargs):
         raise subprocess.TimeoutExpired(cmd="xclip", timeout=15)
 
     monkeypatch.setattr(_desktop.subprocess, "run", boom)
-    monkeypatch.setattr(_offer.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setenv("DISPLAY", ":99")
     clipboard.set_clipboard_inspector(None)

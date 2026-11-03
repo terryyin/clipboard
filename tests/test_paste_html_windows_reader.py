@@ -14,7 +14,7 @@ from html_offer import FRAGMENT, build_cf_html
 from win32_clipboard_fake import ACCESS_DENIED, FakeWin32
 
 import clipboard
-from clipboard import _html_native, _html_native_windows
+from clipboard import _html_native_windows
 
 ENVELOPE = build_cf_html(
     FRAGMENT,
@@ -24,9 +24,9 @@ ENVELOPE = build_cf_html(
 
 
 @pytest.fixture
-def win32(monkeypatch, restore_html_clipboard_reader):
+def win32(monkeypatch, restore_html_clipboard_reader, fake_platform):
     """Default reader on a pretend Windows with a scripted Win32 API."""
-    monkeypatch.setattr(_html_native.sys, "platform", "win32")
+    fake_platform("win32")
     clipboard.set_html_clipboard_reader(None)
 
     def install(envelope: bytes | None = ENVELOPE, **kwargs) -> FakeWin32:

@@ -2,9 +2,10 @@
 
 ``clipboard._files_native_windows_writer._win32_files_write_api`` is replaced
 with ``FakeWin32FilesWriter``, so these run on every CI host without touching a
-real clipboard. Only the shared ``sys.platform`` is faked to ``win32``; the
-writer path does no other platform-dependent work, so this is safe on
-Linux and macOS hosts too.
+real clipboard. Only the package platform is faked to ``win32`` (through the
+``fake_platform`` fixture, not the shared ``sys.platform``); the writer path
+does no other platform-dependent work, so this is safe on Linux and macOS
+hosts too.
 """
 
 from __future__ import annotations
@@ -34,9 +35,9 @@ def sources(tmp_path):
 
 
 @pytest.fixture
-def win32(monkeypatch, restore_files_clipboard_writer):
+def win32(monkeypatch, restore_files_clipboard_writer, fake_platform):
     """Default writer on a (pretend or real) win32 with a scripted Win32 API."""
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "win32")
+    fake_platform("win32")
     clipboard.set_files_clipboard_writer(None)
 
     def install(**kwargs):

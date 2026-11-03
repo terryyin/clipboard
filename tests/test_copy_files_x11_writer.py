@@ -1,6 +1,6 @@
 """Desktop-free tests for copy_files' Linux X11 ``xclip`` default writer.
 
-Only ``clipboard._files_native``'s own ``sys`` reference is replaced (not the
+The package platform is faked through the ``fake_platform`` fixture (not the
 shared ``sys.platform``), and ``subprocess.run`` / ``Popen``, ``shutil.which``,
 ``os.killpg`` and the session variables are faked, so these run on every CI
 host without a display, ``xclip``, or a real clipboard. The large-list stall
@@ -11,14 +11,13 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import types
 from pathlib import Path
 
 import pytest
 from fake_xclip_files import URI_LIST, FakeX11Files
 
 import clipboard
-from clipboard import _files_native, _files_native_x11_writer, _text_native_x11
+from clipboard import _files_native_x11_writer, _text_native_x11
 
 NAMES = ["report final.pdf", "données é.csv"]
 WRITE = ["xclip", "-selection", "clipboard", "-t", URI_LIST]
@@ -36,10 +35,10 @@ def sources(tmp_path):
 
 
 @pytest.fixture
-def x11(monkeypatch, restore_files_clipboard_writer):
+def x11(monkeypatch, restore_files_clipboard_writer, fake_platform):
     """Default writer on a pretend Linux X11 session with a scripted xclip."""
     fake = FakeX11Files()
-    monkeypatch.setattr(_files_native, "sys", types.SimpleNamespace(platform="linux"))
+    fake_platform("linux")
     clipboard.set_files_clipboard_writer(None)
     monkeypatch.setattr(subprocess, "run", fake.run)
     monkeypatch.setattr(subprocess, "Popen", fake.popen)

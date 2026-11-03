@@ -130,8 +130,8 @@ contents = None
 def as_wsl_session():
     # A delegated session shape on every CI host (Linux without DISPLAY,
     # macOS, Windows): WSL keeps pyperclip's bridge.
-    from clipboard import _desktop_text
-    sys.platform = "linux"
+    from clipboard import _desktop_text, _platform
+    _platform.current = lambda: "linux"
     _desktop_text._read_proc_version = lambda: "Linux 5.15-microsoft-standard-WSL2"
 def copy(value):
     global contents
@@ -188,13 +188,12 @@ def test_set_clipboard_alone_does_not_displace_owned_backend():
     observed = _run(
         """
 import json
-import sys
 import pyperclip
 
 pyperclip.set_clipboard("pbcopy")
 assert pyperclip.is_available()
-sys.platform = "darwin"
-from clipboard import _text
+from clipboard import _platform, _text
+_platform.current = lambda: "darwin"
 print(json.dumps(_text._select_text_backend()))
 """
     )

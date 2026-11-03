@@ -10,7 +10,7 @@ import pytest
 from html_offer import FRAGMENT
 
 import clipboard
-from clipboard import _desktop, _html_native, _html_native_linux
+from clipboard import _desktop, _html_native_linux
 
 LIST_TYPES = ("wl-paste", "--list-types")
 READ_HTML = ("wl-paste", "--no-newline", "--type", "text/html")
@@ -57,9 +57,9 @@ class _WlPaste:
 
 
 @pytest.fixture
-def wayland_wl_paste(monkeypatch, restore_html_clipboard_reader):
+def wayland_wl_paste(monkeypatch, restore_html_clipboard_reader, fake_platform):
     """Default reader on a pretend Linux Wayland session with a scripted wl-paste."""
-    monkeypatch.setattr(_html_native.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-1")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
     clipboard.set_html_clipboard_reader(None)

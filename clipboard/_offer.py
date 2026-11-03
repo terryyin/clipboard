@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+from clipboard import _platform
 from clipboard._errors import ClipboardContentError
 
 ClipboardKind = Literal["text", "image", "html", "files"]
@@ -93,11 +93,12 @@ def snapshot_from_native_formats(
 
 def _default_clipboard_inspector() -> ClipboardOfferSnapshot:
     """Platform-selected enumerator (Darwin; Linux; Windows desktop)."""
-    if sys.platform == "darwin":
+    platform = _platform.current()
+    if platform == "darwin":
         from clipboard._offer_macos import _macos_clipboard_inspector
 
         return _macos_clipboard_inspector()
-    if sys.platform.startswith("linux"):
+    if platform.startswith("linux"):
         from clipboard._desktop import _is_linux_wayland
         from clipboard._offer_x11 import _linux_x11_clipboard_inspector
 
@@ -108,13 +109,13 @@ def _default_clipboard_inspector() -> ClipboardOfferSnapshot:
 
             return _linux_wayland_clipboard_inspector()
         return _linux_x11_clipboard_inspector()
-    if sys.platform == "win32":
+    if platform == "win32":
         from clipboard._offer_windows import _windows_clipboard_inspector
 
         return _windows_clipboard_inspector()
     raise ClipboardContentError(
         "inspect format enumeration is not available "
-        f"({sys.platform}); need a usable desktop session that can list "
+        f"({platform}); need a usable desktop session that can list "
         "offered clipboard formats/types (Windows desktop via user32 "
         "EnumClipboardFormats; macOS Aqua pasteboard types; Linux X11: "
         "CLIPBOARD TARGETS helper; Linux Wayland: MIME-list helper on a "

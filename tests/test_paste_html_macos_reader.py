@@ -11,7 +11,7 @@ import pytest
 from html_offer import FRAGMENT
 
 import clipboard
-from clipboard import _html_native, _html_native_macos
+from clipboard import _html_native_macos
 
 BROWSER_BODY = "<meta charset='utf-8'>" + FRAGMENT
 
@@ -32,9 +32,9 @@ class _Helper:
 
 
 @pytest.fixture
-def darwin_helper(monkeypatch, restore_html_clipboard_reader):
+def darwin_helper(monkeypatch, restore_html_clipboard_reader, fake_platform):
     """Default reader on a pretend Darwin with a scripted osascript."""
-    monkeypatch.setattr(_html_native.sys, "platform", "darwin")
+    fake_platform("darwin")
     clipboard.set_html_clipboard_reader(None)
 
     def install(**kwargs):
@@ -99,11 +99,11 @@ def test_helper_failure_is_content_error(darwin_helper, helper_kwargs, message):
 
 
 def test_non_darwin_default_reader_is_not_available(
-    monkeypatch, restore_html_clipboard_reader
+    monkeypatch, restore_html_clipboard_reader, fake_platform
 ):
     # Windows, Linux X11 and Wayland have readers (tests/test_paste_html_*
     # _reader.py); an unsupported platform such as Solaris does not.
-    monkeypatch.setattr(_html_native.sys, "platform", "sunos5")
+    fake_platform("sunos5")
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
 
     def no_helper(*args, **kwargs):
@@ -111,5 +111,5 @@ def test_non_darwin_default_reader_is_not_available(
 
     monkeypatch.setattr(_html_native_macos.subprocess, "run", no_helper)
     clipboard.set_html_clipboard_reader(None)
-    with pytest.raises(clipboard.ClipboardContentError, match="not available"):
+    with pytest.raises(clipboard.ClipboardContentError, match=r"\(sunos5\)"):
         clipboard.paste_html()

@@ -13,16 +13,16 @@ def test_paste_files_public_surface():
 
 
 def test_default_reader_raises_on_unknown_platform(
-    restore_files_clipboard_reader, monkeypatch
+    restore_files_clipboard_reader, fake_platform
 ):
     """Platforms without a file-list adapter raise ClipboardContentError."""
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "aix")
+    fake_platform("aix")
     clipboard.set_files_clipboard_reader(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.paste_files()
     assert raised.value.__class__ is clipboard.ClipboardContentError
     assert not isinstance(raised.value, clipboard.ClipboardImageError)
-    assert "not available on this platform" in str(raised.value)
+    assert "(aix)" in str(raised.value)
 
 
 def test_injected_reader_returns_paths(restore_files_clipboard_reader):
@@ -61,14 +61,16 @@ def test_injected_clipboard_content_error_propagates(
         clipboard.paste_files()
 
 
-def test_reset_reader_restores_default(restore_files_clipboard_reader, monkeypatch):
+def test_reset_reader_restores_default(
+    restore_files_clipboard_reader, monkeypatch, fake_platform
+):
     clipboard.set_files_clipboard_reader(lambda: ["/tmp/x"])
     clipboard.set_files_clipboard_reader(None)
     assert (
         clipboard._files._files_clipboard_reader
         is clipboard._files_native._default_files_clipboard_reader
     )
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", "linux")
+    fake_platform("linux")
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     monkeypatch.setattr(

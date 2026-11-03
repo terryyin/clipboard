@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 21
+- Highest allocated local number: 22
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners. DD-019 awaits local triage.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
 - Ownership: project-owned findings (cause in Clipboard's own code, tests, configuration or CI workflow) live in [ProjectFindings.md](ProjectFindings.md); DD-001, DD-005 and DD-010 moved there on 2026-11-03 (recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`). `DD-NNN` numbering is shared across both files; the highest allocated local number above covers both.
@@ -284,4 +284,31 @@ fill the turn, which delegation guidance forbids ("Do not issue no-op calls").
   - Evidence: coordinator Bash call "No-op placeholder" (`echo waiting`) after launching the slice 1 implementation and the source-only review
   - Observed effect: One wasted tool call; no effect on work or proof
   - Inference: One-off; ending the turn and relying on task notifications is the supported wait
+- Execution: SEED-003#host-independent-desktop-free-tests
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: coordinator Bash call "No-op placeholder check" (`fc -ln 0 …; echo skip`) after a failed record-writing script, before rewriting it
+  - Observed effect: One wasted tool call; no effect on work or proof
+  - Inference: Recurrence in a second execution suggests a habit rather than a one-off
 
+## DD-022 — CI-owned final-slice proof has no named observation step before the done transition
+A Behavior slice whose planned proof is a CI matrix observation was published
+with `progress: true`; guidance says to mark it done "after accepted
+observation" but names no command for that observation, and forbids
+`complete-revision` after ordinary slice delivery. The coordinator inferred the
+read-only `ci-mailbox.mjs await-revision` and then needed a records-only commit
+to flip the status. Related to ODF-416 (same `progress: true` → second
+records-only commit), but here the slice was the last one and nothing was
+blocked; the gap is the unnamed observation step. Matching uncertain.
+
+### Occurrences
+- Execution: SEED-003#host-independent-desktop-free-tests
+  - Timestamp: 2026-11-03T21:45:43+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: slice-2 publish 5380548 with `progress: true`; `await-revision /tmp/dough-ci-501/watch-bS46pD 5380548…` → exact success (run 41656910713); records-only done commit 663dca6; `references/fresh-increment.md` (`progress` row) and `references/ci-completion-wait.md` ("Never invoke it after ordinary slice delivery")
+  - Observed effect: One extra publication and CI run solely to record CI proof and the done status; coordinator spent reads choosing between `await-revision` and `complete-revision`
+  - Inference: Naming the read-only observation command for `progress: true` slices (or letting the completion operation settle a final CI-owned slice) would remove the inference and possibly the extra commit

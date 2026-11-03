@@ -47,6 +47,12 @@ session; optional native text / pasteboard / file-list probes stay gated via
 `tests/test_text_native_{macos,linux_x11,linux_wayland,windows}.py`, and the
 `copy_files` probes
 `scripts/probe_{macos,windows,linux_x11,linux_wayland}_native_copy_files.py`).
+Desktop-free tests must pass on every matrix OS: fake the platform only via
+the `fake_platform` fixture (never `sys.platform`; the `tests/conftest.py`
+guard fails it), use file names valid on every OS (host-only names such as
+`"` or `\` only as gated additions shared expectations ignore), supply
+POSIX-only stdlib attributes (`os.killpg`) through fakes, and assert the error
+type plus the named platform rather than copied message wording.
 Release setup and maintainer steps are documented in `docs/releasing.md`.
 Project-owned retrospective findings live in `ProjectFindings.md`; process
 findings about published Open Dough guidance stay in `DearDough.md`, which

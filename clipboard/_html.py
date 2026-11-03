@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable
 from typing import TypeVar
 
+from clipboard import _platform
 from clipboard._errors import ClipboardContentError
 from clipboard._html_envelope import _decode_html_offer
 from clipboard._html_native import _default_html_clipboard_reader
@@ -16,12 +16,13 @@ _T = TypeVar("_T")
 
 def _default_html_clipboard_writer(html: str, text: str) -> None:
     """Platform-selected dual-offer writer; Darwin uses NSPasteboard via osascript."""
-    if sys.platform == "darwin":
+    platform = _platform.current()
+    if platform == "darwin":
         _macos_html_clipboard_writer(html, text)
         return
     raise ClipboardContentError(
         "copy_html native dual-offer writer is not available on this platform "
-        f"({sys.platform}); need a usable desktop session with a multi-type "
+        f"({platform}); need a usable desktop session with a multi-type "
         "HTML+text helper (Linux X11: multi-type-capable xclip; Wayland: "
         "multi-type-capable helper on a named compositor; Windows desktop: "
         "HTML Format + Unicode text), or inject a writer with "

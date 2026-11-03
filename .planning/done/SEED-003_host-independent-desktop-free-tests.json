@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-003#host-independent-desktop-free-tests",
+  "title": "Make desktop-free platform tests pass on every matrix OS",
+  "completedAt": "2026-11-03T14:57:53.756Z",
+  "developer": "Terry Yin",
+  "agent": "Yuma-chan",
+  "host": "claude",
+  "model": "opus"
+}
