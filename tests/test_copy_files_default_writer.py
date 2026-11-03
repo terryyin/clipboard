@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -16,7 +17,10 @@ import pytest
 import clipboard
 from clipboard import _files_native_macos
 
-AWKWARD_NAMES = ["report final.pdf", "données é.csv", 'quote " back\\slash.txt']
+AWKWARD_NAMES = ["report final.pdf", "données é.csv"]
+if sys.platform != "win32":
+    # Windows file names cannot contain ``"``, and ``\\`` is its separator.
+    AWKWARD_NAMES.append('quote " back\\slash.txt')
 
 
 class _Helper:

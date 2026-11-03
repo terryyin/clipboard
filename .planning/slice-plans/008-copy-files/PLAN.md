@@ -252,3 +252,6 @@ locked screen (`CGSSessionScreenIsLocked`),
 where Finder ignored Apple Events and its Paste item read disabled even for
 AppleScript's own `set the clipboard to POSIX file` offer of the same six
 types. Unlocked, a Finder round can still upgrade the macOS limit (G2).
+
+CI repair after slice 3 (run 41558761684): desktop-free writer tests must use
+file names valid on Windows (`"` and `\` are rejected there).
