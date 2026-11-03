@@ -3,6 +3,7 @@
 ## Retention
 
 - Highest allocated local number: 23
+- Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
 - Ownership: project-owned findings (cause in Clipboard's own code, tests, configuration or CI workflow) live in [ProjectFindings.md](ProjectFindings.md); DD-001, DD-005 and DD-010 moved there on 2026-11-03 (recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`). `DD-NNN` numbering is shared across both files; the highest allocated local number above covers both.
@@ -256,7 +257,10 @@ paste could not be observed.
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-408](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-408.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-019 — CI observer budget expired while the next slice was still open
+## ODF-259 — CI observer budget expired while the next slice was still open
+
+Former local code: DD-019.
+
 After slice-1 publish, the retained CI observer's budget expired during a long
 or interrupted next-slice delegation, so the coordinator continued delivery
 without promised monitoring on the prior SHA until the next publish reattached
@@ -267,7 +271,10 @@ Ownership assessment (2026-11-04): shared observer lifecycle. Open Dough
 The execution supplies no evidence of a Clipboard-specific observer override
 or failure to follow that contract. [Run 41647699400](https://github.com/terryyin/clipboard/actions/runs/41647699400)
 later confirmed the three gated native copy-files jobs and CI passed on
-`a73a418`; the earlier `d74c178` observation remains unconfirmed.
+`a73a418`. The shared review also recovered [run 41575770049](https://github.com/terryyin/clipboard/actions/runs/41575770049)
+on `d74c178`, which passed the same three gated jobs and CI. This recovers
+the intermediate verdict. The observer's coverage still lapsed between
+its budget expiry and reattachment.
 
 ### Occurrences
 - Execution: SEED-001#bounded-x11-file-write
@@ -278,7 +285,10 @@ later confirmed the three gated native copy-files jobs and CI passed on
   - Observed effect: Intermediate gated coverage for d74c178 was not retained as a known green; native X11/Wayland/Windows proof conclusions for the story rest on the later tip's still-pending observation
   - Inference: A long next-slice turn can outlive the prior increment's observation budget; treat mid-story budget expiry as lost coverage (report once, continue) and keep final acceptance conditional on the tip observer, not on an assumed earlier green
 
-## DD-020 — Plan chose a design already present elsewhere without recording it as existing-solution evidence
+## ODF-417 — Plan chose a design already present elsewhere without recording it as existing-solution evidence
+
+Former local code: DD-020.
+
 The plan decided to feed `xclip` from an unlinked temp file and to keep the
 correction inside the text subsystem, without citing that the file-list X11
 writer already implemented the same owner launch; the post-change refactor
@@ -294,29 +304,26 @@ pass then stopped at the subsystem gate on the new duplication.
   - Observed effect: One human interruption and a resumed refactor agent (~62k subagent tokens across both turns) for zero edits; the share-or-defer choice was made mid-execution instead of at planning
   - Inference: A PFE pass during slice planning (the plan names `dough-pfe` for relocating responsibility) would likely have found the sibling launcher and let the plan record share-or-defer up front
 
-## DD-021 — Coordinator issued a no-op shell call while waiting on background agents
+## ODF-325 — Coordinator issued a no-op shell call while waiting on background agents
+
+Former local code: DD-021.
+
 While two delegated agents ran, the coordinator ran `echo waiting` solely to
 fill the turn, which delegation guidance forbids ("Do not issue no-op calls").
 
 ### Occurrences
-- Execution: SEED-001#bounded-x11-text-write
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: coordinator Bash call "No-op placeholder" (`echo waiting`) after launching the slice 1 implementation and the source-only review
-  - Observed effect: One wasted tool call; no effect on work or proof
-  - Inference: One-off; ending the turn and relying on task notifications is the supported wait
-- Execution: SEED-003#host-independent-desktop-free-tests
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: coordinator Bash call "No-op placeholder check" (`fc -ln 0 …; echo skip`) after a failed record-writing script, before rewriting it
-  - Observed effect: One wasted tool call; no effect on work or proof
-  - Inference: Recurrence in a second execution suggests a habit rather than a one-off
+Two Claude Code / Claude Opus 5.5 executions on Open Dough 0.3.82, both with
+unknown event timestamps: SEED-001#bounded-x11-text-write (slice 1
+`echo waiting` after delegation) and SEED-003#host-independent-desktop-free-tests
+(`fc -ln 0 …; echo skip` before retrying a record-writing script). Each cost
+one tool call without affecting work or proof. The existing waiting rule
+covers both. Full rows are recoverable from the pre-compaction revision
+above and retained at [ODF-325](https://github.com/terryyin/open-dough/blob/main/docs/maintainer/findings/ODF-325.md#odf-325).
 
-## DD-022 — CI-owned final-slice proof has no named observation step before the done transition
+## ODF-418 — CI-owned final-slice proof has no named observation step before the done transition
+
+Former local code: DD-022.
+
 A Behavior slice whose planned proof is a CI matrix observation was published
 with `progress: true`; guidance says to mark it done "after accepted
 observation" but names no command for that observation, and forbids
@@ -336,7 +343,10 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Observed effect: One extra publication and CI run solely to record CI proof and the done status; coordinator spent reads choosing between `await-revision` and `complete-revision`
   - Inference: Naming the read-only observation command for `progress: true` slices (or letting the completion operation settle a final CI-owned slice) would remove the inference and possibly the extra commit
 
-## DD-023 — Probe smoke check ran a destructive child helper on the owner desktop
+## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
+
+Former local code: DD-023.
+
 An implementation agent import-checked a new Linux probe support module on the
 macOS coordinator host by calling its `child_clear()` helper, which ran the
 real `clipboard.clear()` and emptied the developer's live clipboard. The
