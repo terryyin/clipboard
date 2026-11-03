@@ -7,8 +7,10 @@
 ## Provenance
 
 Retrospective correction of SEED-001#clear-clipboard (story
-`.planning/seeds/SEED-001-clipboard-true-to-its-name.md#clear-clipboard`,
-plan `.planning/slice-plans/011-clear-clipboard/PLAN.md`; reviewed commits
+`git show 1f8d805:.planning/seeds/SEED-001-clipboard-true-to-its-name.md`
+anchor `#clear-clipboard`, plan
+`git show 1f8d805:.planning/slice-plans/011-clear-clipboard/PLAN.md`; both
+removed at wrap-up; reviewed commits
 f0ec814..e0c0643). The probes and wrappers came from that plan's slices 2–6
 and its later evidence rounds. The historical promises and README Evidence of
 SEED-001#clear-clipboard stay as they are; this correction changes no

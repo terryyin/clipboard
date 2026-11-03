@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_clear-clipboard.json",
+      "identity": "SEED-001#clear-clipboard",
+      "completedAt": "2026-11-03T15:25:20.597Z",
+      "blob": "5a7434d3dd1f05ee25ea0af9d8b9a0216292b856"
+    },
+    {
       "fileName": "SEED-001_explicit-text-delegation.json",
       "identity": "SEED-001#explicit-text-delegation",
       "completedAt": "2026-11-03T03:59:59.038Z",
