@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#shared-native-clear-proof
 **Source:** [Define "cleared" once across the native clear probes](../../seeds/SEED-001-clipboard-true-to-its-name.md#shared-native-clear-proof)
+**Source review:** [Source review](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Provenance
@@ -124,7 +125,7 @@ Observed in this checkout (Darwin 25.6.0, branch
 
 ### 1. Clear named in the Wayland-selection rule; contract tests observe, not restate
 Type: Structure
-Status: planned
+Status: done
 Proof: rows "2" and "3" above.
 
 Correction (findings 2 and 3; one local proof loop, `make check`):

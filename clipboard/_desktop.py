@@ -29,7 +29,7 @@ _WL_PASTE_LIST_TYPES_INSPECT_CMD = ["wl-paste", "-l"]
 def _is_linux_wayland() -> bool:
     """Wayland when session type or ``WAYLAND_DISPLAY`` says so.
 
-    Used by image write, HTML read, and inspect. Distinct from
+    Used by image write, HTML read, inspect, and clear. Distinct from
     ``_linux_wayland_without_x11`` (file-list): a session with both
     ``DISPLAY`` and ``WAYLAND_DISPLAY`` still counts as Wayland here.
     """

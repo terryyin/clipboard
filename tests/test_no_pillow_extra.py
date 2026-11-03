@@ -140,6 +140,7 @@ import clipboard
 assert callable(clipboard.clear)
 assert callable(clipboard.set_clipboard_clearer)
 assert "clear" in clipboard.__all__
+assert "set_clipboard_clearer" in clipboard.__all__
 
 calls = []
 clipboard.set_clipboard_clearer(lambda: calls.append(None))

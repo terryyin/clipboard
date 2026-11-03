@@ -33,7 +33,7 @@ wordings, which read as absence) live in private `clipboard/_desktop` with
 per-caller failure modes; content-kind
 modules must not copy those helpers. On a session with both `DISPLAY` and
 `WAYLAND_DISPLAY`, `paste_files` and `copy_files` still select X11 while
-HTML/inspect/image write select Wayland. Gated Windows `paste_html` native proof fails the job
+HTML/inspect/image write/clear select Wayland. Gated Windows `paste_html` native proof fails the job
 when the probe reports an evidence limit (no skip).
 
 Use Nix for development tools, as in the neighboring Lizard project. Run tools

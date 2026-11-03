@@ -11,13 +11,6 @@ import clipboard
 from clipboard import _clear_macos, _clear_wayland, _clear_x11, _offer_windows
 
 
-def test_clear_is_public_without_images_extra():
-    assert "clear" in clipboard.__all__
-    assert "set_clipboard_clearer" in clipboard.__all__
-    assert callable(clipboard.clear)
-    assert callable(clipboard.set_clipboard_clearer)
-
-
 def test_clear_calls_injected_clearer_once_and_returns_none(
     restore_clipboard_clearer,
 ):
@@ -67,16 +60,12 @@ def test_clearer_other_failure_becomes_content_error_with_cause(
     assert str(failure) in str(excinfo.value)
 
 
-def test_set_clipboard_clearer_none_restores_default(restore_clipboard_clearer):
-    clipboard.set_clipboard_clearer(lambda: None)
-    clipboard.set_clipboard_clearer(None)
-    assert clipboard._clipboard_clearer is clipboard._default_clipboard_clearer
-
-
 def test_default_clearer_names_platform_and_seam(
     restore_clipboard_clearer, monkeypatch, fake_platform
 ):
-    """Only non-desktop platforms lack a native clearer; they run no helper."""
+    """None restores the default; non-desktop platforms run no helper there."""
+    injected_calls: list[None] = []
+    clipboard.set_clipboard_clearer(lambda: injected_calls.append(None))
     platform = "sunos5"
     fake_platform(platform)
     monkeypatch.setenv("DISPLAY", ":0")
@@ -97,6 +86,7 @@ def test_default_clearer_names_platform_and_seam(
     assert "not available" in message
     assert f"({platform})" in message
     assert "set_clipboard_clearer" in message
+    assert injected_calls == []
 
 
 def test_linux_without_any_session_says_no_desktop_session(linux_clear_session):
