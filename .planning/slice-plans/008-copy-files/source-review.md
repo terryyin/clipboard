@@ -29,7 +29,7 @@ Input: only the story's Goal, Scope and Key examples (and the start of Considere
 | 7.1 | macOS Aqua native offer: `NSPasteboard` file URLs | slice 3 | observed: scripts/probe_macos_native_copy_files.py JSON independent.types (public.file-url, NSFilenamesPboardType) + independent.paths == expected_paths after writer child exit; gated tests/test_copy_files_native_macos.py::test_macos_copy_files_independent_file_url_consumer_probe |
 | 7.2 | Windows native offer: `CF_HDROP` | slice 4 | observed: Actions run 41561268655 job native-windows-copy-files (tests/test_copy_files_native_windows.py::test_windows_copy_files_independent_consumer_and_shell_paste_probe): independent PowerShell GetFileDropList / Get-Clipboard FileDropList equal the two Unicode+space paths in order after writer exit, rechecked at 0/5/10 s |
 | 7.3 | Windows native offer: `Preferred DropEffect` = copy | slice 4 | observed: Actions run 41561268655 job native-windows-copy-files (tests/test_copy_files_native_windows.py::test_windows_copy_files_independent_consumer_and_shell_paste_probe): independent.drop_effect == 1, drop_effect_bytes 01-00-00-00 |
-| 7.4 | Linux X11 native offer: `text/uri-list` | slice 5 | |
+| 7.4 | Linux X11 native offer: `text/uri-list` | slice 5 | observed: Actions run 41562962489 job native-linux-x11-copy-files (tests/test_copy_files_native_linux_x11.py::test_x11_copy_files_independent_consumer_and_thunar_paste_probe): independent_body_equal + targets_list_uri_list + offer_held_after_exit (xclip -o -t text/uri-list after API child exit, rechecked 0/5/10 s) |
 | 7.5 | Linux Wayland native offer: `text/uri-list` | slice 6 | |
 | 7.6 | Linux X11/Wayland: also the GNOME copied-files convention, where the helper can offer it | slice 6 | |
 | 7.7 | The Linux X11/Wayland offer is served by a background owner, as `copy_image` does | slice 6 | |
@@ -103,8 +103,8 @@ Input: only the story's Goal, Scope and Key examples (and the start of Considere
 | E5.c | Result: the file manager reports or skips the missing item | slice 7 | |
 | E5.d | Result: nothing is raised in Python | slice 7 | |
 | E5.e | Result: no other file is touched | slice 7 | |
-| E6.a | Setup: Linux X11 without `xclip` on `PATH` | slice 5 | |
-| E6.b | Trigger: `copy_files([...])` | slice 5 | |
-| E6.c | Result: raises `ClipboardContentError` with an install hint | slice 5 | |
-| E6.d | Result: the previous clipboard is untouched | slice 5 | |
+| E6.a | Setup: Linux X11 without `xclip` on `PATH` | slice 5 | observed: Actions run 41562962489 job native-linux-x11-copy-files (tests/test_copy_files_native_linux_x11.py::test_x11_copy_files_independent_consumer_and_thunar_paste_probe): missing-helper child runs with PATH lacking xclip |
+| E6.b | Trigger: `copy_files([...])` | slice 5 | observed: Actions run 41562962489 job native-linux-x11-copy-files (tests/test_copy_files_native_linux_x11.py::test_x11_copy_files_independent_consumer_and_thunar_paste_probe): missing-helper child calls public copy_files |
+| E6.c | Result: raises `ClipboardContentError` with an install hint | slice 5 | observed: Actions run 41562962489 job native-linux-x11-copy-files (tests/test_copy_files_native_linux_x11.py::test_x11_copy_files_independent_consumer_and_thunar_paste_probe): missing_helper_content_error + missing_helper_install_hint (apt-get install xclip) |
+| E6.d | Result: the previous clipboard is untouched | slice 5 | observed: Actions run 41562962489 job native-linux-x11-copy-files (tests/test_copy_files_native_linux_x11.py::test_x11_copy_files_independent_consumer_and_thunar_paste_probe): missing_helper_prior_text_survives (independent xclip -o UTF8_STRING still reads prior text) |
 | N.1 | Not scope (rationale): a documented per-platform recipe would leave callers owning formats, copy-versus-cut markers, quoting and lifetime; Windows `Set-Clipboard -Path` treats `[` `]` as wildcards | slice 7 | |

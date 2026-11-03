@@ -151,7 +151,7 @@ limited; copy marker observed.
 
 ### 5. Linux X11 native writer
 Type: Behavior
-Status: planned
+Status: done
 Proof: default X11 writer (session rule shared with `paste_files`) feeds the
 slice 2 MIME body (percent-encoded `file://` URIs, CRLF) to a background
 `xclip -selection clipboard -t <type>` owner and waits for the type in
@@ -281,3 +281,9 @@ a previous owner may already list the type); native proof is CI job
 `native-linux-x11-copy-files` (API child exits, independent xclip read with
 rechecks, Thunar Paste, missing-xclip hint with prior text kept). Shared
 Thunar harness moved to `scripts/linux_x11_thunar_support.py`.
+Slice 5 accepted on run 41562962489 (Ubuntu 24.04.5 LTS, kernel
+7.0.0-1017-azure, Thunar 4.18.8, xclip 0.13, Python 3.13.14, Xvfb/Openbox):
+the public copy_files child exited, an independent xclip read the exact CRLF
+body with rechecks, Thunar Paste copied both files byte-equal with sources
+unchanged, and with xclip off PATH copy_files raised with the install hint
+while prior text survived. Only Thunar on X11 is verified.
