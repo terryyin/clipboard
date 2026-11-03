@@ -98,7 +98,7 @@ claims need an independent producer and consumer in other processes.
 | --- | --- | --- | --- |
 | Default pytest is desktop-free and green at the starting revision | Slice 1 regression baseline | `nix develop -c make check` in this worktree at 4dbb488 → `302 passed, 16 skipped` | Settled |
 | Linux `inspect()` raises today on no-owner / nothing-copied | Slice 3 changes it | `_linux_x11_clipboard_inspector()` with `DISPLAY=:0` and a fake `subprocess.run` returning exit 1 / `Error: target TARGETS not available` → `ClipboardContentError … enumeration failed: Error: target TARGETS not available`; `_linux_wayland_clipboard_inspector()` with exit 1 / `Nothing is copied` → `ClipboardContentError … MIME-list enumeration failed: Nothing is copied` | Settled |
-| Real `xclip` no-owner wording on CI is the `_XCLIP_NO_TARGETS` marker | Slice 3 classification; slices 5's proof | Pillow's `ImageGrab` silent-error list also has `xclip: Error: There is no owner for the ` (newer `xclip`), so the wording is version-dependent; Darwin here | **Early probe** at the start of slice 3 (first X11 CI run on a fresh Xvfb); unknown wording keeps raising |
+| Real `xclip` no-owner wording on CI is the `_XCLIP_NO_TARGETS` marker | Slice 3 classification; slices 5's proof | CI run 41649816028: xclip 0.13 on ubuntu-26.04 Xvfb → exit 1, `Error: target TARGETS not available`; newer wording `There is no owner for the` also recognized | Settled |
 | macOS `clearContents` removes every type and repeats cleanly | Slice 2 clearer | macOS 26.6.2, private named pasteboard via `osascript` / AppKit: `public.html`, `Apple HTML pasteboard type`, `public.utf8-plain-text`, `NSStringPboardType` → `clearContents` → 0 types; second `clearContents` → 0 types; change count 1 → 2 → 3; `stringForType` nil | Settled for the call; general pasteboard and any privacy prompt in slice 2's gated probe |
 | `copy("")` leaves an empty text offer on macOS and X11 and truly clears on Windows / Wayland | Example 4 contrast, README wording | pyperclip 1.11.0 source: Windows `EmptyClipboard` without data (418–440), Wayland `wl-copy --clear` (210–230), X11 pipes `""` to `xclip` (157–167); macOS empty `pbcopy` leaves `public.utf8-plain-text` (SEED-001#portable-text observation) | Settled |
 | `wl-copy --clear` empties the selection on Sway and ends a `wl-copy` owner | Slice 4 clearer | Needs Sway | **Early probe** at the start of slice 4 |
@@ -154,7 +154,7 @@ Postcondition: seed examples 1–4 hold with independent consumers. Example
 
 ### 3. Empty Linux clipboard reads as an empty snapshot
 Type: Behavior
-Status: planned
+Status: done
 Proof: first, the early probe. On a fresh Xvfb in the X11 job, record
 `xclip -selection clipboard -o -t TARGETS` exit code and stderr. On a fresh
 Sway, record `wl-paste -l` exit code and stderr. Then desktop-free tests in
@@ -284,8 +284,10 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   are not observable from agent sessions (`screencapture` has no display
   access); recorded as G2. A PNG offer is listed with system-added TIFF types,
   so producer checks test inclusion. AGENTS.md now names `clear`.
-- Slice 3 (desktop-free proof accepted 2026-11-03; native proof pending the
-  published revision's CI): `_desktop._xclip_reports_no_owner` /
+- Slice 3 (accepted 2026-11-03; native proof CI run 41649816028 on 342f12c,
+  ubuntu-26.04: xclip 0.13 says `Error: target TARGETS not available` exit 1;
+  Sway 1.11 + wl-clipboard 2.2.1 says `Nothing is copied` exit 1; every reader
+  read absence on both): `_desktop._xclip_reports_no_owner` /
   `_wl_paste_reports_nothing_copied` are now the one home for empty-clipboard
   wording (both xclip wordings, both wl-paste wordings), used by inspect,
   HTML, file-list, and text readers. New CI jobs `native-linux-x11-clear` and

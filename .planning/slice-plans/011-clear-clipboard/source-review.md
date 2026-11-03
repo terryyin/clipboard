@@ -46,10 +46,10 @@
 | 2.4 | Linux Wayland: `wl-copy --clear` | slice 4 | |
 | 2.5 | Session selection uses the existing writer rule: Wayland when `WAYLAND_DISPLAY` or the session type says so | slice 4 | |
 | 2.5a | This matches how image write, HTML and inspect choose a session (qualification) | slice 4 | |
-| 3.1 | On X11, `inspect()` returns an empty snapshot when CLIPBOARD has no owner (`xclip` "target TARGETS not available") instead of raising | slice 3 | |
-| 3.2 | On Wayland, `inspect()` returns an empty snapshot when nothing is copied (`wl-paste` "Nothing is copied" / "No selection") instead of raising | slice 3 | |
-| 3.3 | Reason: inspect's contract already says an empty offer gives an empty snapshot (qualification) | slice 3 | |
-| 3.4 | Other non-zero helper exits still raise (exclusion) | slice 3 | |
+| 3.1 | On X11, `inspect()` returns an empty snapshot when CLIPBOARD has no owner (`xclip` "target TARGETS not available") instead of raising | slice 3 | observed: CI run 41649816028 (342f12c) native-linux-x11-clear step 1: xclip 0.13 exit 1 'target TARGETS not available', inspect() empty; tests/test_inspect_x11.py::test_unowned_clipboard_inspects_as_empty_snapshot (both wordings) |
+| 3.2 | On Wayland, `inspect()` returns an empty snapshot when nothing is copied (`wl-paste` "Nothing is copied" / "No selection") instead of raising | slice 3 | observed: CI run 41649816028 (342f12c) native-linux-wayland-clear step 1: wl-paste -l exit 1 'Nothing is copied', inspect() empty; tests/test_inspect_wayland.py::test_nothing_copied_inspects_as_empty_snapshot (both wordings) |
+| 3.3 | Reason: inspect's contract already says an empty offer gives an empty snapshot (qualification) | slice 3 | observed: clipboard/_desktop.py _xclip_targets_inspect / _wl_paste_list_types_inspect return () on no owner / nothing copied |
+| 3.4 | Other non-zero helper exits still raise (exclusion) | slice 3 | observed: tests/test_inspect_x11.py test_xclip_helper_failure_raises_* and tests/test_inspect_wayland.py test_wl_paste_helper_failure_raises_* still raise |
 | 4.1 | A failed clear raises `ClipboardContentError` naming the cause, never a silent success, for each listed cause | slice 6 | |
 | 4.1.1 | No visible desktop session | slice 5 | |
 | 4.1.2 | Missing helper: `wl-clipboard` install hint on Wayland; names whatever the chosen mechanism needs on X11 | slice 5 | |
@@ -94,10 +94,10 @@
 | 8.3 | Already empty: `clear()` returns `None`, and again returns `None` | slice 6 | |
 | 8.4 | macOS `copy("")` leaves `inspect().kinds == {"text"}`; `clear()` leaves `inspect().formats == ()` on every supported desktop | slice 6 | |
 | 8.5 | X11: `copy_image` background `xclip` owner; after `clear()` it stops serving and exits; `xclip -o -t TARGETS` reports no owner | slice 5 | |
-| 8.6 | X11 no owner: `inspect()` empty snapshot instead of raising; same on Wayland when nothing is copied | slice 3 | |
+| 8.6 | X11 no owner: `inspect()` empty snapshot instead of raising; same on Wayland when nothing is copied | slice 3 | observed: CI run 41649816028 (342f12c) both clear jobs step 1: inspect() empty, paste() '', paste_html/paste_files/paste_image None on fresh Xvfb and fresh Sway |
 | 8.7 | Linux with neither `DISPLAY` nor `WAYLAND_DISPLAY`: `clear()` raises saying no desktop session is visible; Wayland without `wl-copy`: error names `wl-clipboard` | slice 5 | |
 | 8.8 | Windows held past the bound: raises naming the held clipboard, previous content still there; released within the bound: succeeds | slice 6 | |
 | 8.9 | KDE Klipper re-offer after `clear()` is a newer offer outside the promise; the README names it | slice 2 | observed: README.rst clear() Boundary paragraph names KDE Klipper prevent empty clipboard as a newer offer |
 | 9.1 | `clear()` means "no offer at all"; an empty placeholder does not count (qualification) | slice 6 | |
-| 9.2 | The Linux inspect empty-offer change is included in this story (qualification) | slice 3 | |
+| 9.2 | The Linux inspect empty-offer change is included in this story (qualification) | slice 3 | observed: slice 3 commit 342f12c changes the Linux inspect listings in clipboard/_desktop.py |
 | 9.3 | A clipboard manager's re-offer after the clear is outside the promise and is not detected (exclusion) | slice 2 | observed: README.rst clear() Boundary paragraph (no re-check in clipboard/_clear.py) |

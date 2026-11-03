@@ -497,10 +497,14 @@ Evidence / verified platforms (native probes gated via
   ``verified: false`` (Wayland also ``compositor_generalization: false``;
   exit 2). Re-run on owner-held desktops to replace limits. Empty Linux
   CLIPBOARD → empty ``inspect()``, ``paste_html()`` / ``paste_files()``
-  ``None``: desktop-free tests only so far; native evidence on a fresh Xvfb
-  (``native-linux-x11-clear``) and a fresh headless Sway
-  (``native-linux-wayland-clear``) is **pending CI** (helper versions and
-  observed no-owner wording to be recorded here).
+  ``None`` (and ``paste()`` ``""``, ``paste_image()`` ``None``) **verified**
+  in CI on ``ubuntu-26.04`` (image 20261025.179.1): a fresh Xvfb
+  2:21.1.22-1ubuntu1.3 with xclip 0.13 (``native-linux-x11-clear``; xclip
+  TARGETS exit 1, stderr ``Error: target TARGETS not available``) and a fresh
+  headless Sway 1.11 with wl-clipboard 2.2.1 (``native-linux-wayland-clear``;
+  ``wl-paste -l`` exit 1, stderr ``Nothing is copied``). The newer xclip
+  wording ``There is no owner for the`` and wl-paste ``No selection`` are
+  covered by desktop-free tests only.
 * ``clear()``: macOS Aqua **verified** by ``scripts/probe_macos_native_clear.py``
   (wrapper ``tests/test_clear_native_macos.py``, run with ``--extra images``)
   on the owner's unlocked console session, macOS 26.6.2 (build 25G83) /
