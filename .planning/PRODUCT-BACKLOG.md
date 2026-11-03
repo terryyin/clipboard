@@ -6,8 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Copy local file references into file managers](seeds/SEED-001-clipboard-true-to-its-name.md#copy-files) — SEED-001#copy-files ([plan](slice-plans/008-copy-files/PLAN.md))
-
 ## Backlog list
 
 - [Bound the X11 file-list write and prove directories and duplicates natively](seeds/SEED-001-clipboard-true-to-its-name.md#bounded-x11-file-write) — SEED-001#bounded-x11-file-write

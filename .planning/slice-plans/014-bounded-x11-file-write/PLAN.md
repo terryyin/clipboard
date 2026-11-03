@@ -6,11 +6,11 @@
 
 ## Provenance
 
-Retrospective correction of SEED-001#copy-files (story and plan
+Retrospective correction of SEED-001#copy-files (story and plan recoverable
+at before-cleanup commit d86f90d:
 `.planning/seeds/SEED-001-clipboard-true-to-its-name.md#copy-files` and
-`.planning/slice-plans/008-copy-files/PLAN.md`, recoverable from branch
-`claude/copy-local-file-references-into-file-managers` at c30ff90; first-parent
-commits fbafe60..c30ff90, excluding trunk merge a580bb1; net diff
+`.planning/slice-plans/008-copy-files/PLAN.md`; first-parent commits
+fbafe60..6ddb51d, excluding trunk merge a580bb1; net diff
 `git diff 93ab158 c30ff90`). The X11 writer came from slice 5 (6562a75,
 44086d0); the probes from slices 3–6.
 
