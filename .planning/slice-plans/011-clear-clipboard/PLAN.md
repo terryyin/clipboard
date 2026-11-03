@@ -103,7 +103,7 @@ claims need an independent producer and consumer in other processes.
 | `copy("")` leaves an empty text offer on macOS and X11 and truly clears on Windows / Wayland | Example 4 contrast, README wording | pyperclip 1.11.0 source: Windows `EmptyClipboard` without data (418–440), Wayland `wl-copy --clear` (210–230), X11 pipes `""` to `xclip` (157–167); macOS empty `pbcopy` leaves `public.utf8-plain-text` (SEED-001#portable-text observation) | Settled |
 | `wl-copy --clear` empties the selection on Sway and ends a `wl-copy` owner | Slice 4 clearer | CI run 41651498162: raw `wl-copy --clear` exit 0 in 0.002 s, then `Nothing is copied`, owner exited | Settled |
 | A non-owner `XSetSelectionOwner(CLIPBOARD, None)` empties CLIPBOARD under Xvfb and makes an `xclip` owner exit; libX11 loads by `ctypes` on `ubuntu-latest` | Slice 5 mechanism | CI run 41654014945: `libX11.so.6` loaded, owner 2097153 → 0, xclip owner exited, TARGETS no owner | Settled (no `xsel` fallback) |
-| `OpenClipboard(NULL)` + `EmptyClipboard` removes every format for an independent consumer on `windows-latest` | Slice 6 clearer | Needs a Windows session | **Early probe** at the start of slice 6 |
+| `OpenClipboard(NULL)` + `EmptyClipboard` removes every format for an independent consumer on `windows-latest` | Slice 6 clearer | CI run 41658893626 step 1: raw empty left no formats | Settled |
 | CI hosts Xvfb + `xclip`, Sway + `wl-clipboard`, and a `windows-latest` clipboard session | Slices 3–6 venues | `ci.yml` jobs `native-linux-x11-*`, `native-linux-wayland-*`, `native-windows-paste-html` | Settled for venues |
 | The macOS probe route runs in this checkout | Slice 2 proof route | `osascript` AppKit script ran here (premise above) | Settled for the route; it changes the live clipboard, so it runs only at slice 2 execution |
 
@@ -218,7 +218,7 @@ session. Postcondition: seed examples 1, 2, 3, 5, and the X11 counterpart of
 
 ### 6. Windows desktop clear
 Type: Behavior
-Status: planned
+Status: done
 Proof: first, the early probe in a gated `windows-latest` job. A PowerShell
 producer (`scripts/windows_powershell_producers.py`) offers HTML + text, then
 `OpenClipboard(NULL)` / `EmptyClipboard` / `CloseClipboard`, then an
@@ -256,7 +256,7 @@ README notes that Win+V history and cloud clipboard are not erased.
 ### G1. Default clearer raises "not available" on every platform
 Reported: slice 1 — "No native clearer is implemented. When slices 2, 4, 5 and 6 add a native clearer, each must drop its platform from that parametrize list."
 Story clause: "with one call whose result is the same on every supported desktop"
-Disposition: interim until slices 2, 4, 5, 6
+Disposition: proved by slice 6: no desktop raises "not available" (tests/test_clear.py::test_default_clearer_names_platform_and_seam covers only sunos5); native clears verified on macOS, Wayland, X11 and Windows (CI run 41658893626 and the macOS probe)
 
 ### G2. macOS privacy prompt on clear() is unobserved
 Reported: slice 2 — "Privacy prompt: not observable, so it is recorded as an evidence limit"
@@ -313,9 +313,8 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   replaces `_linux_desktop_session_visible`. Clear tests are now split per
   platform (`tests/test_clear{,_macos,_wayland,_x11}.py`,
   `tests/test_x11_relinquish.py`, fakes in `tests/fake_clear_helpers.py`).
-- Slice 6 (desktop-free proof and macOS file-URL / custom-type probe cases
-  accepted 2026-11-03; Windows and Linux native proof pending the published
-  revision's CI): `clipboard/_clear_windows.py` reuses `_offer_windows`
+- Slice 6 (accepted 2026-11-03; CI run 41658893626 on 8a7368d: Windows 8/8
+  steps on win25-vs2026, Linux file-list and unknown-type steps ok): `clipboard/_clear_windows.py` reuses `_offer_windows`
   `_load_user32` and `_open_clipboard_bounded(operation=, seam=)` (15 s), then
   `EmptyClipboard` / `CloseClipboard`. Probe support shared by Linux and
   Windows probes is `scripts/native_clear_support.py`. Every platform's

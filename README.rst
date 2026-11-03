@@ -560,12 +560,12 @@ Evidence / verified platforms (native probes gated via
   twice, and a ``PATH`` without ``wl-copy``. Each time ``wl-paste -l`` then
   said ``Nothing is copied``, every reader read absence, the library's
   background ``wl-copy`` image owner exited within 5 s, and the ``PATH``
-  case raised ``ClipboardContentError`` naming ``wl-clipboard``. Pending CI:
-  steps 8-9 add an independent ``wl-copy --type text/uri-list`` producer of a
+  case raised ``ClipboardContentError`` naming ``wl-clipboard``. CI run
+  41658893626 steps 8-9 add an independent ``wl-copy --type text/uri-list`` producer of a
   ``file://`` URI naming an existing temp file and an unknown
   ``application/x-clipboard-probe`` type, each followed by a child
-  ``clear()`` (nothing copied, ``paste_files()`` ``None``); they are not yet
-  observed. Evidence limits: other Wayland
+  ``clear()``; both then read nothing copied and ``paste_files()`` ``None``.
+  Evidence limits: other Wayland
   compositors, and desktops with clipboard managers (GNOME, KDE Plasma /
   Klipper) that may re-offer a saved entry, are unverified. Linux X11
   (libX11 ``XSetSelectionOwner``) is **verified** in CI run 41654014945 by
@@ -580,15 +580,16 @@ Evidence / verified platforms (native probes gated via
   exited; after each library ``clear()`` ``xclip -o -t TARGETS`` reported no
   owner, every reader read absence, and the library's background ``xclip``
   image owner exited within 5 s; the dead ``DISPLAY`` raised
-  ``ClipboardContentError`` naming ``DISPLAY=':1987'``. Pending CI: steps
-  7-8 add an independent ``xclip -t text/uri-list`` owner of a ``file://``
+  ``ClipboardContentError`` naming ``DISPLAY=':1987'``. CI run 41658893626
+  steps 7-8 add an independent ``xclip -t text/uri-list`` owner of a ``file://``
   URI naming an existing temp file and an unknown
   ``application/x-clipboard-probe`` owner, each followed by a child
-  ``clear()`` (no owner, producer exited, ``paste_files()`` ``None``); they
-  are not yet observed. Evidence limits: real X11 desktops, and those with
+  ``clear()``; both then read no owner, the producer exited, and
+  ``paste_files()`` was ``None``. Evidence limits: real X11 desktops, and those with
   clipboard managers that may re-offer a saved entry, are unverified.
-  Windows desktop (user32 ``EmptyClipboard``) is **pending CI** on the
-  GitHub ``windows-latest`` runner image (job ``native-windows-clear``;
+  Windows desktop (user32 ``EmptyClipboard``) is **verified** in CI run
+  41658893626 on GitHub ``windows-latest`` (image ``win25-vs2026``
+  20261030.294.1, Windows 10.0.26100 ServerDatacenter; job ``native-windows-clear``;
   ``scripts/probe_windows_native_clear.py``, wrapper
   ``tests/test_clear_native_windows.py``, which records the runner image and
   Windows version and fails, never skips, on an evidence limit). It first
@@ -601,8 +602,10 @@ Evidence / verified platforms (native probes gated via
   and every reader must read absence; then ``clear()`` twice, a holder
   process keeping the clipboard open past the 15 s bound (``clear()`` must
   raise naming the held clipboard and the prior formats must remain), and a
-  holder releasing within the bound (``clear()`` must succeed). Not yet
-  observed. Evidence limits: Win+V clipboard history and cloud clipboard
+  holder releasing within the bound (``clear()`` must succeed). All eight
+  steps held: each ``clear()`` left no formats; the held case raised after
+  15.1 s with ``last_error=5`` and ``HTML Format`` / ``CF_UNICODETEXT`` (13)
+  were still listed after release. Evidence limits: Win+V clipboard history and cloud clipboard
   copies are not erased or checked.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
