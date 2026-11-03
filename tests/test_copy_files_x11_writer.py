@@ -142,15 +142,6 @@ def test_no_display_raises_before_any_helper(sources, x11):
     assert x11.popens == [] and x11.calls == []
 
 
-def test_wayland_without_x11_stays_unsupported_until_its_writer(sources, x11):
-    x11.session({"WAYLAND_DISPLAY": "wayland-0"}, helpers=("xclip", "wl-copy"))
-
-    with pytest.raises(clipboard.ClipboardContentError) as caught:
-        clipboard.copy_files([str(sources / NAMES[0])])
-    assert "not available on this platform (linux)" in str(caught.value)
-    assert x11.popens == [] and x11.calls == []
-
-
 def test_x11_is_selected_when_both_display_and_wayland_are_set(sources, x11):
     x11.session({"DISPLAY": ":0", "WAYLAND_DISPLAY": "wayland-0"})
 

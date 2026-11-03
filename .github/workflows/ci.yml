@@ -253,6 +253,10 @@ jobs:
     name: Native Linux Wayland text copy/paste (Sway)
     uses: ./.github/workflows/native-wayland-text.yml
 
+  native-linux-wayland-copy-files:
+    name: Native Linux Wayland copy_files (wl-copy on Sway)
+    uses: ./.github/workflows/native-wayland-copy-files.yml
+
   native-windows-paste-html:
     name: Native Windows paste_html (windows-latest)
     runs-on: windows-latest
@@ -324,6 +328,7 @@ jobs:
       - native-linux-wayland-copy-image
       - native-linux-wayland-paste-html
       - native-linux-wayland-text
+      - native-linux-wayland-copy-files
       - native-windows-paste-html
       - native-windows-text
       - native-windows-copy-files
@@ -342,6 +347,7 @@ jobs:
           NATIVE_WAYLAND_RESULT: ${{ needs.native-linux-wayland-copy-image.result }}
           NATIVE_WAYLAND_PASTE_HTML_RESULT: ${{ needs.native-linux-wayland-paste-html.result }}
           NATIVE_WAYLAND_TEXT_RESULT: ${{ needs.native-linux-wayland-text.result }}
+          NATIVE_WAYLAND_COPY_FILES_RESULT: ${{ needs.native-linux-wayland-copy-files.result }}
           NATIVE_WINDOWS_PASTE_HTML_RESULT: ${{ needs.native-windows-paste-html.result }}
           NATIVE_WINDOWS_TEXT_RESULT: ${{ needs.native-windows-text.result }}
           NATIVE_WINDOWS_COPY_FILES_RESULT: ${{ needs.native-windows-copy-files.result }}
@@ -356,6 +362,7 @@ jobs:
           && test "$NATIVE_WAYLAND_RESULT" = success
           && test "$NATIVE_WAYLAND_PASTE_HTML_RESULT" = success
           && test "$NATIVE_WAYLAND_TEXT_RESULT" = success
+          && test "$NATIVE_WAYLAND_COPY_FILES_RESULT" = success
           && test "$NATIVE_WINDOWS_PASTE_HTML_RESULT" = success
           && test "$NATIVE_WINDOWS_TEXT_RESULT" = success
           && test "$NATIVE_WINDOWS_COPY_FILES_RESULT" = success

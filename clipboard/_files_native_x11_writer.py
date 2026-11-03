@@ -21,10 +21,10 @@ import shutil
 import subprocess
 import tempfile
 import time
-from pathlib import Path
 
 from clipboard._desktop import _xclip_targets_lenient
 from clipboard._errors import ClipboardContentError
+from clipboard._files_offer import _uri_list_body
 from clipboard._text_native_linux import (
     _helper_log,
     _helper_log_suffix,
@@ -50,11 +50,6 @@ def _error(detail: str) -> ClipboardContentError:
 
 def _xclip_missing_detail() -> str:
     return f"xclip was not found on PATH; {_install_hint('xclip', 'xclip')}"
-
-
-def _uri_list_body(paths: list[str]) -> bytes:
-    """``text/uri-list`` bytes: percent-encoded ASCII URIs, CRLF after each."""
-    return "".join(f"{Path(path).as_uri()}\r\n" for path in paths).encode("ascii")
 
 
 def _require_session() -> None:

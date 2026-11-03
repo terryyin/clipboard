@@ -156,9 +156,12 @@ def copy_files(paths: Iterable[str | os.PathLike[str]]) -> None:
     Windows desktop it sets ``CF_HDROP`` with ``Preferred DropEffect`` copy via
     ``ctypes``; on Linux X11 it feeds a CRLF ``text/uri-list`` of ``file://``
     URIs to a background ``xclip`` owner (missing ``DISPLAY`` / ``xclip``
-    raises with an install hint before the clipboard is replaced); other
-    platforms raise ``ClipboardContentError`` naming the platform until their
-    writers land. Tests inject one via ``set_files_clipboard_writer``.
+    raises with an install hint before the clipboard is replaced); on Linux
+    Wayland without X11 ``DISPLAY`` it pipes the same body to ``wl-copy --type
+    text/uri-list`` and confirms it with ``wl-paste`` (missing
+    ``WAYLAND_DISPLAY`` / wl-clipboard raises likewise); other platforms raise
+    ``ClipboardContentError`` naming the platform. Tests inject one via
+    ``set_files_clipboard_writer``.
     """
     absolute = _validate_copy_files_paths(paths)
     _call_content_backend("file-list write", _files_clipboard_writer, absolute)

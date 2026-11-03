@@ -287,3 +287,8 @@ the public copy_files child exited, an independent xclip read the exact CRLF
 body with rechecks, Thunar Paste copied both files byte-equal with sources
 unchanged, and with xclip off PATH copy_files raised with the install hint
 while prior text survived. Only Thunar on X11 is verified.
+
+Slice 6 (in progress): Wayland writer `clipboard/_files_native_wayland_writer.py`
+(`wl-copy --type text/uri-list`, listed-type plus read-back wait, shared
+`_uri_list_body` in `_files_offer.py`); native proof is the Sway job
+`native-linux-wayland-copy-files`, with a recorded-only Thunar-on-Sway attempt.

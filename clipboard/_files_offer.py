@@ -2,12 +2,14 @@
 
 Native adapters and injected fakes return path lists, structured ``uri-list`` /
 ``paths`` offers, or absence kinds; every shape goes through
-``_normalize_files_offer`` so the same rules apply on every platform.
+``_normalize_files_offer`` so the same rules apply on every platform. The
+Linux writers encode their ``text/uri-list`` body with ``_uri_list_body``.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, NoReturn
 from urllib.parse import unquote, urlparse
 
@@ -64,6 +66,11 @@ def _paths_from_uri_list(payload: object) -> list[str] | None:
         if local is not None:
             paths.append(local)
     return paths or None
+
+
+def _uri_list_body(paths: list[str]) -> bytes:
+    """``text/uri-list`` bytes: percent-encoded ASCII URIs, CRLF after each."""
+    return "".join(f"{Path(path).as_uri()}\r\n" for path in paths).encode("ascii")
 
 
 def _paths_from_path_list(paths: object) -> list[str] | None:
