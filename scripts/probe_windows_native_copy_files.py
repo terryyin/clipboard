@@ -16,6 +16,11 @@
    ``InvokeVerb("Paste")`` (falling back to the folder's own ``Paste`` verb)
    must create copies in an empty temporary folder; the destination bytes must
    equal the sources and the sources must be unchanged.
+4. A further offer-level round: from a child whose cwd is the source folder,
+   ``copy_files(["report final.pdf", "a dir", "report final.pdf"])`` (relative
+   file, directory, duplicate). The same PowerShell CF_HDROP consumer must
+   read three absolute paths in that order with drop effect 1; ``paste_files()``
+   agrees. No Explorer paste for this round (a duplicate would collide).
 
 Prints one JSON object (floors included). Exit 0 only when every observation
 held; 1 when one failed or could not be made; 2 off Windows or without
@@ -28,26 +33,25 @@ import hashlib
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
-import textwrap
 import time
 from pathlib import Path
 
+from copy_files_native_probe_support import paste_files_consistency
 from windows_native_copy_files_support import (
     consumer_ok,
+    copy_in_exiting_child,
     independent_consumer,
+    relative_directory_duplicate_round,
     sequence_number,
     shell_paste,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
 SOURCE_NAMES = ("report final.pdf", "données é.csv")
 SOURCE_BODIES = (b"%PDF-1.4 probe report\n", "col,é\n1,données\n".encode())
 # Seconds after writer exit at which the independent consumer re-reads.
 RECHECKS_S = (0, 5, 10)
-CHILD_TIMEOUT_S = 60
 
 
 def _fingerprint(path: Path) -> dict:
@@ -56,36 +60,6 @@ def _fingerprint(path: Path) -> dict:
         "size": st.st_size,
         "mtime_ns": st.st_mtime_ns,
         "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-    }
-
-
-def copy_in_exiting_child(paths: list[str]) -> dict:
-    """Run public copy_files with the default writer in a child that exits."""
-    code = textwrap.dedent(
-        """
-        import sys
-        import clipboard
-        clipboard.set_files_clipboard_writer(None)
-        clipboard.copy_files(sys.argv[1:])
-        """
-    )
-    try:
-        result = subprocess.run(
-            [sys.executable, "-c", code, *paths],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=CHILD_TIMEOUT_S,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return {"exited": False, "error": f"child timed out after {CHILD_TIMEOUT_S}s"}
-    return {
-        "exited": True,
-        "returncode": result.returncode,
-        "stderr": result.stderr.strip()[-2000:],
     }
 
 
@@ -106,16 +80,6 @@ def recheck_after_exit(paths: list[str]) -> list[dict]:
             }
         )
     return rechecks
-
-
-def paste_files_consistency() -> dict:
-    import clipboard
-
-    clipboard.set_files_clipboard_reader(None)
-    try:
-        return {"value": clipboard.paste_files(), "error": None}
-    except clipboard.ClipboardContentError as exc:
-        return {"value": None, "error": str(exc)}
 
 
 def windows_floors() -> dict:
@@ -155,6 +119,8 @@ def main() -> int:
         independent = independent_consumer()
         pasted = paste_files_consistency()
         paste = shell_paste(sources, dest)
+        # After Explorer paste: a duplicate would collide in a file-manager paste.
+        relative_round = relative_directory_duplicate_round(source_dir)
         after = {p.name: _fingerprint(p) for p in sources}
 
     sequences = {r["sequence_number"] for r in rechecks}
@@ -169,6 +135,15 @@ def main() -> int:
         "paste_files_agrees": pasted["value"] == paths,
         "shell_paste_copies_match": paste["copies_match"],
         "sources_unchanged": before == after,
+        "relative_directory_duplicate_writer_exited_ok": relative_round[
+            "writer_exited_ok"
+        ],
+        "relative_directory_duplicate_independent_paths_equal": relative_round[
+            "independent_paths_equal"
+        ],
+        "relative_directory_duplicate_paste_files_agrees": relative_round[
+            "paste_files_agrees"
+        ],
     }
     failed = [name for name, held in observations.items() if not held]
     report = {
@@ -184,6 +159,7 @@ def main() -> int:
         "independent": independent,
         "paste_files": pasted,
         "shell_paste": paste,
+        "relative_directory_duplicate": relative_round,
         "sources_before": before,
         "sources_after": after,
         "floors": windows_floors(),
@@ -196,6 +172,10 @@ def main() -> int:
             "independent_consumer": (
                 "Windows PowerShell -STA Windows.Forms Clipboard.GetFileDropList, "
                 "Get-Clipboard -Format FileDropList, Preferred DropEffect stream"
+            ),
+            "relative_directory_duplicate": (
+                "further offer: relative file + directory + duplicate from "
+                "source cwd; PowerShell CF_HDROP; no Explorer paste"
             ),
             "file_manager": "Shell.Application folder Paste verb (Explorer shell)",
             "consistency_only": "paste_files() agreement is not interop proof",

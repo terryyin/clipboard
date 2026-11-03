@@ -75,15 +75,41 @@ def assert_windows_copy_files_report(report: dict) -> None:
     assert floors["os"] == "Windows"
     for key in ("windows_version", "windows_build", "powershell", "python", "machine"):
         assert floors[key], key
+    relative = report["relative_directory_duplicate"]
+    assert relative["relative_args"] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert [PureWindowsPath(p).name for p in relative["expected_paths"]] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert relative["expected_paths"][0] == relative["expected_paths"][2]
+    assert relative["independent"]["drop_list"] == relative["expected_paths"]
+    assert relative["paste_files"]["value"] == relative["expected_paths"]
+    assert relative["writer"]["exited"] is True
+    assert relative["writer"]["returncode"] == 0
 
 
 def _passing_report() -> dict:
     expected = [rf"C:\t\sources\{name}" for name in NAMES]
+    relative_paths = [
+        r"C:\t\sources\report final.pdf",
+        r"C:\t\sources\a dir",
+        r"C:\t\sources\report final.pdf",
+    ]
     fingerprint = {n: {"size": 1, "mtime_ns": 2, "sha256": "x"} for n in NAMES}
     return {
         "ok": True,
         "failed_observations": [],
-        "observations": {"shell_paste_copies_match": True},
+        "observations": {
+            "shell_paste_copies_match": True,
+            "relative_directory_duplicate_writer_exited_ok": True,
+            "relative_directory_duplicate_independent_paths_equal": True,
+            "relative_directory_duplicate_paste_files_agrees": True,
+        },
         "expected_paths": expected,
         "writer": {"exited": True, "returncode": 0},
         "independent": {
@@ -101,6 +127,17 @@ def _passing_report() -> dict:
             "copies_match": True,
             "copies": [{"name": n, "exists": True, "bytes_equal": True} for n in NAMES],
             "dest_listing": NAMES,
+        },
+        "relative_directory_duplicate": {
+            "relative_args": [
+                "report final.pdf",
+                "a dir",
+                "report final.pdf",
+            ],
+            "expected_paths": relative_paths,
+            "independent": {"drop_list": relative_paths},
+            "paste_files": {"value": relative_paths},
+            "writer": {"exited": True, "returncode": 0},
         },
         "sources_before": fingerprint,
         "sources_after": copy.deepcopy(fingerprint),
@@ -128,6 +165,12 @@ def test_report_check_accepts_a_complete_report():
         lambda r: r["shell_paste"].update(dest_listing=[]),
         lambda r: r["rechecks_after_exit"][-1].update(ok=False),
         lambda r: r["floors"].update(windows_build=None),
+        lambda r: r["relative_directory_duplicate"]["independent"].update(
+            drop_list=r["relative_directory_duplicate"]["expected_paths"][:1]
+        ),
+        lambda r: r["relative_directory_duplicate"]["paste_files"].update(
+            value=[r"C:\t\sources\report final.pdf"]
+        ),
     ],
 )
 def test_report_check_rejects_a_missing_observation(spoil):

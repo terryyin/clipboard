@@ -16,6 +16,11 @@ ci.yml).
    ``paste_files()`` agreement is recorded as a consistency check only.
 3. Recorded only (never gating): a Thunar Paste attempt under Sway
    (``GDK_BACKEND=wayland``, Sway IPC focus, ``wtype`` Ctrl+V).
+4. A further offer-level round: from a child whose cwd is the source folder,
+   ``copy_files(["report final.pdf", "a dir", "report final.pdf"])`` (relative
+   file, directory, duplicate). Independent ``wl-paste --type text/uri-list``
+   must return the three absolute ``file://`` URIs in that order;
+   ``paste_files()`` agrees. No file-manager paste for this round.
 
 Prints one JSON object (floors included) and writes it, plus ``thunar.log``,
 to CLIPBOARD_PROBE_ARTIFACTS. Exit 0 only when every gated observation held.
@@ -31,9 +36,11 @@ import tempfile
 import time
 from pathlib import Path
 
+from copy_files_native_probe_support import paste_files_consistency
 from linux_wayland_native_copy_files_support import (
     TEXT_TYPE,
     URI_LIST,
+    relative_directory_duplicate_round,
     require_wayland_only_session,
     set_text_independently,
     wayland_floors,
@@ -89,16 +96,6 @@ def recheck_after_exit(body: bytes) -> list[dict]:
     return rechecks
 
 
-def paste_files_consistency() -> dict:
-    import clipboard
-
-    clipboard.set_files_clipboard_reader(None)
-    try:
-        return {"value": clipboard.paste_files(), "error": None}
-    except clipboard.ClipboardContentError as exc:
-        return {"value": None, "error": str(exc)}
-
-
 def run_probe(tmp: Path, log) -> dict:
     source, destination, empty_bin = tmp / "sources", tmp / "dest", tmp / "no-wl"
     for folder in (source, destination, empty_bin):
@@ -116,6 +113,8 @@ def run_probe(tmp: Path, log) -> dict:
     types = wl_list_types()
     pasted = paste_files_consistency()
     thunar = attempt_thunar_paste(source, destination, SOURCES, log)
+    # After the two-file round: a duplicate would collide in a file-manager paste.
+    relative_round = relative_directory_duplicate_round(source)
     after = {name: _fingerprint(source / name) for name in SOURCES}
 
     missing_stderr = missing["writer"].get("stderr", "")
@@ -136,6 +135,18 @@ def run_probe(tmp: Path, log) -> dict:
         ),
         "paste_files_agrees": pasted["value"] == paths,
         "sources_unchanged": before == after,
+        "relative_directory_duplicate_writer_exited_ok": relative_round[
+            "writer_exited_ok"
+        ],
+        "relative_directory_duplicate_independent_body_equal": relative_round[
+            "independent_body_equal"
+        ],
+        "relative_directory_duplicate_types_list_uri_list": relative_round[
+            "types_list_uri_list"
+        ],
+        "relative_directory_duplicate_paste_files_agrees": relative_round[
+            "paste_files_agrees"
+        ],
     }
     failed = [name for name, held in observations.items() if not held]
     return {
@@ -157,6 +168,7 @@ def run_probe(tmp: Path, log) -> dict:
         },
         "paste_files": pasted,
         "thunar_paste_attempt": thunar,
+        "relative_directory_duplicate": relative_round,
         "sources_before": before,
         "sources_after": after,
     }
@@ -178,6 +190,10 @@ def main() -> int:
             "writer_exit": "copy_files ran in a child Python that exited first",
             "independent_consumer": "wl-paste --type text/uri-list and "
             "--list-types, rechecked at 0/5/10 s",
+            "relative_directory_duplicate": (
+                "further offer: relative file + directory + duplicate from "
+                "source cwd; wl-paste --type text/uri-list; no file-manager paste"
+            ),
             "consistency_only": "paste_files() agreement is not interop proof",
             "evidence_limit": "offer level on headless Sway only; the Thunar "
             "attempt is recorded, not gated; other compositors and file "

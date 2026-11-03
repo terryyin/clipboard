@@ -15,6 +15,12 @@ import sys
 import time
 from pathlib import Path
 
+from copy_files_native_probe_support import (
+    paste_files_consistency,
+    prepare_relative_directory_duplicate,
+    uri_list_body,
+)
+from linux_x11_native_copy_files_support import copy_in_exiting_child
 from native_probe_common import wl_clipboard_version
 from native_probe_wayland import sway_running, sway_version
 
@@ -124,4 +130,34 @@ def wayland_floors() -> dict:
         "wayland_display": os.environ.get("WAYLAND_DISPLAY"),
         "xdg_session_type": os.environ.get("XDG_SESSION_TYPE"),
         "session": "Wayland / headless Sway (wlroots data-control)",
+    }
+
+
+def relative_directory_duplicate_round(source: Path) -> dict:
+    """Offer-level: relative file + directory + duplicate → absolute URI list."""
+    relative, expected = prepare_relative_directory_duplicate(source)
+    body = uri_list_body(expected)
+    writer = copy_in_exiting_child(relative, cwd=source)
+    independent = wl_paste_read(URI_LIST)
+    types = wl_list_types()
+    pasted = paste_files_consistency()
+    return {
+        "relative_args": relative,
+        "cwd": str(source),
+        "expected_paths": expected,
+        "expected_body": body.decode("ascii"),
+        "writer": writer,
+        "independent": {
+            "returncode": independent["returncode"],
+            "body": independent["stdout"].decode("utf-8", "replace"),
+            "stderr": independent["stderr"],
+            "types": types,
+        },
+        "paste_files": pasted,
+        "writer_exited_ok": writer.get("exited") is True
+        and writer.get("returncode") == 0,
+        "independent_body_equal": independent["returncode"] == 0
+        and independent["stdout"] == body,
+        "types_list_uri_list": URI_LIST in types,
+        "paste_files_agrees": pasted["value"] == expected,
     }

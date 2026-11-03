@@ -82,7 +82,7 @@ writer fixture does, so it terminates its own child on Windows CI too.
 
 ### 2. Native proof for directories, duplicates and relative paths
 Type: Behavior
-Status: planned
+Status: done
 Proof: row 3 above.
 
 Behavior: each desktop's gated `copy_files` probe → a further offer-level
@@ -150,9 +150,21 @@ concern remains. No remaining slice-specific concerns were identified.
   still terminates the child (Windows CI has no `os.killpg`).
 - File-size gate: keep the stall case in
   `tests/test_copy_files_x11_writer_stall.py` beside the FakeX11Files suite.
+- Relative-round expected paths must `Path.resolve()`; macOS writers publish
+  `/private/tmp` while `abspath` keeps `/tmp`.
+- Shared relative-round helpers live in
+  `scripts/copy_files_native_probe_support.py` so probes stay under the
+  file-size gate.
 
 ## Accepted proof (slice 1)
 
 - `nix develop -c uv run --locked --extra images pytest -q tests/test_copy_files_x11_writer.py tests/test_copy_files_x11_writer_stall.py` → 12 passed
 - Product: `_start_owner` feeds an unlinked `TemporaryFile` as stdin (no pipe write)
 - Gated `native-linux-x11-copy-files` left to CI after publish
+
+## Accepted proof (slice 2)
+
+- `nix develop -c uv run --locked --extra images pytest -q tests/test_copy_files_native_*.py` → 29 passed, 4 skipped
+- Live macOS: `CLIPBOARD_NATIVE_PROBE=1 … scripts/probe_macos_native_copy_files.py` → ok, three absolute paths (directory + duplicate + relative) agree
+- Expected paths use `Path.resolve()` so `/tmp` vs `/private/tmp` matches writers
+- Gated X11/Wayland/Windows native jobs left to CI after publish

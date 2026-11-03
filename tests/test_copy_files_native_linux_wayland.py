@@ -32,6 +32,10 @@ GATED = {
     "offer_held_after_exit",
     "paste_files_agrees",
     "sources_unchanged",
+    "relative_directory_duplicate_writer_exited_ok",
+    "relative_directory_duplicate_independent_body_equal",
+    "relative_directory_duplicate_types_list_uri_list",
+    "relative_directory_duplicate_paste_files_agrees",
 }
 
 
@@ -82,11 +86,33 @@ def assert_wayland_copy_files_report(report: dict) -> None:
     floors = report["floors"]
     assert floors["sway"] and floors["wl_clipboard"] and floors["python"]
     assert floors["distribution"]
+    relative = report["relative_directory_duplicate"]
+    assert relative["relative_args"] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert [PurePosixPath(p).name for p in relative["expected_paths"]] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert relative["expected_paths"][0] == relative["expected_paths"][2]
+    assert relative["independent"]["body"] == relative["expected_body"]
+    assert relative["paste_files"]["value"] == relative["expected_paths"]
+    assert relative["writer"]["exited"] is True
+    assert relative["writer"]["returncode"] == 0
 
 
 def _synthetic_report() -> dict:
     paths = [f"/tmp/p/sources/{name}" for name in NAMES]
     body = "".join(f"file://{p}\r\n" for p in paths)
+    relative_paths = [
+        "/tmp/p/sources/report final.pdf",
+        "/tmp/p/sources/a dir",
+        "/tmp/p/sources/report final.pdf",
+    ]
+    relative_body = "".join(f"file://{p}\r\n" for p in relative_paths)
     recheck = {"t_s": 0.0, "ok": True, "types_list_uri_list": True, "error": None}
     return {
         "ok": True,
@@ -98,6 +124,18 @@ def _synthetic_report() -> dict:
         "writer": {"exited": True, "returncode": 0},
         "rechecks_after_exit": [recheck] * 3,
         "missing_helper": {"writer": {"stderr": "sudo apt-get install wl-clipboard"}},
+        "relative_directory_duplicate": {
+            "relative_args": [
+                "report final.pdf",
+                "a dir",
+                "report final.pdf",
+            ],
+            "expected_paths": relative_paths,
+            "expected_body": relative_body,
+            "independent": {"body": relative_body},
+            "paste_files": {"value": relative_paths},
+            "writer": {"exited": True, "returncode": 0},
+        },
         "sources_before": {"a": "1"},
         "sources_after": {"a": "1"},
         "floors": {
@@ -123,6 +161,12 @@ def test_report_assertions_accept_a_complete_report():
         lambda r: r["missing_helper"]["writer"].update(stderr="error"),
         lambda r: r["sources_after"].update(a="2"),
         lambda r: r["floors"].update(sway=None),
+        lambda r: r["relative_directory_duplicate"]["independent"].update(
+            body="file:///other\r\n"
+        ),
+        lambda r: r["relative_directory_duplicate"]["paste_files"].update(
+            value=["/tmp/p/sources/report final.pdf"]
+        ),
     ],
 )
 def test_report_assertions_reject_a_failed_observation(damage):
