@@ -159,3 +159,28 @@ def test_xclip_timeout_raises_clipboard_content_error(
 
     assert "timed out" in str(raised.value).lower()
     assert "TARGETS" in str(raised.value)
+
+
+@pytest.mark.parametrize(
+    "stderr",
+    [
+        "Error: target TARGETS not available\n",  # xclip 0.13
+        "xclip: Error: There is no owner for the CLIPBOARD selection\n",  # newer
+    ],
+)
+def test_unowned_clipboard_inspects_as_empty_snapshot(
+    monkeypatch, restore_clipboard_inspector, fake_platform, stderr
+):
+    """No CLIPBOARD owner → empty snapshot, not an error (either xclip wording)."""
+
+    def fake_run(*_args, **_kwargs):
+        return SimpleNamespace(returncode=1, stdout="", stderr=stderr)
+
+    monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
+    fake_platform("linux")
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
+    monkeypatch.setenv("DISPLAY", ":99")
+    clipboard.set_clipboard_inspector(None)
+
+    assert clipboard.inspect() == clipboard.ClipboardOfferSnapshot(frozenset(), ())

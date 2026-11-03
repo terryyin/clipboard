@@ -121,3 +121,21 @@ def test_wl_paste_timeout_raises_clipboard_content_error(
 
     assert "timed out" in str(raised.value).lower()
     assert "wl-paste" in str(raised.value)
+
+
+@pytest.mark.parametrize("stderr", ["Nothing is copied\n", "No selection\n"])
+def test_nothing_copied_inspects_as_empty_snapshot(
+    monkeypatch, restore_clipboard_inspector, fake_platform, stderr
+):
+    """Nothing copied → empty snapshot, not an error (wl-clipboard 2.x wordings)."""
+
+    def fake_run(*_args, **_kwargs):
+        return SimpleNamespace(returncode=1, stdout="", stderr=stderr)
+
+    monkeypatch.setattr(_desktop.subprocess, "run", fake_run)
+    fake_platform("linux")
+    monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
+    monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
+    clipboard.set_clipboard_inspector(None)
+
+    assert clipboard.inspect() == clipboard.ClipboardOfferSnapshot(frozenset(), ())

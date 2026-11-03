@@ -29,6 +29,6 @@ build:
 test-package: build
 	set -eu; for distribution in dist/*; do \
 		uv run --isolated --no-project --with "$$distribution" python -I -c \
-		'import clipboard, importlib.metadata; assert callable(clipboard.copy); assert callable(clipboard.paste); assert clipboard.VERSION == importlib.metadata.version("clipboard")'; \
+		'import clipboard, importlib.metadata; assert callable(clipboard.copy); assert callable(clipboard.paste); assert callable(clipboard.clear); assert callable(clipboard.set_clipboard_clearer); assert clipboard.VERSION == importlib.metadata.version("clipboard")'; \
 	done
 

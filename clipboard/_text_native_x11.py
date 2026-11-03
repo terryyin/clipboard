@@ -2,7 +2,7 @@
 
 Reading lists ``TARGETS`` first, so absence never depends on parsing the
 wording of a failed text conversion: an unowned CLIPBOARD (xclip's
-``target TARGETS not available``) or an owner offering neither
+no-owner wording, ``_desktop._xclip_reports_no_owner``) or an owner offering neither
 ``UTF8_STRING`` nor ``STRING`` reads ``""``. ``UTF8_STRING`` is decoded as
 UTF-8 and ``STRING`` as Latin-1 (ICCCM); the listing decides which, because
 a ``STRING``-only owner answers a ``UTF8_STRING`` request with exit 0 and its
@@ -26,7 +26,7 @@ import subprocess
 import tempfile
 import time
 
-from clipboard._desktop import _XCLIP_NO_TARGETS, _XCLIP_TARGETS_CMD
+from clipboard._desktop import _XCLIP_TARGETS_CMD, _xclip_reports_no_owner
 from clipboard._text_native_linux import (
     _LINUX_TEXT_TIMEOUT_S,
     _decode_text,
@@ -71,7 +71,7 @@ def _x11_text_targets(deadline: float) -> set[str] | None:
     result = _run_xclip(list(_XCLIP_TARGETS_CMD), deadline)
     if result.returncode != 0:
         stderr = (result.stderr or b"").decode("utf-8", "replace")
-        if _XCLIP_NO_TARGETS in stderr:
+        if _xclip_reports_no_owner(stderr):
             return None
         raise _text_exit_error(_DESKTOP, "read", list(_XCLIP_TARGETS_CMD), result)
     return {

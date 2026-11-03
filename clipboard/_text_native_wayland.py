@@ -2,7 +2,7 @@
 
 Reading lists ``wl-paste --list-types`` first, so absence never depends on the
 wording of a failed text conversion: wl-paste's known "nothing copied" stderr
-(``_desktop._WL_PASTE_NOTHING_COPIED``) or an offer with no text type reads
+(``_desktop._wl_paste_reports_nothing_copied``) or an offer with no text type reads
 ``""``. The first offered text type in ``_WAYLAND_TEXT_TYPES`` order is read
 with ``wl-paste -n -t <type>`` (``-n``: wl-paste appends no newline of its
 own). Every type is decoded strictly as UTF-8 except ``STRING``, which is
@@ -31,7 +31,10 @@ import subprocess
 import tempfile
 import time
 
-from clipboard._desktop import _WL_PASTE_LIST_TYPES_HTML_CMD, _WL_PASTE_NOTHING_COPIED
+from clipboard._desktop import (
+    _WL_PASTE_LIST_TYPES_HTML_CMD,
+    _wl_paste_reports_nothing_copied,
+)
 from clipboard._text_native_linux import (
     _LINUX_TEXT_TIMEOUT_S,
     _decode_text,
@@ -83,8 +86,8 @@ def _wayland_offered_types(deadline: float) -> list[str] | None:
     """The selection's MIME types, or ``None`` when nothing is copied."""
     result = _run_wl_paste(_LIST_TYPES_CMD, deadline)
     if result.returncode != 0:
-        stderr = (result.stderr or b"").decode("utf-8", "replace").strip()
-        if stderr in _WL_PASTE_NOTHING_COPIED:
+        stderr = (result.stderr or b"").decode("utf-8", "replace")
+        if _wl_paste_reports_nothing_copied(stderr):
             return None
         raise _text_exit_error(_DESKTOP, "read", _LIST_TYPES_CMD, result)
     listing = (result.stdout or b"").decode("utf-8", "replace")

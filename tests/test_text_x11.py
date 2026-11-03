@@ -64,6 +64,19 @@ def test_no_owner_or_no_text_target_reads_empty_string(x11, offers):
     assert [c["cmd"] for c in x11.calls] == [TARGETS]
 
 
+def test_newer_xclip_no_owner_wording_reads_empty_string(x11, monkeypatch):
+    newer = b"xclip: Error: There is no owner for the CLIPBOARD selection\n"
+
+    def no_owner(cmd, **_kwargs):
+        x11.calls.append({"cmd": cmd})
+        return subprocess.CompletedProcess(cmd, 1, b"", newer)
+
+    monkeypatch.setattr(subprocess, "run", no_owner)
+
+    assert clipboard.paste() == ""
+    assert [c["cmd"] for c in x11.calls] == [TARGETS]
+
+
 def test_undecodable_utf8_string_is_a_content_error(x11):
     x11.offers = {"UTF8_STRING": b"h\xe9llo"}
 

@@ -62,14 +62,18 @@ def format_label_for_id(
 
 
 def _load_user32():
-    """Load ``user32`` with clipboard-enum prototypes (win32 only)."""
+    """Load ``user32`` with clipboard open/enum/empty prototypes (win32 only).
+
+    Inspect enumerates through these; ``clipboard._clear_windows`` reuses the
+    loader and ``_open_clipboard_bounded`` for ``EmptyClipboard``.
+    """
     platform = _platform.current()
     if platform != "win32":
         raise ClipboardContentError(
-            "Windows clipboard inspect requires win32 "
-            "(EnumClipboardFormats via user32); "
-            f"current platform is {platform!r}, or inject an inspector "
-            "with set_clipboard_inspector for tests"
+            "Windows clipboard access requires win32 (user32 clipboard "
+            f"functions); current platform is {platform!r}, or inject an "
+            "inspector with set_clipboard_inspector or a clearer with "
+            "set_clipboard_clearer for tests"
         )
     import ctypes
     from ctypes import wintypes
@@ -79,6 +83,8 @@ def _load_user32():
     user32.OpenClipboard.restype = wintypes.BOOL
     user32.CloseClipboard.argtypes = []
     user32.CloseClipboard.restype = wintypes.BOOL
+    user32.EmptyClipboard.argtypes = []
+    user32.EmptyClipboard.restype = wintypes.BOOL
     user32.EnumClipboardFormats.argtypes = [wintypes.UINT]
     user32.EnumClipboardFormats.restype = wintypes.UINT
     user32.GetClipboardFormatNameW.argtypes = [
@@ -98,7 +104,14 @@ def _registered_name(user32, ctypes, fmt: int) -> str | None:
     return buf.value or None
 
 
-def _open_clipboard_bounded(user32, ctypes) -> None:
+def _open_clipboard_bounded(user32, ctypes, *, operation: str, seam: str) -> None:
+    """``OpenClipboard(NULL)``, retried until ``_OPEN_CLIPBOARD_TIMEOUT_S``.
+
+    ``operation`` names what the caller was doing (e.g. ``enumerating
+    formats``) and ``seam`` the test injection to suggest; both appear in the
+    ``ClipboardContentError`` raised when the open still fails at the deadline
+    (another process holds the clipboard, or access is denied).
+    """
     deadline = time.monotonic() + _OPEN_CLIPBOARD_TIMEOUT_S
     while True:
         if user32.OpenClipboard(None):
@@ -106,11 +119,11 @@ def _open_clipboard_bounded(user32, ctypes) -> None:
         if time.monotonic() >= deadline:
             err = ctypes.get_last_error()
             raise ClipboardContentError(
-                "Windows OpenClipboard failed while enumerating formats "
+                f"Windows OpenClipboard failed while {operation} "
                 f"(last_error={err}; timed out after "
-                f"{_OPEN_CLIPBOARD_TIMEOUT_S:g}s; clipboard may be locked by "
-                "another process). Retry later or inject an inspector with "
-                "set_clipboard_inspector for tests"
+                f"{_OPEN_CLIPBOARD_TIMEOUT_S:g}s; the clipboard may be locked, "
+                "held by another process, or access was denied). Retry later "
+                f"or inject {seam} for tests"
             )
         time.sleep(_OPEN_RETRY_SLEEP_S)
 
@@ -140,7 +153,12 @@ def _enumerate_windows_clipboard_formats() -> tuple[str, ...]:
     ``ClipboardContentError`` (never a fabricated empty success).
     """
     user32, ctypes = _load_user32()
-    _open_clipboard_bounded(user32, ctypes)
+    _open_clipboard_bounded(
+        user32,
+        ctypes,
+        operation="enumerating formats",
+        seam="an inspector with set_clipboard_inspector",
+    )
     try:
         return _enumerate_open(user32, ctypes)
     finally:

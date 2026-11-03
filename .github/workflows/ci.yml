@@ -105,6 +105,40 @@ jobs:
           uv run --locked --extra images
           pytest tests/test_copy_image_native_linux_x11.py -v
 
+  native-linux-x11-clear:
+    name: Native Linux X11 clear (Xvfb)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install X11 clipboard helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xclip xvfb
+      - run: uv sync --locked --extra images
+      - name: Early probe of xclip on a fresh unowned CLIPBOARD (records only)
+        # Records the version-dependent no-owner wording; never fails the job.
+        run: |
+          xvfb-run -a sh -c '
+            xclip -version 2>&1 || true
+            xclip -selection clipboard -o -t TARGETS
+            echo "xclip TARGETS exit code: $?"
+          ' 2>&1 || true
+      - name: Gated X11 clear probe under a fresh Xvfb
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: >
+          xvfb-run -a
+          uv run --locked --extra images
+          pytest tests/test_clear_native_linux_x11.py -v -rP
+
   native-linux-x11-paste-html:
     name: Native Linux X11 paste_html (Xvfb)
     runs-on: ubuntu-latest
@@ -257,6 +291,10 @@ jobs:
     name: Native Linux Wayland copy_files (wl-copy on Sway)
     uses: ./.github/workflows/native-wayland-copy-files.yml
 
+  native-linux-wayland-clear:
+    name: Native Linux Wayland clear (Sway)
+    uses: ./.github/workflows/native-wayland-clear.yml
+
   native-windows-paste-html:
     name: Native Windows paste_html (windows-latest)
     runs-on: windows-latest
@@ -314,6 +352,27 @@ jobs:
           CLIPBOARD_NATIVE_PROBE: '1'
         run: uv run --locked pytest tests/test_copy_files_native_windows.py -v -rP
 
+  native-windows-clear:
+    name: Native Windows clear (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - run: uv sync --locked --extra images
+      - name: Gated Windows clear probe (fails on an evidence limit)
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: >
+          uv run --locked --extra images
+          pytest tests/test_clear_native_windows.py -v -rP
+
   ci-passed:
     name: CI passed
     if: always()
@@ -325,13 +384,16 @@ jobs:
       - native-linux-x11-text
       - native-linux-x11-file-manager-offers
       - native-linux-x11-copy-files
+      - native-linux-x11-clear
       - native-linux-wayland-copy-image
       - native-linux-wayland-paste-html
       - native-linux-wayland-text
       - native-linux-wayland-copy-files
+      - native-linux-wayland-clear
       - native-windows-paste-html
       - native-windows-text
       - native-windows-copy-files
+      - native-windows-clear
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -344,13 +406,16 @@ jobs:
           NATIVE_X11_TEXT_RESULT: ${{ needs.native-linux-x11-text.result }}
           NATIVE_FILE_MANAGER_OFFERS_RESULT: ${{ needs.native-linux-x11-file-manager-offers.result }}
           NATIVE_X11_COPY_FILES_RESULT: ${{ needs.native-linux-x11-copy-files.result }}
+          NATIVE_X11_CLEAR_RESULT: ${{ needs.native-linux-x11-clear.result }}
           NATIVE_WAYLAND_RESULT: ${{ needs.native-linux-wayland-copy-image.result }}
           NATIVE_WAYLAND_PASTE_HTML_RESULT: ${{ needs.native-linux-wayland-paste-html.result }}
           NATIVE_WAYLAND_TEXT_RESULT: ${{ needs.native-linux-wayland-text.result }}
           NATIVE_WAYLAND_COPY_FILES_RESULT: ${{ needs.native-linux-wayland-copy-files.result }}
+          NATIVE_WAYLAND_CLEAR_RESULT: ${{ needs.native-linux-wayland-clear.result }}
           NATIVE_WINDOWS_PASTE_HTML_RESULT: ${{ needs.native-windows-paste-html.result }}
           NATIVE_WINDOWS_TEXT_RESULT: ${{ needs.native-windows-text.result }}
           NATIVE_WINDOWS_COPY_FILES_RESULT: ${{ needs.native-windows-copy-files.result }}
+          NATIVE_WINDOWS_CLEAR_RESULT: ${{ needs.native-windows-clear.result }}
         run: >-
           test "$QUALITY_RESULT" = success
           && test "$TEST_RESULT" = success
@@ -359,10 +424,13 @@ jobs:
           && test "$NATIVE_X11_TEXT_RESULT" = success
           && test "$NATIVE_FILE_MANAGER_OFFERS_RESULT" = success
           && test "$NATIVE_X11_COPY_FILES_RESULT" = success
+          && test "$NATIVE_X11_CLEAR_RESULT" = success
           && test "$NATIVE_WAYLAND_RESULT" = success
           && test "$NATIVE_WAYLAND_PASTE_HTML_RESULT" = success
           && test "$NATIVE_WAYLAND_TEXT_RESULT" = success
           && test "$NATIVE_WAYLAND_COPY_FILES_RESULT" = success
+          && test "$NATIVE_WAYLAND_CLEAR_RESULT" = success
           && test "$NATIVE_WINDOWS_PASTE_HTML_RESULT" = success
           && test "$NATIVE_WINDOWS_TEXT_RESULT" = success
           && test "$NATIVE_WINDOWS_COPY_FILES_RESULT" = success
+          && test "$NATIVE_WINDOWS_CLEAR_RESULT" = success

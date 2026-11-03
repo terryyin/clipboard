@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 22
+- Highest allocated local number: 23
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners. DD-019 awaits local triage.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
 - Ownership: project-owned findings (cause in Clipboard's own code, tests, configuration or CI workflow) live in [ProjectFindings.md](ProjectFindings.md); DD-001, DD-005 and DD-010 moved there on 2026-11-03 (recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`). `DD-NNN` numbering is shared across both files; the highest allocated local number above covers both.
@@ -119,6 +119,14 @@ jobs pass on their first published run, with no CI repair cycle.
   - Evidence: tip SHA 2b06eb3 CI run https://github.com/terryyin/clipboard/actions/runs/41464367130 success on first attempt including native-windows-paste-html, native-linux-x11/wayland paste_html and copy_image; intermediate published SHAs 1b9ed68, 98daafa, 75d3909 also coverage-success with no repair commits; observer `/tmp/dough-ci-501/watch-Xh83iA`; contrast DD-003 / DD-004
   - Observed effect: Structure relocation of session/listing helpers landed with no CI repair; five-job native confirmation stayed green while later slices continued under observation
   - Inference: Useful practice — reuse the same Xvfb/Sway venues and fail-not-skip native wrapper pattern when relocating desktop helpers; first-run green held for session-selection proof that desktop-free pytest cannot cover
+- Execution: SEED-001#clear-clipboard
+  - Timestamp: 2026-11-03T14:02:39Z
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: slices 3–6 each published a `progress: true` increment (342f12c, 0da29c3, c16d2c1, 8a7368d) then a records-only done commit with observed CI values (81ab56e, f93e1b4, 8184a23, e0c0643); runs 41649816028, 41651498162, 41654014945, 41658893626 had every native clear probe (X11, Sway, windows-latest) pass on its first run; the plan's "early probe at the start of the slice" became the probe's first step in the same increment, because an implementation agent cannot publish
+  - Observed effect: No probe or product CI repair in six slices; each CI wait took about 10–15 minutes while the next slice waited
+  - Inference: Useful practice holds; plans that schedule a CI-only premise "before" implementation should expect it to run inside the first published increment
 
 ## ODF-258 — Producer-kind gap carried three slices before developer decision
 
@@ -180,6 +188,14 @@ Distinct executions, original provenance, observations and qualified inferences 
   - Evidence: run 41653760018 (543911e, "Python 3.14 on macos-latest" cancelled, 0 steps, completedAt 2026-11-03T14:30:44Z = createdAt of superseding run 41654397559 for 4cc60f3); coordinator first named supersession from `ci.yml` `cancel-in-progress` and the newer run alone, and inspected steps/timestamps only during the retrospective
   - Observed effect: Attribution was right this time (cancel instant equals the superseding run's creation), but it again preceded the step/runner inspection this finding asks for; the job had sat ~4 min with zero steps, so macOS acquisition was also slow
   - Inference: Recurrence of the order-of-checks practice rather than of a wrong cause; the cancel-time-equals-new-run-time check is a cheap decisive discriminator
+- Execution: SEED-001#clear-clipboard
+  - Timestamp: 2026-11-03T14:43:29Z
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: run 41654014945 attempt 1: `Python 3.10 on macos-latest` cancelled after about 15 minutes with empty `runner_name` and no steps; `ci-github-diagnostic` showed only `CI passed` failing on `TEST_RESULT: abandoned`; `gh run rerun --failed` → attempt 2 green
+  - Observed effect: Classified as runner acquisition on the first report; no wrong cause stated; one rerun for coverage
+  - Inference: The ODF-289 (former DD-014) practice was applied directly; it worked when the classification checked runner and steps before naming a cause
 
 ## ODF-141 — Fresh refactor agent for small CI repairs returned no change
 
@@ -312,3 +328,20 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Evidence: slice-2 publish 5380548 with `progress: true`; `await-revision /tmp/dough-ci-501/watch-bS46pD 5380548…` → exact success (run 41656910713); records-only done commit 663dca6; `references/fresh-increment.md` (`progress` row) and `references/ci-completion-wait.md` ("Never invoke it after ordinary slice delivery")
   - Observed effect: One extra publication and CI run solely to record CI proof and the done status; coordinator spent reads choosing between `await-revision` and `complete-revision`
   - Inference: Naming the read-only observation command for `progress: true` slices (or letting the completion operation settle a final CI-owned slice) would remove the inference and possibly the extra commit
+
+## DD-023 — Probe smoke check ran a destructive child helper on the owner desktop
+An implementation agent import-checked a new Linux probe support module on the
+macOS coordinator host by calling its `child_clear()` helper, which ran the
+real `clipboard.clear()` and emptied the developer's live clipboard. The
+delegation brief had not said that probe child helpers act on the live
+clipboard of whatever host runs them.
+
+### Occurrences
+- Execution: SEED-001#clear-clipboard
+  - Timestamp: unknown (2026-11-03, during slice 4 before commit 0da29c3)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: slice 4 implementation return: "I ran `linux_native_clear_support.child_clear()` on this Mac (it returned `{"raised": null}`, 0.27 s). That cleared the developer's live macOS clipboard."; slice 5 and 6 briefs then said never to run the real `clear()` or probe child helpers locally, and no recurrence was reported
+  - Observed effect: The developer's clipboard was emptied once without a planned probe; earlier authorized macOS probe runs had already replaced it, so no unique content is known lost
+  - Inference: For destructive or live-state operations, delegation briefs should name which helpers mutate the host's desktop and limit local smoke checks to imports or `evidence_limit` exits

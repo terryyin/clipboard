@@ -12,8 +12,11 @@ _IMAGE_XCLIP_TARGETS_TIMEOUT_S = 2.0
 _HTML_LISTING_TIMEOUT_S = 10.0
 _INSPECT_LISTING_TIMEOUT_S = 15.0
 
-# xclip stderr when CLIPBOARD has no owner (ICCCM owners must answer TARGETS).
-_XCLIP_NO_TARGETS = "target TARGETS not available"
+# Version-dependent xclip stderr when CLIPBOARD has no owner (ICCCM owners must
+# answer TARGETS): older releases report the missing TARGETS conversion; newer
+# ones say "xclip: Error: There is no owner for the CLIPBOARD selection" (also
+# on Pillow's ImageGrab silent-error list).
+_XCLIP_NO_OWNER_MARKERS = ("target TARGETS not available", "There is no owner for the")
 # wl-paste stderr when the selection has no offer (wl-clipboard 2.x variants).
 _WL_PASTE_NOTHING_COPIED = frozenset({"Nothing is copied", "No selection"})
 
@@ -34,6 +37,15 @@ def _is_linux_wayland() -> bool:
     return session == "wayland" or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
+def _linux_x11_display() -> str | None:
+    """The advertised X11 ``DISPLAY`` value, or ``None`` when unset or empty.
+
+    ``clear()`` dispatches here after ``_is_linux_wayland`` (so a session with
+    both ``DISPLAY`` and ``WAYLAND_DISPLAY`` clears Wayland).
+    """
+    return os.environ.get("DISPLAY") or None
+
+
 def _linux_wayland_without_x11() -> bool:
     """True when only a Wayland session is advertised (X11 reader not selected).
 
@@ -43,6 +55,16 @@ def _linux_wayland_without_x11() -> bool:
     return bool(os.environ.get("WAYLAND_DISPLAY")) and not bool(
         os.environ.get("DISPLAY")
     )
+
+
+def _xclip_reports_no_owner(stderr: str) -> bool:
+    """Whether xclip stderr says CLIPBOARD has no owner (an empty clipboard)."""
+    return any(marker in stderr for marker in _XCLIP_NO_OWNER_MARKERS)
+
+
+def _wl_paste_reports_nothing_copied(stderr: str) -> bool:
+    """Whether wl-paste stderr says the selection has no offer at all."""
+    return stderr.strip() in _WL_PASTE_NOTHING_COPIED
 
 
 def _helper_failure_detail(result, *, fallback: str = "") -> str:
@@ -88,7 +110,9 @@ def _xclip_targets_html() -> subprocess.CompletedProcess[bytes] | None:
         check=False,
         timeout=_HTML_LISTING_TIMEOUT_S,
     )
-    if result.returncode != 0 and _XCLIP_NO_TARGETS in _helper_stderr_detail(result):
+    if result.returncode != 0 and _xclip_reports_no_owner(
+        _helper_stderr_detail(result)
+    ):
         return None
     return result
 
@@ -106,15 +130,19 @@ def _wl_paste_list_types_html() -> subprocess.CompletedProcess[bytes] | None:
         check=False,
         timeout=_HTML_LISTING_TIMEOUT_S,
     )
-    if result.returncode != 0 and (
-        _helper_stderr_detail(result) in _WL_PASTE_NOTHING_COPIED
+    if result.returncode != 0 and _wl_paste_reports_nothing_copied(
+        _helper_stderr_detail(result)
     ):
         return None
     return result
 
 
 def _xclip_targets_inspect() -> tuple[str, ...]:
-    """List X11 CLIPBOARD TARGETS for ``inspect()`` (bounded, strict errors)."""
+    """List X11 CLIPBOARD TARGETS for ``inspect()`` (bounded, strict errors).
+
+    An unowned CLIPBOARD lists nothing (empty snapshot); any other non-zero
+    exit raises.
+    """
     try:
         result = subprocess.run(
             _XCLIP_TARGETS_CMD,
@@ -142,6 +170,8 @@ def _xclip_targets_inspect() -> tuple[str, ...]:
             "(xclip -selection clipboard -o -t TARGETS)"
         ) from exc
     if result.returncode != 0:
+        if _xclip_reports_no_owner(result.stderr or ""):
+            return ()
         detail = _helper_failure_detail(result)
         raise ClipboardContentError(
             "Linux X11 CLIPBOARD TARGETS enumeration failed"
@@ -155,7 +185,11 @@ def _xclip_targets_inspect() -> tuple[str, ...]:
 
 
 def _wl_paste_list_types_inspect() -> tuple[str, ...]:
-    """List Wayland MIME types via ``wl-paste -l`` for ``inspect()``."""
+    """List Wayland MIME types via ``wl-paste -l`` for ``inspect()``.
+
+    Nothing copied lists nothing (empty snapshot); any other non-zero exit
+    raises.
+    """
     try:
         result = subprocess.run(
             _WL_PASTE_LIST_TYPES_INSPECT_CMD,
@@ -181,6 +215,8 @@ def _wl_paste_list_types_inspect() -> tuple[str, ...]:
             f"Linux Wayland MIME-list enumeration failed: {exc} (wl-paste -l)"
         ) from exc
     if result.returncode != 0:
+        if _wl_paste_reports_nothing_copied(result.stderr or ""):
+            return ()
         detail = _helper_failure_detail(result)
         raise ClipboardContentError(
             "Linux Wayland MIME-list enumeration failed"

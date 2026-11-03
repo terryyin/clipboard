@@ -1,10 +1,11 @@
-"""Cross-platform clipboard: text, image, HTML, files, and inspect."""
+"""Cross-platform clipboard: text, image, HTML, files, inspect, and clear."""
 
 from __future__ import annotations
 
 import subprocess as subprocess  # noqa: F401 — tests monkeypatch ``clipboard.subprocess``
 
-from clipboard import _files, _html, _offer, _text
+from clipboard import _clear, _files, _html, _offer, _text
+from clipboard._clear import clear, set_clipboard_clearer
 from clipboard._errors import ClipboardContentError, ClipboardImageError
 from clipboard._files import (
     copy_files,
@@ -41,6 +42,7 @@ __all__ = [
     "ClipboardImageError",
     "ClipboardKind",
     "ClipboardOfferSnapshot",
+    "clear",
     "copy",
     "copy_files",
     "copy_html",
@@ -50,6 +52,7 @@ __all__ = [
     "paste_files",
     "paste_html",
     "paste_image",
+    "set_clipboard_clearer",
     "set_clipboard_inspector",
     "set_files_clipboard_reader",
     "set_files_clipboard_writer",
@@ -69,6 +72,8 @@ _INJECTION_GLOBAL_OWNERS = {
     "_default_text_clipboard_writer": _text,
     "_text_clipboard_reader": _text,
     "_default_text_clipboard_reader": _text,
+    "_clipboard_clearer": _clear,
+    "_default_clipboard_clearer": _clear,
     "_clipboard_inspector": _offer,
     "_default_clipboard_inspector": _offer,
     "_files_clipboard_reader": _files,

@@ -174,7 +174,10 @@ error. Denied access, missing helper, or enumeration failure raises
 clipboard. The snapshot is a point-in-time view and can race with other
 writers. Linux helpers: X11 ``xclip -selection clipboard -o -t TARGETS``;
 Wayland ``wl-paste -l`` (verified claims stay **named-compositor-scoped**).
-WSL, SSH, containers, and headless CI are not additional guaranteed desktops
+On Linux an unowned X11 CLIPBOARD (``xclip``'s no-owner error, in either its
+``target TARGETS not available`` or ``There is no owner for the`` wording) and
+a nothing-copied Wayland selection (``Nothing is copied`` / ``No selection``)
+give an empty snapshot; any other helper failure still raises. WSL, SSH, containers, and headless CI are not additional guaranteed desktops
 for ``inspect``.
 
 To read the HTML fragment of a selection another application copied (for
@@ -320,6 +323,65 @@ For desktop-free tests, inject a fake writer with
 already validated ``list[str]`` of absolute paths and must publish it as one
 copy offer or raise.
 
+Clear the clipboard (no ``clipboard[images]`` required):
+
+::
+
+   import clipboard
+   clipboard.clear()
+
+``clear()`` removes every representation from the current clipboard, so it
+holds no offer at all: afterwards ``paste()`` returns ``""``, ``paste_html()``,
+``paste_image()`` and ``paste_files()`` return ``None``, ``inspect()`` is
+empty, and other applications see no types. It returns ``None``. Clearing an
+already empty clipboard, or clearing twice in a row, succeeds. This is not the
+same as ``copy("")``, which on macOS and ``xclip`` leaves an empty text offer
+behind (a ``public.utf8-plain-text`` type on macOS). Failures (no usable
+session, a helper or native call failing, a timeout) raise
+``clipboard.ClipboardContentError``.
+
+Platforms: macOS Aqua clears the general pasteboard with ``NSPasteboard
+clearContents`` through the built-in ``osascript`` (bounded at 15 s; see
+Evidence). Linux Wayland runs ``wl-copy --clear`` (bounded at 10 s), which
+needs ``wl-clipboard`` on ``PATH``; a missing ``wl-copy`` raises
+``ClipboardContentError`` naming ``wl-clipboard``. A session with both
+``DISPLAY`` and ``WAYLAND_DISPLAY`` clears the Wayland selection. Linux X11
+(``DISPLAY`` only) gives up the ``CLIPBOARD`` selection with libX11
+``XSetSelectionOwner(CLIPBOARD, None, CurrentTime)`` through ``ctypes``, in
+a child process bounded at 10 s; it needs nothing beyond libX11 (``libx11-6``
+on Debian / Ubuntu), which ``xclip`` already requires, and leaves the
+PRIMARY selection untouched. A missing libX11 raises
+``ClipboardContentError`` naming ``libx11-6``, and a ``DISPLAY`` that cannot
+be opened raises one naming ``DISPLAY`` and its value. On Linux with neither
+``DISPLAY`` nor ``WAYLAND_DISPLAY``, ``clear()`` raises
+``ClipboardContentError`` saying no desktop session is visible. Windows
+desktop calls user32 ``EmptyClipboard`` through ``ctypes`` (no
+``win32clipboard``) after ``OpenClipboard``, retrying the open for up to
+15 s while another process holds the clipboard, and always closes it again.
+A clipboard still held at the end of that bound raises
+``ClipboardContentError`` naming ``OpenClipboard``, the clipboard as held by
+another process (or access denied), the ``last_error`` code, and that nothing
+was cleared; the prior contents stay. An ``EmptyClipboard`` failure raises one
+with its ``GetLastError`` code and message. Platforms without a desktop
+clipboard this package knows raise ``ClipboardContentError`` saying the
+native clearer is not available on that platform.
+
+Boundary: ``clear()`` acts once on the current clipboard. A later offer is a
+newer copy, not a failed clear, and is not detected: another application
+copying, a clipboard manager re-offering its saved entry (for example KDE
+Klipper's "prevent empty clipboard" or compositor clipboard persistence), or
+a sync service. ``clear()`` does not erase OS clipboard history (such as the
+Windows Win+V clipboard history), clipboard managers' saved entries, cloud
+clipboard (Windows) or Universal Clipboard (Apple) copies, or other
+devices, and it claims no secure deletion of the former contents. On macOS it
+clears only the general pasteboard, not the Find pasteboard or other named
+pasteboards; the X11 PRIMARY selection is out of scope.
+
+For desktop-free tests, inject a fake with
+``clipboard.set_clipboard_clearer(clearer)`` and restore the default with
+``clipboard.set_clipboard_clearer(None)``. The clearer takes no arguments and
+must leave the clipboard with no offer at all or raise.
+
 Installation
 ------------
 
@@ -454,7 +516,97 @@ Evidence / verified platforms (native probes gated via
   ``scripts/probe_linux_wayland_native_inspect.py``,
   ``scripts/probe_windows_native_inspect.py`` record ``evidence_limit`` /
   ``verified: false`` (Wayland also ``compositor_generalization: false``;
-  exit 2). Re-run on owner-held desktops to replace limits.
+  exit 2). Re-run on owner-held desktops to replace limits. Empty Linux
+  CLIPBOARD → empty ``inspect()``, ``paste_html()`` / ``paste_files()``
+  ``None`` (and ``paste()`` ``""``, ``paste_image()`` ``None``) **verified**
+  in CI on ``ubuntu-26.04`` (image 20261025.179.1): a fresh Xvfb
+  2:21.1.22-1ubuntu1.3 with xclip 0.13 (``native-linux-x11-clear``; xclip
+  TARGETS exit 1, stderr ``Error: target TARGETS not available``) and a fresh
+  headless Sway 1.11 with wl-clipboard 2.2.1 (``native-linux-wayland-clear``;
+  ``wl-paste -l`` exit 1, stderr ``Nothing is copied``). The newer xclip
+  wording ``There is no owner for the`` and wl-paste ``No selection`` are
+  covered by desktop-free tests only.
+* ``clear()``: macOS Aqua **verified** by ``scripts/probe_macos_native_clear.py``
+  (wrapper ``tests/test_clear_native_macos.py``, run with ``--extra images``)
+  on the owner's unlocked console session, macOS 26.6.2 (build 25G83) /
+  Darwin 25.6.0, arm64, Python 3.13.17, Pillow 11.3.0. Independent
+  ``osascript`` / AppKit producers offered HTML + text (``public.html``,
+  ``Apple HTML pasteboard type``, ``public.utf8-plain-text``,
+  ``NSStringPboardType``) and, separately, a PNG (listed as ``public.png``,
+  ``Apple PNG pasteboard type``, ``public.tiff``, ``NeXT TIFF v4.0 pasteboard
+  type``); a child Python called ``clear()`` and exited (about 0.3 s); an
+  independent JXA ``NSPasteboard types`` listing was then empty, ``pbpaste``
+  printed nothing, and the probe's own ``paste()`` was ``""``,
+  ``paste_html()`` / ``paste_image()`` / ``paste_files()`` were ``None`` and
+  ``inspect()`` had no kinds or formats. ``clear()`` twice on the cleared
+  pasteboard succeeded; ``copy("")`` left ``public.utf8-plain-text`` and
+  ``NSStringPboardType`` listed, and a following ``clear()`` left none. An
+  independent JXA producer's file URL (``writeObjects`` of an ``NSURL`` for
+  an existing temp file, listed as ``public.file-url``,
+  ``NSFilenamesPboardType``, ``Apple URL pasteboard type`` and related
+  types) and, separately, an unknown ``com.example.clipboard-probe`` type
+  alone were each emptied to no types by a child ``clear()``, with
+  ``paste_files()`` ``None`` and every reader absent. Evidence limits: whether a macOS privacy prompt appeared on screen is
+  unobserved (the probe cannot capture the screen); every ``clear()``
+  finished within its bound without blocking. Linux Wayland (``wl-copy
+  --clear``) **verified** in CI run 41651498162:
+  ``scripts/probe_linux_wayland_native_clear.py``
+  (wrapper ``tests/test_clear_native_linux_wayland.py``, job
+  ``native-linux-wayland-clear``) on headless Sway 1.11 with wl-clipboard
+  2.2.1 on ``ubuntu-26.04`` first records the raw ``wl-copy --clear`` against
+  an independent ``text/html`` owner, then has independent ``wl-copy``
+  producers of ``text/html`` and ``text/plain;charset=utf-8`` and a
+  ``copy_image()`` owner each followed by a child ``clear()``, ``clear()``
+  twice, and a ``PATH`` without ``wl-copy``. Each time ``wl-paste -l`` then
+  said ``Nothing is copied``, every reader read absence, the library's
+  background ``wl-copy`` image owner exited within 5 s, and the ``PATH``
+  case raised ``ClipboardContentError`` naming ``wl-clipboard``. CI run
+  41658893626 steps 8-9 add an independent ``wl-copy --type text/uri-list`` producer of a
+  ``file://`` URI naming an existing temp file and an unknown
+  ``application/x-clipboard-probe`` type, each followed by a child
+  ``clear()``; both then read nothing copied and ``paste_files()`` ``None``.
+  Evidence limits: other Wayland
+  compositors, and desktops with clipboard managers (GNOME, KDE Plasma /
+  Klipper) that may re-offer a saved entry, are unverified. Linux X11
+  (libX11 ``XSetSelectionOwner``) is **verified** in CI run 41654014945 by
+  ``scripts/probe_linux_x11_native_clear.py`` (wrapper
+  ``tests/test_clear_native_linux_x11.py``, job ``native-linux-x11-clear``)
+  on a fresh Xvfb 2:21.1.22 with xclip 0.13 on ``ubuntu-26.04``: the raw
+  ``ctypes`` ``XSetSelectionOwner(None)`` from a separate process against an
+  independent ``xclip -t text/html`` owner, then an independent ``xclip``
+  ``text/html`` producer and a ``copy_image()`` owner each followed by a
+  child ``clear()``, ``clear()`` twice, and a ``DISPLAY`` naming no server.
+  The raw call left ``XGetSelectionOwner`` at 0 and the ``xclip`` owner
+  exited; after each library ``clear()`` ``xclip -o -t TARGETS`` reported no
+  owner, every reader read absence, and the library's background ``xclip``
+  image owner exited within 5 s; the dead ``DISPLAY`` raised
+  ``ClipboardContentError`` naming ``DISPLAY=':1987'``. CI run 41658893626
+  steps 7-8 add an independent ``xclip -t text/uri-list`` owner of a ``file://``
+  URI naming an existing temp file and an unknown
+  ``application/x-clipboard-probe`` owner, each followed by a child
+  ``clear()``; both then read no owner, the producer exited, and
+  ``paste_files()`` was ``None``. Evidence limits: real X11 desktops, and those with
+  clipboard managers that may re-offer a saved entry, are unverified.
+  Windows desktop (user32 ``EmptyClipboard``) is **verified** in CI run
+  41658893626 on GitHub ``windows-latest`` (image ``win25-vs2026``
+  20261030.294.1, Windows 10.0.26100 ServerDatacenter; job ``native-windows-clear``;
+  ``scripts/probe_windows_native_clear.py``, wrapper
+  ``tests/test_clear_native_windows.py``, which records the runner image and
+  Windows version and fails, never skips, on an evidence limit). It first
+  records a raw ``OpenClipboard(NULL)`` / ``EmptyClipboard`` from a separate
+  process against an independent PowerShell / .NET HTML + text offer, then
+  has independent producers of HTML + text, an image, a ``CF_HDROP`` file
+  list naming an existing temp file, and only an unknown registered
+  ``ClipboardProbe.Custom`` format each followed by a child ``clear()``, after
+  which an independent ``EnumClipboardFormats`` consumer must list no formats
+  and every reader must read absence; then ``clear()`` twice, a holder
+  process keeping the clipboard open past the 15 s bound (``clear()`` must
+  raise naming the held clipboard and the prior formats must remain), and a
+  holder releasing within the bound (``clear()`` must succeed). All eight
+  steps held: each ``clear()`` left no formats; the held case raised after
+  15.1 s with ``last_error=5`` and ``HTML Format`` / ``CF_UNICODETEXT`` (13)
+  were still listed after release. Evidence limits: Win+V clipboard history and cloud clipboard
+  copies are not erased or checked.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
   been verified with an independent **browser** producer: Google Chrome

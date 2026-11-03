@@ -1,7 +1,9 @@
-"""Scripted user32/kernel32 stand-in for the Windows ``HTML Format`` reader.
+"""Scripted user32/kernel32 stand-in for the Windows clipboard.
 
 Install ``FakeWin32(...).api`` as ``clipboard._html_native_windows._win32_api``
-so reader tests need neither Windows nor a real clipboard.
+so reader tests need neither Windows nor a real clipboard. Clear tests build
+``FakeWin32(..., clear_allowed=True)`` and install ``(fake.user32,
+fake.ctypes)`` as ``clipboard._offer_windows._load_user32``.
 """
 
 from __future__ import annotations
@@ -28,6 +30,8 @@ class FakeWin32:
         data_missing: bool = False,
         lock_fails: bool = False,
         padding: bytes = b"\x00\x00",
+        clear_allowed: bool = False,
+        empty_error: int = 0,
     ):
         self.envelope = envelope
         self.open_failures = open_failures
@@ -35,6 +39,7 @@ class FakeWin32:
         self.data_missing = data_missing
         self.lock_fails = lock_fails
         self.padding = padding  # GlobalSize may exceed the producer's bytes
+        self.empty_error = empty_error  # non-zero: EmptyClipboard fails with it
         self.calls: list[str] = []
         self.sleeps: list[float] = []
         self.last_error = 0
@@ -46,11 +51,18 @@ class FakeWin32:
             OpenClipboard=self.open,
             CloseClipboard=self.close,
             GetClipboardData=self.get_data,
-            EmptyClipboard=self.forbidden("EmptyClipboard"),
+            EmptyClipboard=(
+                self.empty if clear_allowed else self.forbidden("EmptyClipboard")
+            ),
             SetClipboardData=self.forbidden("SetClipboardData"),
         )
         self.kernel32 = SimpleNamespace(
             GlobalLock=self.lock, GlobalUnlock=self.unlock, GlobalSize=self.size
+        )
+        # The ``ctypes`` half of ``_offer_windows._load_user32``'s pair.
+        self.ctypes = SimpleNamespace(
+            get_last_error=lambda: self.last_error,
+            FormatError=lambda code: f"message {code} ",
         )
 
     def api(self) -> _html_native_windows._Win32Api:
@@ -91,6 +103,14 @@ class FakeWin32:
             self.open_failures -= 1
             return self._fail(ACCESS_DENIED)
         self.is_open = True
+        return 1
+
+    def empty(self):
+        self.calls.append("EmptyClipboard")
+        assert self.is_open
+        if self.empty_error:
+            return self._fail(self.empty_error)
+        self.envelope = None
         return 1
 
     def close(self):

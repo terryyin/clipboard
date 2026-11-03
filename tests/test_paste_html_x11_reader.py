@@ -16,7 +16,8 @@ HTML_TARGETS = b"TIMESTAMP\nTARGETS\nMULTIPLE\ntext/html\nUTF8_STRING\n"
 TEXT_TARGETS = b"TIMESTAMP\nTARGETS\nUTF8_STRING\nSTRING\nTEXT\n"
 IMAGE_TARGETS = b"TIMESTAMP\nTARGETS\nimage/png\n"
 FILES_TARGETS = b"TIMESTAMP\nTARGETS\ntext/uri-list\nx-special/gnome-copied-files\n"
-NO_OWNER = b"Error: target TARGETS not available\n"
+NO_OWNER = b"Error: target TARGETS not available\n"  # xclip 0.13
+NEWER_NO_OWNER = b"xclip: Error: There is no owner for the CLIPBOARD selection\n"
 NO_DISPLAY = b"Error: Can't open display: (null)\n"
 
 
@@ -99,9 +100,10 @@ def test_targets_without_text_html_is_none(x11_xclip, targets):
     assert len(helper.calls) == 1
 
 
-def test_unowned_clipboard_is_none(x11_xclip):
-    # xclip 0.13 on an empty (unowned) CLIPBOARD: exit 1 with this stderr.
-    helper = x11_xclip(answers={"TARGETS": _done(1, stderr=NO_OWNER)})
+@pytest.mark.parametrize("no_owner", [NO_OWNER, NEWER_NO_OWNER])
+def test_unowned_clipboard_is_none(x11_xclip, no_owner):
+    # xclip on an empty (unowned) CLIPBOARD: exit 1 with either wording.
+    helper = x11_xclip(answers={"TARGETS": _done(1, stderr=no_owner)})
     assert clipboard.paste_html() is None
     assert len(helper.calls) == 1
 

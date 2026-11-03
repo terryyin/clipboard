@@ -134,6 +134,20 @@ assert snapshot.kinds == frozenset({"text"})
 assert snapshot.formats == ("text/plain",)
 clipboard.set_clipboard_inspector(None)
 """,
+    "clear": """\
+import clipboard
+
+assert callable(clipboard.clear)
+assert callable(clipboard.set_clipboard_clearer)
+assert "clear" in clipboard.__all__
+
+calls = []
+clipboard.set_clipboard_clearer(lambda: calls.append(None))
+assert clipboard.clear() is None
+assert calls == [None]
+clipboard.set_clipboard_clearer(None)
+assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
+""",
 }
 
 

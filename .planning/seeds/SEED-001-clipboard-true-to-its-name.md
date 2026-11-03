@@ -85,207 +85,32 @@ platform distinctions, reuse candidates, and uncertainty.
 
 ## Story Decomposition
 
-<a id="clear-clipboard"></a>
+<a id="shared-native-clear-proof"></a>
 
-### Clear every representation from the current clipboard
+### Define "cleared" once across the native clear probes
 
-**Identity:** SEED-001#clear-clipboard
+**Identity:** SEED-001#shared-native-clear-proof
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/011-clear-clipboard/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"0bd330ead961dec862bca590971b7c89b5638bc5b94bf0586512e3d91f30c304","plan":"37530da5855f8770fa813d8a4751b85bdb626639d3f5824acf2578eb206dbbf9"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/015-shared-native-clear-proof/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"5933e11c2afbd5558d79a93b99a4dc5e1a352795af1faa7d266787c86ed2aef2","plan":"965fb568f70f1197c1da3910036d17caf4f7a02d36a0dddefefca3059d16218b"}}
 ```
 
-**Goal:** Python users and automation developers can deliberately empty the
-current clipboard, removing every representation another application or this
-library offered (text, HTML, image, file list, unknown types), with one call
-whose result is the same on every supported desktop, instead of relying on
-`copy("")`, which empties the clipboard on Windows and `wl-copy` but leaves
-an empty text offer on macOS and `xclip`. A failed clear is reported, so the
-user never believes content is gone when it is not. This adds the ordinary
-clipboard "clear" action beside the read and write operations, and keeps
-its meaning as more content kinds are added.
+**Goal:** Maintainers who change what the native `clear()` proof calls
+"cleared" make that change in one place, not in parallel copies across four
+probes and four wrappers, so the desktops' proofs cannot drift apart. The
+documentation names `clear()` wherever it lists the operations that pick
+Wayland on a mixed session.
 
-**Scope:**
-
-- *Required behavior.* A new `clear()` (no `clipboard[images]` extra) leaves
-  the current CLIPBOARD with **no offer at all**: no old representation is
-  readable, and no empty placeholder (such as an empty text type) is left in
-  its place. Afterwards the library's readers report ordinary absence:
-  `paste()` returns `""`, `paste_html()`, `paste_image()`, and
-  `paste_files()` return `None`, and `inspect()` returns empty `kinds` and
-  `formats`. Independent native
-  consumers see an empty clipboard too. `clear()` returns `None`, and
-  calling it on an already empty clipboard, or twice in a row, succeeds
-  with no error. When this library's own Linux background owner (from
-  `copy_image`, or later writers) is serving the old offer, clearing ends
-  that offer, so no helper process keeps serving it.
-- *Native paths.* macOS Aqua: `NSPasteboard` general pasteboard
-  `clearContents`. Windows desktop: `OpenClipboard` / `EmptyClipboard` /
-  `CloseClipboard` through user32, retrying the open within a documented
-  bound while another process holds the clipboard. Linux X11: give up
-  CLIPBOARD ownership so no owner remains (`xclip` has no clear operation;
-  planning chooses the mechanism, see Architecture). Linux Wayland:
-  `wl-copy --clear`. Session selection uses the existing writer rule
-  (Wayland when `WAYLAND_DISPLAY` or the session type says so), as image
-  write, HTML, and inspect do.
-- *Empty Linux offer reads as empty (included).* Today `inspect()` on Linux
-  raises when CLIPBOARD has no owner (`xclip` "target TARGETS not
-  available") or nothing is copied (`wl-paste` "Nothing is copied" /
-  "No selection"), even though its contract says an empty offer gives an
-  empty snapshot. This story makes those two cases return an empty
-  snapshot, because otherwise the state `clear()` creates cannot be
-  observed through the library's own contract. Other non-zero helper exits
-  still raise.
-- *Failure reporting.* No visible desktop session, missing helper
-  (`wl-clipboard` install hint on Wayland; whatever the X11 mechanism needs
-  on X11), a Windows clipboard held past the bound, denied access, and a
-  helper or native call that fails raise `ClipboardContentError` naming the
-  cause, within a bound of seconds, never a silent success. A failed clear
-  promises nothing about what is on the clipboard afterwards beyond what the
-  platform did.
-- *Boundary of the promise.* Clearing acts on the current CLIPBOARD once.
-  Something that offers content **after** the clear is a newer copy, not a
-  failed clear: another application copying, a clipboard manager that
-  immediately offers its saved entry again (for example, KDE Klipper's
-  "prevent empty clipboard" or a compositor's built-in clipboard
-  persistence), or a sync service. `clear()` does not check the clipboard
-  again afterwards and does not report such a re-offer. It does not erase
-  OS clipboard history (Windows Win+V, managers' saved entries), cloud or
-  Universal Clipboard copies, or remote devices, and it claims no secure
-  deletion.
-- *Proof.* An independent producer puts HTML + text, and separately an
-  image, on the clipboard; after `clear()` an independent consumer sees no
-  types: macOS through a gated owner-desktop probe
-  (`CLIPBOARD_NATIVE_PROBE=1`, `osascript` producer, pasteboard type list
-  and `pbpaste` consumers); Windows in a gated `windows-latest` job
-  (PowerShell `Set-Clipboard` producer, format enumeration /
-  `Get-Clipboard` consumer); X11 under the existing Xvfb + `xclip` job (no
-  clipboard manager); Wayland under the existing Sway + `wl-clipboard` job.
-  The README names those sessions and helper versions. GNOME, KDE, and any
-  desktop with a clipboard manager are evidence limits, not verified
-  claims. Default pytest stays desktop-free through an explicit injection
-  seam.
-- *Scope limits (deferred, not rejected).* Clearing PRIMARY
-  (SEED-001#primary-selection), the macOS Find pasteboard, or other named
-  pasteboards; clearing only one kind while keeping others; snapshot and
-  restore; erasing history, managers, or synced copies; checking that the
-  clipboard stays empty afterwards; WSL, SSH, containers, and headless CI as
-  guaranteed desktops. Changing what `copy("")` does belongs to
-  SEED-001#portable-text, not to this story.
-- *Plan:* [011-clear-clipboard](../slice-plans/011-clear-clipboard/PLAN.md).
-
-**Key examples:**
-
-1. Another application copies a formatted paragraph (HTML + text) →
-   `clear()` returns `None` → `paste()` returns `""`, `paste_html()` returns
-   `None`, `inspect()` returns empty `kinds` and `formats`; pasting into an
-   independent application inserts nothing.
-2. Another application copies an image → `clear()` → `paste_image()` returns
-   `None` and no independent consumer can read the image.
-3. The clipboard is already empty → `clear()` returns `None`; calling it
-   again also returns `None`.
-4. Contrast with text: on macOS today `copy("")` leaves `inspect().kinds ==
-   {"text"}` with an empty value; `clear()` leaves `inspect().formats == ()`
-   on every supported desktop.
-5. Linux X11: `copy_image(img)` returned and its background `xclip` owner is
-   serving the image → `clear()` → that owner stops serving and exits;
-   `xclip -o -t TARGETS` reports no owner.
-6. Linux X11 with nothing owning CLIPBOARD (for example, right after
-   `clear()`) → `inspect()` returns an empty snapshot instead of raising;
-   the same on Wayland when `wl-paste` says nothing is copied.
-7. Linux with neither `DISPLAY` nor `WAYLAND_DISPLAY` → `clear()` raises
-   `ClipboardContentError` saying no desktop session is visible; Wayland
-   without `wl-copy` on `PATH` → the error names `wl-clipboard`.
-8. Windows, another process holds the clipboard open past the bound →
-   `clear()` raises `ClipboardContentError` naming the held clipboard; the
-   previous content is still there. Released within the bound → `clear()`
-   succeeds.
-9. KDE with Klipper set to prevent an empty clipboard → `clear()` returns
-   `None`, then Klipper offers its last entry again; `inspect()` shows that
-   entry. This is a newer offer outside the promise; the README names it.
-
-**Investigation (facts, with sources).** Observed on this host (macOS 26.6.2
-/ 25G83, `osascript` / AppKit, on a private named pasteboard so the live
-clipboard stayed untouched): after writing `public.html` and
-`public.utf8-plain-text`, `clearContents` left zero types, a second
-`clearContents` on the empty pasteboard succeeded, the change count rose on
-each call, and `stringForType` returned nil. pyperclip 1.11.0 (installed)
-handles `copy("")` by calling `EmptyClipboard` with no data on Windows
-(`__init__.py` 418–440) and `wl-copy --clear` on Wayland (210–230), but
-pipes empty input to `xclip -selection c` on X11 (157–167) and `pbcopy` on
-macOS, which leave an empty text offer (the macOS result is recorded under
-SEED-001#portable-text). In the code, the Linux inspect listings
-`_xclip_targets_inspect` / `_wl_paste_list_types_inspect` in
-`clipboard/_desktop.py` raise on any non-zero exit, while the HTML read
-listings in the same module already treat "target TARGETS not available"
-and "Nothing is copied" / "No selection" as absence. No test covers inspect
-on an empty Linux clipboard. *Hypotheses for planning:* a non-owner client
-setting the X11 CLIPBOARD owner to `None` empties it under Xvfb and makes
-an `xclip` background owner exit (settle in the X11 job before building
-on it); `wl-copy --clear` empties the selection on Sway (settle in the
-Wayland job); `EmptyClipboard` after `OpenClipboard(NULL)` removes every
-format for PowerShell consumers (settle in the Windows job); clearing the
-macOS general pasteboard triggers no paste-privacy prompt (settle with the
-owner-desktop probe); `paste_html()`, `paste_files()`, and `paste_image()`
-already return `None` on an unowned X11 / nothing-copied Wayland clipboard
-(their code treats "not available" / "Nothing is copied" as absence; settle
-in the Linux jobs, and any reader that raises there is fixed here like
-`inspect()`); the clipboard-manager re-offer behavior in example 9
-is from upstream descriptions and is not observed here.
-
-**Considered alternatives.** (a) Document `copy("")` as the clear: no code,
-but it leaves an empty text offer on macOS and X11, and SEED-001#portable-text
-explicitly does not promise more than `paste() == ""`, so the user still has
-to guess. (b) Offer an explicit empty placeholder (take ownership and serve
-zero types): it is not empty on X11 (an owner still answers), keeps a
-helper process alive, and differs from what Windows, macOS, and `wl-copy`
-do. (c) Clear, then inspect again and raise if anything is offered: it
-cannot tell a manager's re-offer from a legitimate new copy made in the same
-moment, so it would report false failures; rejected in favor of the stated
-boundary. (d) Reuse PyClip's clear: an extra dependency for four short
-native calls, and its native behavior is not verified. **Recommended:**
-native clear per platform behind one `clear()`. *Borrowed mechanism:* HTTP
-`DELETE` versus `PUT` with an empty body on a resource with several
-negotiated representations. `copy("")` is the empty `PUT`: the resource
-still exists with one empty text variant. `clear()` is the `DELETE`: every
-variant is gone, and repeating it is idempotent and still succeeds.
-Clipboard managers and history play the role of caches, which the library
-does not purge. The analogy breaks on X11 and Wayland, where there is no
-server storage to delete from; "deleting" is giving up ownership, and a
-manager can become the new owner at once, which is a new `PUT` by someone
-else, not stale data. So success means the clear was performed, not that
-the clipboard stays empty. *Strongest doubt (challenge):* on desktops with
-an always-on clipboard manager, `clear()` can succeed and old content can
-still be pasteable a moment later. That meets the wording but not the
-purpose for those users. It does not change what this story can promise,
-because a re-offer cannot be told apart from a new copy. It is handled by
-the boundary above, example 9, and README evidence limits, not by more
-mechanism.
-
-**Architecture.** Adds one public operation, `clear()`, with an injection
-seam `set_clipboard_clearer` (mirroring `set_html_clipboard_writer`) so
-default tests stay in-memory, in a new content module with per-platform
-native clearers, raising `ClipboardContentError`. macOS reuses the
-`osascript` / AppKit stack of `copy_html` and `inspect`. Windows reuses the
-bounded `OpenClipboard` retry approach of `clipboard/_offer_windows.py`
-rather than another copy with a different bound. Linux session detection,
-helper-failure detail, and the no-owner / nothing-copied markers come from
-private `clipboard/_desktop`; the inspect empty-offer change lives in its
-listing functions, so content-kind modules do not copy those helpers. X11
-has no clear in `xclip`, so planning chooses between calling
-`XSetSelectionOwner(CLIPBOARD, None)` through libX11 with `ctypes`
-(recommended: libX11 is already present wherever `xclip` runs, so there is
-no new install) and requiring `xsel --clipboard --clear` (a second X11
-helper users must install). SEED-001#portable-text is in progress and owns
-the text path and `copy("")`; this story leaves both unchanged and only
-reads text through the existing `paste()`. No ADR store exists in this
-repository, so no Accepted decision was checked.
-
-**Decisions recorded here, reviewable before Take.** `clear()` means "no
-offer at all", not "no old content" (an empty placeholder does not count),
-because the title promises every representation and `copy("")` already
-gives the weaker result on two platforms. The Linux inspect empty-offer
-change is included in this story. A clipboard manager's re-offer after the
-clear is outside the promise and is not detected.
+**Scope:** Correction of SEED-001#clear-clipboard's proof and documentation
+structure only: one shared "cleared" observation and one Linux step set
+behind the X11 / Wayland / Windows / macOS clear probes, wrappers that rely on
+each step's own `ok`, every touched probe file within 250 lines, `clear()`
+named in the `_is_linux_wayland` docstring and AGENTS.md session sentence,
+and `tests/test_clear.py` stops restating the no-Pillow scenario and private
+globals. Changes no product code or public API, and keeps every probe step's
+name, order and observed evidence. Excludes how X11 `clear()` launches its
+relinquish helper in frozen or zipped applications (a separate human
+decision).
+[Plan](../slice-plans/015-shared-native-clear-proof/PLAN.md)
 
 <a id="wait-for-content"></a>
 
