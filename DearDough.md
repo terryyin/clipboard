@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 19
+- Highest allocated local number: 21
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners. DD-019 awaits local triage.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
 - Ownership: project-owned findings (cause in Clipboard's own code, tests, configuration or CI workflow) live in [ProjectFindings.md](ProjectFindings.md); DD-001, DD-005 and DD-010 moved there on 2026-11-03 (recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`). `DD-NNN` numbering is shared across both files; the highest allocated local number above covers both.
@@ -172,6 +172,15 @@ found only when the same pattern recurred on the next run.
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-289](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-289.md); source recovery remains in this project’s pre-compaction revision.
 
+- Execution: SEED-001#bounded-x11-text-write
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: run 41653760018 (543911e, "Python 3.14 on macos-latest" cancelled, 0 steps, completedAt 2026-11-03T14:30:44Z = createdAt of superseding run 41654397559 for 4cc60f3); coordinator first named supersession from `ci.yml` `cancel-in-progress` and the newer run alone, and inspected steps/timestamps only during the retrospective
+  - Observed effect: Attribution was right this time (cancel instant equals the superseding run's creation), but it again preceded the step/runner inspection this finding asks for; the job had sat ~4 min with zero steps, so macOS acquisition was also slow
+  - Inference: Recurrence of the order-of-checks practice rather than of a wrong cause; the cancel-time-equals-new-run-time check is a cheap decisive discriminator
+
 ## ODF-141 — Fresh refactor agent for small CI repairs returned no change
 
 Former local code: DD-015.
@@ -183,6 +192,15 @@ after reading the same context again.
 ### Occurrences
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-141](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-141.md); source recovery remains in this project’s pre-compaction revision.
+
+- Execution: SEED-001#bounded-x11-text-write
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: slice 3 refactor agent (47.6k subagent tokens, 5 tool uses, ~22 s) returned "none — already clean" for a 7-line test-gate removal and one workflow comment; slice 1's pass made no edits but surfaced a real duplication candidate; slice 2's pass removed a dead fake method
+  - Observed effect: One of three passes in this execution was pure re-reading for no change; the other two produced value
+  - Inference: Supports the proportionality idea for tiny Structure slices without weakening passes on Behavior slices
 
 ## ODF-097 — Source-freshness check chained into delivery ignored a conflict
 
@@ -236,3 +254,34 @@ observation.
   - Evidence: slice-1 publish d74c178 (2026-11-03T11:02:43+07:00) with observer attached; coordinator transcript after interrupted slice-2 delegation: "CI observation budget expired — continuing without promising monitoring"; slice-2 publish a73a418 (2026-11-03T20:48:37+07:00) reattached observer `/tmp/dough-ci-501/watch-MvPeuG` (coverage state pending for a73a418, run 41647699400)
   - Observed effect: Intermediate gated coverage for d74c178 was not retained as a known green; native X11/Wayland/Windows proof conclusions for the story rest on the later tip's still-pending observation
   - Inference: A long next-slice turn can outlive the prior increment's observation budget; treat mid-story budget expiry as lost coverage (report once, continue) and keep final acceptance conditional on the tip observer, not on an assumed earlier green
+
+## DD-020 — Plan chose a design already present elsewhere without recording it as existing-solution evidence
+The plan decided to feed `xclip` from an unlinked temp file and to keep the
+correction inside the text subsystem, without citing that the file-list X11
+writer already implemented the same owner launch; the post-change refactor
+pass then stopped at the subsystem gate on the new duplication.
+
+### Occurrences
+- Execution: SEED-001#bounded-x11-text-write
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: `.planning/slice-plans/012-bounded-x11-text-write/PLAN.md` at before-cleanup commit 6d26a2f, Current decisions ("Correction stays inside the text subsystem"; "Feed `xclip` a temp-file `stdin`"); `clipboard/_files_native_x11_writer.py` `_start_owner` from d74c178 (SEED-001#bounded-x11-file-write); slice 1 refactor report ending `## REFACTOR JIDOKA STOP`, coordinator AskUserQuestion, maintainer chose "Defer as follow-up" (queued as SEED-001#bounded-helper-owner-write); plan Learnings slice 1 entry
+  - Observed effect: One human interruption and a resumed refactor agent (~62k subagent tokens across both turns) for zero edits; the share-or-defer choice was made mid-execution instead of at planning
+  - Inference: A PFE pass during slice planning (the plan names `dough-pfe` for relocating responsibility) would likely have found the sibling launcher and let the plan record share-or-defer up front
+
+## DD-021 — Coordinator issued a no-op shell call while waiting on background agents
+While two delegated agents ran, the coordinator ran `echo waiting` solely to
+fill the turn, which delegation guidance forbids ("Do not issue no-op calls").
+
+### Occurrences
+- Execution: SEED-001#bounded-x11-text-write
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: coordinator Bash call "No-op placeholder" (`echo waiting`) after launching the slice 1 implementation and the source-only review
+  - Observed effect: One wasted tool call; no effect on work or proof
+  - Inference: One-off; ending the turn and relying on task notifications is the supported wait
+

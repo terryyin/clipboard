@@ -114,40 +114,32 @@ def _owner_serves(data: bytes, deadline: float) -> bool:
 
 
 def _stop_owner(proc: subprocess.Popen) -> None:
-    """Best effort: stop an owner that never offered (its whole session).
-
-    ``os.killpg`` is POSIX-only; without it, kill the owner process itself.
-    """
-    killpg = getattr(os, "killpg", None)
+    """Best effort: stop an owner that never offered (its whole session)."""
     try:
-        if killpg is None:
-            proc.kill()
-        else:
-            killpg(proc.pid, signal.SIGTERM)
+        os.killpg(proc.pid, signal.SIGTERM)
     except (ProcessLookupError, PermissionError):
         pass
 
 
 def _start_owner(data: bytes, log) -> subprocess.Popen:
-    try:
-        proc = subprocess.Popen(
-            _XCLIP_WRITE_CMD,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=log,
-            start_new_session=True,
-        )
-    except OSError as exc:
-        raise _text_launch_error(
-            _DESKTOP, "write", _XCLIP_WRITE_CMD[0], _PACKAGE, exc
-        ) from exc
-    assert proc.stdin is not None
-    try:
-        proc.stdin.write(data)
-        proc.stdin.close()
-    except BrokenPipeError:
-        pass  # xclip already exited; its status and stderr say why below.
-    return proc
+    # Unlinked temp file: an owner that never reads (stalled display) cannot
+    # block Python on a full pipe buffer. Close our handle once Popen has
+    # inherited its copy; an early exit is reported from status and stderr.
+    with tempfile.TemporaryFile() as stdin:
+        stdin.write(data)
+        stdin.seek(0)
+        try:
+            return subprocess.Popen(
+                _XCLIP_WRITE_CMD,
+                stdin=stdin,
+                stdout=subprocess.DEVNULL,
+                stderr=log,
+                start_new_session=True,
+            )
+        except OSError as exc:
+            raise _text_launch_error(
+                _DESKTOP, "write", _XCLIP_WRITE_CMD[0], _PACKAGE, exc
+            ) from exc
 
 
 def _x11_text_clipboard_writer(text: str) -> None:

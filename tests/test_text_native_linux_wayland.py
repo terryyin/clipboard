@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -37,12 +36,6 @@ pytestmark = [
     pytest.mark.skipif(
         os.environ.get("CLIPBOARD_NATIVE_PROBE") != "1",
         reason="set CLIPBOARD_NATIVE_PROBE=1 to run native Wayland text probe",
-    ),
-    pytest.mark.skipif(
-        not os.environ.get("WAYLAND_DISPLAY")
-        or shutil.which("wl-copy") is None
-        or shutil.which("wl-paste") is None,
-        reason="requires a Linux Wayland session with wl-clipboard on PATH",
     ),
 ]
 

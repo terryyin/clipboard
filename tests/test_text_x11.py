@@ -174,10 +174,8 @@ def test_rejected_text_never_starts_xclip(x11):
     assert x11.popens == []
 
 
-@pytest.mark.parametrize("broken_pipe", [False, True])
-def test_owner_exiting_early_raises_quoting_its_stderr(x11, broken_pipe):
+def test_owner_exiting_early_raises_quoting_its_stderr(x11):
     x11.owner_exit = (1, DEAD_DISPLAY)
-    x11.broken_pipe = broken_pipe
 
     with pytest.raises(clipboard.ClipboardContentError) as caught:
         clipboard.copy("x")
@@ -199,16 +197,6 @@ def test_owner_that_never_offers_raises_after_the_bound(x11, monkeypatch):
         clipboard.copy("x")
     assert "0.2s bound" in str(caught.value)
     assert isinstance(caught.value.__cause__, subprocess.TimeoutExpired)
-    assert x11.killed == [4242]
-
-
-def test_owner_is_killed_directly_where_process_groups_do_not_exist(x11, monkeypatch):
-    monkeypatch.setattr(_text_native_x11, "_X11_TEXT_WRITE_TIMEOUT_S", 0.2)
-    monkeypatch.delattr(_text_native_x11.os, "killpg")
-    x11.never_offers = True
-
-    with pytest.raises(clipboard.ClipboardContentError, match="0.2s bound"):
-        clipboard.copy("x")
     assert x11.killed == [4242]
 
 

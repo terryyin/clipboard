@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#bounded-x11-text-write",
+  "title": "Bound the X11 text write for large text on a stalled display",
+  "completedAt": "2026-11-03T14:40:36.325Z",
+  "developer": "Terry Yin",
+  "agent": "Akiho-chan",
+  "host": "claude",
+  "model": "opus"
+}

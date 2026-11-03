@@ -2,7 +2,8 @@
 
 ``FakeX11.run`` answers ``xclip -o -t T`` like xclip 0.13 (``target T not
 available`` on stderr, exit 1); ``FakeX11.popen`` starts a ``FakeOwner`` that
-takes CLIPBOARD after ``delay`` read-backs, exits early, or never offers.
+takes CLIPBOARD with the text already on its stdin file after ``delay``
+read-backs, exits early, or never offers.
 """
 
 import subprocess
@@ -11,21 +12,12 @@ import subprocess
 class FakeOwner:
     """A background ``xclip -i``: takes CLIPBOARD after ``delay`` read-backs."""
 
-    def __init__(self, x11, stderr):
+    def __init__(self, x11, stderr, data: bytes):
         self.x11 = x11
         self.log = stderr
         self.pid = 4242
         self.status = None
-        self.data = b""
-        self.stdin = self
-
-    def write(self, data):
-        if self.x11.owner_exit is not None and self.x11.broken_pipe:
-            self._exit()
-            raise BrokenPipeError(32, "Broken pipe")
-        self.data += data
-
-    def close(self):
+        self.data = data
         if self.x11.owner_exit is not None:
             self._exit()
         elif not self.x11.never_offers:
@@ -40,9 +32,6 @@ class FakeOwner:
     def poll(self):
         return self.status
 
-    def kill(self):
-        self.x11.killed.append(self.pid)
-
 
 class FakeX11:
     def __init__(self):
@@ -53,7 +42,6 @@ class FakeX11:
         self.popen_error = None
         self.popens = []
         self.owner_exit = None  # (status, stderr) when the owner dies early
-        self.broken_pipe = False
         self.never_offers = False
         self.delay = 0
         self.pending = None
@@ -90,10 +78,12 @@ class FakeX11:
         return subprocess.CompletedProcess(cmd, 1, b"", stderr)
 
     def popen(self, cmd, *, stdin, stdout, stderr, start_new_session):
-        assert stdin is subprocess.PIPE and stdout is subprocess.DEVNULL
+        # Writer feeds an unlinked temp file, never a pipe Python would block on.
+        assert stdin is not subprocess.PIPE and hasattr(stdin, "read")
+        assert stdout is subprocess.DEVNULL
         assert hasattr(stderr, "write") and start_new_session is True
         if self.popen_error is not None:
             raise self.popen_error
-        owner = FakeOwner(self, stderr)
+        owner = FakeOwner(self, stderr, stdin.read())
         self.popens.append({"cmd": cmd, "owner": owner})
         return owner

@@ -85,31 +85,6 @@ platform distinctions, reuse candidates, and uncertainty.
 
 ## Story Decomposition
 
-<a id="bounded-x11-text-write"></a>
-
-### Bound the X11 text write for large text on a stalled display
-
-**Identity:** SEED-001#bounded-x11-text-write
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/012-bounded-x11-text-write/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"49c53cff5acac2714373807928aa4b62d600b74bef85fa96a4a9d0ceba954949","plan":"8d26bef174c6eed0b88d31dd7bac3ba67fae7f39b5aad6797a599bae6167feb2"}}
-```
-
-**Goal:** Callers of `copy(text)` on Linux X11 get the documented bounded
-`ClipboardContentError` instead of an indefinite hang when the X server stalls
-and the text is larger than a pipe buffer, so SEED-001#portable-text's "never
-an indefinite wait" holds for every text size.
-
-**Scope:** Correction of SEED-001#portable-text's owned X11 writer only: feed
-`xclip` its input without a blocking unbounded pipe write, keeping the
-background owner, exact-bytes read-back, stderr quoting and owner cleanup;
-remove the test-only `os.killpg` fallback; make the gated Wayland text wrapper
-fail rather than skip on a missing session or helper. Excludes the same
-pattern in `copy_image` and any change to selection rules.
-[Plan](../slice-plans/012-bounded-x11-text-write/PLAN.md)
-
-The maintainer accepted keeping this correction first in the queue on
-2026-11-03.
-
 <a id="clear-clipboard"></a>
 
 ### Clear every representation from the current clipboard
@@ -369,6 +344,36 @@ clear is outside the promise and is not detected.
 - **Depends on:** None. Selection semantics are independently evaluable.
 - **Safe stopping point:** Opt-in Linux behavior is useful by itself and
   unsupported selections never silently fall back to CLIPBOARD.
+
+<a id="bounded-helper-owner-write"></a>
+
+### Bound every helper-owner clipboard write behind one launcher
+
+**Identity:** SEED-001#bounded-helper-owner-write
+```json dough-story-state
+{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+```
+
+- **For / why:** Python users calling `copy_image` on a Linux desktop whose
+  display or compositor stalls get the documented bounded
+  `ClipboardImageError` instead of a hang; maintainers keep one rule for
+  feeding a background clipboard owner its payload.
+- **Evaluation:** With a helper owner that never reads its input,
+  `copy_image` of a PNG larger than a pipe buffer (about 64 KiB) fails within
+  its documented bound; the text, file-list and image owner writes start
+  their helpers through one shared launcher (unlinked temp-file `stdin`,
+  detached session) with each caller keeping its own error mapping.
+- **Value / learning:** `clipboard/_image_write.py` still writes PNG bytes
+  into `stdin=subprocess.PIPE` without a deadline, the pattern that hung
+  large text on X11; the text and file-list X11 writers already duplicate the
+  temp-file launcher. Whether the image hang reproduces on X11 and Wayland is
+  unverified.
+- **Boundary:** Helper input feeding and its bound only; no change to session
+  selection, offered formats, or public API.
+- **Effort hypothesis:** **S**, medium confidence.
+- **Depends on:** None.
+- **Safe stopping point:** The shared launcher with the image write bounded is
+  useful by itself.
 
 ## Ordering and Scope Reduction
 
