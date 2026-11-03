@@ -15,6 +15,11 @@ Run inside dbus-run-session + xvfb-run with Openbox, xclip, xdotool and Thunar
    ``paste_files()`` agreement is recorded as a consistency check only.
 3. Thunar Paste (Ctrl+V in a destination window) must create both copies
    with matching bytes while the sources stay unchanged.
+4. A further offer-level round: from a child whose cwd is the source folder,
+   ``copy_files(["report final.pdf", "a dir", "report final.pdf"])`` (relative
+   file, directory, duplicate). Independent ``xclip -o -t text/uri-list`` must
+   return the three absolute ``file://`` URIs in that order; ``paste_files()``
+   agrees. No file-manager paste for this round (a duplicate would collide).
 
 Prints one JSON object (floors included) and writes it, plus ``thunar.log``,
 to CLIPBOARD_PROBE_ARTIFACTS. Exit 0 only when every observation held.
@@ -31,11 +36,13 @@ import tempfile
 import time
 from pathlib import Path
 
+from copy_files_native_probe_support import paste_files_consistency
 from linux_x11_native_copy_files_support import (
     CONTENT_ERROR_EXIT,
     URI_LIST,
     copy_in_exiting_child,
     paste_and_verify,
+    relative_directory_duplicate_round,
     set_text_independently,
     xclip_read,
     xclip_targets,
@@ -89,16 +96,6 @@ def recheck_after_exit(body: bytes) -> list[dict]:
     return rechecks
 
 
-def paste_files_consistency() -> dict:
-    import clipboard
-
-    clipboard.set_files_clipboard_reader(None)
-    try:
-        return {"value": clipboard.paste_files(), "error": None}
-    except clipboard.ClipboardContentError as exc:
-        return {"value": None, "error": str(exc)}
-
-
 def _owner_processes() -> str:
     """Recorded, not gated: the background owner that holds the offer."""
     try:
@@ -129,6 +126,8 @@ def run_probe(tmp: Path, log) -> dict:
         owners = _owner_processes()
         pasted = paste_files_consistency()
         paste = paste_and_verify(window, source, destination, SOURCES)
+    # After Thunar: a duplicate would collide in a file-manager paste.
+    relative_round = relative_directory_duplicate_round(source)
     after = {name: _fingerprint(source / name) for name in SOURCES}
 
     missing_stderr = missing["writer"].get("stderr", "")
@@ -150,6 +149,18 @@ def run_probe(tmp: Path, log) -> dict:
         "paste_files_agrees": pasted["value"] == paths,
         "thunar_paste_copies_match": paste["copies_match"],
         "sources_unchanged": before == after,
+        "relative_directory_duplicate_writer_exited_ok": relative_round[
+            "writer_exited_ok"
+        ],
+        "relative_directory_duplicate_independent_body_equal": relative_round[
+            "independent_body_equal"
+        ],
+        "relative_directory_duplicate_targets_list_uri_list": relative_round[
+            "targets_list_uri_list"
+        ],
+        "relative_directory_duplicate_paste_files_agrees": relative_round[
+            "paste_files_agrees"
+        ],
     }
     failed = [name for name, held in observations.items() if not held]
     return {
@@ -170,6 +181,7 @@ def run_probe(tmp: Path, log) -> dict:
         "xclip_owner_processes": owners,
         "paste_files": pasted,
         "thunar_paste": paste,
+        "relative_directory_duplicate": relative_round,
         "sources_before": before,
         "sources_after": after,
     }
@@ -191,6 +203,10 @@ def main() -> int:
             "writer_exit": "copy_files ran in a child Python that exited first",
             "independent_consumer": "xclip -selection clipboard -o -t "
             "text/uri-list and TARGETS, rechecked at 0/5/10 s",
+            "relative_directory_duplicate": (
+                "further offer: relative file + directory + duplicate from "
+                "source cwd; xclip -o text/uri-list; no file-manager paste"
+            ),
             "file_manager": "Thunar Ctrl+V in its own isolated X11/D-Bus session",
             "consistency_only": "paste_files() agreement is not interop proof",
             "evidence_limit": "Thunar on this Xvfb/Openbox session only; other "

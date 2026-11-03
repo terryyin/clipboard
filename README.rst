@@ -531,10 +531,13 @@ Evidence / verified platforms (native probes gated via
 * ``copy_files``: each desktop was checked with two sources whose names
   contain Unicode and spaces, copied by the public ``copy_files`` in a child
   Python process that **exits** before an independent consumer (not this
-  library) reads the offer. ``paste_files()`` agreement is recorded only as a
-  consistency check, not as interoperability proof. A file-manager paste is
-  claimed only where one was observed; one file manager or compositor is not
-  generalized to others.
+  library) reads the offer. A further offer-level round (no file-manager paste)
+  copies a relative file path, a directory, and the same file again from a
+  child whose cwd is the source folder; the independent consumer and
+  ``paste_files()`` must read three absolute paths in that order.
+  ``paste_files()`` agreement is recorded only as a consistency check, not as
+  interoperability proof. A file-manager paste is claimed only where one was
+  observed; one file manager or compositor is not generalized to others.
 
   * macOS Aqua **offer verified; Finder paste not observed** by
     ``scripts/probe_macos_native_copy_files.py`` (wrapper

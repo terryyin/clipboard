@@ -3,7 +3,8 @@
 Only ``clipboard._files_native``'s own ``sys`` reference is replaced (not the
 shared ``sys.platform``), and ``subprocess.run`` / ``Popen``, ``shutil.which``,
 ``os.killpg`` and the session variables are faked, so these run on every CI
-host without a display, ``xclip``, or a real clipboard.
+host without a display, ``xclip``, or a real clipboard. The large-list stall
+bound lives in ``test_copy_files_x11_writer_stall.py``.
 """
 
 from __future__ import annotations
@@ -75,7 +76,6 @@ def test_body_is_crlf_percent_encoded_file_uris_fed_to_background_xclip(sources,
     (launch,) = x11.popens
     assert launch["cmd"] == WRITE
     body = launch["owner"].data
-    assert launch["owner"].closed is True
     assert body == b"".join(Path(p).as_uri().encode() + b"\r\n" for p in paths)
     assert body.isascii() and body.endswith(b"\r\n")
     lines = body.split(b"\r\n")[:-1]
@@ -150,10 +150,8 @@ def test_x11_is_selected_when_both_display_and_wayland_are_set(sources, x11):
     assert [p["cmd"] for p in x11.popens] == [WRITE]
 
 
-@pytest.mark.parametrize("broken_pipe", [False, True])
-def test_helper_exit_is_content_error_quoting_stderr(sources, x11, broken_pipe):
+def test_helper_exit_is_content_error_quoting_stderr(sources, x11):
     x11.owner_exit = (1, b"Error: Can't open display: :0\n")
-    x11.broken_pipe = broken_pipe
 
     with pytest.raises(clipboard.ClipboardContentError) as caught:
         clipboard.copy_files([str(sources / NAMES[0])])

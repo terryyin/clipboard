@@ -69,16 +69,44 @@ def assert_x11_copy_files_report(report: dict) -> None:
     assert report["thunar_paste"]["copies_match"] is True
     assert report["sources_before"] == report["sources_after"]
     assert report["floors"]["thunar"] and report["floors"]["xclip"]
+    relative = report["relative_directory_duplicate"]
+    assert relative["relative_args"] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert [PurePosixPath(p).name for p in relative["expected_paths"]] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert relative["expected_paths"][0] == relative["expected_paths"][2]
+    assert relative["independent"]["body"] == relative["expected_body"]
+    assert relative["paste_files"]["value"] == relative["expected_paths"]
+    assert relative["writer"]["exited"] is True
+    assert relative["writer"]["returncode"] == 0
 
 
 def _synthetic_report() -> dict:
     paths = [f"/tmp/p/sources/{name}" for name in NAMES]
     body = "".join(f"file://{p}\r\n" for p in paths)
+    relative_paths = [
+        "/tmp/p/sources/report final.pdf",
+        "/tmp/p/sources/a dir",
+        "/tmp/p/sources/report final.pdf",
+    ]
+    relative_body = "".join(f"file://{p}\r\n" for p in relative_paths)
     recheck = {"t_s": 0.0, "ok": True, "targets_list_uri_list": True, "error": None}
     return {
         "ok": True,
         "failed_observations": [],
-        "observations": {"independent_body_equal": True},
+        "observations": {
+            "independent_body_equal": True,
+            "relative_directory_duplicate_writer_exited_ok": True,
+            "relative_directory_duplicate_independent_body_equal": True,
+            "relative_directory_duplicate_targets_list_uri_list": True,
+            "relative_directory_duplicate_paste_files_agrees": True,
+        },
         "expected_paths": paths,
         "expected_body": body,
         "independent": {"body": body},
@@ -86,6 +114,18 @@ def _synthetic_report() -> dict:
         "rechecks_after_exit": [recheck] * 3,
         "missing_helper": {"writer": {"stderr": "sudo apt-get install xclip"}},
         "thunar_paste": {"copies_match": True},
+        "relative_directory_duplicate": {
+            "relative_args": [
+                "report final.pdf",
+                "a dir",
+                "report final.pdf",
+            ],
+            "expected_paths": relative_paths,
+            "expected_body": relative_body,
+            "independent": {"body": relative_body},
+            "paste_files": {"value": relative_paths},
+            "writer": {"exited": True, "returncode": 0},
+        },
         "sources_before": {"a": "1"},
         "sources_after": {"a": "1"},
         "floors": {"thunar": "thunar 4.18.8", "xclip": "xclip version 0.13"},
@@ -105,6 +145,12 @@ def test_report_assertions_accept_a_complete_report():
         lambda r: r["missing_helper"]["writer"].update(stderr="error"),
         lambda r: r["thunar_paste"].update(copies_match=False),
         lambda r: r["sources_after"].update(a="2"),
+        lambda r: r["relative_directory_duplicate"]["independent"].update(
+            body="file:///other\r\n"
+        ),
+        lambda r: r["relative_directory_duplicate"]["paste_files"].update(
+            value=["/tmp/p/sources/report final.pdf"]
+        ),
     ],
 )
 def test_report_assertions_reject_a_failed_observation(damage):

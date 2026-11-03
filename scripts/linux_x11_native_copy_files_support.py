@@ -13,6 +13,12 @@ import textwrap
 import time
 from pathlib import Path
 
+from copy_files_native_probe_support import (
+    ensure_repo_on_pythonpath,
+    paste_files_consistency,
+    prepare_relative_directory_duplicate,
+    uri_list_body,
+)
 from linux_x11_thunar_support import PASTE_WAIT, assert_copies, run
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -63,8 +69,17 @@ def set_text_independently(text: str) -> None:
     raise RuntimeError("independent xclip producer did not publish the prior text")
 
 
-def copy_in_exiting_child(paths: list[str], *, env: dict | None = None) -> dict:
-    """Run public copy_files (default writer) in a child Python that exits."""
+def copy_in_exiting_child(
+    paths: list[str],
+    *,
+    env: dict | None = None,
+    cwd: Path | str | None = None,
+) -> dict:
+    """Run public copy_files (default writer) in a child Python that exits.
+
+    ``cwd`` defaults to the repo root. Relative-path rounds pass the probe's
+    source folder so ``copy_files`` resolves against that directory.
+    """
     code = textwrap.dedent(
         f"""
         import sys
@@ -80,8 +95,8 @@ def copy_in_exiting_child(paths: list[str], *, env: dict | None = None) -> dict:
     try:
         result = subprocess.run(
             [sys.executable, "-c", code, *paths],
-            cwd=ROOT,
-            env=env,
+            cwd=ROOT if cwd is None else cwd,
+            env=ensure_repo_on_pythonpath(env, ROOT),
             capture_output=True,
             text=True,
             timeout=CHILD_TIMEOUT_S,
@@ -93,6 +108,36 @@ def copy_in_exiting_child(paths: list[str], *, env: dict | None = None) -> dict:
         "exited": True,
         "returncode": result.returncode,
         "stderr": result.stderr.strip()[-2000:],
+    }
+
+
+def relative_directory_duplicate_round(source: Path) -> dict:
+    """Offer-level: relative file + directory + duplicate → absolute URI list."""
+    relative, expected = prepare_relative_directory_duplicate(source)
+    body = uri_list_body(expected)
+    writer = copy_in_exiting_child(relative, cwd=source)
+    independent = xclip_read(URI_LIST)
+    targets = xclip_targets()
+    pasted = paste_files_consistency()
+    return {
+        "relative_args": relative,
+        "cwd": str(source),
+        "expected_paths": expected,
+        "expected_body": body.decode("ascii"),
+        "writer": writer,
+        "independent": {
+            "returncode": independent["returncode"],
+            "body": independent["stdout"].decode("utf-8", "replace"),
+            "stderr": independent["stderr"],
+            "targets": targets,
+        },
+        "paste_files": pasted,
+        "writer_exited_ok": writer.get("exited") is True
+        and writer.get("returncode") == 0,
+        "independent_body_equal": independent["returncode"] == 0
+        and independent["stdout"] == body,
+        "targets_list_uri_list": URI_LIST in targets,
+        "paste_files_agrees": pasted["value"] == expected,
     }
 
 

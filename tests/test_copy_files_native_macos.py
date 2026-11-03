@@ -63,3 +63,18 @@ def test_macos_copy_files_independent_file_url_consumer_probe():
     floors = report["floors"]
     for key in ("macos_product", "darwin_release", "machine", "python", "osascript"):
         assert floors[key], key
+    relative = report["relative_directory_duplicate"]
+    assert relative["relative_args"] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert [Path(p).name for p in relative["expected_paths"]] == [
+        "report final.pdf",
+        "a dir",
+        "report final.pdf",
+    ]
+    assert relative["expected_paths"][0] == relative["expected_paths"][2]
+    assert relative["independent"]["paths"] == relative["expected_paths"]
+    assert relative["paste_files"] == relative["expected_paths"]
+    assert relative["writer"]["exited"] is True

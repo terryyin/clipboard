@@ -3,8 +3,9 @@
 ``FakeX11Files.run`` answers ``xclip -o -t T`` like xclip 0.13 (``target T not
 available`` on stderr, exit 1, ``TARGETS`` listing otherwise);
 ``FakeX11Files.popen`` starts a ``FakeUriListOwner`` that takes CLIPBOARD with
-its ``text/uri-list`` body after ``delay`` helper runs, exits early, or never
-offers. No display, helper, or real clipboard is touched.
+the ``text/uri-list`` body already on its stdin file after ``delay`` helper
+runs, exits early, or never offers. No display, helper, or real clipboard is
+touched.
 """
 
 from __future__ import annotations
@@ -15,25 +16,14 @@ URI_LIST = "text/uri-list"
 
 
 class FakeUriListOwner:
-    """A forking ``xclip -t text/uri-list``: stdin body, then background owner."""
+    """A forking ``xclip -t text/uri-list``: stdin file body, then background owner."""
 
-    def __init__(self, x11, stderr):
+    def __init__(self, x11, stderr, data: bytes):
         self.x11 = x11
         self.log = stderr
         self.pid = 5151
         self.status = None
-        self.data = b""
-        self.closed = False
-        self.stdin = self
-
-    def write(self, data):
-        if self.x11.owner_exit is not None and self.x11.broken_pipe:
-            self._exit()
-            raise BrokenPipeError(32, "Broken pipe")
-        self.data += data
-
-    def close(self):
-        self.closed = True
+        self.data = data
         if self.x11.owner_exit is not None:
             self._exit()
         elif not self.x11.never_offers:
@@ -59,7 +49,6 @@ class FakeX11Files:
         self.popen_error = None
         self.popens = []
         self.owner_exit = None  # (status, stderr) when the owner dies early
-        self.broken_pipe = False
         self.never_offers = False
         self.delay = 0
         self.pending = None
@@ -90,12 +79,15 @@ class FakeX11Files:
         return subprocess.CompletedProcess(cmd, 1, b"", stderr)
 
     def popen(self, cmd, *, stdin, stdout, stderr, start_new_session):
-        assert stdin is subprocess.PIPE and stdout is subprocess.DEVNULL
+        # Writer feeds an unlinked temp file, never a pipe Python would block on.
+        assert stdin is not subprocess.PIPE and hasattr(stdin, "read")
+        assert stdout is subprocess.DEVNULL
         # Never a pipe the background owner would inherit and hold open.
         assert hasattr(stderr, "write") and stderr is not subprocess.PIPE
         assert start_new_session is True
         if self.popen_error is not None:
             raise self.popen_error
-        owner = FakeUriListOwner(self, stderr)
+        body = stdin.read()
+        owner = FakeUriListOwner(self, stderr, body)
         self.popens.append({"cmd": cmd, "owner": owner})
         return owner

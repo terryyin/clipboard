@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_bounded-x11-file-write.json",
+      "identity": "SEED-001#bounded-x11-file-write",
+      "completedAt": "2026-11-03T13:57:59.927Z",
+      "blob": "a764741a898d7fa3faf6f613efad1b4174130786"
+    },
+    {
       "fileName": "SEED-001_explicit-text-delegation.json",
       "identity": "SEED-001#explicit-text-delegation",
       "completedAt": "2026-11-03T03:59:59.038Z",

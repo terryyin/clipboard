@@ -11,8 +11,18 @@ import base64
 import ctypes
 import json
 import subprocess
+import sys
 import textwrap
 from pathlib import Path
+
+from copy_files_native_probe_support import (
+    ensure_repo_on_pythonpath,
+    paste_files_consistency,
+    prepare_relative_directory_duplicate,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+CHILD_TIMEOUT_S = 60
 
 # Independent consumer (PowerShell, STA). Paths travel as base64 UTF-8.
 CONSUMER = textwrap.dedent(
@@ -177,4 +187,59 @@ def shell_paste(sources: list[Path], dest: Path) -> dict:
         "copies": copies,
         "copies_match": all(c["bytes_equal"] for c in copies)
         and listing == sorted(p.name for p in sources),
+    }
+
+
+def copy_in_exiting_child(paths: list[str], *, cwd: Path | str | None = None) -> dict:
+    """Run public copy_files with the default writer in a child that exits.
+
+    ``cwd`` defaults to the repo root. Relative-path rounds pass the probe's
+    source folder so ``copy_files`` resolves against that directory.
+    """
+    code = textwrap.dedent(
+        """
+        import sys
+        import clipboard
+        clipboard.set_files_clipboard_writer(None)
+        clipboard.copy_files(sys.argv[1:])
+        """
+    )
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", code, *paths],
+            cwd=ROOT if cwd is None else cwd,
+            env=ensure_repo_on_pythonpath(None, ROOT),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=CHILD_TIMEOUT_S,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return {"exited": False, "error": f"child timed out after {CHILD_TIMEOUT_S}s"}
+    return {
+        "exited": True,
+        "returncode": result.returncode,
+        "stderr": result.stderr.strip()[-2000:],
+    }
+
+
+def relative_directory_duplicate_round(source: Path) -> dict:
+    """Offer-level: relative file + directory + duplicate → absolute paths."""
+    relative, expected = prepare_relative_directory_duplicate(source)
+    writer = copy_in_exiting_child(relative, cwd=source)
+    seen = independent_consumer()
+    pasted = paste_files_consistency()
+    return {
+        "relative_args": relative,
+        "cwd": str(source),
+        "expected_paths": expected,
+        "writer": writer,
+        "independent": seen,
+        "paste_files": pasted,
+        "writer_exited_ok": writer.get("exited") is True
+        and writer.get("returncode") == 0,
+        "independent_paths_equal": consumer_ok(seen, expected),
+        "paste_files_agrees": pasted["value"] == expected,
     }
