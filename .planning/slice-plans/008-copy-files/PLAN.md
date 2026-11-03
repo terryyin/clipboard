@@ -197,6 +197,19 @@ evidence line updated; module and function docstrings agree;
 Behavior: Pre-condition: slices 3–6 results. Trigger: documentation update.
 Postcondition: callers know exactly what is verified where.
 
+## Execution complete
+
+Product advice: no backlog reorder. Two evidence limits remain candidates for
+a later owner-held-desktop observation round rather than new behavior: Finder
+Paste of the macOS offer (G2) and a Wayland file-manager paste. Correction
+SEED-001#bounded-x11-file-write (plan 014) bounds the X11 file-list write and
+extends native proof to directories, duplicates and relative paths. It shares
+its root cause with queued SEED-001#bounded-x11-text-write, so the maintainer
+may order them together. Open residue for a maintainer decision: the Linux
+file-list writers duplicate the text writers' owner plumbing and borrow
+`_text_native_linux` helpers, and the four copy_files probes duplicate their
+fixtures. SEED-001#clear-clipboard can reuse the per-platform writer seams.
+
 ## Current decisions
 
 - `ClipboardContentError` for every `copy_files` failure, matching

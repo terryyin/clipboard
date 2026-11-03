@@ -194,6 +194,32 @@ probe before building the Linux writers; if no single-type offer serves a
 named file manager, the Linux coverage becomes a scope decision for the
 maintainer instead of a silent reduction.
 
+<a id="bounded-x11-file-write"></a>
+
+### Bound the X11 file-list write and prove directories and duplicates natively
+
+**Identity:** SEED-001#bounded-x11-file-write
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/014-bounded-x11-file-write/PLAN.md"}
+```
+
+**Goal:** Callers of `copy_files(paths)` on Linux X11 get the documented
+bounded `ClipboardContentError` instead of an indefinite hang when the X
+server stalls and the URI list is larger than a pipe buffer, and every
+desktop's native proof covers the directory, duplicate and relative-path
+promises SEED-001#copy-files makes.
+
+**Scope:** Correction of SEED-001#copy-files: feed the X11 file-list
+`xclip` owner without a blocking unbounded pipe write, keeping the background
+owner, TARGETS plus exact-body read-back, stderr quoting, install hint and
+owner cleanup; extend the four gated native probes so a directory, a
+duplicate and a relative path reach each native writer and an independent
+consumer. Excludes the same pattern in the text writer (owned by
+SEED-001#bounded-x11-text-write) and `copy_image`, a shared Linux owner
+helper (a structure decision for the maintainer), and file-manager paste
+evidence limits.
+[Plan](../slice-plans/014-bounded-x11-file-write/PLAN.md)
+
 <a id="bounded-x11-text-write"></a>
 
 ### Bound the X11 text write for large text on a stalled display
