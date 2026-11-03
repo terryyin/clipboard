@@ -370,6 +370,36 @@ clear is outside the promise and is not detected.
 - **Safe stopping point:** Opt-in Linux behavior is useful by itself and
   unsupported selections never silently fall back to CLIPBOARD.
 
+<a id="bounded-helper-owner-write"></a>
+
+### Bound every helper-owner clipboard write behind one launcher
+
+**Identity:** SEED-001#bounded-helper-owner-write
+```json dough-story-state
+{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+```
+
+- **For / why:** Python users calling `copy_image` on a Linux desktop whose
+  display or compositor stalls get the documented bounded
+  `ClipboardImageError` instead of a hang; maintainers keep one rule for
+  feeding a background clipboard owner its payload.
+- **Evaluation:** With a helper owner that never reads its input,
+  `copy_image` of a PNG larger than a pipe buffer (about 64 KiB) fails within
+  its documented bound; the text, file-list and image owner writes start
+  their helpers through one shared launcher (unlinked temp-file `stdin`,
+  detached session) with each caller keeping its own error mapping.
+- **Value / learning:** `clipboard/_image_write.py` still writes PNG bytes
+  into `stdin=subprocess.PIPE` without a deadline, the pattern that hung
+  large text on X11; the text and file-list X11 writers already duplicate the
+  temp-file launcher. Whether the image hang reproduces on X11 and Wayland is
+  unverified.
+- **Boundary:** Helper input feeding and its bound only; no change to session
+  selection, offered formats, or public API.
+- **Effort hypothesis:** **S**, medium confidence.
+- **Depends on:** None.
+- **Safe stopping point:** The shared launcher with the image write bounded is
+  useful by itself.
+
 ## Ordering and Scope Reduction
 
 The global queue follows the maintainer's images/rich-content priority: image
