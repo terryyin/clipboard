@@ -227,7 +227,7 @@ their order is a priority choice, not a blocking dependency.
 
 **Identity:** SEED-001#explicit-text-delegation
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/013-explicit-text-delegation/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"808183de5cb3e765bffd1ebca591d87f1e45169fbb22971986e76003e0a855e0","plan":"313ef273e961244744683ae6440fe346b7ca2e909bafe9f206c1ce41b438ed50"}}
 ```
 
 **Goal:** Python application and automation developers retain the package's
@@ -270,11 +270,17 @@ the repository's text-backend guidance with the implementation.
   selection is not frozen at import or first use.
 - Windows, WSL, and the existing unowned fallback sessions still use
   pyperclip automatically, without requiring the caller to install hooks.
+- Boundary: Linux with no visible desktop session (SSH `tty`) where the
+  caller ran `pyperclip.set_clipboard(...)` now raises the usual
+  no-desktop-session `ClipboardContentError` instead of using that
+  mechanism; installing both hooks restores delegation. This is the
+  accepted compatibility change, documented for callers.
 
 **Boundary:** No new backend, public selector, pyperclip monkeypatch, or
 native content feature. The X11 write deadline belongs to
 [the preceding correction](#bounded-x11-text-write). The completed
 SEED-001#portable-text story remains closed; this is new follow-up work.
+[Plan](../slice-plans/013-explicit-text-delegation/PLAN.md)
 
 <a id="clear-clipboard"></a>
 
