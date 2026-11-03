@@ -345,10 +345,17 @@ clearContents`` through the built-in ``osascript`` (bounded at 15 s; see
 Evidence). Linux Wayland runs ``wl-copy --clear`` (bounded at 10 s), which
 needs ``wl-clipboard`` on ``PATH``; a missing ``wl-copy`` raises
 ``ClipboardContentError`` naming ``wl-clipboard``. A session with both
-``DISPLAY`` and ``WAYLAND_DISPLAY`` clears the Wayland selection. On Linux
-with neither ``DISPLAY`` nor ``WAYLAND_DISPLAY``, ``clear()`` raises
-``ClipboardContentError`` saying no desktop session is visible. Linux X11 and
-Windows desktop clears are not available yet: there ``clear()`` raises
+``DISPLAY`` and ``WAYLAND_DISPLAY`` clears the Wayland selection. Linux X11
+(``DISPLAY`` only) gives up the ``CLIPBOARD`` selection with libX11
+``XSetSelectionOwner(CLIPBOARD, None, CurrentTime)`` through ``ctypes``, in
+a child process bounded at 10 s; it needs nothing beyond libX11 (``libx11-6``
+on Debian / Ubuntu), which ``xclip`` already requires, and leaves the
+PRIMARY selection untouched. A missing libX11 raises
+``ClipboardContentError`` naming ``libx11-6``, and a ``DISPLAY`` that cannot
+be opened raises one naming ``DISPLAY`` and its value. On Linux with neither
+``DISPLAY`` nor ``WAYLAND_DISPLAY``, ``clear()`` raises
+``ClipboardContentError`` saying no desktop session is visible. Windows
+desktop clears are not available yet: there ``clear()`` raises
 ``ClipboardContentError`` saying the native clearer is not available on that
 platform.
 
@@ -542,8 +549,18 @@ Evidence / verified platforms (native probes gated via
   background ``wl-copy`` image owner exited within 5 s, and the ``PATH``
   case raised ``ClipboardContentError`` naming ``wl-clipboard``. Evidence limits: other Wayland
   compositors, and desktops with clipboard managers (GNOME, KDE Plasma /
-  Klipper) that may re-offer a saved entry, are unverified. Linux X11 and
-  Windows clears are not available yet.
+  Klipper) that may re-offer a saved entry, are unverified. Linux X11
+  (libX11 ``XSetSelectionOwner``) is **pending CI** in
+  ``scripts/probe_linux_x11_native_clear.py`` (wrapper
+  ``tests/test_clear_native_linux_x11.py``, job ``native-linux-x11-clear``)
+  on a fresh Xvfb 2:21.1.22 with xclip 0.13 on ``ubuntu-26.04``: the raw
+  ``ctypes`` ``XSetSelectionOwner(None)`` from a separate process against an
+  independent ``xclip -t text/html`` owner, then an independent ``xclip``
+  ``text/html`` producer and a ``copy_image()`` owner each followed by a
+  child ``clear()``, ``clear()`` twice, and a ``DISPLAY`` naming no server.
+  Evidence limits: real X11 desktops, and those with clipboard managers that
+  may re-offer a saved entry, are unverified. Windows clears are not
+  available yet.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
   been verified with an independent **browser** producer: Google Chrome

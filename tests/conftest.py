@@ -52,6 +52,41 @@ def restore_clipboard_clearer():
 
 
 @pytest.fixture
+def linux_clear_session(monkeypatch, restore_clipboard_clearer):
+    """Default clearer on a pretend Linux with the given session variables.
+
+    ``linux_clear_session(display=, wayland=, session_type=, **wl_copy)``
+    returns the ``FakeWlCopyClear`` answering ``wl-copy --clear``; set its
+    ``x11_child`` to let the session reach the libX11 clear child.
+    """
+    import sys
+
+    from fake_clear_helpers import FakeWlCopyClear
+
+    import clipboard
+    from clipboard import _clear_wayland
+
+    monkeypatch.setattr(sys, "platform", "linux")
+    clipboard.set_clipboard_clearer(None)
+
+    def install(*, display=None, wayland=None, session_type=None, **kwargs):
+        for name, value in (
+            ("DISPLAY", display),
+            ("WAYLAND_DISPLAY", wayland),
+            ("XDG_SESSION_TYPE", session_type),
+        ):
+            if value is None:
+                monkeypatch.delenv(name, raising=False)
+            else:
+                monkeypatch.setenv(name, value)
+        helper = FakeWlCopyClear(**kwargs)
+        monkeypatch.setattr(_clear_wayland.subprocess, "run", helper)
+        return helper
+
+    return install
+
+
+@pytest.fixture
 def restore_image_writeclipboard():
     import clipboard
 

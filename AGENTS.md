@@ -15,9 +15,11 @@ reads via `paste_files`, local file-list copy offers via `copy_files` (writer
 seam `set_files_clipboard_writer`; validation before the clipboard is
 replaced), non-mutating offer inspection via `inspect`
 (kinds + native formats; no images extra), and `clear` (clearer seam
-`set_clipboard_clearer`; no offer at all afterwards; native on macOS Aqua
-and Linux Wayland (`wl-copy --clear`), Linux with no session raises "no
-desktop session is visible", other platforms raise "not available"). Image access/helper/transfer or
+`set_clipboard_clearer`; no offer at all afterwards; native on macOS Aqua,
+Linux Wayland (`wl-copy --clear`) and Linux X11 (libX11
+`XSetSelectionOwner` via `ctypes` in a bounded child), Linux with no session
+raises "no desktop session is visible", Windows and other platforms raise
+"not available"). Image access/helper/transfer or
 malformed-image failures raise `ClipboardImageError` rather than returning
 `None` (or silently succeeding on write). HTML, file-list (`paste_files` and
 `copy_files`), inspect, and clear invalid-input, access, helper, transfer,
@@ -50,7 +52,7 @@ session; optional native text / pasteboard / file-list probes stay gated via
 `CLIPBOARD_NATIVE_PROBE` (see README Evidence, e.g.
 `scripts/probe_macos_native_paste_image.py`, the text probes
 `tests/test_text_native_{macos,linux_x11,linux_wayland,windows}.py`, the
-`clear` probes `tests/test_clear_native_{macos,linux_wayland}.py`, and the
+`clear` probes `tests/test_clear_native_{macos,linux_wayland,linux_x11}.py`, and the
 `copy_files` probes
 `scripts/probe_{macos,windows,linux_x11,linux_wayland}_native_copy_files.py`).
 Release setup and maintainer steps are documented in `docs/releasing.md`.

@@ -34,10 +34,11 @@ def _default_clipboard_clearer() -> None:
     macOS Aqua clears the general pasteboard through ``osascript`` / AppKit.
     On Linux, a Wayland session (``_desktop._is_linux_wayland``, so also when
     both ``DISPLAY`` and ``WAYLAND_DISPLAY`` are set) runs ``wl-copy
-    --clear``; no visible session raises ``ClipboardContentError``. Other
-    platforms (and Linux X11 for now) have no native clearer yet and raise
-    ``ClipboardContentError``; later adapters (Linux X11, Windows desktop)
-    dispatch here before the fallback raise.
+    --clear``; otherwise ``DISPLAY`` (``_desktop._linux_x11_display``)
+    relinquishes X11 CLIPBOARD through libX11 ``XSetSelectionOwner``; no
+    visible session raises ``ClipboardContentError``. Other platforms have no
+    native clearer yet and raise ``ClipboardContentError``; later adapters
+    (Windows desktop) dispatch here before the fallback raise.
     """
     if sys.platform == "darwin":
         from clipboard._clear_macos import _macos_clipboard_clearer
@@ -50,8 +51,12 @@ def _default_clipboard_clearer() -> None:
 
             _wayland_clipboard_clearer()
             return
-        if not _desktop._linux_desktop_session_visible():
-            raise ClipboardContentError(_NO_LINUX_SESSION_MESSAGE)
+        if _desktop._linux_x11_display():
+            from clipboard._clear_x11 import _x11_clipboard_clearer
+
+            _x11_clipboard_clearer()
+            return
+        raise ClipboardContentError(_NO_LINUX_SESSION_MESSAGE)
     raise ClipboardContentError(_unavailable_native_clearer_message())
 
 
@@ -75,9 +80,10 @@ def clear() -> None:
     Does not require the optional ``clipboard[images]`` extra. Clearing an
     already empty clipboard, or clearing twice in a row, succeeds. Failures
     raise ``ClipboardContentError`` (the underlying error, if any, is
-    ``__cause__``). The default clears the macOS general pasteboard and the
-    Linux Wayland selection (``wl-copy --clear``, needs wl-clipboard); other
-    platforms have no native clearer yet, so the default raises
+    ``__cause__``). The default clears the macOS general pasteboard, the
+    Linux Wayland selection (``wl-copy --clear``, needs wl-clipboard) and
+    Linux X11 CLIPBOARD (libX11 ``XSetSelectionOwner``); other platforms
+    have no native clearer yet, so the default raises
     ``ClipboardContentError`` naming the platform. Tests inject a fake via
     ``set_clipboard_clearer``.
     """

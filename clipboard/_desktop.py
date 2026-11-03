@@ -37,9 +37,13 @@ def _is_linux_wayland() -> bool:
     return session == "wayland" or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
-def _linux_desktop_session_visible() -> bool:
-    """Whether any Linux desktop session is advertised (Wayland or X11)."""
-    return _is_linux_wayland() or bool(os.environ.get("DISPLAY"))
+def _linux_x11_display() -> str | None:
+    """The advertised X11 ``DISPLAY`` value, or ``None`` when unset or empty.
+
+    ``clear()`` dispatches here after ``_is_linux_wayland`` (so a session with
+    both ``DISPLAY`` and ``WAYLAND_DISPLAY`` clears Wayland).
+    """
+    return os.environ.get("DISPLAY") or None
 
 
 def _linux_wayland_without_x11() -> bool:

@@ -303,6 +303,14 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   `scripts/probe_linux_wayland_native_clear.py`; slice 5 should reuse
   `linux_native_clear_support.helper_pids` / `wait_pids_exit` / `child_clear`
   and revisit `_desktop._linux_desktop_session_visible` once X11 dispatches.
+- Slice 5 (desktop-free proof accepted 2026-11-03; native proof pending the
+  published revision's CI): `clipboard/_clear_x11.py` runs
+  `clipboard/_x11_relinquish.py` as a bounded (10 s) `python -I` child that
+  calls libX11 `XOpenDisplay` / `XInternAtom(CLIPBOARD)` /
+  `XSetSelectionOwner(None, CurrentTime)` / `XSync`; `_desktop._linux_x11_display`
+  replaces `_linux_desktop_session_visible`. Clear tests are now split per
+  platform (`tests/test_clear{,_macos,_wayland,_x11}.py`,
+  `tests/test_x11_relinquish.py`, fakes in `tests/fake_clear_helpers.py`).
 - The per-module osascript runners (`_offer_macos`, `_html_native_macos`,
   `_clear_macos`) keep separate failure messages and bounds; consolidating
   them is a cross-module refactor outside this story.
