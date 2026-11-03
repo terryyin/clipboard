@@ -46,7 +46,7 @@ its numbered return is recorded below verbatim or close.
 | 10.6 | Wrappers keep "fails on an evidence limit, never skips" where it holds today | slice 4 | |
 | 11a | Default pytest stays desktop-free | slice 4 | |
 | 11b | Probes still exit 2 with `evidence_limit` off their desktop | slice 4 | |
-| 12a | Linux and Windows probes run only in CI jobs `native-linux-x11-clear`, `native-linux-wayland-clear` and `native-windows-clear`, after publication | slice 3 | |
+| 12a | Linux and Windows probes run only in CI jobs `native-linux-x11-clear`, `native-linux-wayland-clear` and `native-windows-clear`, after publication | slice 3 | observed: CI runs 41741871109 (f071961) and 41742684361 (147119b): native-linux-x11-clear, native-linux-wayland-clear, native-windows-clear success after publication |
 | 12b | The macOS probe runs locally under `CLIPBOARD_NATIVE_PROBE=1` (replaces the live clipboard; check the screen is unlocked first) | slice 4 | |
 | 13 | If a native run shows a step that held before now fails, stop and return the observation; do not weaken the step or its `ok` | slice 4 | |
 | 14a | A clear is proven when a child `clear()` returned, the desktop's independent listing classifies as empty, and every public reader reads absence | slice 4 | |

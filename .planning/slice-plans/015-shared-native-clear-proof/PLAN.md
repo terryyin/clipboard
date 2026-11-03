@@ -190,7 +190,7 @@ for the `copy_image` step; dropping it would loosen that step.
 
 ### 3. Windows clear probe on the shared rule
 Type: Structure
-Status: planned
+Status: done
 Proof: row "1 (Windows)" above.
 
 Correction (finding 1, Windows): `_produced_then_child_clear` and
@@ -201,6 +201,13 @@ and the support file stays ≤ 250. Step names, order, producers, bound
 arithmetic and the held-case message checks stay. The wrapper asserts exit
 0, `evidence_limit` false, `ok`, `failed_steps == []`, the eight-step list
 and the Windows floors only. Publish, then accept `native-windows-clear`.
+
+Accepted proof (147119b): `nix develop -c make check` 606 passed, 27
+skipped; Windows probe exits 2 with `evidence_limit` on Darwin; probe 190,
+support 245 lines; CI run 41742684361 `Native Windows clear
+(windows-latest)` success, eight step names in order, `failed_steps: []`,
+step 7 `ok` with `library_bound_s` 15.0 against a 25 s holder and HTML
+Format still listed afterwards.
 
 ### 4. macOS clear probe on the shared child clear and readers
 Type: Structure
