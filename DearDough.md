@@ -3,6 +3,7 @@
 ## Retention
 
 - Highest allocated local number: 19
+- Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners. DD-003, DD-004 and DD-013 all map to ODF-074 and keep their local codes until a consolidation decision. DD-019 awaits local triage.
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -26,7 +27,10 @@ occurrence.
   - Observed effect: Story-branch matrix jobs failed after slice 1 publish; WIP stash + dedicated CI repair before continuing slice 2; quality/Nix path had already passed.
   - Inference: Dual local-vs-matrix verification seams need an explicit extras checklist when optional dependencies first enter pytest; Makefile green did not prove the matrix path.
 
-## DD-002 — Settled no-session premise still ran three Behavior deliver cycles
+## ODF-414 — Settled no-session premise still ran three Behavior deliver cycles
+
+Former local code: DD-002.
+
 When a plan's decisive premise already settles that the execution checkout cannot
 host the remaining desktop sessions, splitting each desktop's authorized
 evidence-limit path into its own Behavior slice still incurred a full
@@ -34,20 +38,8 @@ implement → obligations/source-review → refactor → publish cycle per deskt
 before the consolidation Structure slice, without new native measurement.
 
 ### Occurrences
-- Execution: SEED-001#read-images-native
-  - Timestamp: 2026-11-02T11:43:00+07:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.79
-  - Evidence: PLAN.md Decisive premises (Darwin cannot run Win/Linux probes); slices 1–3 Accepted notes all Darwin/no-session evidence limits; published SHAs d08fb4c, 47e5b9c, 0501e6a (near-identical README evidence-limit increments) then fcd18a0 consolidation; coordinator transcript d2b3e3b5… (three Behavior deliver cycles after settled uname Darwin)
-  - Observed effect: Three docs-only Behavior publishes plus refactor agents authorized to fill Accepted notes; no Win/Linux probe scripts delivered; slice 4 rewrote the same Evidence paragraph into one consolidated limit statement.
-  - Inference: Once session absence is settled for the executing checkout, one evidence-limit write covering the remaining desktops (or collapsing early-probe Behavior slices) would preserve per-desktop honesty with less deliver/refactor overhead; independent desktop loops remain justified only when a session may still appear.
-- Execution: SEED-001#inspect-formats
-  - Timestamp: 2026-11-02T16:52:28+07:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.79
-  - Evidence: PLAN.md Decisive premises (Darwin; xclip/wl-paste absent — Win/Linux cannot probe here); coordinator 8888689d… after slice 3: “Slices 4–6 are evidence-limit paths on this Darwin host”; published 629513f (X11), ee446c2 (Wayland), 0c9741a (Windows) each with full deliver→source-review→refactor→publish; README/probe `evidence_limit` paths only for those desktops
-  - Observed effect: Three more Behavior publish cycles after session absence was settled; unlike the read-images-native occurrence, each slice also wired a real enumerator + desktop-free tests (not docs-only), but native verification remained predetermined evidence-limit with no new desktop measurement on this host.
-  - Inference: Settled no-session still does not justify three early-probe Behavior cycles for the verification claim; enumerator wiring for remaining desktops can share one Structure/Behavior slice with a single honest multi-desktop evidence-limit write.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-414](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-414.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-003 — Linux X11 clipboard ownership learned through gated-CI repair loops
 For Linux image write under Xvfb, successive published repairs rediscovered that
@@ -57,13 +49,8 @@ not race tempfile deletion, and return must wait until TARGETS lists
 the gated job was treated as green-or-repair.
 
 ### Occurrences
-- Execution: SEED-001#write-images
-  - Timestamp: 2026-11-02T14:00:07+07:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.79
-  - Evidence: commits 3b4149e (`-quiet`), 7fb288b (pipe hang), c6f6585 (leave owner running), 8d842c6 (stdin/`-quiet` regression), a2f4a99 (restore fire-and-forget), 833bbd3 (TARGETS wait); coordinator transcript ed9de93f… lines noting X11 hang → pipe hang → ownership → opaque race; before-cleanup a922455:.planning/slice-plans/003-write-images/PLAN.md Learnings on Xvfb xclip
-  - Observed effect: Multiple story-branch CI repair cycles on slices 4–5 before both native jobs stayed green; interim “done” floors were rewritten after later ownership fixes.
-  - Inference: When gated CI is the authorized native venue, helper lifetime/ownership premises belong in an early local or throwaway probe before counting the job as the acceptance loop.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-074](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-074.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-004 — Wayland CI compositor chosen without wl-clipboard protocol check
 The first Wayland gated job used Weston headless; `wl-copy` failed because
@@ -71,13 +58,8 @@ Weston lacks wlr-data-control. Retargeting to Sway (`WLR_BACKENDS=headless`)
 fixed proof, after one failed compositor choice.
 
 ### Occurrences
-- Execution: SEED-001#write-images
-  - Timestamp: 2026-11-02T14:25:25+07:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.79
-  - Evidence: commit 8d842c6 (Weston job), a2f4a99 (Sway retarget; commit message: Weston lacks wlr-data-control); before-cleanup a922455:.planning/slice-plans/003-write-images/PLAN.md Accepted proof / Learnings; transcript ed9de93f… “Weston lacks… switching… to Sway”
-  - Observed effect: Wayland acceptance waited on a compositor swap and a second gated-CI cycle after X11 work was already in flight.
-  - Inference: Named Wayland CI compositors need a protocol/helper compatibility check (wlr-data-control / wl-clipboard) before the first published probe job.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-074](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-074.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-005 — Platform stub wording change broke Windows-only assertion
 Editing the shared default `NotImplementedError` message for honesty on
@@ -115,29 +97,18 @@ silently weakening the bar.
   - Observed effect: Plan venue revised under approval; Linux acceptance preserved via gated jobs rather than skip or unauthorized limits.
   - Inference: Useful practice — mandatory native proof that the checkout cannot run is a human venue decision, not an agent-chosen evidence-limit substitute.
 
-## DD-007 — Pre-existing over-limit module surfaced only at the first refactor stop
+## ODF-415 — Pre-existing over-limit module surfaced only at the first refactor stop
+
+Former local code: DD-007.
+
 A module already over the refactor file-size limit before the story (470 of
 250 lines) was not named as a premise during planning, so the first slice's
 post-change refactor stopped for a structural developer decision (package
 split) after implementation was done.
 
 ### Occurrences
-- Execution: SEED-001#read-html
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.79
-  - Evidence: 2026-11-02, before commit 0d3e238 (16:11:50+07:00); `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md` Decisive premises name no file-size premise; slice 1 refactor return `## REFACTOR JIDOKA STOP` (clipboard.py 510 lines); developer answer "Split now"; same PLAN.md Current decisions "Developer decision (2026-11-02, slice 1 refactor stop)"
-  - Observed effect: One extra refactor round (about 20 minutes reported by the refactor agent) and a mid-slice human question; the split landed with slice 1.
-  - Inference: Planning could check the line counts of files the plan will edit and settle split-or-exception before the first slice; impact was modest because the split was cheap.
-
-- Execution: SEED-002#linux-file-offers-ci
-  - Timestamp: unknown
-  - Tool: Codex
-  - Open Dough release: 0.3.82
-  - Evidence: 2026-11-02 before cc6d541; baseline `7a908cc:.github/workflows/ci.yml` has 275 lines, initial Thunar-job addition reached 318; independent refactor return reports the 250-line gate and about four minutes of work; cc6d541 extracts the unchanged Wayland jobs into `native-wayland-copy-image.yml` and `native-wayland-paste-html.yml`.
-  - Observed effect: The bounded file-manager experiment acquired two additional reusable workflow files during post-change refactoring; their command behavior stayed unchanged and required workflow lint and hosted validation.
-  - Inference: The same late discovery as the earlier module occurrence: planning could recognize an already over-limit workflow and include the required cohesive split before implementation. This occurrence needed no cross-subsystem human decision.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-415](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-415.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-008 — Prior native-venue findings reused; every gated CI probe passed first run
 Reusing the project's recorded native venues (Xvfb with an owning xclip,
@@ -162,21 +133,18 @@ jobs pass on their first published run, with no CI repair cycle.
   - Observed effect: Structure relocation of session/listing helpers landed with no CI repair; five-job native confirmation stayed green while later slices continued under observation
   - Inference: Useful practice — reuse the same Xvfb/Sway venues and fail-not-skip native wrapper pattern when relocating desktop helpers; first-run green held for session-selection proof that desktop-free pytest cannot cover
 
-## DD-009 — Producer-kind gap carried three slices before developer decision
+## ODF-258 — Producer-kind gap carried three slices before developer decision
+
+Former local code: DD-009.
+
 The story's "browser or rich editor" producer wording could not be met by the
 authorized CI venues; the gap was recorded at slice 4 as an interim obligation
 and only put to the developer before slice 7, after Wayland and Windows used
 the same helper-producer pattern.
 
 ### Occurrences
-- Execution: SEED-001#read-html
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.79
-  - Evidence: 2026-11-02, between commits 8659430 (17:18:38+07:00) and 1a5b92d (17:36:04+07:00); `9d3ceda:.planning/slice-plans/005-read-html/PLAN.md` Story obligations G4 (reported slice 4, interim until slices 5, 6, 7, then owner changed); developer answer "Verified, helper-labelled"; `9d3ceda:.planning/seeds/SEED-001-clipboard-true-to-its-name.md` "Developer amendment (2026-11-02, during execution)"; `9d3ceda:.planning/slice-plans/005-read-html/source-review.md` replaced after the amendment
-  - Observed effect: Slices 5–6 proceeded on an unresolved acceptance question; the amendment then required a fresh source review and re-allocation of 77 commitment ids.
-  - Inference: Asking at the first occurrence (slice 4) would have settled README wording earlier and avoided carrying the interim; the late ask still preceded any false claim.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-258](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-258.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-010 — Desktop-free unavailable-path test asserted host OS
 A desktop-free test for the Windows unavailable stub used `assert sys.platform != "win32"` so the path was only exercised off Windows; the windows-latest matrix failed until the assertion was replaced with a platform monkeypatch.
@@ -229,21 +197,18 @@ When the 250-line refactor check required splitting an oversize module into a pa
   - Observed effect: Slice-1 delivery paused until human authorization; authorized split preserved public `import clipboard` / `VERSION` and unblocked later slices
   - Inference: Useful practice — file-size fixes that cross delivered subsystem seams are human-owned packaging decisions, parallel to venue stops for mandatory native proof (DD-006)
 
-## DD-012 — progress:true left mid-plan Behavior slice unfinished until local-proof done commit
+## ODF-416 — progress:true left mid-plan Behavior slice unfinished until local-proof done commit
+
+Former local code: DD-012.
+
 Publishing the first Behavior increment with `progress: true` kept the slice
 `planned` until CI confirmation, which blocked continuing the plan; marking the
 slice done on accepted local proof required a second records-only commit and
 cancelled the still-running CI for the superseded implementation SHA.
 
 ### Occurrences
-- Execution: SEED-001#desktop-helpers
-  - Timestamp: 2026-11-02T21:10:11+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.82
-  - Evidence: commits 237e23d (implementation) then 1b9ed68 (mark slice 1 done); coordinator transcript 0fc04e77… “Slice 1 stayed `planned` under `progress: true`… marking it done while CI keeps observing”; observer event CI_INCOMPLETE cancelled on 237e23d (run 41459230661); coverage success later on 1b9ed68 (run 41459401185)
-  - Observed effect: Extra records-only publish before slice 2; cancelled CI on the implementation SHA; ~1 minute between the two commits; later Structure slices proceeded under observation without waiting for tip green
-  - Inference: When local proof is the authorized done floor and CI is observation/repair only, publishing Behavior with `progress: true` creates avoidable mid-plan friction; mark done on local proof in the same publish, or treat progress as non-blocking for the next slice without a second commit
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-416](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-416.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-013 — Native probe scaffolding assumptions failed on the first gated run
 New gated probes asserted facts the runner could not supply or used stand-ins
@@ -253,95 +218,62 @@ pyperclip's own NULL open shares and closes), and `Get-Clipboard` standing in
 for Notepad. Each cost a full CI round trip although the product passed.
 
 ### Occurrences
-- Execution: SEED-001#portable-text
-  - Timestamp: 2026-11-02T23:37:16+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: run 41471306541 (X11 probe all steps ok, wrapper failed `assert env[floor]` on `xvfb_version: null`; repair c086e20 adds `dpkg-query`); run 41483294562 (Windows step 5 `close_ok: false`, held `paste()`/`copy()` succeeded; step 2 both PowerShells report one line; repair 450f786 adds own-window holder with `GetOpenClipboardWindow` evidence and a Notepad `EM_GETLINECOUNT` consumer); run 41484980894 green on both
-  - Observed effect: Slices 4 and 6 each needed one probe-only repair cycle (about 15–25 minutes of CI wait each) before native acceptance; no product code changed for these
-  - Inference: Before the first gated run, check that each asserted floor has a runner-available source (package manager first) and that each stand-in consumer or holder observes the story's own example (here, Notepad and a real ownership hold); slice 4's lesson was carried into slices 5–6 briefs, which then failed only on the Windows-specific holder semantics
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-074](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-074.md); source recovery remains in this project’s pre-compaction revision.
 
-- Execution: SEED-001#copy-files
-  - Timestamp: 2026-11-03T08:40:19+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: run 41560847952 job native-windows-copy-files: Explorer `Shell.Application` paste copies matched, drop effect 01-00-00-00, `GetFileDropList` exact, but `independent_paths_equal` failed because `Get-Clipboard -Format FileDropList | ForEach-Object { $_.FullName }` in PowerShell 5.1 yielded one space-joined string; probe-only repair ab913cf; run 41561268655 green
-  - Observed effect: One probe-only CI round trip (about 5 minutes) before slice 4's native acceptance; product passed on the first run
-  - Inference: A second independent reader added for robustness carried an unverified PowerShell collection assumption; the slice 5 and 6 probes passed on their first gated run
+## ODF-289 — Cancelled CI jobs attributed to supersession before checking runner acquisition
 
-## DD-014 — Cancelled CI jobs attributed to supersession before checking runner acquisition
+Former local code: DD-014.
+
 A failed `CI passed` with cancelled macOS jobs was first reported as
 supersession by the next push; the jobs had zero steps and a GitHub annotation
 "The job was not acquired by Runner of type hosted", which the coordinator
 found only when the same pattern recurred on the next run.
 
 ### Occurrences
-- Execution: SEED-001#portable-text
-  - Timestamp: 2026-11-02T23:08:46+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: run 41475927301 (ca8917b, both macOS jobs cancelled, 0 steps, annotation above) first reported as superseded by the 823dcce push; run 41478592764 attempt 1 macOS 3.14 same annotation, rerun with `gh run rerun --failed` → attempt 2 green; correction stated to the developer
-  - Observed effect: One wrong cause stated in a progress report and corrected later; no wrong action followed because the superseded revision changed only planning files
-  - Inference: Classify a cancelled job by its steps / runner / annotations before naming supersession; a zero-step job with that annotation is infrastructure and warrants a rerun of the failed jobs for coverage
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-289](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-289.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-015 — Fresh refactor agent for small CI repairs returned no change
+## ODF-141 — Fresh refactor agent for small CI repairs returned no change
+
+Former local code: DD-015.
+
 Delivery required an independent refactor agent before every publication; for
 three small repairs or proof-only changes it reported "none — already clean"
 after reading the same context again.
 
 ### Occurrences
-- Execution: SEED-001#portable-text
-  - Timestamp: 2026-11-03T00:07:26+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: refactor agents for slice 3 (60.8k subagent tokens, no edits), slice 4 CI repair c086e20 (47.8k, no edits), bound-clamp repair 43ee728 (50.4k, no edits); agent usage lines in the coordinator transcript
-  - Observed effect: About 160k subagent tokens and several minutes per publication for no code change; other refactor passes in the same execution did make useful edits (owner→function map, shared Linux helper log, docs contradiction)
-  - Inference: A proportionality rule (e.g. coordinator may record "no refactor candidates" for a repair whose diff is a few lines inside one function, or reuse the slice's refactor pass when the repair stays within already-reviewed code) could save cost without losing the passes that found real residue; timestamp is the last occurrence's repair commit 43ee728
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-141](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-141.md); source recovery remains in this project’s pre-compaction revision.
 
-- Execution: SEED-001#copy-files
-  - Timestamp: 2026-11-03T08:40:19+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: coordinator delivered CI repairs 5df300b, 152faa2 and ab913cf (each a few lines in one test file or probe script) and the plan-only slice 2 commits without the required fresh refactor agent; every slice implementation increment did get one (slices 1, 3–7)
-  - Observed effect: The delivery contract's refactor step was skipped for small repairs, a compliance deviation rather than an authorized rule; no residue from those repairs has been reported
-  - Inference: The coordinator applied the proportionality this finding proposes without an authorizing rule; adopting the rule or keeping the step would stop silent skips
+## ODF-097 — Source-freshness check chained into delivery ignored a conflict
 
-## DD-016 — Source-freshness check chained into delivery ignored a conflict
+Former local code: DD-016.
+
 The Story Branch source-freshness check ran in the same shell command as the
 guarded delivery, so its `conflict` result was printed but not acted on, and a
 plan record contradicting trunk's newer evidence was published.
 
 ### Occurrences
-- Execution: SEED-001#copy-files
-  - Timestamp: 2026-11-02T21:33:33+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: one coordinator Bash call ran `source-freshness.mjs check … | cut -c1-40` (printed `{"result":"conflict"`), then story-obligations and `execution-increment-delivery.mjs fresh`; published d503c8e recorded "no Linux desktop, X11 file-manager evidence limit" while trunk cc86951 had completed slice 2 with real Thunar evidence; correction 085b6d9 after a developer decision
-  - Observed effect: One wrong published plan record, one extra correction commit and one developer question; no product code affected
-  - Inference: Run the freshness check as its own gating call and branch on its result before any delivery command, as the coordinator did for every later delivery (`[ "$r" = unchanged ] || exit 1`)
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-097](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-097.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-017 — Branch plan notes next to trunk-amended lines kept freshness in conflict
+## ODF-403 — Branch plan notes next to trunk-amended lines kept freshness in conflict
+
+Former local code: DD-017.
+
 Branch-only plan additions placed directly after a trunk-rewritten Learnings
 paragraph made the three-way freshness comparison report `overlapping-edit`
 even after trunk's text was taken verbatim, twice in one execution.
 
 ### Occurrences
-- Execution: SEED-001#copy-files
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: between commits 085b6d9 (2026-11-02T21:36:14+07:00) and 5787804 (2026-11-03T08:17:17+07:00): after taking trunk's plan text, `source-freshness.mjs check` still reported plan `conflict` until the branch's slice 1 learning bullet adjacent to trunk's Learnings paragraph was dropped; later the slice 3 learning in the same position again forced `conflict` and was moved to a separate `## Execution learnings` section, after which the result was `amended` and `absorb` succeeded
-  - Observed effect: Two diagnosis detours reading `source-freshness.mjs` and its comparison module, and one dropped plan learning
-  - Inference: Keep branch-only plan notes in sections trunk is unlikely to rewrite, or separated from trunk-edited hunks by unchanged lines; the containment search treats adjacent additions as overlapping
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-403](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-403.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-018 — Developer-operated desktop rounds requested while the developer was away
+## ODF-408 — Developer-operated desktop rounds requested while the developer was away
+
+Former local code: DD-018.
+
 Slice 3's Finder paste was planned as a developer-operated round. Three
 question rounds were sent; the developer later said they were not at the
 computer and asked the agent to proceed itself, and the screen was locked
@@ -349,14 +281,8 @@ computer and asked the agent to proceed itself, and the screen was locked
 paste could not be observed.
 
 ### Occurrences
-- Execution: SEED-001#copy-files
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: between commits 085b6d9 (2026-11-02T21:36:14+07:00) and 5787804 (2026-11-03T08:17:17+07:00): Finder rounds 1–2 answered "Only one / none" (round 1 overwritten by a PNG; round 2 pasteboard types empty at an unchanged changeCount); round 3 rejected with "I am not on the computer right now … Please proceed this without me"; the coordinator then found the session locked, `screencapture` "could not create image from display", and Finder Apple Events timing out; a slice 3 rework agent (about 150k subagent tokens) could not reproduce a vanish
-  - Observed effect: The macOS file-manager claim ended as an evidence limit (G2) after one rework delegation and several investigation turns on a pasteboard hypothesis that the lock state may explain
-  - Inference: Before asking for a developer-operated desktop round, check the session lock state and try host automation first; treat answers to remote prompts as possibly not observed at the machine (the developer's preference is now in agent memory)
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-408](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-408.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-019 — CI observer budget expired while the next slice was still open
 After slice-1 publish, the retained CI observer's budget expired during a long
