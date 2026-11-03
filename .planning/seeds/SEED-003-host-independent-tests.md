@@ -25,14 +25,14 @@ assumptions no longer surface as story-branch CI repair cycles. This keeps
 cross-platform clipboard work (the project's North Star) cheap to deliver; the
 story changes how tests fake a platform, not what the library does.
 
-**Evidence:** [DearDough DD-010](../../DearDough.md#dd-010--desktop-free-unavailable-path-test-asserted-host-os)
+**Evidence:** [Project finding DD-010](../../ProjectFindings.md#dd-010--desktop-free-unavailable-path-test-asserted-host-os)
 records three executions (SEED-001#read-files, SEED-001#portable-text,
 SEED-001#copy-files), each needing one or two Windows-matrix repairs
 (b00d9ab; c086e20; 5df300b and 152faa2): an `assert sys.platform !=
 "win32"`, an unguarded `os.killpg` patch, a fixture file name with `"` and
 `\`, and faking the shared `sys.platform` so stdlib `urllib` took its macOS
 branch on Windows. Related:
-[DD-005](../../DearDough.md#dd-005--platform-stub-wording-change-broke-windows-only-assertion)
+[DD-005](../../ProjectFindings.md#dd-005--platform-stub-wording-change-broke-windows-only-assertion)
 (a Windows-only assertion copied the shared stub wording).
 
 **Current state (observed 2026-11-03 on this branch).** Product modules read

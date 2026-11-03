@@ -48,4 +48,7 @@ session; optional native text / pasteboard / file-list probes stay gated via
 `copy_files` probes
 `scripts/probe_{macos,windows,linux_x11,linux_wayland}_native_copy_files.py`).
 Release setup and maintainer steps are documented in `docs/releasing.md`.
+Project-owned retrospective findings live in `ProjectFindings.md`; process
+findings about published Open Dough guidance stay in `DearDough.md`, which
+also holds the shared `DD-NNN` numbering for both files.
 Never create or push a release tag unless the maintainer explicitly requests it.
