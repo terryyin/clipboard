@@ -200,7 +200,7 @@ maintainer instead of a silent reduction.
 
 **Identity:** SEED-001#bounded-x11-text-write
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/012-bounded-x11-text-write/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/012-bounded-x11-text-write/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"49c53cff5acac2714373807928aa4b62d600b74bef85fa96a4a9d0ceba954949","plan":"8d26bef174c6eed0b88d31dd7bac3ba67fae7f39b5aad6797a599bae6167feb2"}}
 ```
 
 **Goal:** Callers of `copy(text)` on Linux X11 get the documented bounded
