@@ -111,5 +111,5 @@ def test_non_darwin_default_reader_is_not_available(
 
     monkeypatch.setattr(_html_native_macos.subprocess, "run", no_helper)
     clipboard.set_html_clipboard_reader(None)
-    with pytest.raises(clipboard.ClipboardContentError, match="not available"):
+    with pytest.raises(clipboard.ClipboardContentError, match=r"\(sunos5\)"):
         clipboard.paste_html()

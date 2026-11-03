@@ -24,17 +24,17 @@ was the reason (X5 keeps host-capability skips); the guard fails the test (E6).
 | 6.1 | This covers tests. | slice 1 | observed: 21 in-process test files migrated to fake_platform (git diff tests/test_*); grep shows no sys.platform patch |
 | 6.2 | This covers fixtures. | slice 1 | observed: tests/conftest.py text_session uses fake_platform; darwin_helper fixture uses fake_platform |
 | 6.3 | This covers subprocess scenarios. | slice 1 | observed: tests/test_clipboard.py _SUBPROCESS_PRELUDE as_wsl_session and test_set_clipboard_alone_does_not_displace_owned_backend; tests/test_no_pillow_extra.py paste_html scenario assign _platform.current |
-| 7 | Host skips that existed only because of the global `sys.platform` faking are removed. | slice 2 |  |
+| 7 | Host skips that existed only because of the global `sys.platform` faking are removed. | slice 2 | observed: tests/test_copy_files_default_writer.py darwin_helper: win32 skip removed; tests/test_copy_image_failures.py test_default_write_stub_wrapped_as_clipboard_image_error host skipif replaced by fake_platform('win32'); remaining skips are host-capability (test_copy_files_contract.py:184 URI decoding, native probes) |
 | 7.1 | As a result, the pretend-Darwin writer group runs on every matrix OS. | slice 2 |  |
-| 8 | Shared fixtures use file names that are valid on every matrix OS. | slice 2 |  |
-| 8.1 | A host-only awkward name (such as `"` or `\` on POSIX) is allowed only as an explicitly gated addition. | slice 2 |  |
-| 8.2 | Shared expectations must not depend on such a gated host-only name. | slice 2 |  |
-| 9 | Tests that need a POSIX-only stdlib attribute (such as `os.killpg`) get it from the fake rather than requiring it from the host. | slice 2 |  |
-| 10 | Platform-gated message assertions check: | slice 2 |  |
-| 10.1 | the exception type, and | slice 2 |  |
-| 10.2 | either the platform-identifying fact (for example the named platform) or the product's own message source, | slice 2 |  |
-| 10.3 | not copied wording. | slice 2 |  |
-| 11 | A short project rule in `AGENTS.md` directs future desktop-free tests to the helper and to these rules. | slice 2 |  |
+| 8 | Shared fixtures use file names that are valid on every matrix OS. | slice 2 | observed: tests/test_copy_files_default_writer.py AWKWARD_NAMES shared = ['report final.pdf', 'données é.csv'] |
+| 8.1 | A host-only awkward name (such as `"` or `\` on POSIX) is allowed only as an explicitly gated addition. | slice 2 | observed: tests/test_copy_files_default_writer.py: 'quote " back\\slash.txt' appended only under sys.platform != 'win32', commented as gated POSIX-only addition |
+| 8.2 | Shared expectations must not depend on such a gated host-only name. | slice 2 | observed: tests/test_copy_files_default_writer.py: expectations index only AWKWARD_NAMES[0] and uris[1]; gated name appears only in a 'name not in script' loop |
+| 9 | Tests that need a POSIX-only stdlib attribute (such as `os.killpg`) get it from the fake rather than requiring it from the host. | slice 2 | observed: os.killpg supplied by monkeypatch.setattr(..., raising=False) stubs: tests/test_text_x11.py:33, test_copy_files_x11_writer.py:47, test_copy_files_x11_writer_stall.py:59; product reads getattr(os,'killpg',None) clipboard/_text_native_x11.py:121 |
+| 10 | Platform-gated message assertions check: | slice 2 | observed: seven unimplemented-platform assertions rewritten (slice 2 diff): copy_files_default_writer, paste_files_seam, paste_html_contract, paste_html_macos_reader, copy_html_contract, no_pillow_extra, paste_files_native_windows, copy_image_failures |
+| 10.1 | the exception type, and | slice 2 | observed: each rewritten test keeps pytest.raises(ClipboardContentError/ClipboardImageError) or __class__ is check |
+| 10.2 | either the platform-identifying fact (for example the named platform) or the product's own message source, | slice 2 | observed: assertions check f'({platform})' / '(sunos5)' / '(aix)' / '(linux)'; test_paste_files_native_windows compares with clipboard._files_native_windows._windows_unavailable_message(); copy_image stub checks NotImplementedError cause (stub names no platform, X3) |
+| 10.3 | not copied wording. | slice 2 | observed: 'not available on this platform' / 'not implemented for this platform' / 'unavailable' copied wording removed from those assertions; make check 539 passed, 23 skipped |
+| 11 | A short project rule in `AGENTS.md` directs future desktop-free tests to the helper and to these rules. | slice 2 | observed: AGENTS.md paragraph 'Desktop-free tests must pass on every matrix OS: fake the platform only via the fake_platform fixture ...' |
 | 12 | The existing CI matrix passes. | slice 2 |  |
 | 12.1 | `ubuntu-latest` passes. | slice 2 |  |
 | 12.2 | `macos-latest` passes. | slice 2 |  |
@@ -42,15 +42,15 @@ was the reason (X5 keeps host-capability skips); the guard fails the test (E6).
 | 13 | Locally, a guard detects any test that leaves the shared `sys.platform` different from the host's value. | slice 1 | observed: tests/conftest.py pytest_runtest_call wrapper fails a test leaving sys.platform != _HOST_PLATFORM; scratch monkeypatch.setattr(sys,'platform','win32') test failed, fake_platform version passed (scratch deleted) |
 | 14 | The existing public API is preserved. | slice 1 | observed: clipboard/__init__.py diff removes only the private 'import sys as sys' test re-export; no public name changed |
 | 15 | `clipboard.VERSION` is preserved. | slice 1 | observed: clipboard.VERSION untouched in diff |
-| 16 | No required restrictions apply beyond 14 and 15. | slice 2 |  |
-| X1 | Native probes and their CI venues are out of scope. | slice 2 |  |
-| X2 | Product behavior changes are out of scope. | slice 2 |  |
-| X3 | Product message changes are out of scope. | slice 2 |  |
-| X4 | New matrix cells are out of scope. | slice 2 |  |
-| X5 | Tests whose skip reflects a genuine host capability, rather than global faking, are out of scope (for example a real pasteboard probe, or file-URI decoding that differs by host). Their skips may stay. | slice 2 |  |
+| 16 | No required restrictions apply beyond 14 and 15. | slice 2 | observed: slice 1+2 diffs touch no restriction beyond public API and VERSION |
+| X1 | Native probes and their CI venues are out of scope. | slice 2 | observed: no scripts/probe_* or native-probe test or workflow changed in slices 1-2 |
+| X2 | Product behavior changes are out of scope. | slice 2 | observed: product diff (slice 1) only reroutes the platform read; message text identical |
+| X3 | Product message changes are out of scope. | slice 2 | observed: no product message string changed (git diff 60ecd90 -- clipboard shows only platform-read substitutions) |
+| X4 | New matrix cells are out of scope. | slice 2 | observed: no .github/workflows change |
+| X5 | Tests whose skip reflects a genuine host capability, rather than global faking, are out of scope (for example a real pasteboard probe, or file-URI decoding that differs by host). Their skips may stay. | slice 2 | observed: kept skips: test_copy_files_contract.py:184 (file URIs decode to POSIX-style paths), native-probe skipifs |
 | E1 | Shows 4.1, 4.2 and 7.1. On a Windows runner, the pretend-Darwin `copy_files` writer tests run with no skip. The helper fakes macOS for the product's platform choice, `Path.as_uri` keeps Windows behavior, and urllib's macOS-only `_scproxy` is never imported. | slice 2 |  |
 | E2 | Shows 4, 5, 6.2 and 13. The `text_session` fixture configured for `"linux"` on a macOS or Windows host selects the X11 or Wayland owner as it would on Linux. After the test, the shared `sys.platform` is unchanged because it was never patched. | slice 1 | observed: tests/test_text_session.py, test_text_dispatch.py, test_text_x11.py, test_text_wayland.py green on Darwin with text_session('linux',...) via fake_platform under the guard |
-| E3 | Shows 8, 8.1 and 8.2. A file-list fixture with a space and a Unicode name (`report final.pdf`, `données é.csv`) is created on every matrix OS. A name containing `"` or `\` is only a gated POSIX addition. | slice 2 |  |
+| E3 | Shows 8, 8.1 and 8.2. A file-list fixture with a space and a Unicode name (`report final.pdf`, `données é.csv`) is created on every matrix OS. A name containing `"` or `\` is only a gated POSIX addition. | slice 2 | observed: tests/test_copy_files_default_writer.py sources fixture creates AWKWARD_NAMES; gated '"'/'\\' name only off Windows |
 | E4 | Shows 9. The X11 owner-shutdown test runs on Windows, where `os.killpg` does not exist, because the fake supplies it. | slice 2 |  |
-| E5 | Shows 10. Rewording an unimplemented-platform message (as d408685 did) does not fail a test that only runs on another OS, because the assertion checks the error type and the named platform. | slice 2 |  |
+| E5 | Shows 10. Rewording an unimplemented-platform message (as d408685 did) does not fail a test that only runs on another OS, because the assertion checks the error type and the named platform. | slice 2 | observed: rewritten assertions check type + named platform (e.g. test_paste_files_seam '(aix)'); rewording the message does not break them |
 | E6 | Shows 13. A new test that assigns `sys.platform` directly fails the local suite on any host through the guard, before it reaches the Windows matrix cell. | slice 1 | observed: scratch tests/test_scratch_platform_guard.py: FAILED 'test left sys.platform=win32 (host darwin)' under nix develop -c uv run --locked --extra images pytest; deleted after |

@@ -37,7 +37,7 @@ _platform.current = lambda: "sunos5"
 try:
     clipboard.paste_html()
 except clipboard.ClipboardContentError as exc:
-    assert "not available" in str(exc), exc
+    assert "(sunos5)" in str(exc), exc
 else:
     raise AssertionError("default reader should raise ClipboardContentError")
 assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)

@@ -88,6 +88,16 @@ If the Windows cell still fails the Darwin group for a host reason the seam
 cannot remove, keep that skip with the true reason and record the learning
 here; no human decision is needed for that fallback.
 
+Accepted local proof (Darwin, 2026-11-03): `darwin_helper` skip removed;
+`test_default_write_stub_wrapped_as_clipboard_image_error` now fakes `win32`
+and runs on every host; seven unimplemented-platform assertions check error
+type plus the named platform or the product message source; `AGENTS.md` rule
+added. `nix develop -c make check` 539 passed, 23 skipped; the 12
+`darwin_helper` tests pass with `-v`. Kept host-capability skip:
+`tests/test_copy_files_contract.py` URI decoding. Pending: CI matrix
+(`windows-latest` runs the `darwin_helper` group) on this slice's published
+revision.
+
 ## Decisive premises
 
 Observed in this workspace (Darwin host, `nix develop -c uv run --locked

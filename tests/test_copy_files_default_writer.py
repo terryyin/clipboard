@@ -19,7 +19,8 @@ from clipboard import _files_native_macos
 
 AWKWARD_NAMES = ["report final.pdf", "données é.csv"]
 if sys.platform != "win32":
-    # Windows file names cannot contain ``"``, and ``\\`` is its separator.
+    # Gated POSIX-only addition: Windows file names cannot contain ``"``, and
+    # ``\\`` is its separator. Shared expectations do not depend on it.
     AWKWARD_NAMES.append('quote " back\\slash.txt')
 
 
@@ -56,7 +57,6 @@ def test_default_writer_raises_naming_platform(
     clipboard.set_files_clipboard_writer(None)
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.copy_files([str(sources / AWKWARD_NAMES[0])])
-    assert "not available on this platform" in str(raised.value)
     assert f"({platform})" in str(raised.value)
 
 
@@ -74,11 +74,11 @@ def test_reset_writer_restores_default(restore_files_clipboard_writer):
 
 @pytest.fixture
 def darwin_helper(monkeypatch, restore_files_clipboard_writer, fake_platform):
-    """Default writer on a pretend Darwin with a scripted osascript."""
-    if sys.platform == "win32":
-        # Patching the shared ``sys.platform`` to darwin on Windows sends
-        # ``Path.as_uri`` into urllib's macOS-only ``_scproxy`` import.
-        pytest.skip("pretend-Darwin writer tests need a POSIX host")
+    """Default writer on a pretend Darwin with a scripted osascript.
+
+    Runs on every host: only the package's platform seam is faked, so stdlib
+    (``Path.as_uri``) keeps the host's behavior and expectations derive from it.
+    """
     fake_platform("darwin")
     clipboard.set_files_clipboard_writer(None)
 

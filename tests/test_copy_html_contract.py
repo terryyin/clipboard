@@ -238,6 +238,6 @@ def test_unsupported_platform_default_writer_is_content_error(
     with pytest.raises(clipboard.ClipboardContentError) as raised:
         clipboard.copy_html("<b>x</b>", "x")
     message = str(raised.value).lower()
-    assert "not available" in message
+    assert "(linux)" in message
     assert "multi-type" in message
     assert "xclip" in message

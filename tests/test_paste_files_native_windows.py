@@ -49,9 +49,10 @@ def test_windows_reader_non_windows_raises_content_error(fake_platform):
 
     assert raised.value.__class__ is clipboard.ClipboardContentError
     assert not isinstance(raised.value, clipboard.ClipboardImageError)
-    message = str(raised.value).lower()
-    assert "cf_hdrop" in message or "windows" in message
-    assert "unavailable" in message
+    assert (
+        str(raised.value)
+        == clipboard._files_native_windows._windows_unavailable_message()
+    )
 
 
 def test_windows_reader_path_list_uses_contract_normalize(

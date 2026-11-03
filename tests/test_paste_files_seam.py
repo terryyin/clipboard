@@ -22,7 +22,7 @@ def test_default_reader_raises_on_unknown_platform(
         clipboard.paste_files()
     assert raised.value.__class__ is clipboard.ClipboardContentError
     assert not isinstance(raised.value, clipboard.ClipboardImageError)
-    assert "not available on this platform" in str(raised.value)
+    assert "(aix)" in str(raised.value)
 
 
 def test_injected_reader_returns_paths(restore_files_clipboard_reader):

@@ -243,5 +243,5 @@ def test_reset_reader_restores_default(
     monkeypatch.setattr(clipboard._html_native_macos.subprocess, "run", no_helper)
     clipboard.set_html_clipboard_reader(lambda: _fragment_offer("<i>x</i>"))
     clipboard.set_html_clipboard_reader(None)
-    with pytest.raises(clipboard.ClipboardContentError, match="not available"):
+    with pytest.raises(clipboard.ClipboardContentError, match=r"\(sunos5\)"):
         clipboard.paste_html()
