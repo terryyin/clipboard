@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#bounded-x11-text-write
 **Source:** [Bound the X11 text write for large text on a stalled display](../../seeds/SEED-001-clipboard-true-to-its-name.md#bounded-x11-text-write)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Provenance
@@ -72,7 +73,7 @@ merge 42c0a6f). The X11 writer came from slice 4 (8a816be, c086e20,
 
 ### 1. Bounded X11 owner input
 Type: Behavior
-Status: planned
+Status: done
 Proof: rows 1–3 above.
 
 Behavior: Linux X11 session with `xclip` on `PATH` whose owner never reads
@@ -157,4 +158,16 @@ were identified.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1 (2026-11-03): the temp-file-stdin owner launch now exists in both
+  `clipboard/_text_native_x11.py` and `clipboard/_files_native_x11_writer.py`
+  `_start_owner` (differing only in command and launch-error mapping). The
+  refactor pass stopped at the subsystem gate; the maintainer chose to keep
+  both copies here and defer one shared launcher (likely in
+  `clipboard/_desktop`, possibly also covering the excluded `copy_image` pipe
+  write) as a follow-up for backlog consideration at retrospective/wrap-up.
+- Slice 1 accepted proof: `tests/test_text_x11_write_stall.py` (real
+  non-reading owner, 200,000 chars → `ClipboardContentError` within 1 s bound
+  + 2 s margin, owner pid signalled; failed pre-fix at its 6 s watchdog);
+  `FakeX11.popen` now asserts a file `stdin`; `make check` 538 passed,
+  24 skipped. Real `xclip` with a file stdin is owned by gated CI
+  `native-linux-x11-text`.

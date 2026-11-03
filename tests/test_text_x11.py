@@ -174,10 +174,8 @@ def test_rejected_text_never_starts_xclip(x11):
     assert x11.popens == []
 
 
-@pytest.mark.parametrize("broken_pipe", [False, True])
-def test_owner_exiting_early_raises_quoting_its_stderr(x11, broken_pipe):
+def test_owner_exiting_early_raises_quoting_its_stderr(x11):
     x11.owner_exit = (1, DEAD_DISPLAY)
-    x11.broken_pipe = broken_pipe
 
     with pytest.raises(clipboard.ClipboardContentError) as caught:
         clipboard.copy("x")
