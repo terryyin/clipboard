@@ -24,7 +24,11 @@ CONSUMER = textwrap.dedent(
     $formats = @()
     if ($null -ne $o) { $formats = @($o.GetFormats()) }
     $drop = @([Windows.Forms.Clipboard]::GetFileDropList() | ForEach-Object { B $_ })
-    $gc = @(Get-Clipboard -Format FileDropList | ForEach-Object { B $_.FullName })
+    # PowerShell 5.1 emits the drop list as one collection object, so
+    # unroll it: ``$_.FullName`` on it is an array that [string] joins.
+    $gc = @(foreach ($item in @(Get-Clipboard -Format FileDropList)) {
+        foreach ($name in @($item.FullName)) { B $name }
+    })
     $effect = $null
     $effectBytes = $null
     if ($null -ne $o -and $o.GetDataPresent('Preferred DropEffect')) {

@@ -263,3 +263,8 @@ Slice 4 (in progress): Windows writer `clipboard/_files_native_windows_writer.py
 pyperclip) is desktop-free proven; native proof is the gated CI job
 `native-windows-copy-files` (independent PowerShell consumer, rechecks at
 0/5/10 s after writer exit, Shell.Application Paste into a temp folder).
+CI result (run 41560847952): Explorer `Shell.Application` Paste on
+windows-latest created both copies with matching bytes and unchanged
+sources, drop effect 01-00-00-00, `GetFileDropList` exact; the probe's
+`Get-Clipboard -Format FileDropList` read joined both paths into one string
+(PowerShell 5.1 collection), so the probe now unrolls it.
