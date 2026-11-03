@@ -133,7 +133,7 @@ Finder paste. Postcondition: seed example 1 (macOS) verified or limited.
 
 ### 4. Windows native writer and Explorer shell proof
 Type: Behavior
-Status: planned
+Status: done
 Proof: default win32 writer uses `ctypes` (no pywin32): `OpenClipboard` with
 the same bounded retry as the readers, `EmptyClipboard`, a wide `DROPFILES`
 `CF_HDROP`, and registered `Preferred DropEffect` DWORD 1; gated job
@@ -268,3 +268,9 @@ windows-latest created both copies with matching bytes and unchanged
 sources, drop effect 01-00-00-00, `GetFileDropList` exact; the probe's
 `Get-Clipboard -Format FileDropList` read joined both paths into one string
 (PowerShell 5.1 collection), so the probe now unrolls it.
+Slice 4 accepted on run 41561268655 (windows-latest image win25-vs2026
+20261030.294.1, Windows NT 10.0.26100, PowerShell 5.1.26100.33648, Python
+3.13.17, AMD64): independent consumer, writer-exit rechecks, drop effect 1,
+and `Shell.Application` Explorer-shell Paste copying both files byte-equal
+with sources unchanged. This is the Explorer shell verb, not an interactive
+Explorer window.

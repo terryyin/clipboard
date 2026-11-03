@@ -27,8 +27,8 @@ Input: only the story's Goal, Scope and Key examples (and the start of Considere
 | 5.2 | Directories are offered | slice 1 | observed: tests/test_copy_files_contract.py::test_valid_paths_reach_writer_absolute_ordered_with_duplicates (directory reaches writer) |
 | 6 | The offer stays pasteable after the writing Python process exits | slice 7 | |
 | 7.1 | macOS Aqua native offer: `NSPasteboard` file URLs | slice 3 | observed: scripts/probe_macos_native_copy_files.py JSON independent.types (public.file-url, NSFilenamesPboardType) + independent.paths == expected_paths after writer child exit; gated tests/test_copy_files_native_macos.py::test_macos_copy_files_independent_file_url_consumer_probe |
-| 7.2 | Windows native offer: `CF_HDROP` | slice 4 | |
-| 7.3 | Windows native offer: `Preferred DropEffect` = copy | slice 4 | |
+| 7.2 | Windows native offer: `CF_HDROP` | slice 4 | observed: Actions run 41561268655 job native-windows-copy-files (tests/test_copy_files_native_windows.py::test_windows_copy_files_independent_consumer_and_shell_paste_probe): independent PowerShell GetFileDropList / Get-Clipboard FileDropList equal the two Unicode+space paths in order after writer exit, rechecked at 0/5/10 s |
+| 7.3 | Windows native offer: `Preferred DropEffect` = copy | slice 4 | observed: Actions run 41561268655 job native-windows-copy-files (tests/test_copy_files_native_windows.py::test_windows_copy_files_independent_consumer_and_shell_paste_probe): independent.drop_effect == 1, drop_effect_bytes 01-00-00-00 |
 | 7.4 | Linux X11 native offer: `text/uri-list` | slice 5 | |
 | 7.5 | Linux Wayland native offer: `text/uri-list` | slice 6 | |
 | 7.6 | Linux X11/Wayland: also the GNOME copied-files convention, where the helper can offer it | slice 6 | |
