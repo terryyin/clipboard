@@ -10,6 +10,13 @@ Makefile/local `uv run --extra …` alone left the GitHub Actions matrix `tests`
 job on bare `uv sync/run --locked`, so published slice work failed on every
 OS/Python cell until a CI repair aligned the workflow.
 
+Responsibility (triage 2026-11-03): project — Clipboard's `Makefile` and
+`.github/workflows/ci.yml` matrix carry separate `uv` invocations; no project findings record is defined in this project's guidance, so it stays here.
+Current assessment: repair 48e8266 is adopted (matrix `tests` uses
+`--extra images`), but the two command seams remain independent. Keep open
+until the next new optional extra enters pytest; no story selected for one
+occurrence.
+
 ### Occurrences
 - Execution: SEED-001#read-images
   - Timestamp: 2026-11-02T10:42:00+07:00
@@ -77,6 +84,12 @@ Editing the shared default `NotImplementedError` message for honesty on
 unimplemented platforms invalidated a substring assertion that only runs off
 Darwin/Linux, so the Windows matrix failed after the evidence-limit commit
 until a follow-up assertion fix.
+
+Responsibility (triage 2026-11-03): project — a Clipboard test coupled to
+copied stub wording; no project findings record is defined in this project's guidance, so it stays here. Repaired for that test by c5e10c3; the general
+rule is in scope of queued
+[SEED-003#host-independent-desktop-free-tests](.planning/seeds/SEED-003-host-independent-tests.md#host-independent-desktop-free-tests)
+(queued, not resolved). Related to DD-010, distinct cause.
 
 ### Occurrences
 - Execution: SEED-001#write-images
@@ -167,6 +180,13 @@ the same helper-producer pattern.
 
 ## DD-010 — Desktop-free unavailable-path test asserted host OS
 A desktop-free test for the Windows unavailable stub used `assert sys.platform != "win32"` so the path was only exercised off Windows; the windows-latest matrix failed until the assertion was replaced with a platform monkeypatch.
+
+Responsibility (triage 2026-11-03): project — Clipboard's desktop-free tests
+and fixtures encode host assumptions (the shared `text_session` fixture in
+`tests/conftest.py` still patches the global `sys.platform`); no project findings record is defined in this project's guidance, so it stays here. Response:
+queued
+[SEED-003#host-independent-desktop-free-tests](.planning/seeds/SEED-003-host-independent-tests.md#host-independent-desktop-free-tests)
+(queued, not resolved).
 
 ### Occurrences
 - Execution: SEED-001#read-files
