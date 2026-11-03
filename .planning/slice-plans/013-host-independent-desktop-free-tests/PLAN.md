@@ -98,6 +98,16 @@ added. `nix develop -c make check` 539 passed, 23 skipped; the 12
 5380548 passed every matrix cell; on `windows-latest` the `darwin_helper` group and X11 owner-shutdown
 tests ran and passed (no skip).
 
+## Execution complete
+
+Product advice: no change. The story's outcome holds across the matrix with
+no correction needed; it addresses the causes recorded in
+[DD-010](../../../ProjectFindings.md#dd-010--desktop-free-unavailable-path-test-asserted-host-os)
+and [DD-005](../../../ProjectFindings.md#dd-005--platform-stub-wording-change-broke-windows-only-assertion),
+whose status wrap-up may settle. Minor, uncorrected:
+`tests/test_inspect_seam.py` keeps a host branch whose two arms assert the
+same thing (older, no host-dependence risk).
+
 ## Decisive premises
 
 Observed in this workspace (Darwin host, `nix develop -c uv run --locked
