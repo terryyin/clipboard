@@ -257,3 +257,9 @@ CI repair after slice 3 (run 41558761684): desktop-free writer tests must use
 file names valid on Windows (`"` and `\` are rejected there).
 A second repair (run 41559117116): pretend-Darwin writer tests patch the
 shared `sys.platform`, so they skip on Windows hosts.
+
+Slice 4 (in progress): Windows writer `clipboard/_files_native_windows_writer.py`
+(ctypes CF_HDROP + Preferred DropEffect 1, hidden STATIC owner window like
+pyperclip) is desktop-free proven; native proof is the gated CI job
+`native-windows-copy-files` (independent PowerShell consumer, rechecks at
+0/5/10 s after writer exit, Shell.Application Paste into a temp folder).

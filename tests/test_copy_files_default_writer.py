@@ -1,6 +1,6 @@
 """Desktop-free tests for copy_files' platform-selected default writer.
 
-Non-macOS platforms raise naming the platform; on a pretend Darwin,
+Platforms without a writer raise naming the platform; on a pretend Darwin,
 ``subprocess.run`` in ``clipboard._files_native_macos`` is replaced, so no test
 here touches the real pasteboard or needs an Aqua session.
 """
@@ -46,7 +46,7 @@ def sources(tmp_path):
     return tmp_path
 
 
-@pytest.mark.parametrize("platform", ["linux", "win32", "aix"])
+@pytest.mark.parametrize("platform", ["linux", "aix"])
 def test_default_writer_raises_naming_platform(
     sources, restore_files_clipboard_writer, monkeypatch, platform
 ):

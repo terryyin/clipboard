@@ -152,9 +152,11 @@ def copy_files(paths: Iterable[str | os.PathLike[str]]) -> None:
     before the writer runs, so the current clipboard is left untouched.
     Writer, helper, access, or transfer failures also raise
     ``ClipboardContentError``. On macOS Aqua the default writer publishes one
-    file-URL ``NSPasteboard`` item per path via ``osascript`` / AppKit; other
-    platforms raise ``ClipboardContentError`` naming the platform until their
-    writers land. Tests inject one via ``set_files_clipboard_writer``.
+    file-URL ``NSPasteboard`` item per path via ``osascript`` / AppKit; on
+    Windows desktop it sets ``CF_HDROP`` with ``Preferred DropEffect`` copy via
+    ``ctypes``; other platforms raise ``ClipboardContentError`` naming the
+    platform until their writers land. Tests inject one via
+    ``set_files_clipboard_writer``.
     """
     absolute = _validate_copy_files_paths(paths)
     _call_content_backend("file-list write", _files_clipboard_writer, absolute)
