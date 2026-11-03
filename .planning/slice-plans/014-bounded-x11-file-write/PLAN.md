@@ -63,19 +63,83 @@ fbafe60..6ddb51d, excluding trunk merge a580bb1; net diff
 ### 1. Bounded X11 file-list owner input
 Type: Behavior
 Status: planned
-Proof: rows 1–2 above. Candidate fix: write the body to an unlinked
-temporary file, seek to 0 and pass it as the owner's stdin (no pipe), or
-otherwise bound the write by the shared deadline; choose and justify, and
-align with SEED-001#bounded-x11-text-write's choice when it has landed.
+Proof: rows 1–2 above.
+
+Behavior: Linux X11 session with `xclip` on `PATH` whose owner never reads
+its input (stalled display) → `copy_files(paths)` whose `text/uri-list` body
+is larger than a pipe buffer → `ClipboardContentError` within the 10 s write
+bound, the owner's process group signalled, as for a short list today.
+
+`_start_owner` writes the body to an unlinked `tempfile.TemporaryFile()`,
+seeks to 0 and passes it as the owner's `stdin` (closed once the owner has
+it); Python never writes to a pipe, so the `BrokenPipeError` handling and
+`FakeUriListOwner`'s broken-pipe mode go away, and an early exit is still
+reported from status and the stderr log. `FakeX11Files.popen` reads the body
+from the stdin file instead of asserting `subprocess.PIPE`. The new
+real-process test stubs `os.killpg` with `raising=False`, as the existing
+writer fixture does, so it terminates its own child on Windows CI too.
 
 ### 2. Native proof for directories, duplicates and relative paths
 Type: Behavior
 Status: planned
 Proof: row 3 above.
 
+Behavior: each desktop's gated `copy_files` probe → a further offer-level
+round copies `[<relative file>, <directory>, <same file again>]` from a
+child Python process whose cwd is the probe's source folder, and exits → the
+platform's existing independent consumer (`xclip -o`, `wl-paste`,
+PowerShell 5.1 `-STA` CF_HDROP reader, `osascript` `public.file-url` items)
+reads three absolute paths in that order, directory included, and
+`paste_files()` agrees.
+
+The existing two-file round, including its Thunar / Explorer paste, stays as
+it is: a duplicate entry would collide in a file-manager paste, and
+file-manager evidence is excluded. If a consumer shows a platform drops or
+merges the duplicate or the directory, stop under the preserved-promise rule
+above.
+
+## Decisive premises
+
+Observed in this workspace (Darwin, `nix develop -c uv run`), scratch edits
+reverted:
+
+- **Symptom (finding 1).** `_x11_files_clipboard_writer` with
+  `_XCLIP_URI_LIST_WRITE_CMD` pointed at a `sys.executable` script that only
+  sleeps, TARGETS stubbed empty, write bound 1 s, 6 s thread watchdog:
+  10 paths (1,100-byte body) → `ClipboardContentError after 1.0s`;
+  2,000 paths (220,000-byte body) → `STILL BLOCKED at 6s watchdog`.
+- **Fix (slice 1).** Same harness with the temp-file `stdin` applied:
+  2,000 paths → `ClipboardContentError after 1.0s`. With that edit in
+  `clipboard/_files_native_x11_writer.py`,
+  `uv run --all-extras pytest -q tests` → 9 failed, 519 passed, 24 skipped
+  (baseline 528 passed), all in `tests/test_copy_files_x11_writer.py` through
+  `FakeX11Files.popen` / `FakeUriListOwner`: those are the consumers slice 1
+  adapts.
+- **macOS duplicate and directory (slice 2's riskiest platform).** From a cwd
+  holding `report final.pdf` and `a dir/`, default-writer
+  `copy_files(["report final.pdf", "a dir", "report final.pdf"])` succeeded
+  (no "kept N of M"); an independent `osascript` AppKit read returned three
+  `public.file-url` items in order (`…/report%20final.pdf`,
+  `…/a%20dir/`, `…/report%20final.pdf`) and `paste_files()` returned the
+  three absolute paths. The prior text clipboard was restored afterwards.
+  X11, Wayland and Windows consumers are proved by their gated CI jobs.
+
 ## Current decisions
 
 - Correction stays inside the file-list subsystem.
+- Feed `xclip` a temp-file `stdin` rather than a bounded pipe-writer thread,
+  matching SEED-001#bounded-x11-text-write's recorded decision (no
+  partial-write or `BrokenPipeError` handling; the owner's input is complete
+  before it starts). Neither correction extracts a shared helper.
+- The directory/duplicate/relative proof is a separate offer-level round in
+  each probe; file-manager pastes keep the two-file round.
+
+## Plan review
+
+Slice-plan refinement not needed: two independent findings map to two
+slices with their own proof, slice 1's consumers and slice 2's riskiest
+native premise were observed, and no boundary, design, proof or sizing
+concern remains. No remaining slice-specific concerns were identified.
 
 ## Learnings
 

@@ -91,7 +91,7 @@ platform distinctions, reuse candidates, and uncertainty.
 
 **Identity:** SEED-001#bounded-x11-file-write
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/014-bounded-x11-file-write/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/014-bounded-x11-file-write/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"c9ca8b031d954198d2a4ceb0eae584c183fca25bc125263e51d4c84da703be1f","plan":"80bbb2521ea44bc1fac0f838ddb3e8eed770167a4dd9bce045eec7aceb169fd0"}}
 ```
 
 **Goal:** Callers of `copy_files(paths)` on Linux X11 get the documented
