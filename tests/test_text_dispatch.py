@@ -13,16 +13,78 @@ import clipboard
 from clipboard import _text
 
 
-@pytest.mark.parametrize("platform", ["darwin", "linux"])
-def test_already_resolved_pyperclip_mechanism_wins(text_session, monkeypatch, platform):
+@pytest.mark.parametrize(
+    ("platform", "env", "helpers", "owner"),
+    [
+        ("darwin", {}, (), "macos"),
+        ("linux", {"DISPLAY": ":0"}, ("xclip",), "x11"),
+        (
+            "linux",
+            {"WAYLAND_DISPLAY": "wayland-0"},
+            ("wl-copy", "wl-paste"),
+            "wayland",
+        ),
+    ],
+)
+def test_resolved_pyperclip_state_does_not_displace_owned_backend(
+    text_session, monkeypatch, platform, env, helpers, owner
+):
     fake = FakePyperclip(monkeypatch, available=True)
-    # Even without any desktop session, a caller-chosen mechanism is used.
-    text_session(platform)
+    text_session(platform, env, helpers)
+    written = []
+    monkeypatch.setitem(_text._OWNED_TEXT_WRITERS, owner, written.append)
+    monkeypatch.setitem(_text._OWNED_TEXT_READERS, owner, lambda: "from owner")
 
-    assert _text._select_text_backend() == "pyperclip"
+    assert _text._select_text_backend() == owner
     clipboard.copy("chosen")
-    assert fake.writes == ["chosen"]
-    assert clipboard.paste() == "chosen"
+    assert clipboard.paste() == "from owner"
+    assert written == ["chosen"]
+    assert fake.writes == []
+    assert fake.reads == 0
+
+
+def test_resolved_pyperclip_without_session_is_still_diagnosed(
+    text_session, monkeypatch
+):
+    fake = FakePyperclip(monkeypatch, available=True)
+    text_session("linux")
+
+    for call in (lambda: clipboard.copy("x"), clipboard.paste):
+        with pytest.raises(
+            clipboard.ClipboardContentError, match="no desktop session is visible"
+        ):
+            call()
+    assert fake.writes == []
+    assert fake.reads == 0
+
+
+def test_explicit_hooks_delegate_to_pyperclip_and_none_restores_owner(
+    text_session, monkeypatch
+):
+    fake = FakePyperclip(monkeypatch, available=True)
+    text_session("darwin")
+    owned = []
+    monkeypatch.setitem(_text._OWNED_TEXT_WRITERS, "macos", owned.append)
+    monkeypatch.setitem(_text._OWNED_TEXT_READERS, "macos", lambda: "owner")
+
+    clipboard.set_text_clipboard_writer(lambda text: pyperclip.copy(text))
+    clipboard.set_text_clipboard_reader(lambda: pyperclip.paste())
+    clipboard.copy("via pyperclip")
+    assert clipboard.paste() == "via pyperclip"
+    assert fake.writes == ["via pyperclip"]
+    assert owned == []
+
+    error = pyperclip.PyperclipException("no mechanism")
+    fake.copy_error = error
+    with pytest.raises(clipboard.ClipboardContentError, match="text write") as caught:
+        clipboard.copy("x")
+    assert caught.value.__cause__ is error
+
+    clipboard.set_text_clipboard_writer(None)
+    clipboard.set_text_clipboard_reader(None)
+    clipboard.copy("owned again")
+    assert owned == ["owned again"]
+    assert clipboard.paste() == "owner"
 
 
 @pytest.mark.parametrize(

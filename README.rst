@@ -64,12 +64,12 @@ background owner serves exactly the written bytes); on macOS each
 and then raises (no other bound is added there). Delegated paths carry no
 bound promise.
 
-The default backend is chosen per call, in pyperclip's order, so no working
-user changes mechanism (except macOS pyobjc users, below):
+The default backend is chosen per call from the current session, in
+pyperclip's order (except macOS pyobjc users, below). A mechanism already
+resolved in pyperclip (``pyperclip.set_clipboard``, or earlier direct
+``pyperclip.copy`` / ``paste`` use in the process) never displaces an owned
+backend below; delegate deliberately instead (see below).
 
-* a mechanism already resolved in pyperclip (selected with
-  ``pyperclip.set_clipboard``, or by earlier direct ``pyperclip.copy`` /
-  ``paste`` use in the process) is used through pyperclip;
 * Windows: pyperclip's ``CF_UNICODETEXT`` backend (ctypes);
 * macOS Aqua (owned): ``pbcopy`` / ``pbpaste`` run with ``LC_ALL=en_US.UTF-8``
   in the helper's environment (the process environment is not changed).
@@ -86,11 +86,23 @@ user changes mechanism (except macOS pyobjc users, below):
   decoded as Latin-1;
 * X11 with only ``xsel``, Klipper, or Qt, and other platforms: pyperclip.
 
-Delegated paths (an already resolved pyperclip mechanism, WSL, X11 without
-``xclip``, other platforms) get failure translation only — pyperclip errors,
+Delegated paths (WSL, X11 without ``xclip``, other platforms) get failure translation only — pyperclip errors,
 a missing executable, or a non-``str`` result become
 ``ClipboardContentError``, and a ``None`` result becomes ``""`` — and are
 unverified (see Evidence).
+
+**Compatibility note:** a process that selected a mechanism with
+``pyperclip.set_clipboard`` (or used pyperclip directly) on macOS, X11 with
+``xclip`` or Wayland with wl-clipboard now reaches the owned backend, not that
+mechanism. To keep pyperclip there, delegate explicitly, with pyperclip looked
+up at call time::
+
+    import pyperclip
+    clipboard.set_text_clipboard_writer(lambda text: pyperclip.copy(text))
+    clipboard.set_text_clipboard_reader(lambda: pyperclip.paste())
+
+Failures still become ``ClipboardContentError``; pass ``None`` to each setter
+to restore default dispatch.
 
 **Compatibility note:** ``copy`` / ``paste`` no longer let
 ``pyperclip.PyperclipException`` (or ``PyperclipWindowsException``) escape. A
@@ -98,7 +110,7 @@ caller catching ``pyperclip.PyperclipException`` must catch
 ``clipboard.ClipboardContentError`` instead; the pyperclip exception is its
 ``__cause__``.
 
-For desktop-free tests, inject fakes with
+For desktop-free tests, or deliberate delegation as above, inject with
 ``clipboard.set_text_clipboard_writer(writer)`` and
 ``clipboard.set_text_clipboard_reader(reader)``; pass ``None`` to restore the
 default. A writer receives the already validated ``str``; a reader takes no
@@ -407,7 +419,7 @@ Evidence / verified platforms (native probes gated via
 
   The Linux and Windows venues are headless CI runner sessions, not
   owner-held desktops. Unverified: delegated paths (``xsel``, Klipper, Qt,
-  WSL, an already resolved pyperclip mechanism), Cygwin, SSH sessions,
+  WSL), Cygwin, SSH sessions,
   containers, headless environments other than those jobs, and remote
   desktops. Re-run with ``CLIPBOARD_NATIVE_PROBE=1`` and
   ``tests/test_text_native_macos.py``,

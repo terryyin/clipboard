@@ -57,7 +57,7 @@ after publication.
 
 ### 1. Owned text backends ignore resolved pyperclip state
 Type: Behavior
-Status: planned
+Status: done
 Proof: all rows above; `nix develop -c make check`.
 
 Behavior: an owned desktop session whose process already resolved a pyperclip
@@ -84,4 +84,4 @@ observed. No remaining slice-specific concerns were identified.
 
 ## Learnings
 
-_(none yet)_
+- Slice 1: the three-line removal held as predicted. Proof: `nix develop -c make check` (532 passed, 24 skipped); the six new/replaced tests in `tests/test_text_dispatch.py` and `tests/test_clipboard.py` fail without the `_text.py` change and pass with it. Refactor pass found nothing further.

@@ -184,6 +184,23 @@ print(json.dumps([clipboard.paste(), pyperclip.is_available()]))
     assert observed == [value, True]
 
 
+def test_set_clipboard_alone_does_not_displace_owned_backend():
+    observed = _run(
+        """
+import json
+import sys
+import pyperclip
+
+pyperclip.set_clipboard("pbcopy")
+assert pyperclip.is_available()
+sys.platform = "darwin"
+from clipboard import _text
+print(json.dumps(_text._select_text_backend()))
+"""
+    )
+    assert observed == "macos"
+
+
 def test_default_backend_translates_pyperclip_failure():
     observed = _run(
         _SUBPROCESS_PRELUDE

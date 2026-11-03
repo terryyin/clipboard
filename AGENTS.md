@@ -3,8 +3,10 @@
 A small Python library exposing `copy`, `paste`, and `VERSION`. Text
 `copy` / `paste` are package-owned on macOS (`pbcopy` / `pbpaste`), Linux X11
 (`xclip`) and Wayland (wl-clipboard), use pyperclip's `CF_UNICODETEXT` backend
-on Windows, and delegate to pyperclip elsewhere (WSL, an already resolved
-pyperclip mechanism, X11 without `xclip`, other platforms); every text
+on Windows, and delegate to pyperclip elsewhere (WSL, X11 without `xclip`, other
+platforms; a resolved pyperclip mechanism never displaces an owned backend,
+only `set_text_clipboard_writer` / `set_text_clipboard_reader` delegate
+deliberately); every text
 failure raises `ClipboardContentError` (`paste()` returns `""` for absence,
 never `None`). It also offers optional image read/write via `paste_image` /
 `copy_image` when the `clipboard[images]` extra (Pillow) is installed, HTML

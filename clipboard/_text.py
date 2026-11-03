@@ -3,9 +3,10 @@
 Validation, coercion, ``None`` → ``""`` normalization, and failure translation
 sit above the seam so every backend shares them. The default backend selects
 its owner per call by session (``_desktop_text._text_session_owner``,
-pyperclip's order): Windows, WSL, a mechanism already resolved in pyperclip,
-X11 without ``xclip``, and other platforms delegate to pyperclip (resolved
-lazily, so ``import clipboard`` never makes pyperclip pick a mechanism);
+pyperclip's order, minus its process-wide resolved state): Windows, WSL, X11
+without ``xclip``, and other platforms delegate to pyperclip (resolved lazily,
+so ``import clipboard`` never makes pyperclip pick a mechanism); a mechanism
+the caller resolved in pyperclip never displaces an owned path;
 macOS (``_text_native_macos``: ``pbcopy`` / ``pbpaste``), Linux X11 with
 ``xclip`` (``_text_native_x11``), and Linux Wayland with wl-clipboard
 (``_text_native_wayland``) are owned paths.
@@ -27,15 +28,12 @@ from ._errors import ClipboardContentError, _call_content_backend
 def _select_text_backend() -> str:
     """Choose the default text backend at call time (never at import).
 
-    A mechanism the caller already resolved in pyperclip (``set_clipboard`` or
-    earlier pyperclip use) wins; otherwise the session rule in
-    ``_desktop_text._text_session_owner`` decides, raising
+    The session rule in ``_desktop_text._text_session_owner`` decides, raising
     ``ClipboardContentError`` when no desktop session or helper is visible.
+    A mechanism the caller already resolved in pyperclip (``set_clipboard`` or
+    earlier pyperclip use) is deliberately ignored; delegation is explicit
+    through ``set_text_clipboard_writer`` / ``set_text_clipboard_reader``.
     """
-    import pyperclip
-
-    if pyperclip.is_available():
-        return _desktop_text._TEXT_OWNER_PYPERCLIP
     return _desktop_text._text_session_owner()
 
 
@@ -84,8 +82,9 @@ _text_clipboard_reader: Callable[[], object] = _default_text_clipboard_reader
 
 
 def set_text_clipboard_writer(writer: Callable[[str], None] | None) -> None:
-    """Inject a plain-text clipboard writer (tests / fakes); ``None`` restores
-    the default session-dispatched writer.
+    """Inject a plain-text clipboard writer (fakes, or deliberate delegation
+    such as ``lambda text: pyperclip.copy(text)``); ``None`` restores the
+    default session-dispatched writer.
 
     The writer receives an already validated ``str``.
     """
@@ -96,8 +95,9 @@ def set_text_clipboard_writer(writer: Callable[[str], None] | None) -> None:
 
 
 def set_text_clipboard_reader(reader: Callable[[], object] | None) -> None:
-    """Inject a plain-text clipboard reader (tests / fakes); ``None`` restores
-    the default session-dispatched reader.
+    """Inject a plain-text clipboard reader (fakes, or deliberate delegation
+    such as ``lambda: pyperclip.paste()``); ``None`` restores the default
+    session-dispatched reader.
 
     A reader returning ``None`` means no text is offered; ``paste`` returns
     ``""``.
