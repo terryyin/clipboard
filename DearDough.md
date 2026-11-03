@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 18
+- Highest allocated local number: 19
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 When a packaging optional extra is required for new contract tests, updating
@@ -149,6 +149,15 @@ jobs pass on their first published run, with no CI repair cycle.
   - Observed effect: Structure relocation of session/listing helpers landed with no CI repair; five-job native confirmation stayed green while later slices continued under observation
   - Inference: Useful practice — reuse the same Xvfb/Sway venues and fail-not-skip native wrapper pattern when relocating desktop helpers; first-run green held for session-selection proof that desktop-free pytest cannot cover
 
+- Execution: SEED-001#clear-clipboard
+  - Timestamp: 2026-11-03T14:02:39Z
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: slices 3–6 each published a `progress: true` increment (342f12c, 0da29c3, c16d2c1, 8a7368d) then a records-only done commit with observed CI values (81ab56e, f93e1b4, 8184a23, e0c0643); runs 41649816028, 41651498162, 41654014945, 41658893626 had every native clear probe (X11, Sway, windows-latest) pass on its first run; the plan's "early probe at the start of the slice" became the probe's first step in the same increment, because an implementation agent cannot publish
+  - Observed effect: No probe or product CI repair in six slices; each CI wait took about 10–15 minutes while the next slice waited
+  - Inference: Useful practice holds; plans that schedule a CI-only premise "before" implementation should expect it to run inside the first published increment
+
 ## DD-009 — Producer-kind gap carried three slices before developer decision
 The story's "browser or rich editor" producer wording could not be met by the
 authorized CI venues; the gap was recorded at slice 4 as an interim obligation
@@ -267,6 +276,15 @@ found only when the same pattern recurred on the next run.
   - Observed effect: One wrong cause stated in a progress report and corrected later; no wrong action followed because the superseded revision changed only planning files
   - Inference: Classify a cancelled job by its steps / runner / annotations before naming supersession; a zero-step job with that annotation is infrastructure and warrants a rerun of the failed jobs for coverage
 
+- Execution: SEED-001#clear-clipboard
+  - Timestamp: 2026-11-03T14:43:29Z
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: run 41654014945 attempt 1: `Python 3.10 on macos-latest` cancelled after about 15 minutes with empty `runner_name` and no steps; `ci-github-diagnostic` showed only `CI passed` failing on `TEST_RESULT: abandoned`; `gh run rerun --failed` → attempt 2 green
+  - Observed effect: Classified as runner acquisition on the first report; no wrong cause stated; one rerun for coverage
+  - Inference: The DD-014 practice was applied directly; it worked when the classification checked runner and steps before naming a cause
+
 ## DD-015 — Fresh refactor agent for small CI repairs returned no change
 Delivery required an independent refactor agent before every publication; for
 three small repairs or proof-only changes it reported "none — already clean"
@@ -337,3 +355,20 @@ paste could not be observed.
   - Evidence: between commits 085b6d9 (2026-11-02T21:36:14+07:00) and 5787804 (2026-11-03T08:17:17+07:00): Finder rounds 1–2 answered "Only one / none" (round 1 overwritten by a PNG; round 2 pasteboard types empty at an unchanged changeCount); round 3 rejected with "I am not on the computer right now … Please proceed this without me"; the coordinator then found the session locked, `screencapture` "could not create image from display", and Finder Apple Events timing out; a slice 3 rework agent (about 150k subagent tokens) could not reproduce a vanish
   - Observed effect: The macOS file-manager claim ended as an evidence limit (G2) after one rework delegation and several investigation turns on a pasteboard hypothesis that the lock state may explain
   - Inference: Before asking for a developer-operated desktop round, check the session lock state and try host automation first; treat answers to remote prompts as possibly not observed at the machine (the developer's preference is now in agent memory)
+
+## DD-019 — Probe smoke check ran a destructive child helper on the owner desktop
+An implementation agent import-checked a new Linux probe support module on the
+macOS coordinator host by calling its `child_clear()` helper, which ran the
+real `clipboard.clear()` and emptied the developer's live clipboard. The
+delegation brief had not said that probe child helpers act on the live
+clipboard of whatever host runs them.
+
+### Occurrences
+- Execution: SEED-001#clear-clipboard
+  - Timestamp: unknown (2026-11-03, during slice 4 before commit 0da29c3)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: slice 4 implementation return: "I ran `linux_native_clear_support.child_clear()` on this Mac (it returned `{"raised": null}`, 0.27 s). That cleared the developer's live macOS clipboard."; slice 5 and 6 briefs then said never to run the real `clear()` or probe child helpers locally, and no recurrence was reported
+  - Observed effect: The developer's clipboard was emptied once without a planned probe; earlier authorized macOS probe runs had already replaced it, so no unique content is known lost
+  - Inference: For destructive or live-state operations, delegation briefs should name which helpers mutate the host's desktop and limit local smoke checks to imports or `evidence_limit` exits

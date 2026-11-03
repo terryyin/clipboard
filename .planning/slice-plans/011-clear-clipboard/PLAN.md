@@ -334,3 +334,20 @@ premises (slices 3–6) are each bounded by an early probe at the start of
 their slice, and their failure stops that slice and changes this plan. The
 interim "not available" default from slice 1 is an accepted trade-off, which
 slices 2, 4, 5, and 6 replace.
+
+## Execution complete
+
+Product advice:
+- No new product story. `clear()` is the first operation verified natively
+  on all four desktops (macOS probe; X11, Sway, and `windows-latest` CI);
+  the North Star evidence can record it.
+- Refinement notes for queued stories: SEED-001#wait-for-content can use
+  `clear()` for a known-empty start; SEED-001#primary-selection should decide
+  whether clearing PRIMARY joins its scope (this story excluded it).
+- Unresolved developer choice: whether frozen or zipped applications must be
+  supported on X11. `clear()` there runs `sys.executable -I
+  <package>/_x11_relinquish.py`, which ordinary wheel and sdist installs
+  satisfy but frozen apps do not.
+- Correction planned, not queued: SEED-001#shared-native-clear-proof
+  ([plan](../015-shared-native-clear-proof/PLAN.md)) consolidates the
+  duplicated native clear probe steps and fixes two omitted `clear()` mentions.
