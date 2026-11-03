@@ -2,7 +2,9 @@
 
 ``helper(XCLIP_TARGETS)`` is the independent consumer; ``xclip_no_owner``
 classifies its result as an unowned CLIPBOARD and ``wait_targeted`` polls it
-until a target is offered. ``raw_relinquish`` runs the mechanism without the
+until a target is offered. ``xclip_produce`` is the independent producer, and
+``X11`` describes this desktop to the shared ``linux_native_clear_steps``.
+``raw_relinquish`` runs the mechanism without the
 library: a separate Python sets the CLIPBOARD owner to ``None`` through
 libX11 ``ctypes`` and reports what libX11 returned;
 ``raw_relinquish_ends_html_owner`` is the probe's early step 2 built on it.
@@ -17,12 +19,11 @@ import subprocess
 import time
 from pathlib import Path
 
+from linux_native_clear_steps import HTML_BODY, HTML_TYPE, LinuxDesktop
 from native_clear_support import OWNER_EXIT_BOUND_S, child_python, helper, step
 
 XCLIP_TARGETS = ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"]
 OFFER_WAIT_S = 5.0
-HTML_TYPE = "text/html"
-HTML_BODY = b"<p><b>clear probe</b> html</p>"
 
 # The raw mechanism, independent of the library: relinquish CLIPBOARD and
 # report what libX11 returned and who owns CLIPBOARD afterwards.
@@ -88,6 +89,35 @@ def wait_targeted(target: str) -> dict:
         time.sleep(0.1)
 
 
+def xclip_produce(mime_type: str, body: bytes) -> dict:
+    """An independent ``xclip`` (not the library) owning one type."""
+    cmd = ["xclip", "-selection", "clipboard", "-t", mime_type, "-i"]
+    try:
+        # xclip forks a background owner and the foreground process exits;
+        # no pipes, so the forked owner cannot hold this run open.
+        producer = subprocess.run(
+            cmd,
+            input=body,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=15,
+            check=False,
+            start_new_session=True,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"cmd": cmd, "error": f"{type(exc).__name__}: {exc}"}
+    return {"cmd": cmd, "returncode": producer.returncode}
+
+
+X11 = LinuxDesktop(
+    owner="xclip",
+    listing=lambda: helper(XCLIP_TARGETS),
+    is_empty=xclip_no_owner,
+    wait_offered=wait_targeted,
+    produce=xclip_produce,
+)
+
+
 def raw_relinquish() -> dict:
     run = child_python(RAW_RELINQUISH)
     try:
@@ -131,6 +161,8 @@ def raw_relinquish_ends_html_owner(observed: dict) -> dict:
         "2_early_raw_xsetselectionowner_none_ends_html_owner",
         offered["offered"]
         and raw.get("returncode") == 0
+        and libx11.get("display_opened") is True
+        and libx11.get("owner_before", 0) != 0
         and libx11.get("owner_after") == 0
         and no_owner
         and owner_exit is not None,

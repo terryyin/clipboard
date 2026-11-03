@@ -14,7 +14,7 @@ its numbered return is recorded below verbatim or close.
 | 2 | The documentation names `clear()` wherever it lists the operations that pick Wayland on a mixed session | slice 1 | observed: clipboard/_desktop.py _is_linux_wayland docstring and AGENTS.md:36 name clear; README.rst:348 already states mixed-session clear clears Wayland |
 | 3 | Scope is limited to correcting SEED-001#clear-clipboard's proof and documentation structure | slice 4 | |
 | 3a.1 | One shared "cleared" observation behind the X11 / Wayland / Windows / macOS clear probes | slice 4 | |
-| 3a.2 | One Linux step set behind the X11 / Wayland clear probes | slice 2 | |
+| 3a.2 | One Linux step set behind the X11 / Wayland clear probes | slice 2 | observed: scripts/linux_native_clear_steps.py LinuxDesktop + shared steps used by both scripts/probe_linux_{x11,wayland}_native_clear.py (step lists identical to 9eb5a3c) |
 | 3a.3 | Wrappers rely on each step's own `ok` | slice 4 | |
 | 3a.4 | Every touched probe file stays within 250 lines | slice 4 | |
 | 3a.5 | `clear()` is named in the `_is_linux_wayland` docstring (`clipboard/_desktop.py`) | slice 1 | observed: clipboard/_desktop.py _is_linux_wayland docstring: "Used by image write, HTML read, inspect, and clear." |
@@ -53,7 +53,7 @@ its numbered return is recorded below verbatim or close.
 | 14a.1 | Desktops differ only by listing, empty predicate, producer and owner helper | slice 4 | |
 | 14a.2 | Platform-only steps stay per desktop: dead `DISPLAY`, missing `wl-copy`, Windows holder bound, macOS `copy("")` contrast, raw early mechanism steps | slice 4 | |
 | 14b | The shared producer step requires producer-owner exit on Wayland as on X11 | slice 2 | |
-| 14c | Shared Linux steps go in a new script module rather than `native_clear_support.py` | slice 2 | |
+| 14c | Shared Linux steps go in a new script module rather than `native_clear_support.py` | slice 2 | observed: new module scripts/linux_native_clear_steps.py; native_clear_support.py holds only the shared cleared_step rule |
 | X1 | EXCLUSION: how X11 `clear()` launches its relinquish helper in frozen or zipped applications (separate human decision) | slice 4 | |
 | X2 | EXCLUSION: a `make test-package` check of the installed `_x11_relinquish.py` | slice 4 | |
 | X3 | EXCLUSION: probes for other content kinds (text, inspect, copy_files) | slice 4 | |

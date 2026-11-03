@@ -38,158 +38,27 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 import sys
-import tempfile
-from pathlib import Path
 
-from linux_x11_native_clear_support import (
+from linux_native_clear_steps import (
     HTML_BODY,
     HTML_TYPE,
-    XCLIP_TARGETS,
+    UNKNOWN_BODY,
+    UNKNOWN_TYPE,
+    clear_twice_on_cleared,
+    copy_image_owner_ends,
+    file_list_producer_then_child_clear,
+    fresh_reads_empty,
+    producer_then_child_clear,
+)
+from linux_x11_native_clear_support import (
+    X11,
     absent_display,
     raw_relinquish_ends_html_owner,
-    wait_targeted,
-    xclip_no_owner,
 )
 from linux_x11_native_text_support import xvfb_version
-from native_clear_support import (
-    child_clear,
-    child_cleared,
-    child_python,
-    distro,
-    helper,
-    helper_pids,
-    read_everything,
-    reads_empty,
-    report,
-    step,
-    wait_pids_exit,
-)
+from native_clear_support import child_clear, distro, report, step
 from native_probe_common import linux_x11_environment
-
-URI_LIST_TYPE = "text/uri-list"
-UNKNOWN_TYPE = "application/x-clipboard-probe"
-UNKNOWN_BODY = b"clear probe custom bytes"
-COPY_IMAGE_CHILD = """
-from PIL import Image
-import clipboard
-
-clipboard.copy_image(Image.new("RGB", (4, 4), (255, 0, 0)))
-"""
-
-
-def _xclip_producer_then_child_clear(name: str, mime_type: str, body: bytes) -> dict:
-    """An independent background ``xclip`` owner of one type, then child clear."""
-    before = helper_pids("xclip")
-    cmd = ["xclip", "-selection", "clipboard", "-t", mime_type, "-i"]
-    try:
-        # xclip forks a background owner and the foreground process exits;
-        # no pipes, so the forked owner cannot hold this run open.
-        producer = subprocess.run(
-            cmd,
-            input=body,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=15,
-            check=False,
-            start_new_session=True,
-        )
-        produced = {"cmd": cmd, "returncode": producer.returncode}
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        produced = {"cmd": cmd, "error": f"{type(exc).__name__}: {exc}"}
-    offered = wait_targeted(mime_type)
-    owners = helper_pids("xclip", argv_contains=mime_type) - before
-    cleared = child_clear()
-    owner_exit = wait_pids_exit(owners)
-    after = helper(XCLIP_TARGETS)
-    reads = read_everything()
-    no_owner = xclip_no_owner(after)
-    return step(
-        name,
-        produced.get("returncode") == 0
-        and offered["offered"]
-        and child_cleared(cleared)
-        and no_owner
-        and reads_empty(reads)
-        and owner_exit["exited"],
-        producer=produced,
-        offered_before=offered,
-        producer_xclip_owner_pids=sorted(owners),
-        child_clear=cleared,
-        owner_exit=owner_exit,
-        xclip_targets_after=after,
-        classified_no_owner=no_owner,
-        reads=reads,
-    )
-
-
-def _file_list_producer_then_child_clear() -> dict:
-    """``text/uri-list`` naming an existing temp file, then child clear."""
-    with tempfile.TemporaryDirectory(prefix="clipboard-clear-probe-") as raw:
-        listed = Path(raw) / "clear probe file.txt"
-        listed.write_text("clear probe file\n", encoding="utf-8")
-        body = (listed.as_uri() + "\r\n").encode("ascii")
-        result = _xclip_producer_then_child_clear(
-            "7_file_list_producer_then_child_clear_reads_empty",
-            URI_LIST_TYPE,
-            body,
-        )
-        result["file_uri"] = listed.as_uri()
-        result["file_existed"] = listed.is_file()
-        result["ok"] = result["ok"] and result["file_existed"]
-        return result
-
-
-def _copy_image_owner_ends() -> dict:
-    before = helper_pids("xclip")
-    writer = child_python(COPY_IMAGE_CHILD)
-    offered = wait_targeted("image/png")
-    owners = helper_pids("xclip", argv_contains="image/png") - before
-    cleared = child_clear()
-    owner_exit = wait_pids_exit(owners)
-    after = helper(XCLIP_TARGETS)
-    reads = read_everything()
-    no_owner = xclip_no_owner(after)
-    return step(
-        "4_copy_image_owner_ends_after_child_clear",
-        writer.get("returncode") == 0
-        and offered["offered"]
-        and bool(owners)
-        and child_cleared(cleared)
-        and owner_exit["exited"]
-        and no_owner
-        and reads["paste_image"] == {"value": None}
-        and reads_empty(reads),
-        copy_image_child=writer,
-        offered_before=offered,
-        library_xclip_owner_pids=sorted(owners),
-        child_clear=cleared,
-        owner_exit=owner_exit,
-        xclip_targets_after=after,
-        classified_no_owner=no_owner,
-        reads=reads,
-    )
-
-
-def _clear_twice_on_cleared() -> dict:
-    first = child_clear()
-    second = child_clear()
-    after = helper(XCLIP_TARGETS)
-    reads = read_everything()
-    no_owner = xclip_no_owner(after)
-    return step(
-        "5_clear_twice_on_cleared_succeeds",
-        child_cleared(first)
-        and child_cleared(second)
-        and no_owner
-        and reads_empty(reads),
-        first=first,
-        second=second,
-        xclip_targets_after=after,
-        classified_no_owner=no_owner,
-        reads=reads,
-    )
 
 
 def _unopenable_display_names_display() -> dict:
@@ -212,38 +81,25 @@ def _unopenable_display_names_display() -> dict:
 
 
 def _probe(observed: dict) -> list[dict]:
-    steps = []
-    fresh = helper(XCLIP_TARGETS)
-    observed["fresh_unowned_targets"] = fresh
-    reads = read_everything()
-    no_owner = xclip_no_owner(fresh)
-    steps.append(
-        step(
-            "1_fresh_unowned_clipboard_reads_empty",
-            no_owner and reads_empty(reads),
-            xclip_targets=fresh,
-            classified_no_owner=no_owner,
-            reads=reads,
-        )
-    )
-    steps.append(raw_relinquish_ends_html_owner(observed))
-    steps.append(
-        _xclip_producer_then_child_clear(
-            "3_html_producer_then_child_clear_reads_empty", HTML_TYPE, HTML_BODY
-        )
-    )
-    steps.append(_copy_image_owner_ends())
-    steps.append(_clear_twice_on_cleared())
-    steps.append(_unopenable_display_names_display())
-    steps.append(_file_list_producer_then_child_clear())
-    steps.append(
-        _xclip_producer_then_child_clear(
+    return [
+        fresh_reads_empty(X11, "1_fresh_unowned_clipboard_reads_empty", observed),
+        raw_relinquish_ends_html_owner(observed),
+        producer_then_child_clear(
+            X11, "3_html_producer_then_child_clear_reads_empty", HTML_TYPE, HTML_BODY
+        ),
+        copy_image_owner_ends(X11, "4_copy_image_owner_ends_after_child_clear"),
+        clear_twice_on_cleared(X11, "5_clear_twice_on_cleared_succeeds"),
+        _unopenable_display_names_display(),
+        file_list_producer_then_child_clear(
+            X11, "7_file_list_producer_then_child_clear_reads_empty"
+        ),
+        producer_then_child_clear(
+            X11,
             "8_unknown_type_producer_then_child_clear_reads_empty",
             UNKNOWN_TYPE,
             UNKNOWN_BODY,
-        )
-    )
-    return steps
+        ),
+    ]
 
 
 def main() -> int:

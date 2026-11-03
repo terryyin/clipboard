@@ -10,8 +10,9 @@ The probe must run before anything is copied in that Sway session: its first
 step reads the fresh, nothing-copied selection. Later steps clear with the raw
 ``wl-copy --clear`` (early probe) and then with ``clipboard.clear()`` in child
 processes against independent producers and a ``copy_image`` owner. Its JSON
-report is printed (``-rP`` shows it on success). An evidence limit fails here.
-Results are scoped to Sway.
+report is printed (``-rP`` shows it on success); each step's ``ok`` carries
+that step's conditions, so the wrapper checks the whole report. An evidence
+limit fails here. Results are scoped to Sway.
 """
 
 from __future__ import annotations
@@ -27,13 +28,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 PROBE = ROOT / "scripts" / "probe_linux_wayland_native_clear.py"
-EMPTY_READS = {
-    "inspect": {"value": {"kinds": [], "formats": []}},
-    "paste": {"value": ""},
-    "paste_html": {"value": None},
-    "paste_files": {"value": None},
-    "paste_image": {"value": None},
-}
 
 pytestmark = [
     pytest.mark.skipif(
@@ -69,51 +63,6 @@ def test_linux_wayland_native_clear_probe():
     assert report["ok"] is True
     assert report["failed_steps"] == []
     assert report["compositor_generalization"] is False
-    steps = {step["step"]: step for step in report["steps"]}
-    fresh = steps["1_fresh_nothing_copied_reads_empty"]
-    assert fresh["wl_paste_list"]["returncode"] != 0
-    assert fresh["classified_nothing_copied"] is True
-    assert fresh["reads"] == EMPTY_READS
-    raw = steps["2_early_raw_wl_copy_clear_ends_html_owner"]
-    assert raw["raw_clear"]["returncode"] == 0
-    assert raw["classified_nothing_copied"] is True
-    assert raw["owner"]["exit_code"] is not None
-    for name in (
-        "3_html_producer_then_child_clear_reads_empty",
-        "4_text_producer_then_child_clear_reads_empty",
-    ):
-        assert steps[name]["offered_before"]["offered"] is True
-        assert steps[name]["child_clear"]["outcome"] == {"raised": None}
-        assert steps[name]["classified_nothing_copied"] is True
-        assert steps[name]["reads"] == EMPTY_READS
-    image = steps["5_copy_image_owner_ends_after_child_clear"]
-    assert image["library_wl_copy_owner_pids"]
-    assert image["owner_exit"]["exited"] is True
-    assert image["reads"]["paste_image"] == {"value": None}
-    twice = steps["6_clear_twice_on_cleared_succeeds"]
-    assert twice["first"]["outcome"] == twice["second"]["outcome"] == {"raised": None}
-    missing = steps["7_path_without_wl_copy_names_wl_clipboard"]
-    assert missing["wl_copy_on_child_path"] is None
-    assert missing["child_clear"]["outcome"]["raised"] == "ClipboardContentError"
-    assert "wl-clipboard" in missing["child_clear"]["outcome"]["message"]
-    for name, mime_type in (
-        ("8_file_list_producer_then_child_clear_reads_empty", "text/uri-list"),
-        (
-            "9_unknown_type_producer_then_child_clear_reads_empty",
-            "application/x-clipboard-probe",
-        ),
-    ):
-        produced = steps[name]
-        assert produced["producer"]["returncode"] == 0
-        assert mime_type in produced["producer"]["cmd"]
-        assert produced["offered_before"]["offered"] is True
-        assert produced["child_clear"]["outcome"] == {"raised": None}
-        assert produced["classified_nothing_copied"] is True
-        assert produced["reads"] == EMPTY_READS
-    files = steps["8_file_list_producer_then_child_clear_reads_empty"]
-    assert files["file_uri"].startswith("file:///")
-    assert files["file_existed"] is True
-    assert files["reads"]["paste_files"] == {"value": None}
     assert [step["step"] for step in report["steps"]] == [
         "1_fresh_nothing_copied_reads_empty",
         "2_early_raw_wl_copy_clear_ends_html_owner",

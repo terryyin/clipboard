@@ -1,16 +1,19 @@
-"""Shared steps for the gated Linux X11 / Wayland and Windows ``clear`` probes.
+"""Shared steps and the one "cleared" rule for every desktop's ``clear`` probe.
 
-``read_everything`` reads the clipboard through every public reader in this
-process, recording each value or error, so a probe can show that an empty
-CLIPBOARD reads as absence (``inspect()`` empty, ``paste()`` ``""``,
-``paste_html`` / ``paste_files`` / ``paste_image`` ``None``) rather than an
-error. ``helper`` records an independent helper run (exit code, stdout,
-stderr) so the observed helper wording lands in the report. ``child_clear``
-runs ``clipboard.clear()`` in a separate Python process that exits before the
-clipboard is observed. ``helper_pids`` / ``wait_pids_exit`` (Linux
-``/proc`` only) follow a clipboard owner process (for example a background
-``wl-copy`` or ``xclip``) until it ends, and ``distro`` names the Linux
-distribution.
+``cleared_step`` is the single definition of a proven clear, used by the
+Linux X11 / Wayland, Windows and macOS probes: every child ``clear()``
+returned, the desktop's independent listing (called after the clear)
+classifies as empty under that desktop's predicate, every followed clipboard
+owner exited within the bound, and every public reader reads absence
+(``EMPTY_READS``: ``inspect()`` empty, ``paste()`` ``""``, ``paste_html`` /
+``paste_files`` / ``paste_image`` ``None``) rather than an error.
+``read_everything`` records each reader's value or error in this process.
+``helper`` records an independent helper run (exit code, stdout, stderr) so
+the observed helper wording lands in the report. ``child_clear`` runs
+``clipboard.clear()`` in a separate Python process that exits before the
+clipboard is observed. ``helper_pids`` / ``wait_pids_exit`` (Linux ``/proc``
+only) follow a clipboard owner process (for example a background ``wl-copy``
+or ``xclip``) until it ends, and ``distro`` names the Linux distribution.
 """
 
 from __future__ import annotations
@@ -27,6 +30,13 @@ CHILD_TIMEOUT_S = 60
 # How long a clipboard owner may take to exit once it loses the selection.
 OWNER_EXIT_BOUND_S = 5.0
 _ROOT = Path(__file__).resolve().parents[1]
+EMPTY_READS = {
+    "inspect": {"value": {"kinds": [], "formats": []}},
+    "paste": {"value": ""},
+    "paste_html": {"value": None},
+    "paste_files": {"value": None},
+    "paste_image": {"value": None},
+}
 _CHILD_CLEAR = """
 import json
 import clipboard
@@ -178,13 +188,50 @@ def read_everything() -> dict:
 
 def reads_empty(reads: dict) -> bool:
     """Whether ``read_everything`` saw an empty clipboard and no errors."""
-    return reads == {
-        "inspect": {"value": {"kinds": [], "formats": []}},
-        "paste": {"value": ""},
-        "paste_html": {"value": None},
-        "paste_files": {"value": None},
-        "paste_image": {"value": None},
-    }
+    return reads == EMPTY_READS
+
+
+def _owner_exited(owner_exit: dict) -> bool:
+    return (
+        owner_exit.get("exited") is True
+        and owner_exit["waited_s"] <= (owner_exit["bound_s"])
+    )
+
+
+def cleared_step(
+    name: str,
+    listing,
+    is_empty,
+    *,
+    held: bool = True,
+    clears: tuple[dict, ...] = (),
+    owner_exit: dict | None = None,
+    reader=read_everything,
+    **observed,
+) -> dict:
+    """The one "cleared" rule: clears returned, listing empty, readers absent.
+
+    ``listing`` is the desktop's independent consumer (called now, after the
+    clear), ``is_empty`` its empty-clipboard predicate; ``held`` carries the
+    step's own preconditions (producer ran, type offered). A followed
+    ``owner_exit`` (``wait_pids_exit``) must show every owner ended within
+    its bound.
+    """
+    after = listing()
+    empty = bool(is_empty(after))
+    reads = reader()
+    ok = (
+        held
+        and all(child_cleared(run) for run in clears)
+        and (owner_exit is None or _owner_exited(owner_exit))
+        and empty
+        and reads_empty(reads)
+    )
+    if owner_exit is not None:
+        observed["owner_exit"] = owner_exit
+    return step(
+        name, ok, **observed, listing_after=after, classified_empty=empty, reads=reads
+    )
 
 
 def step(name: str, ok: bool, **observed) -> dict:
