@@ -216,6 +216,66 @@ fail rather than skip on a missing session or helper. Excludes the same
 pattern in `copy_image` and any change to selection rules.
 [Plan](../slice-plans/012-bounded-x11-text-write/PLAN.md)
 
+The maintainer accepted keeping this correction first in the queue on
+2026-11-03. The separate
+[explicit text delegation story](#explicit-text-delegation) follows it;
+their order is a priority choice, not a blocking dependency.
+
+<a id="explicit-text-delegation"></a>
+
+### Keep owned text backends unless callers explicitly delegate
+
+**Identity:** SEED-001#explicit-text-delegation
+```json dough-story-state
+{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+```
+
+**Goal:** Python application and automation developers retain the package's
+reliable text behavior on macOS, Linux X11 with `xclip`, and Linux Wayland
+with wl-clipboard even when another library uses pyperclip in the same
+process, while callers can deliberately choose delegation.
+
+**Accepted decision (Terry Yin, 2026-11-03):** Prefer explicit opt-in over
+both the current `pyperclip.is_available()` override and freezing selection
+at the first text call. Pyperclip's resolved state does not distinguish an
+explicit `set_clipboard()` from ordinary first use. Do not infer caller
+intent from that state or intercept pyperclip's global functions. Reuse
+`clipboard.set_text_clipboard_writer` and `set_text_clipboard_reader` as the
+explicit override, without adding a public API. This intentionally changes
+the documented compatibility behavior for already resolved pyperclip
+mechanisms, including `pyperclip.set_clipboard()` alone.
+
+**Scope:** On the default path, select the backend from the current session
+at each call, without letting resolved pyperclip state displace an owned
+backend. Preserve automatic pyperclip delegation on Windows, WSL, X11
+without `xclip` but with a supported fallback, and other unowned platforms.
+Preserve text validation/coercion, exact Unicode and line endings, `""`
+absence, and `ClipboardContentError` with the underlying cause. Explicit
+hooks bypass default selection; resetting them to `None` restores default
+dispatch. Document deliberate pyperclip delegation through both hooks using
+call-time lookup of its `copy` / `paste` functions, since pyperclip replaces
+those functions. Update dispatch tests, README compatibility guidance, and
+the repository's text-backend guidance with the implementation.
+
+**Key examples:**
+
+- On an owned desktop, direct pyperclip use before the first `clipboard`
+  text call or between later calls does not change the default owner or
+  weaken its error reporting, timeout, or UTF-8 behavior. Calling
+  `pyperclip.set_clipboard()` alone likewise does not override that owner.
+- A caller installs both text hooks to deliberately delegate to pyperclip.
+  Text uses those hooks and backend failures retain clipboard's error
+  contract. Resetting both hooks to `None` restores the default owner.
+- A later session/helper change is evaluated on the next default text call;
+  selection is not frozen at import or first use.
+- Windows, WSL, and the existing unowned fallback sessions still use
+  pyperclip automatically, without requiring the caller to install hooks.
+
+**Boundary:** No new backend, public selector, pyperclip monkeypatch, or
+native content feature. The X11 write deadline belongs to
+[the preceding correction](#bounded-x11-text-write). The completed
+SEED-001#portable-text story remains closed; this is new follow-up work.
+
 <a id="clear-clipboard"></a>
 
 ### Clear every representation from the current clipboard

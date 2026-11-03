@@ -53,7 +53,10 @@ merge 42c0a6f). The X11 writer came from slice 4 (8a816be, c086e20,
   bound statement true).
 - Excluded: the same pipe-write pattern in `clipboard/_image_write.py`
   (image subsystem; needs its own authorization) and the per-call
-  `pyperclip.is_available()` delegation rule (a separate product decision).
+  `pyperclip.is_available()` delegation rule. The maintainer accepted explicit
+  delegation on 2026-11-03; that compatibility change belongs to the separate
+  [SEED-001#explicit-text-delegation story](../../seeds/SEED-001-clipboard-true-to-its-name.md#explicit-text-delegation),
+  queued after this correction.
 
 ## Outside-in proof
 
