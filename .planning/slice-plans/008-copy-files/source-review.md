@@ -26,7 +26,7 @@ Input: only the story's Goal, Scope and Key examples (and the start of Considere
 | 5.1 | Files are offered | slice 1 | observed: tests/test_copy_files_contract.py::test_valid_paths_reach_writer_absolute_ordered_with_duplicates (file reaches writer) |
 | 5.2 | Directories are offered | slice 1 | observed: tests/test_copy_files_contract.py::test_valid_paths_reach_writer_absolute_ordered_with_duplicates (directory reaches writer) |
 | 6 | The offer stays pasteable after the writing Python process exits | slice 7 | |
-| 7.1 | macOS Aqua native offer: `NSPasteboard` file URLs | slice 3 | |
+| 7.1 | macOS Aqua native offer: `NSPasteboard` file URLs | slice 3 | observed: scripts/probe_macos_native_copy_files.py JSON independent.types (public.file-url, NSFilenamesPboardType) + independent.paths == expected_paths after writer child exit; gated tests/test_copy_files_native_macos.py::test_macos_copy_files_independent_file_url_consumer_probe |
 | 7.2 | Windows native offer: `CF_HDROP` | slice 4 | |
 | 7.3 | Windows native offer: `Preferred DropEffect` = copy | slice 4 | |
 | 7.4 | Linux X11 native offer: `text/uri-list` | slice 5 | |
@@ -90,7 +90,7 @@ Input: only the story's Goal, Scope and Key examples (and the start of Considere
 | E2.a | Setup: the clipboard holds text `keep`; `missing.txt` does not exist | slice 1 | observed: tests/test_copy_files_contract.py::test_missing_path_leaves_prior_offer_untouched setup (fake board text keep) |
 | E2.b | Trigger: `copy_files(["out/report final.pdf", "missing.txt"])` | slice 1 | observed: tests/test_copy_files_contract.py::test_missing_path_is_named_and_writer_never_called |
 | E2.c | Result: raises `ClipboardContentError` naming `missing.txt` | slice 1 | observed: tests/test_copy_files_contract.py::test_missing_path_is_named_and_writer_never_called (names missing.txt) |
-| E2.d | Result: `paste()` still returns `keep` | slice 3 | |
+| E2.d | Result: `paste()` still returns `keep` | slice 3 | observed: scripts/probe_macos_native_copy_files.py JSON missing_path.prior_text_after == keep via independent pbcopy/pbpaste; gated tests/test_copy_files_native_macos.py |
 | E3.a | Trigger: `copy_files([])` | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer [] |
 | E3.b | Trigger: `copy_files("out/report final.pdf")` (bare string) | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer bare str |
 | E3.c | Result (for each): raises `ClipboardContentError` | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer |

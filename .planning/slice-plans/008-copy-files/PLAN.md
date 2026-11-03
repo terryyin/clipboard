@@ -36,9 +36,9 @@ desktops; persistence across logout/reboot; changing `copy`/`paste`.
   **Gap:** no outbound file-list writer exists. Windows PowerShell
   `Set-Clipboard -Path` treats `[` `]` as wildcards and adds a PowerShell
   startup per call; not selected as the default writer.
-- If SEED-001#desktop-helpers has landed when a Linux slice starts, its
-  private desktop module owns session detection, helper-failure detail, and
-  `TARGETS` listing; reuse it instead of the current per-module copies.
+- Private `clipboard/_desktop` owns session detection, helper-failure detail,
+  and `TARGETS` / list-types listing; Linux writer slices reuse it instead of
+  adding per-module copies.
 - No ADR store exists in this repository; no Accepted ADR constrains this plan.
 - Local development is Darwin; Linux desktop proof runs in gated GitHub
   Actions. The helper-offer premise is now verified with real Thunar Paste
@@ -116,7 +116,7 @@ not complete the API writer or verify Wayland/other file managers.
 
 ### 3. macOS Aqua native writer and Finder proof
 Type: Behavior
-Status: planned
+Status: done
 Proof: default Darwin writer publishes the paths as file `NSURL`s through
 `osascript` / AppKit `writeObjects:` after `clearContents`; gated probe
 `scripts/probe_macos_native_copy_files.py` (`CLIPBOARD_NATIVE_PROBE=1`) runs
@@ -215,6 +215,11 @@ Reported: slice 1 — "No native writer exists yet. On Darwin, the default `copy
 Story clause: "replaces the current clipboard with one native file-list offer"
 Disposition: interim until slices 3, 4, 5, 6
 
+### G2. Finder paste of the macOS offer not observed (first reported in slice 3)
+Reported: slice 3 — "The Finder paste is still not shown to work, and the cause of round 2's failure is unknown."
+Story clause: "a platform without that observation is an evidence limit in the README, not a verified claim"
+Disposition: receiving slice 7
+
 ## Learnings
 
 GitHub Actions can run a real named Linux file manager, so an owner-held
@@ -231,3 +236,19 @@ contract precedes the platform writers.
 
 Remaining concerns: none beyond the early probes in slices 2–4, which bound
 the unobserved native premises above.
+
+## Execution learnings
+
+Slice 3 (macOS 26.6.2 / Darwin 25.6.0 / arm64 / Python 3.13.17): the offer
+written by a short-lived `osascript` writer intermittently lost items after
+exit (22 of 30 runs without read-back, and every write method raced), so the
+writer's in-process read-back is load-bearing; Windows and Linux writers
+should check the same exit race. The writer sends percent-encoded URIs from
+`Path.as_uri()` to keep the caller's NFC names (`NSURL fileURLWithPath:`
+returns NFD). Finder Paste was not observed: rounds 1–2 were reported as
+pasting nothing (cause unexplained; round 1 was overwritten by a PNG), and
+round 3, driven by System Events while the developer was away, ran against a
+locked screen (`CGSSessionScreenIsLocked`),
+where Finder ignored Apple Events and its Paste item read disabled even for
+AppleScript's own `set the clipboard to POSIX file` offer of the same six
+types. Unlocked, a Finder round can still upgrade the macOS limit (G2).

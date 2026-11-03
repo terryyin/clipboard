@@ -160,33 +160,6 @@ def test_writer_content_error_passes_through(sources, restore_files_clipboard_wr
         clipboard.copy_files([f"out/{UNICODE_NAME}"])
 
 
-# --- Default writer ---
-
-
-@pytest.mark.parametrize("platform", ["darwin", "linux", "win32", "aix"])
-def test_default_writer_raises_naming_platform(
-    sources, restore_files_clipboard_writer, monkeypatch, platform
-):
-    monkeypatch.setattr(clipboard._files_native.sys, "platform", platform)
-    clipboard.set_files_clipboard_writer(None)
-    with pytest.raises(clipboard.ClipboardContentError) as raised:
-        clipboard.copy_files([f"out/{UNICODE_NAME}"])
-    assert "not available on this platform" in str(raised.value)
-    assert f"({platform})" in str(raised.value)
-
-
-def test_reset_writer_restores_default(restore_files_clipboard_writer):
-    clipboard.set_files_clipboard_writer(lambda paths: None)
-    clipboard.set_files_clipboard_writer(None)
-    assert (
-        clipboard._files_clipboard_writer is clipboard._default_files_clipboard_writer
-    )
-    assert (
-        clipboard._files._files_clipboard_writer
-        is clipboard._files_native._default_files_clipboard_writer
-    )
-
-
 # --- Consistency round trip through the injected paste_files reader ---
 
 

@@ -10,7 +10,10 @@ from ._files_native_linux import (
     _linux_wayland_without_x11,
     _linux_x11_files_clipboard_reader,
 )
-from ._files_native_macos import _macos_files_clipboard_reader
+from ._files_native_macos import (
+    _macos_files_clipboard_reader,
+    _macos_files_clipboard_writer,
+)
 from ._files_native_windows import _windows_files_clipboard_reader
 
 
@@ -40,16 +43,20 @@ def _default_files_clipboard_reader() -> object:
 def _unavailable_native_writer_message() -> str:
     return (
         "copy_files native file-list writer is not available on this platform "
-        f"({sys.platform}); no file-list copy offer adapter exists here yet, "
-        "so inject a writer with set_files_clipboard_writer for tests"
+        f"({sys.platform}); no file-list copy offer adapter exists here yet "
+        "(macOS Aqua is supported), so inject a writer with "
+        "set_files_clipboard_writer for tests"
     )
 
 
 def _default_files_clipboard_writer(paths: list[str]) -> None:
     """Platform-selected file-list copy writer.
 
-    No native writer has landed yet, so every platform raises
-    ``ClipboardContentError`` naming the platform; per-platform writers
-    replace this dispatch as they land.
+    Darwin publishes file ``NSURL`` items through ``osascript`` / AppKit.
+    Other platforms raise ``ClipboardContentError`` naming the platform until
+    their writers land.
     """
+    if sys.platform == "darwin":
+        _macos_files_clipboard_writer(paths)
+        return
     raise ClipboardContentError(_unavailable_native_writer_message())

@@ -223,13 +223,12 @@ writers beside the existing `_files_native_*` readers, with a
 `set_files_clipboard_writer` injection seam mirroring the HTML and image
 writers so default tests stay in-memory. Validation lives above the writer so
 every platform shares fail-before-replace. Linux session detection and helper
-failure reporting reuse the single private desktop module that
-SEED-001#desktop-helpers introduces when it has landed; otherwise follow the
-current `paste_files` session rule rather than adding another copy. Linux
-writer lifetime relies on a background helper owner (`xclip` / `wl-copy`), as
-`copy_image` does; Windows and macOS hand the data to the system clipboard,
-which keeps it after exit. No ADR store exists in this repository, so no
-Accepted decision was checked.
+failure reporting reuse private `clipboard/_desktop` (including the
+file-list reader's distinct Wayland rule) rather than adding another copy.
+Linux writer lifetime relies on a background helper owner (`xclip` /
+`wl-copy`), as `copy_image` does; Windows and macOS hand the data to the
+system clipboard, which keeps it after exit. No ADR store exists in this
+repository, so no Accepted decision was checked.
 
 **Open risk for planning.** `xclip` and `wl-copy` offer one MIME type per
 owner process. Whether named Linux file managers (GNOME Files, Dolphin,
