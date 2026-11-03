@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 
+from clipboard._desktop import _helper_failure_detail
 from clipboard._errors import ClipboardContentError
 from clipboard._offer import ClipboardOfferSnapshot, snapshot_from_native_formats
 
@@ -59,7 +60,7 @@ def _enumerate_macos_pasteboard_types() -> tuple[str, ...]:
             f"macOS pasteboard type enumeration failed: {exc}"
         ) from exc
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout or "").strip()
+        detail = _helper_failure_detail(result)
         raise ClipboardContentError(
             "macOS pasteboard type enumeration failed"
             + (f": {detail}" if detail else "")

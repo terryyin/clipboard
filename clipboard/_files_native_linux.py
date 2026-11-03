@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 
+from ._desktop import _helper_failure_detail
 from ._errors import ClipboardContentError
 
 # Contended clipboard must not hang callers indefinitely (commitment 78).
@@ -23,13 +24,6 @@ _WL_PASTE_TEXT_URI_LIST = (
     "-t",
     "text/uri-list",
 )
-
-
-def _linux_wayland_without_x11() -> bool:
-    """True when only a Wayland session is advertised (X11 reader not selected)."""
-    return bool(os.environ.get("WAYLAND_DISPLAY")) and not bool(
-        os.environ.get("DISPLAY")
-    )
 
 
 def _xclip_uri_list_invocation() -> str:
@@ -100,7 +94,7 @@ def _run_uri_list_helper(
     if result.returncode != 0:
         if _uri_list_target_absent(stderr, stdout):
             return None
-        detail = (stderr or stdout).strip()
+        detail = _helper_failure_detail(result)
         raise ClipboardContentError(
             "clipboard file-list read failed"
             + (f": {detail}" if detail else f": {transfer_failed_detail}")

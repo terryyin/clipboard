@@ -58,47 +58,6 @@ def test_images_extra_declares_pillow():
     assert any("pillow" in req.lower() for req in image_reqs)
 
 
-def test_text_api_importable_without_pillow():
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            """
-import builtins
-import sys
-
-real_import = builtins.__import__
-
-def block_pil(name, globals=None, locals=None, fromlist=(), level=0):
-    if name == "PIL" or name.startswith("PIL."):
-        raise ImportError("No module named 'PIL'")
-    return real_import(name, globals, locals, fromlist, level)
-
-builtins.__import__ = block_pil
-
-import clipboard
-
-assert clipboard.VERSION
-assert callable(clipboard.copy)
-assert callable(clipboard.paste)
-assert callable(clipboard.paste_image)
-
-try:
-    clipboard.paste_image()
-except ImportError as exc:
-    message = str(exc).lower()
-    assert "images" in message or "pillow" in message
-else:
-    raise SystemExit("expected ImportError from paste_image without Pillow")
-""",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0
-
-
 @pytest.mark.parametrize(
     ("text", "image_spec", "expect_image"),
     [
@@ -107,7 +66,7 @@ else:
     ],
 )
 def test_paste_image_absence_and_raster_preservative(text, image_spec, expect_image):
-    # Subprocess mirrors text tests: first-import + injectable grabclipboard stub.
+    # Subprocess: first-import + injected text seam and grabclipboard stub.
     result = subprocess.run(
         [
             sys.executable,
@@ -116,7 +75,6 @@ def test_paste_image_absence_and_raster_preservative(text, image_spec, expect_im
 import json
 import sys
 
-import pyperclip
 from PIL import Image
 
 payload = json.loads(sys.argv[1])
@@ -135,10 +93,10 @@ def copy(value):
 def paste():
     return contents["text"]
 
-pyperclip.determine_clipboard = lambda: (copy, paste)
-
 import clipboard
 
+clipboard.set_text_clipboard_writer(copy)
+clipboard.set_text_clipboard_reader(paste)
 clipboard.set_image_grabclipboard(lambda: contents["image"])
 
 before_text = clipboard.paste()

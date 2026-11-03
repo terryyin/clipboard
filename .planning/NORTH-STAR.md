@@ -34,5 +34,18 @@ Wayland (Sway CI) and Windows (`windows-latest` CI) verified with named
 independent helper producers, browser interoperability there unobserved
 (2026-11-02).
 
+**Text (delivered 2026-11-03, SEED-001#portable-text):** `copy` / `paste` keep
+their names and pyperclip stays a dependency, but they are no longer bare
+re-exports: the package owns their contract (exact `str`, `""` absence,
+NUL / unencodable refusal before replacing, `ClipboardContentError` with the
+cause) and the default macOS (`pbcopy` / `pbpaste` with a UTF-8 locale), X11
+(`xclip`), and Wayland (wl-clipboard) paths, because pyperclip 1.11.0
+discards Linux helper failures and inherits a locale that corrupts macOS
+text; Windows keeps pyperclip's bounded `CF_UNICODETEXT` backend, and
+pyperclip remains the delegate for WSL and unowned environments with failure
+translation only. Verified with independent producers / consumers on macOS
+Aqua (local probe), X11 (Xvfb CI), Wayland (Sway CI), and Windows
+(`windows-latest` CI); delegated paths unverified (README Evidence).
+
 **Affects:** Later file and further rich-content stories should follow the same
 explicit-API + optional-extra shape unless evidence forces a revision.

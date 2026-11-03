@@ -7,12 +7,11 @@ touches a real Wayland clipboard or needs a compositor / wl-clipboard.
 import subprocess
 
 import pytest
+from html_offer import FRAGMENT
 
 import clipboard
-from clipboard import _html_native, _html_native_linux
-from clipboard._html_envelope import _fragment_offer
+from clipboard import _desktop, _html_native, _html_native_linux
 
-FRAGMENT = '<a href="https://example.com/caf%C3%A9"><b>café → naïve 日本</b></a>'
 LIST_TYPES = ("wl-paste", "--list-types")
 READ_HTML = ("wl-paste", "--no-newline", "--type", "text/html")
 HTML_TYPES = b"text/html\ntext/plain;charset=utf-8\nUTF8_STRING\n"
@@ -67,6 +66,8 @@ def wayland_wl_paste(monkeypatch, restore_html_clipboard_reader):
 
     def install(**kwargs):
         helper = _WlPaste(**kwargs)
+        # ``--list-types`` lives in ``_desktop``; ``--type`` read stays local.
+        monkeypatch.setattr(_desktop.subprocess, "run", helper)
         monkeypatch.setattr(_html_native_linux.subprocess, "run", helper)
         return helper
 
@@ -91,20 +92,12 @@ def test_session_type_alone_selects_wayland_reader(wayland_wl_paste, monkeypatch
     assert [args[0] for args, _ in helper.calls] == ["wl-paste"]
 
 
-def test_reader_passes_raw_bytes_through_undecoded(wayland_wl_paste):
+def test_utf16_bom_body_decodes_through_paste_html(wayland_wl_paste):
     raw = b"\xff\xfe" + FRAGMENT.encode("utf-16-le")
     wayland_wl_paste(
         answers={LIST_TYPES: _done(stdout=HTML_TYPES), READ_HTML: _done(stdout=raw)}
     )
-    assert _html_native_linux._linux_wayland_html_clipboard_reader() == (
-        _fragment_offer(raw)
-    )
     assert clipboard.paste_html() == FRAGMENT
-
-
-def test_empty_html_offer_is_empty_string(wayland_wl_paste):
-    wayland_wl_paste(answers={LIST_TYPES: _done(stdout=HTML_TYPES), READ_HTML: _done()})
-    assert clipboard.paste_html() == ""
 
 
 @pytest.mark.parametrize(

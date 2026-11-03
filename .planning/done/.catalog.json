@@ -2,6 +2,24 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_portable-text.json",
+      "identity": "SEED-001#portable-text",
+      "completedAt": "2026-11-02T17:44:10.645Z",
+      "blob": "18af1fadff9464fef7b6585f20d43db5f04d605f"
+    },
+    {
+      "fileName": "SEED-001_desktop-helpers.json",
+      "identity": "SEED-001#desktop-helpers",
+      "completedAt": "2026-11-02T14:49:24.549Z",
+      "blob": "2ff3cf61251feb70da6187f936b7e0e9d886758d"
+    },
+    {
+      "fileName": "SEED-002_linux-file-offers-ci.json",
+      "identity": "SEED-002#linux-file-offers-ci",
+      "completedAt": "2026-11-02T14:30:31.104Z",
+      "blob": "dbfb4199a8890e77eb4a836fbb75cd2042859b5b"
+    },
+    {
       "fileName": "SEED-001_read-files.json",
       "identity": "SEED-001#read-files",
       "completedAt": "2026-11-02T10:53:21.591Z",

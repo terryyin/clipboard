@@ -1,4 +1,4 @@
-"""Clipboard failure types for image and rich-content operations."""
+"""Clipboard failure types for image and other clipboard content operations."""
 
 from __future__ import annotations
 
@@ -13,11 +13,16 @@ class ClipboardImageError(Exception):
 
 
 class ClipboardContentError(Exception):
-    """Rich clipboard content operation failed (HTML, file-list, inspect, …)."""
+    """Clipboard content operation failed (text, HTML, file-list, inspect, …).
+
+    Raised instead of ordinary absence (``""`` / ``None``) or a silent no-op;
+    the underlying helper or pyperclip error, when there is one, is
+    ``__cause__``.
+    """
 
 
 def _call_content_backend(operation: str, backend: Callable[..., _T], *args) -> _T:
-    """Run a rich-content clipboard backend; non-content failures become
+    """Run a clipboard content backend; non-content failures become
     ``ClipboardContentError`` while backend ``ClipboardContentError`` passes as is.
     """
     try:

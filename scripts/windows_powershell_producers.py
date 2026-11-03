@@ -44,8 +44,13 @@ FLOORS = (
 )
 
 
-def powershell(script: str, payload: str | bytes = "") -> subprocess.CompletedProcess:
-    """Run ``script`` in Windows PowerShell with ``payload`` written to ``$in``."""
+def powershell(
+    script: str, payload: str | bytes = "", *, exe: str = "powershell.exe"
+) -> subprocess.CompletedProcess:
+    """Run ``script`` in Windows PowerShell with ``payload`` written to ``$in``.
+
+    ``exe`` selects another PowerShell (e.g. ``pwsh`` 7) with the same flags.
+    """
     with tempfile.TemporaryDirectory(prefix="clipboard-probe-") as raw:
         tmp = Path(raw)
         data = tmp / "input.bin"
@@ -57,7 +62,7 @@ def powershell(script: str, payload: str | bytes = "") -> subprocess.CompletedPr
             encoding="ascii",
         )
         return subprocess.run(
-            ["powershell.exe", "-NoProfile", "-NonInteractive", "-STA"]
+            [exe, "-NoProfile", "-NonInteractive", "-STA"]
             + ["-ExecutionPolicy", "Bypass", "-File", str(ps1), str(data)],
             capture_output=True,
             text=True,
