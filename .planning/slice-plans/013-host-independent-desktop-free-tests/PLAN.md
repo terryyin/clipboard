@@ -72,7 +72,7 @@ capability gates only. Source review ids: [source-review.md](source-review.md).
 
 ### 2. Pretend-platform tests run on every matrix OS, with the project rule
 Type: Behavior
-Status: planned
+Status: done
 Proof: rows 4–7 above.
 
 Behavior: CI matrix on a story-branch push → the pretend-Darwin writer group
@@ -94,9 +94,9 @@ and runs on every host; seven unimplemented-platform assertions check error
 type plus the named platform or the product message source; `AGENTS.md` rule
 added. `nix develop -c make check` 539 passed, 23 skipped; the 12
 `darwin_helper` tests pass with `-v`. Kept host-capability skip:
-`tests/test_copy_files_contract.py` URI decoding. Pending: CI matrix
-(`windows-latest` runs the `darwin_helper` group) on this slice's published
-revision.
+`tests/test_copy_files_contract.py` URI decoding. CI run 41656910713 on
+5380548 passed every matrix cell; on `windows-latest` the `darwin_helper` group and X11 owner-shutdown
+tests ran and passed (no skip).
 
 ## Decisive premises
 
