@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#explicit-text-delegation",
+  "title": "Keep owned text backends unless callers explicitly delegate",
+  "completedAt": "2026-11-03T03:59:59.038Z",
+  "developer": "Terry Yin",
+  "agent": "Koharu-chan",
+  "host": "claude",
+  "model": "sonnet"
+}
