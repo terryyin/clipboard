@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#bounded-x11-file-write
 **Source:** [Bound the X11 file-list write and prove directories and duplicates natively](../../seeds/SEED-001-clipboard-true-to-its-name.md#bounded-x11-file-write)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Provenance
@@ -62,7 +63,7 @@ fbafe60..6ddb51d, excluding trunk merge a580bb1; net diff
 
 ### 1. Bounded X11 file-list owner input
 Type: Behavior
-Status: planned
+Status: done
 Proof: rows 1–2 above.
 
 Behavior: Linux X11 session with `xclip` on `PATH` whose owner never reads
@@ -143,4 +144,15 @@ concern remains. No remaining slice-specific concerns were identified.
 
 ## Learnings
 
-_(none yet)_
+- Temp-file stdin means FakeX11Files must read the body at `popen` time; the
+  old pipe `write`/`close` / broken-pipe protocol is gone.
+- The real-process stall proof needs a `killpg` stub with `raising=False` that
+  still terminates the child (Windows CI has no `os.killpg`).
+- File-size gate: keep the stall case in
+  `tests/test_copy_files_x11_writer_stall.py` beside the FakeX11Files suite.
+
+## Accepted proof (slice 1)
+
+- `nix develop -c uv run --locked --extra images pytest -q tests/test_copy_files_x11_writer.py tests/test_copy_files_x11_writer_stall.py` → 12 passed
+- Product: `_start_owner` feeds an unlinked `TemporaryFile` as stdin (no pipe write)
+- Gated `native-linux-x11-copy-files` left to CI after publish

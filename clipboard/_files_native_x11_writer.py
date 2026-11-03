@@ -67,25 +67,23 @@ def _require_session() -> None:
 
 
 def _start_owner(body: bytes, log) -> subprocess.Popen:
-    try:
-        proc = subprocess.Popen(
-            _XCLIP_URI_LIST_WRITE_CMD,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=log,
-            start_new_session=True,
-        )
-    except FileNotFoundError as exc:
-        raise _error(_xclip_missing_detail()) from exc
-    except OSError as exc:
-        raise _error(f"could not run xclip ({exc})") from exc
-    assert proc.stdin is not None
-    try:
-        proc.stdin.write(body)
-        proc.stdin.close()
-    except BrokenPipeError:
-        pass  # xclip already exited; its status and stderr say why below.
-    return proc
+    # Unlinked temp file: a non-reading owner cannot block Python on a full
+    # pipe buffer. Close our handle once Popen has inherited its copy.
+    with tempfile.TemporaryFile() as stdin:
+        stdin.write(body)
+        stdin.seek(0)
+        try:
+            return subprocess.Popen(
+                _XCLIP_URI_LIST_WRITE_CMD,
+                stdin=stdin,
+                stdout=subprocess.DEVNULL,
+                stderr=log,
+                start_new_session=True,
+            )
+        except FileNotFoundError as exc:
+            raise _error(_xclip_missing_detail()) from exc
+        except OSError as exc:
+            raise _error(f"could not run xclip ({exc})") from exc
 
 
 def _owner_serves(body: bytes, deadline: float) -> bool:
