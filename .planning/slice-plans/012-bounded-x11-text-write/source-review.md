@@ -24,5 +24,5 @@ changes to the writer, with commitments 5 and 6 explicitly listed by Scope.
 | 4.3 | keeping stderr quoting | slice 1 | observed: tests/test_text_x11.py::test_owner_exiting_early_raises_quoting_its_stderr |
 | 4.4 | keeping owner cleanup | slice 1 | observed: tests/test_text_x11_write_stall.py signalled == [owner.pid]; tests/test_text_x11.py::test_owner_that_never_offers_raises_after_the_bound |
 | 5 | remove the test-only `os.killpg` fallback | slice 2 | observed: clipboard/_text_native_x11.py _stop_owner calls os.killpg directly (no getattr/proc.kill branch); fallback test and FakeOwner.kill removed; tests/test_text_x11.py::test_owner_that_never_offers_raises_after_the_bound still asserts group kill |
-| 6.1 | make the gated Wayland text wrapper fail rather than skip on a missing session | slice 3 | |
-| 6.2 | make the gated Wayland text wrapper fail rather than skip on a missing helper | slice 3 | |
+| 6.1 | make the gated Wayland text wrapper fail rather than skip on a missing session | slice 3 | observed: tests/test_text_native_linux_wayland.py pytestmark skips only off Linux / without CLIPBOARD_NATIVE_PROBE=1; scripts/probe_linux_wayland_native_text.py main() returns 2 evidence_limit on WAYLAND_DISPLAY unset → wrapper's returncode==0 assertion fails (scratch run: assert 2 == 0, evidence_limit true) |
+| 6.2 | make the gated Wayland text wrapper fail rather than skip on a missing helper | slice 3 | observed: same wrapper gate; probe main() returns 2 evidence_limit when wl-copy/wl-paste missing → wrapper fails |

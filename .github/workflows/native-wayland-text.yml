@@ -50,7 +50,7 @@ jobs:
             sleep 0.1
           done
           test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
-          # The probe wrapper skips without these; never let CI pass on a skip.
+          # Fail fast with a clear step error; the probe wrapper also fails without these.
           command -v wl-copy
           command -v wl-paste
           uv run --locked \

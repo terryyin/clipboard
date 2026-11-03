@@ -102,7 +102,7 @@ group kill.
 
 ### 3. Wayland text wrapper fails rather than skips on an evidence limit
 Type: Structure
-Status: planned
+Status: done
 Proof: row 5 above.
 
 Correction: drop the `WAYLAND_DISPLAY` / `wl-copy` / `wl-paste` `skipif`
