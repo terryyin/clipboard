@@ -170,7 +170,7 @@ exits. Postcondition: seed examples 1 (offer level) and 6 on X11.
 
 ### 6. Linux Wayland native writer
 Type: Behavior
-Status: planned
+Status: done
 Proof: default Wayland writer pipes the same body to `wl-copy --type <type>`
 (background server keeps the offer); missing `wl-copy` or compositor →
 `ClipboardContentError` with install hint; gated job
@@ -213,7 +213,7 @@ Postcondition: callers know exactly what is verified where.
 ### G1. Default writer raises on every platform until native writers land
 Reported: slice 1 — "No native writer exists yet. On Darwin, the default `copy_files` raises; slices 3–6 replace it per platform."
 Story clause: "replaces the current clipboard with one native file-list offer"
-Disposition: interim until slices 3, 4, 5, 6
+Disposition: proved by slice 6: native offers on macOS (gated probe), Windows (run 41561268655), X11 (run 41562962489) and Wayland (run 41564513429); other platforms raise naming the platform (tests/test_copy_files_default_writer.py)
 
 ### G2. Finder paste of the macOS offer not observed (first reported in slice 3)
 Reported: slice 3 — "The Finder paste is still not shown to work, and the cause of round 2's failure is unknown."
@@ -292,3 +292,10 @@ Slice 6 (in progress): Wayland writer `clipboard/_files_native_wayland_writer.py
 (`wl-copy --type text/uri-list`, listed-type plus read-back wait, shared
 `_uri_list_body` in `_files_offer.py`); native proof is the Sway job
 `native-linux-wayland-copy-files`, with a recorded-only Thunar-on-Sway attempt.
+Slice 6 accepted on run 41564513429 (headless Sway 1.9, wl-clipboard 2.2.1,
+Ubuntu 24.04, Python 3.13.14): the API child exited, an independent wl-paste
+read the exact body with rechecks, and with wl-copy off PATH copy_files raised
+with the install hint while the prior text survived. The recorded-only
+Thunar-on-Sway attempt (GDK_BACKEND=wayland, Sway IPC focus + wtype Ctrl+V)
+pasted nothing, cause undiagnosed, so the Wayland file-manager paste is an
+evidence limit.

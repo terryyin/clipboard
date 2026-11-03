@@ -30,9 +30,9 @@ Input: only the story's Goal, Scope and Key examples (and the start of Considere
 | 7.2 | Windows native offer: `CF_HDROP` | slice 4 | observed: Actions run 41561268655 job native-windows-copy-files (tests/test_copy_files_native_windows.py::test_windows_copy_files_independent_consumer_and_shell_paste_probe): independent PowerShell GetFileDropList / Get-Clipboard FileDropList equal the two Unicode+space paths in order after writer exit, rechecked at 0/5/10 s |
 | 7.3 | Windows native offer: `Preferred DropEffect` = copy | slice 4 | observed: Actions run 41561268655 job native-windows-copy-files (tests/test_copy_files_native_windows.py::test_windows_copy_files_independent_consumer_and_shell_paste_probe): independent.drop_effect == 1, drop_effect_bytes 01-00-00-00 |
 | 7.4 | Linux X11 native offer: `text/uri-list` | slice 5 | observed: Actions run 41562962489 job native-linux-x11-copy-files (tests/test_copy_files_native_linux_x11.py::test_x11_copy_files_independent_consumer_and_thunar_paste_probe): independent_body_equal + targets_list_uri_list + offer_held_after_exit (xclip -o -t text/uri-list after API child exit, rechecked 0/5/10 s) |
-| 7.5 | Linux Wayland native offer: `text/uri-list` | slice 6 | |
-| 7.6 | Linux X11/Wayland: also the GNOME copied-files convention, where the helper can offer it | slice 6 | |
-| 7.7 | The Linux X11/Wayland offer is served by a background owner, as `copy_image` does | slice 6 | |
+| 7.5 | Linux Wayland native offer: `text/uri-list` | slice 6 | observed: Actions run 41564513429 job native-linux-wayland-copy-files (tests/test_copy_files_native_linux_wayland.py::test_wayland_copy_files_independent_consumer_probe): independent_body_equal + types_list_uri_list (wl-paste --type text/uri-list after API child exit) |
+| 7.6 | Linux X11/Wayland: also the GNOME copied-files convention, where the helper can offer it | slice 6 | observed: Decisive premise row: xclip/wl-copy serve one MIME type per owner, so the helpers cannot also offer x-special/gnome-copied-files beside text/uri-list; Thunar pastes the lone text/uri-list (run 41562962489) |
+| 7.7 | The Linux X11/Wayland offer is served by a background owner, as `copy_image` does | slice 6 | observed: Actions run 41564513429 job native-linux-wayland-copy-files (tests/test_copy_files_native_linux_wayland.py::test_wayland_copy_files_independent_consumer_probe) offer_held_after_exit (wl-copy background server) and run 41562962489 offer_held_after_exit (background xclip owner), rechecks 0/5/10 s |
 | 8 | Invalid input raises `ClipboardContentError` naming the problem | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer (message match per case) |
 | 8.1 | Invalid input: an empty iterable | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer [], (), iter([]) |
 | 8.2 | Invalid input: a bare `str` (which would otherwise iterate characters) | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer bare str |
@@ -42,13 +42,13 @@ Input: only the story's Goal, Scope and Key examples (and the start of Considere
 | 8.6 | Invalid-input errors are raised before the current clipboard is replaced (shared fail-before-replace boundary) | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer and ::test_missing_path_leaves_prior_offer_untouched (writer never called) |
 | 8.7 | The empty offer is rejected because it would silently clear the clipboard | slice 1 | observed: tests/test_copy_files_contract.py::test_invalid_input_raises_before_writer (empty message names clipboard clearing) |
 | 8.8 | Clearing the clipboard belongs to SEED-001#clear-clipboard, not this story | slice 1 | observed: clipboard/_files.py _validate_copy_files_paths rejects empty; no clear behavior added |
-| 9 | Environment and transfer failures raise `ClipboardContentError` | slice 6 | |
-| 9.1 | Failure: missing helper | slice 6 | |
-| 9.2 | Failure: unsupported session | slice 6 | |
-| 9.3 | Failure: denied access | slice 6 | |
-| 9.4 | Failure: transfer failure | slice 6 | |
-| 9.5 | Never silent success on such failures | slice 6 | |
-| 9.6 | Never a text-only fallback on such failures | slice 6 | |
+| 9 | Environment and transfer failures raise `ClipboardContentError` | slice 6 | observed: tests/test_copy_files_{macos,windows,x11,wayland}_writer.py failure-mapping tests (all raise ClipboardContentError) |
+| 9.1 | Failure: missing helper | slice 6 | observed: Actions run 41564513429 job native-linux-wayland-copy-files (tests/test_copy_files_native_linux_wayland.py::test_wayland_copy_files_independent_consumer_probe) missing_helper_install_hint; run 41562962489 missing_helper_install_hint; tests/test_copy_files_wayland_writer.py and tests/test_copy_files_x11_writer.py missing-helper tests |
+| 9.2 | Failure: unsupported session | slice 6 | observed: tests/test_copy_files_wayland_writer.py no-compositor and unusable-compositor tests; tests/test_copy_files_x11_writer.py no-display test; tests/test_copy_files_default_writer.py unsupported-platform test (aix, freebsd14) |
+| 9.3 | Failure: denied access | slice 6 | observed: tests/test_copy_files_wayland_writer.py denied-access exit test; tests/test_copy_files_windows_writer.py OpenClipboard-over-bound test |
+| 9.4 | Failure: transfer failure | slice 6 | observed: tests/test_copy_files_{macos,windows,x11,wayland}_writer.py helper-exit / SetClipboardData / read-back mismatch / timeout tests |
+| 9.5 | Never silent success on such failures | slice 6 | observed: same failure-mapping tests assert ClipboardContentError is raised (none return success) |
+| 9.6 | Never a text-only fallback on such failures | slice 6 | observed: writers write only file-list formats; no text fallback path exists in clipboard/_files_native*_writer.py and _files_native_macos.py (inspected); missing-helper rounds show prior text unchanged rather than replaced |
 | 10 | The offer is a reference, not a snapshot | slice 7 | |
 | 10.1 | The library does not lock the files | slice 7 | |
 | 10.2 | The library does not copy the files | slice 7 | |
