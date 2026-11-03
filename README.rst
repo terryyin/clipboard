@@ -342,9 +342,15 @@ session, a helper or native call failing, a timeout) raise
 
 Platforms: macOS Aqua clears the general pasteboard with ``NSPasteboard
 clearContents`` through the built-in ``osascript`` (bounded at 15 s; see
-Evidence). Linux Wayland, Linux X11, and Windows desktop clears are not
-available yet: there ``clear()`` raises ``ClipboardContentError`` saying the
-native clearer is not available on that platform.
+Evidence). Linux Wayland runs ``wl-copy --clear`` (bounded at 10 s), which
+needs ``wl-clipboard`` on ``PATH``; a missing ``wl-copy`` raises
+``ClipboardContentError`` naming ``wl-clipboard``. A session with both
+``DISPLAY`` and ``WAYLAND_DISPLAY`` clears the Wayland selection. On Linux
+with neither ``DISPLAY`` nor ``WAYLAND_DISPLAY``, ``clear()`` raises
+``ClipboardContentError`` saying no desktop session is visible. Linux X11 and
+Windows desktop clears are not available yet: there ``clear()`` raises
+``ClipboardContentError`` saying the native clearer is not available on that
+platform.
 
 Boundary: ``clear()`` acts once on the current clipboard. A later offer is a
 newer copy, not a failed clear, and is not detected: another application
@@ -522,7 +528,17 @@ Evidence / verified platforms (native probes gated via
   ``NSStringPboardType`` listed, and a following ``clear()`` left none.
   Evidence limits: whether a macOS privacy prompt appeared on screen is
   unobserved (the probe cannot capture the screen); every ``clear()``
-  finished within its bound without blocking. Linux Wayland, Linux X11, and
+  finished within its bound without blocking. Linux Wayland (``wl-copy
+  --clear``) **pending CI**: ``scripts/probe_linux_wayland_native_clear.py``
+  (wrapper ``tests/test_clear_native_linux_wayland.py``, job
+  ``native-linux-wayland-clear``) on headless Sway 1.11 with wl-clipboard
+  2.2.1 on ``ubuntu-26.04`` first records the raw ``wl-copy --clear`` against
+  an independent ``text/html`` owner, then has independent ``wl-copy``
+  producers of ``text/html`` and ``text/plain;charset=utf-8`` and a
+  ``copy_image()`` owner each followed by a child ``clear()``, ``clear()``
+  twice, and a ``PATH`` without ``wl-copy``. Evidence limits: other Wayland
+  compositors, and desktops with clipboard managers (GNOME, KDE Plasma /
+  Klipper) that may re-offer a saved entry, are unverified. Linux X11 and
   Windows clears are not available yet.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have

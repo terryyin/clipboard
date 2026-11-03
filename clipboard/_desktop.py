@@ -37,6 +37,11 @@ def _is_linux_wayland() -> bool:
     return session == "wayland" or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
+def _linux_desktop_session_visible() -> bool:
+    """Whether any Linux desktop session is advertised (Wayland or X11)."""
+    return _is_linux_wayland() or bool(os.environ.get("DISPLAY"))
+
+
 def _linux_wayland_without_x11() -> bool:
     """True when only a Wayland session is advertised (X11 reader not selected).
 

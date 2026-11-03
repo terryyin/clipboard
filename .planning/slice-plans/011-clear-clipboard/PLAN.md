@@ -294,6 +294,14 @@ Disposition: no user cost "A failed clear is reported, so the user never believe
   `native-linux-wayland-clear` (`native-wayland-clear.yml`) record the fresh
   session's raw helper wording, then run `scripts/probe_linux_{x11,wayland}_native_clear.py`
   step 1; slices 4–5 append clear steps to each probe's `_probe`.
+- Slice 4 (desktop-free proof accepted 2026-11-03; native proof pending the
+  published revision's CI): `clipboard/_clear_wayland.py` runs `wl-copy
+  --clear` (stdin closed, stderr to a temp file, 10 s bound); `_clear.py`
+  Linux dispatch: Wayland via `_is_linux_wayland`, no session raises,
+  X11-only still "not available". Probe steps 2–7 in
+  `scripts/probe_linux_wayland_native_clear.py`; slice 5 should reuse
+  `linux_native_clear_support.helper_pids` / `wait_pids_exit` / `child_clear`
+  and revisit `_desktop._linux_desktop_session_visible` once X11 dispatches.
 - The per-module osascript runners (`_offer_macos`, `_html_native_macos`,
   `_clear_macos`) keep separate failure messages and bounds; consolidating
   them is a cross-module refactor outside this story.
