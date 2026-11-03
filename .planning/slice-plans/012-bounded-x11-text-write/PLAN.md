@@ -111,6 +111,17 @@ report (exit 2) fails the wrapper, as its docstring, the README and the X11
 wrapper already do; update the now-stale "The probe wrapper skips without
 these" comment in `.github/workflows/native-wayland-text.yml`.
 
+## Execution complete
+
+Product advice: Queue one follow-up story to share a bounded helper-owner
+launcher (temp-file `stdin`, detached session) between the text and file-list
+X11 writers, as the maintainer deferred during slice 1, and consider bounding
+`copy_image`'s helper writes in the same story: `clipboard/_image_write.py`
+still writes PNG bytes (routinely larger than a 64 KiB pipe buffer) into
+`stdin=subprocess.PIPE` with no deadline, the same stalled-display hang this
+correction removed for text. No correction plan: the aggregate change matches
+every source commitment in `source-review.md`.
+
 ## Decisive premises
 
 Observed in this workspace (Darwin, `nix develop -c uv run`), scratch edits
