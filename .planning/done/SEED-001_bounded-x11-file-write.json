@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#bounded-x11-file-write",
+  "title": "Bound the X11 file-list write and prove directories and duplicates natively",
+  "completedAt": "2026-11-03T13:57:59.927Z",
+  "developer": "Terry Yin",
+  "agent": "Anri-chan",
+  "host": "cursor"
+}
