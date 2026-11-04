@@ -235,3 +235,21 @@ Reported: slice 1 — "The gated macOS wait probe stopped at its evidence limit 
 Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) on macOS, Windows, Linux X11 (Xvfb + `xclip`) and Linux Wayland (Sway + wl-clipboard) start a wait, then copy with an independent producer"
 Disposition: owner changed "The macOS native wait observation moved to SEED-001#macos-native-wait-evidence at the developer's request (2026-11-04)"
 Commitment: 6.2, 6.2.1, 8.2.1
+
+## Execution complete
+
+Product advice:
+- Queue the retrospective correction SEED-001#split-native-wait-support
+  (plan `019-split-native-wait-support`): `scripts/native_wait_support.py` is
+  384 lines against the 250-line limit; a behaviour-preserving split proved by
+  the branch CI wait jobs.
+- SEED-001#macos-native-wait-evidence (queued at the developer's request) holds
+  the only unobserved wait desktop; run it when the developer is at an
+  unlocked Mac.
+- Pre-existing defect outside this story: `scripts/macos_native_clear_support.py`
+  reads `kCGSessionOnConsoleKey` (the real key is `kCGSSessionOnConsoleKey`), so
+  the clear probe always records `on_console` false; worth a small project
+  correction.
+- Proposal, not a finding: the six `native-wayland-*.yml` reusable workflows
+  repeat the same Sway setup; a shared workflow or composite action would remove
+  that duplication as a separate CI-structure change.

@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 26
+- Highest allocated local number: 27
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
@@ -264,6 +264,14 @@ paste could not be observed.
 ### Occurrences
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-408](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-408.md); source recovery remains in this project’s pre-compaction revision.
+- Execution: SEED-001#wait-for-content
+  - Timestamp: 2026-11-04T14:09+07:00 (last of several lock checks; slices 1–3)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: plan 018 slice 1 proof required the gated macOS wait probe run on the developer machine; `IOConsoleLocked` was `<true/>` at every check across slices 1–3; the probe exited 2 (`evidence_limit`, locked screen); the developer later said "im not at the mac now" and the proof moved to SEED-001#macos-native-wait-evidence (commit 0120396)
+  - Observed effect: The obligation travelled slice 1 → 2 → 3 and blocked completion until the developer amended the story
+  - Inference: A plan whose slice proof needs the developer's unlocked desktop could check the session at execution start and offer the split before slice 1 instead of carrying it to the end
 
 ## ODF-259 — CI observer budget expired while the next slice was still open
 
@@ -387,3 +395,28 @@ clipboard of whatever host runs them.
   - Evidence: slice 4 implementation return: "I ran `linux_native_clear_support.child_clear()` on this Mac (it returned `{"raised": null}`, 0.27 s). That cleared the developer's live macOS clipboard."; slice 5 and 6 briefs then said never to run the real `clear()` or probe child helpers locally, and no recurrence was reported
   - Observed effect: The developer's clipboard was emptied once without a planned probe; earlier authorized macOS probe runs had already replaced it, so no unique content is known lost
   - Inference: For destructive or live-state operations, delegation briefs should name which helpers mutate the host's desktop and limit local smoke checks to imports or `evidence_limit` exits
+- Execution: SEED-001#wait-for-content
+  - Timestamp: unknown (2026-11-04, slice 1 before 24938ab and slice 3 before bf48f2c)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: slice 1 return: "I also called the probe's step functions directly while the screen was locked, to check the probe mechanics"; slice 3 return: "I ran `run_steps(MACOS)` directly from `scripts/`, bypassing the lock gate. It replaced the clipboard."; neither brief warned that probe steps mutate the live pasteboard
+  - Observed effect: The developer's macOS clipboard was cleared and overwritten twice by unplanned smoke runs; both returns labelled them "not evidence"
+  - Inference: Recurrence after the earlier occurrence suggests the warning belongs in the delegation guidance or probe briefs by default, not only after a first incident
+
+## DD-027 — Refactor return called a 384-line module fine against the 250-line limit
+
+A post-change refactor return reported `scripts/native_wait_support.py` at
+"about 385 lines … all fine" although the refactor checks require splitting
+any checked file over 250 lines; the coordinator accepted `## REFACTOR
+COMPLETE` without a size check, and the retrospective found it.
+
+### Occurrences
+- Execution: SEED-001#wait-for-content
+  - Timestamp: unknown (2026-11-04, slice 3 refactor before bf48f2c)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: unknown
+  - Evidence: slice 3 part 1 refactor return ("The harness is about 385 lines … File sizes: all fine"); `wc -l scripts/native_wait_support.py` = 384 at 0120396; `.claude/skills/dough-post-change-refactor/references/refactor-checks.md` "File size"; correction plan `.planning/slice-plans/019-split-native-wait-support/PLAN.md`
+  - Observed effect: The oversized module was committed and published; a correction story and plan were needed
+  - Inference: Proof acceptance of a refactor return could include a mechanical `wc -l` over the diff's files rather than trusting the return's size claim

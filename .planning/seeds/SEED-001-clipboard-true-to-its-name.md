@@ -262,6 +262,28 @@ limit because the screen was locked.
 2. Locked screen → the probe exits 2 with `evidence_limit` → no README claim
    changes.
 
+<a id="split-native-wait-support"></a>
+
+### Split the native wait probe support along its harness and steps
+
+**Identity:** SEED-001#split-native-wait-support
+
+**Goal:** Maintainers of the native wait probes can change the child wait
+harness or one probe step without reading a 384-line module that mixes both,
+bringing `scripts/native_wait_support.py` back under the project's 250-line
+file limit that every other native support module meets. Retrospective
+correction of SEED-001#wait-for-content.
+
+**Scope:**
+
+- Split `scripts/native_wait_support.py` along its cohesive seam (the child
+  wait harness and timing rules versus the four shared probe steps and their
+  runner) so each module is at most 250 lines; update the four
+  `scripts/probe_*_native_wait.py` imports.
+- No change to probe step names, pass conditions, report fields, gates,
+  floors, CI jobs or the wait API.
+- *Plan:* [019-split-native-wait-support](../slice-plans/019-split-native-wait-support/PLAN.md).
+
 <a id="primary-selection"></a>
 
 ### Use the Linux primary selection explicitly
