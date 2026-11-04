@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#bounded-helper-owner-write
 **Source:** [Bound every helper-owner clipboard write behind one launcher](../../seeds/SEED-001-clipboard-true-to-its-name.md#bounded-helper-owner-write)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -108,6 +109,20 @@ stopped; a working `xclip` → returns once `image/png` reads back the exact
 PNG. Adds `_start_helper_owner` and the owner stop to `clipboard/_desktop`,
 moves the X11 text and file-list writers onto them (deleting their
 `_start_owner` copies), and documents the Linux X11 `copy_image` bound.
+
+Accepted local proof (2026-11-04, Darwin): `tests/test_copy_image_x11_write_stall.py`
+(examples 1, 2 and the writer-level temp-file test; all three failed first: blocked
+past 6 s / returned success / `Popen` with `stdin=PIPE`) and
+`tests/test_helper_owner_launcher.py` pass; `nix develop -c make check` →
+621 passed, 27 skipped. The four existing X11 text / file-list fixtures now fake
+`os.killpg` via `_desktop.os` (one line each; assertions unchanged). Refactor:
+`_X11_FILES_WRITE_TIMEOUT_S` reuses `_LINUX_TEXT_TIMEOUT_S`; the full-temp-dir
+stand-in lives in `tests/fake_full_temp_dir.py`. Pending: Native Linux X11
+copy_image / text / copy_files jobs on the pushed revision (exact `image/png`
+read-back early probe; commitments 17.1–17.3, 21).
+Learning for slice 2: faking `subprocess.Popen` to substitute the stall command
+while stubbing `subprocess.run` makes one test fail first on the old pipe code and
+pass on the launcher; reuse it for the Wayland stand-in.
 
 ### 2. Wayland owner writes through the launcher, image bound at 10 s
 Type: Behavior

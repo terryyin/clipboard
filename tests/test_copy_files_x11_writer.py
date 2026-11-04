@@ -17,7 +17,7 @@ import pytest
 from fake_xclip_files import URI_LIST, FakeX11Files
 
 import clipboard
-from clipboard import _files_native_x11_writer, _text_native_x11
+from clipboard import _desktop, _files_native_x11_writer
 
 NAMES = ["report final.pdf", "données é.csv"]
 WRITE = ["xclip", "-selection", "clipboard", "-t", URI_LIST]
@@ -43,7 +43,7 @@ def x11(monkeypatch, restore_files_clipboard_writer, fake_platform):
     monkeypatch.setattr(subprocess, "run", fake.run)
     monkeypatch.setattr(subprocess, "Popen", fake.popen)
     monkeypatch.setattr(
-        _text_native_x11.os,
+        _desktop.os,
         "killpg",
         lambda pid, sig: fake.killed.append(pid),
         raising=False,  # os.killpg is POSIX-only; these tests also run on Windows

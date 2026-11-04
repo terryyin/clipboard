@@ -13,7 +13,7 @@ from fake_pyperclip import FakePyperclip
 from fake_xclip_text import FakeX11
 
 import clipboard
-from clipboard import _text_native_x11
+from clipboard import _desktop, _text_native_x11
 
 TEXT = "  héllo 👋 ﾃｽﾄ\nline 2 "
 TARGETS = ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"]
@@ -29,7 +29,7 @@ def x11(text_session, monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake.run)
     monkeypatch.setattr(subprocess, "Popen", fake.popen)
     monkeypatch.setattr(
-        _text_native_x11.os,
+        _desktop.os,
         "killpg",
         lambda pid, sig: fake.killed.append(pid),
         raising=False,  # os.killpg is POSIX-only; these tests also run on Windows

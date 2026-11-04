@@ -22,22 +22,26 @@ import subprocess
 import tempfile
 import time
 
-from clipboard._desktop import _xclip_targets_lenient
+from clipboard._desktop import (
+    _start_helper_owner,
+    _stop_helper_owner,
+    _xclip_targets_lenient,
+)
 from clipboard._errors import ClipboardContentError
 from clipboard._files_offer import _uri_list_body
 from clipboard._text_native_linux import (
+    _LINUX_TEXT_TIMEOUT_S,
     _helper_log,
     _helper_log_suffix,
     _install_hint,
     _remaining,
 )
-from clipboard._text_native_x11 import _stop_owner
 
 _URI_LIST = "text/uri-list"
 _XCLIP_URI_LIST_WRITE_CMD = ["xclip", "-selection", "clipboard", "-t", _URI_LIST]
 _XCLIP_URI_LIST_READ_CMD = ["xclip", "-selection", "clipboard", "-o", "-t", _URI_LIST]
-# One bound across launch, TARGETS polling and read-back (text writer's 10 s).
-_X11_FILES_WRITE_TIMEOUT_S = 10.0
+# One bound across launch, TARGETS polling and read-back (``copy``'s 10 s).
+_X11_FILES_WRITE_TIMEOUT_S = _LINUX_TEXT_TIMEOUT_S
 _X11_FILES_READBACK_TIMEOUT_S = 2.0
 _X11_FILES_POLL_INTERVAL_S = 0.05
 
@@ -66,26 +70,6 @@ def _require_session() -> None:
         )
 
 
-def _start_owner(body: bytes, log) -> subprocess.Popen:
-    # Unlinked temp file: a non-reading owner cannot block Python on a full
-    # pipe buffer. Close our handle once Popen has inherited its copy.
-    with tempfile.TemporaryFile() as stdin:
-        stdin.write(body)
-        stdin.seek(0)
-        try:
-            return subprocess.Popen(
-                _XCLIP_URI_LIST_WRITE_CMD,
-                stdin=stdin,
-                stdout=subprocess.DEVNULL,
-                stderr=log,
-                start_new_session=True,
-            )
-        except FileNotFoundError as exc:
-            raise _error(_xclip_missing_detail()) from exc
-        except OSError as exc:
-            raise _error(f"could not run xclip ({exc})") from exc
-
-
 def _owner_serves(body: bytes, deadline: float) -> bool:
     """Whether ``TARGETS`` lists ``text/uri-list`` and it is exactly ``body``."""
     if _URI_LIST.encode() not in _xclip_targets_lenient().splitlines():
@@ -111,7 +95,12 @@ def _x11_files_clipboard_writer(paths: list[str]) -> None:
     deadline = time.monotonic() + _X11_FILES_WRITE_TIMEOUT_S
     # stderr goes to an unlinked file, never a pipe the background owner holds.
     with tempfile.TemporaryFile() as log:
-        proc = _start_owner(body, log)
+        try:
+            proc = _start_helper_owner(_XCLIP_URI_LIST_WRITE_CMD, body, log)
+        except FileNotFoundError as exc:
+            raise _error(_xclip_missing_detail()) from exc
+        except OSError as exc:
+            raise _error(f"could not run xclip ({exc})") from exc
         while True:
             status = proc.poll()
             if status not in (None, 0):
@@ -124,7 +113,7 @@ def _x11_files_clipboard_writer(paths: list[str]) -> None:
             if _owner_serves(body, deadline):
                 return
             if time.monotonic() >= deadline:
-                _stop_owner(proc)
+                _stop_helper_owner(proc)
                 raise _error(
                     f"{command} did not offer the file list as {_URI_LIST} in "
                     f"TARGETS within the {_X11_FILES_WRITE_TIMEOUT_S:g}s bound"

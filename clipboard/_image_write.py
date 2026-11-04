@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import tempfile
+import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from io import BytesIO
@@ -14,13 +15,28 @@ from clipboard import _platform
 from clipboard._desktop import (
     _helper_failure_detail,
     _is_linux_wayland,
-    _xclip_targets_lenient,
+    _start_helper_owner,
+    _stop_helper_owner,
 )
 from clipboard._errors import ClipboardImageError
 from clipboard._image_read import _pillow_image, _raise_image_failure
+from clipboard._text_native_linux import (
+    _LINUX_TEXT_TIMEOUT_S,
+    _helper_log_suffix,
+    _remaining,
+)
 
 if TYPE_CHECKING:
     from PIL import Image
+
+_PNG = "image/png"
+_XCLIP_IMAGE_WRITE_CMD = ["xclip", "-selection", "clipboard", "-t", _PNG, "-i"]
+_XCLIP_IMAGE_READ_CMD = ["xclip", "-selection", "clipboard", "-o", "-t", _PNG]
+# One bound across launch, hand-over and read-back (``copy`` / ``copy_files``).
+_X11_IMAGE_WRITE_TIMEOUT_S = _LINUX_TEXT_TIMEOUT_S
+# Each read-back is bounded below the overall write bound (text writer's cap).
+_X11_IMAGE_READBACK_TIMEOUT_S = 2.0
+_X11_IMAGE_POLL_INTERVAL_S = 0.05
 
 
 @contextmanager
@@ -61,60 +77,65 @@ def _write_macos_pngf(image: Image.Image) -> None:
             )
 
 
-def _wait_xclip_image_png_offer(*, timeout_s: float = 5.0) -> None:
-    """Block until CLIPBOARD advertises ``image/png``, or raise.
-
-    Listing failures are lenient (empty TARGETS): treat as not yet offered.
-    """
-    import time
-
-    deadline = time.monotonic() + timeout_s
-    while time.monotonic() < deadline:
-        if b"image/png" in _xclip_targets_lenient():
-            return
-        time.sleep(0.05)
-    raise OSError("xclip clipboard write did not publish image/png in time")
+def _xclip_serves_png(png_bytes: bytes, deadline: float) -> bool:
+    """Whether CLIPBOARD's ``image/png`` is exactly ``png_bytes`` (lenient)."""
+    try:
+        result = subprocess.run(
+            _XCLIP_IMAGE_READ_CMD,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            check=False,
+            timeout=_remaining(deadline, _X11_IMAGE_READBACK_TIMEOUT_S),
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0 and result.stdout == png_bytes
 
 
 def _write_linux_xclip(image: Image.Image) -> None:
     """Publish PNG bytes on X11 CLIPBOARD via ``xclip`` (``image/png``).
 
-    Feeds PNG on stdin and leaves ``xclip`` running as the CLIPBOARD owner so
-    the writing Python process can exit while the offer stays pasteable
-    (issue #5 writer-exit). Waiting for ``xclip`` to exit hangs under Xvfb;
-    instead wait until TARGETS includes ``image/png``.
+    Leaves ``xclip`` running in its own session as the CLIPBOARD owner so the
+    writing Python process can exit while the offer stays pasteable (issue #5
+    writer-exit); the PNG reaches it through the shared owner launcher, never
+    a pipe. Returns only once ``image/png`` reads back exactly the written
+    PNG: a previous image owner already lists ``image/png`` in TARGETS. One
+    10 s bound covers launch, hand-over and read-back; when it passes, the
+    owner's session is stopped and ``OSError`` names ``xclip`` and the bound.
     """
     png_bytes = _png_bytes(image)
-    try:
-        proc = subprocess.Popen(
-            [
-                "xclip",
-                "-selection",
-                "clipboard",
-                "-t",
-                "image/png",
-                "-i",
-            ],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
-    except FileNotFoundError as exc:
-        raise OSError(
-            "xclip is required for clipboard image write on Linux X11; "
-            "install xclip and ensure it is on PATH"
-        ) from exc
-    assert proc.stdin is not None
-    try:
-        proc.stdin.write(png_bytes)
-        proc.stdin.close()
-    except BrokenPipeError as exc:
-        raise OSError("xclip clipboard write failed: broken pipe") from exc
-    exit_code = proc.poll()
-    if exit_code not in (None, 0):
-        raise OSError(f"xclip clipboard write failed: exit {exit_code}")
-    _wait_xclip_image_png_offer()
+    command = " ".join(_XCLIP_IMAGE_WRITE_CMD)
+    deadline = time.monotonic() + _X11_IMAGE_WRITE_TIMEOUT_S
+    # stderr goes to an unlinked file, never a pipe the background owner holds.
+    with tempfile.TemporaryFile() as log:
+        try:
+            proc = _start_helper_owner(_XCLIP_IMAGE_WRITE_CMD, png_bytes, log)
+        except FileNotFoundError as exc:
+            raise OSError(
+                "xclip is required for clipboard image write on Linux X11; "
+                "install xclip and ensure it is on PATH"
+            ) from exc
+        except OSError as exc:
+            raise OSError(f"xclip clipboard write could not start ({exc})") from exc
+        while True:
+            status = proc.poll()
+            if status not in (None, 0):
+                raise OSError(
+                    f"xclip clipboard write failed: {command} exited with status "
+                    f"{status}" + _helper_log_suffix(log)
+                )
+            if _xclip_serves_png(png_bytes, deadline):
+                return
+            if time.monotonic() >= deadline:
+                _stop_helper_owner(proc)
+                raise OSError(
+                    f"xclip clipboard write failed: {command} did not serve the "
+                    f"PNG as {_PNG} within the {_X11_IMAGE_WRITE_TIMEOUT_S:g}s bound"
+                    + _helper_log_suffix(log)
+                ) from subprocess.TimeoutExpired(
+                    _XCLIP_IMAGE_WRITE_CMD, _X11_IMAGE_WRITE_TIMEOUT_S
+                )
+            time.sleep(_X11_IMAGE_POLL_INTERVAL_S)
 
 
 def _write_linux_wl_copy(image: Image.Image) -> None:
