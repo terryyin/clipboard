@@ -322,29 +322,122 @@ ordinary clipboard, and never pretends macOS or Windows have one.
 
 **Identity:** SEED-001#bounded-helper-owner-write
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/019-bounded-helper-owner-write/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"c8426762bfc0a46ae83bdf00966d0b20a518d6321fc9faf4198d01e7b7075e7b","plan":"9354dc3daa75f7e5a66dd4bf49d3b20fc2bf6041702a9ec8e91c3cd31b804d7d"}}
 ```
 
-- **For / why:** Python users calling `copy_image` on a Linux desktop whose
-  display or compositor stalls get the documented bounded
-  `ClipboardImageError` instead of a hang; maintainers keep one rule for
-  feeding a background clipboard owner its payload.
-- **Evaluation:** With a helper owner that never reads its input,
-  `copy_image` of a PNG larger than a pipe buffer (about 64 KiB) fails within
-  its documented bound; the text, file-list and image owner writes start
-  their helpers through one shared launcher (unlinked temp-file `stdin`,
-  detached session) with each caller keeping its own error mapping.
-- **Value / learning:** `clipboard/_image_write.py` still writes PNG bytes
-  into `stdin=subprocess.PIPE` without a deadline, the pattern that hung
-  large text on X11; the text and file-list X11 writers already duplicate the
-  temp-file launcher. Whether the image hang reproduces on X11 and Wayland is
-  unverified.
-- **Boundary:** Helper input feeding and its bound only; no change to session
-  selection, offered formats, or public API.
-- **Effort hypothesis:** **S**, medium confidence.
+**Goal:** Python users calling `copy_image` on a Linux desktop whose display
+or compositor stalls get a `ClipboardImageError` within one documented bound
+instead of a hang or a false success, as `copy` and `copy_files` already
+do. Maintainers keep one rule for handing a background clipboard owner its
+payload, so the next writer cannot reintroduce the pipe write that hung
+large text on X11. This finishes the reliability promise of the image and
+rich-content writes without changing what any write offers.
+
+**Scope:**
+
+- *Required behavior: bounded image write on Linux.* On Linux X11 and
+  Linux Wayland, each `copy_image` shares one 10 s bound across starting
+  its helper, handing over the PNG, and confirming the offer, the bound
+  `copy` and `copy_files` already use (today the Wayland path waits up to
+  30 s and the X11 path has no bound on the hand-over). When the bound
+  passes it raises `ClipboardImageError` naming the helper and the bound,
+  with the helper's stderr when it wrote any, and stops the owner it
+  started (its whole session) so no half-started owner lingers. The README
+  documents the bound beside the text bound.
+- *Required behavior: an X11 image write succeeds only when its own owner
+  serves it.* `copy_image` on X11 returns only once CLIPBOARD's `image/png`
+  reads back exactly the written PNG bytes, as the text and file-list
+  writers already confirm their own bytes. Reason: the current check only
+  waits for `image/png` in TARGETS, which a previous image owner already
+  lists, so with the hand-over bounded a non-reading owner would otherwise
+  turn a hang into a silent success (the library rule is no silent success
+  on write).
+- *Required behavior: one launcher.* Every Linux helper-owner clipboard
+  write that hands over a payload (X11 `xclip -i` for text, file list and
+  image; Wayland `wl-copy` for text, file list and image) starts its helper
+  through one private launcher beside the shared Linux helpers
+  (`clipboard/_desktop`): the payload comes from an unlinked temporary file
+  as `stdin` (never a pipe the caller must drain), the helper runs in its
+  own session with `stdout` discarded and `stderr` in the caller's unlinked
+  log. Each caller keeps its own deadline, readiness check and error mapping
+  (`ClipboardContentError` for text and file lists, `ClipboardImageError`
+  for images, with the same install hints). The Wayland image write gains
+  the detached session and stderr detail the other Wayland writes already
+  have.
+- *Required behavior: failures before replacing.* A missing helper, or a
+  temporary file that cannot be written (for example a full temporary
+  directory), raises the caller's error before any helper starts, so the
+  current clipboard stays as it was.
+- *Preserved.* Session selection, offered formats and types, the
+  writer-exit lifetime, public API, injection seams, and the existing text
+  and file-list bounds and messages' meaning stay as they are; the existing
+  X11 text and file-list stall tests keep passing through the launcher.
+- *Proof.* Desktop-free tests drive a real `sys.executable` owner that
+  never reads its input (the stalled-display stand-in the text and
+  file-list stall tests use) with a PNG above a typical 64 KiB pipe buffer:
+  X11 `copy_image` raises `ClipboardImageError` within the bound (shortened for the test)
+  and stops the owner's session; with a previous owner still listing
+  `image/png`, it still raises rather than returning; a Wayland `wl-copy`
+  stand-in that never finishes raises within the bound with its stderr.
+  Every Linux writer's launch goes through the one launcher (checked by the
+  launcher's own tests plus the existing writer suites). The existing gated
+  Xvfb + `xclip` and Sway + wl-clipboard `copy_image`, text and
+  `copy_files` probes (`CLIPBOARD_NATIVE_PROBE`) keep passing, including
+  writer-exit pasteability. A truly stalled X server or compositor is an
+  evidence limit: proved by the stand-in only, as for text.
+- *Scope limits (deferred, not rejected).* macOS `osascript` and Windows
+  image writes (already bounded, no background owner fed by Python);
+  payload-free helper runs (`wl-copy --clear`, the X11 clear child);
+  readers; a Wayland read-back confirmation for text or image writes (they
+  keep confirming by `wl-copy`'s foreground exit); a configurable bound;
+  Linux `copy_html` (no native writer exists).
+
+**Key examples:**
+
+1. Linux X11 whose `xclip` never reads its input (stalled display) →
+   `copy_image` of a 480 KB PNG → `ClipboardImageError` naming `xclip` and
+   the 10 s bound about 10 s later; no owner from this call is left running.
+   (Observed 2026-11-04 with a non-reading fake `xclip`: today the call is
+   still blocked after 12 s, with no bound.)
+2. Linux X11, CLIPBOARD already holds an earlier `copy_image` (it lists
+   `image/png`), and the new `xclip` never takes ownership → `copy_image`
+   raises `ClipboardImageError` within the bound rather than returning as if
+   the new image were offered.
+3. Linux X11 working normally → `copy_image(img)` returns once
+   `xclip -o -selection clipboard -t image/png` gives exactly the written
+   PNG; after the Python process exits the image still pastes.
+4. Linux Wayland whose `wl-copy` never finishes → `copy_image` raises
+   `ClipboardImageError` within 10 s (today 30 s), quoting what `wl-copy`
+   wrote to stderr.
+5. Linux X11, 200 000 characters of text or a file list above 64 KiB with
+   a non-reading owner → `copy` / `copy_files` raise `ClipboardContentError`
+   within their bound as today, now launched through the shared launcher.
+6. Linux X11 with no `xclip` on PATH → `copy_image` raises
+   `ClipboardImageError` and `copy_files` raises `ClipboardContentError`,
+   each with its install hint; the clipboard is unchanged.
+
+**Architecture:** No ADR store exists in this repository, so no Accepted
+decision applies. The binding convention is AGENTS.md: shared Linux helper
+mechanics live in private `clipboard/_desktop` with per-caller failure
+modes, and content-kind modules must not copy them. The launcher therefore
+owns only process start and payload hand-over (temporary-file `stdin`,
+detached session, discarded `stdout`, caller's `stderr` log) and raises
+launch failures as `OSError` for each caller to map; deadlines, readiness
+checks, owner stop, and messages stay with the callers. Considered and not
+chosen: copying the temp-file pattern into the image writer only (a third
+duplicate the story exists to remove); passing the payload as an `xclip`
+file argument (`wl-copy` takes none, and the named file would have to
+outlive the call until a stalled owner reads it); bounding the pipe write
+with a writer thread (more moving parts, and the pipe still ties Python to
+a reader that may never come).
+
+- **Effort hypothesis:** **M**, medium confidence (six call sites and one
+  readiness change, all with existing desktop-free suites and native
+  probes).
 - **Depends on:** None.
-- **Safe stopping point:** The shared launcher with the image write bounded is
-  useful by itself.
+- **Safe stopping point:** The launcher with the X11 image write bounded and
+  confirmed is useful by itself; moving the remaining writers onto it can
+  follow.
 
 ## Ordering and Scope Reduction
 
