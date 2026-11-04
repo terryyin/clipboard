@@ -64,7 +64,7 @@ def _copy_one(sources):
     clipboard.copy_files([str(sources / NAMES[0])])
 
 
-def test_body_is_the_x11_uri_list_piped_to_wl_copy_then_read_back(sources, wayland):
+def test_body_is_the_x11_uri_list_handed_to_wl_copy_then_read_back(sources, wayland):
     paths = [str(sources / name) for name in NAMES]
     paths += [str(sources / "a dir"), paths[0]]
 
@@ -218,3 +218,12 @@ def test_missing_path_never_launches_wl_copy(sources, wayland):
     with pytest.raises(clipboard.ClipboardContentError, match="missing.txt"):
         clipboard.copy_files([str(sources / NAMES[0]), "missing.txt"])
     assert wayland.popens == [] and wayland.calls == []
+
+
+def test_unwritable_temp_file_raises_before_wl_copy_starts(
+    sources, wayland, unwritable_temp_files
+):
+    with pytest.raises(clipboard.ClipboardContentError, match="wl-copy") as caught:
+        _copy_one(sources)
+    assert isinstance(caught.value.__cause__, OSError)
+    assert unwritable_temp_files == [] and wayland.calls == []

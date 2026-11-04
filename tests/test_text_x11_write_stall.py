@@ -13,7 +13,7 @@ import threading
 import time
 
 import clipboard
-from clipboard import _text_native_x11
+from clipboard import _desktop, _text_native_x11
 
 # Typical pipe buffer; text larger than this blocked the old pipe write.
 _PIPE_BUFFER_FLOOR = 64 * 1024
@@ -54,7 +54,7 @@ def test_large_text_raises_within_bound_when_owner_never_reads_stdin(
             if proc.pid == pid:
                 proc.kill()
 
-    monkeypatch.setattr(_text_native_x11.os, "killpg", killpg, raising=False)
+    monkeypatch.setattr(_desktop.os, "killpg", killpg, raising=False)
 
     text = "a" * 200_000
     assert len(text.encode("utf-8")) > _PIPE_BUFFER_FLOOR

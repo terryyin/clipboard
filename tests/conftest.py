@@ -231,3 +231,14 @@ def text_session(monkeypatch, tmp_path, restore_text_clipboard, fake_platform):
         monkeypatch.setattr(_desktop_text, "_qt_binding_installed", lambda: qt)
 
     return configure
+
+
+@pytest.fixture
+def unwritable_temp_files(monkeypatch):
+    """``tempfile.TemporaryFile`` whose payload writes fail (full temp dir).
+
+    Returns the list of ``subprocess.Popen`` launches (it must stay empty).
+    """
+    from fake_full_temp_dir import install_full_temp_dir
+
+    return install_full_temp_dir(monkeypatch)

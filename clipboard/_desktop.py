@@ -1,14 +1,16 @@
-"""Shared Linux session detection, helper-failure detail, and type listing."""
+"""Shared Linux session detection, helper-failure detail, listing, owner launch."""
 
 from __future__ import annotations
 
 import os
+import signal
 import subprocess
+import tempfile
 
 from clipboard._errors import ClipboardContentError
 
-# Per-caller listing bounds (image lenient / HTML read / inspect).
-_IMAGE_XCLIP_TARGETS_TIMEOUT_S = 2.0
+# Per-caller listing bounds (file-list write lenient / HTML read / inspect).
+_LENIENT_XCLIP_TARGETS_TIMEOUT_S = 2.0
 _HTML_LISTING_TIMEOUT_S = 10.0
 _INSPECT_LISTING_TIMEOUT_S = 15.0
 
@@ -82,19 +84,44 @@ def _helper_stderr_detail(result: subprocess.CompletedProcess[bytes]) -> str:
 
 
 def _xclip_targets_lenient() -> bytes:
-    """CLIPBOARD TARGETS bytes for image-write polling; empty on any failure."""
+    """CLIPBOARD TARGETS bytes for file-list write polling; empty on any failure."""
     try:
         result = subprocess.run(
             _XCLIP_TARGETS_CMD,
             capture_output=True,
-            timeout=_IMAGE_XCLIP_TARGETS_TIMEOUT_S,
+            timeout=_LENIENT_XCLIP_TARGETS_TIMEOUT_S,
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired):
         return b""
-    if result.returncode != 0:
-        return b""
-    return result.stdout or b""
+    return (result.stdout or b"") if result.returncode == 0 else b""
+
+
+def _start_helper_owner(cmd: list[str], payload: bytes, log) -> subprocess.Popen:
+    """Start a background owner reading ``payload`` from an unlinked temp file.
+
+    Never a pipe a stalled owner leaves full; own session, stdout discarded,
+    stderr into ``log``. ``OSError`` (``FileNotFoundError``: missing helper)
+    propagates before any helper runs; callers keep deadline and readiness.
+    """
+    with tempfile.TemporaryFile() as stdin:
+        stdin.write(payload)
+        stdin.seek(0)
+        return subprocess.Popen(
+            cmd,
+            stdin=stdin,
+            stdout=subprocess.DEVNULL,
+            stderr=log,
+            start_new_session=True,
+        )
+
+
+def _stop_helper_owner(proc: subprocess.Popen) -> None:
+    """Best effort: stop an owner that never offered (its whole session)."""
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        pass
 
 
 def _xclip_targets_html() -> subprocess.CompletedProcess[bytes] | None:
@@ -178,10 +205,7 @@ def _xclip_targets_inspect() -> tuple[str, ...]:
             + (f": {detail}" if detail else "")
             + " (xclip -selection clipboard -o -t TARGETS)"
         )
-    raw = (result.stdout or "").rstrip("\n")
-    if not raw:
-        return ()
-    return tuple(line for line in raw.splitlines() if line)
+    return tuple(line for line in (result.stdout or "").splitlines() if line)
 
 
 def _wl_paste_list_types_inspect() -> tuple[str, ...]:
@@ -223,7 +247,4 @@ def _wl_paste_list_types_inspect() -> tuple[str, ...]:
             + (f": {detail}" if detail else "")
             + " (wl-paste -l)"
         )
-    raw = (result.stdout or "").rstrip("\n")
-    if not raw:
-        return ()
-    return tuple(line for line in raw.splitlines() if line)
+    return tuple(line for line in (result.stdout or "").splitlines() if line)

@@ -3,11 +3,18 @@
 ``FakeWayland.run`` answers ``wl-paste --list-types`` and ``wl-paste -n -t T``
 like wl-clipboard 2.x (``Nothing is copied`` / ``No suitable type of content
 copied`` on stderr, exit 1); ``FakeWayland.popen`` returns a ``FakeWlCopy``
-whose foreground part sets (or clears) the selection, exits with a given
-status and stderr, or stalls past the bound.
+holding the payload read from the launcher's file stdin; waiting on its
+foreground part sets (or clears) the selection, exits with a given status and
+stderr, or stalls past the bound. ``install_fake_wayland`` routes the public
+``copy`` / ``paste`` through it on a Wayland text session.
 """
 
 import subprocess
+
+from fake_pyperclip import FakePyperclip
+
+TEXT = "  héllo 👋 ﾃｽﾄ\nline 2 "
+STALE_SOCKET = b"Failed to connect to a Wayland server: No such file or directory\n"
 
 # What wl-copy 2.x lists for a text type: the type plus its generic family.
 WL_COPY_TEXT_FAMILY = (
@@ -24,35 +31,34 @@ class FakeWlCopy:
         self.wayland = wayland
         self.cmd = cmd
         self.stdin = stdin
+        # The launcher's temp file closes once Popen returns: read it now.
+        self.input = None if stdin is subprocess.DEVNULL else stdin.read()
         self.log = stderr
         self.returncode = None
-        self.input = None
         self.killed = False
 
-    def communicate(self, input=None, timeout=None):
+    def wait(self, timeout=None):
+        if self.killed:
+            self.returncode = -9
+            return self.returncode
         assert 0 < timeout <= 10.0
-        self.input = input
-        self.wayland.communicate_timeouts.append(timeout)
+        self.wayland.wait_timeouts.append(timeout)
         if self.wayland.stalls:
             raise subprocess.TimeoutExpired(self.cmd, timeout)
         if self.wayland.copy_exit is not None:
             status, stderr = self.wayland.copy_exit
             self.log.write(stderr)
             self.returncode = status
-            return None, None
+            return status
         if "--clear" in self.cmd:
             self.wayland.offers = None
         else:
-            self.wayland.offers = dict.fromkeys(WL_COPY_TEXT_FAMILY, input)
+            self.wayland.offers = dict.fromkeys(WL_COPY_TEXT_FAMILY, self.input)
         self.returncode = 0
-        return None, None
+        return 0
 
     def kill(self):
         self.killed = True
-
-    def wait(self, timeout=None):
-        self.returncode = -9
-        return self.returncode
 
 
 class FakeWayland:
@@ -65,7 +71,7 @@ class FakeWayland:
         self.popens = []
         self.copy_exit = None  # (status, stderr) for wl-copy's foreground part
         self.stalls = False
-        self.communicate_timeouts = []
+        self.wait_timeouts = []
 
     def run(self, cmd, *, stdin, capture_output, check, timeout):
         assert stdin is subprocess.DEVNULL
@@ -99,3 +105,16 @@ class FakeWayland:
         proc = FakeWlCopy(self, cmd, stdin, stderr)
         self.popens.append(proc)
         return proc
+
+
+def install_fake_wayland(text_session, monkeypatch):
+    """Replace ``subprocess`` with a ``FakeWayland`` on a Wayland text session.
+
+    ``fake.pyperclip`` records any (unexpected) delegated pyperclip write.
+    """
+    fake = FakeWayland()
+    monkeypatch.setattr(subprocess, "run", fake.run)
+    monkeypatch.setattr(subprocess, "Popen", fake.popen)
+    text_session("linux", {"WAYLAND_DISPLAY": "wayland-0"}, ("wl-copy", "wl-paste"))
+    fake.pyperclip = FakePyperclip(monkeypatch)
+    return fake

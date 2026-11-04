@@ -20,13 +20,16 @@ owner usually lists ``UTF8_STRING`` too. Read and write each share one
 
 from __future__ import annotations
 
-import os
-import signal
 import subprocess
 import tempfile
 import time
 
-from clipboard._desktop import _XCLIP_TARGETS_CMD, _xclip_reports_no_owner
+from clipboard._desktop import (
+    _XCLIP_TARGETS_CMD,
+    _start_helper_owner,
+    _stop_helper_owner,
+    _xclip_reports_no_owner,
+)
 from clipboard._text_native_linux import (
     _LINUX_TEXT_TIMEOUT_S,
     _decode_text,
@@ -113,42 +116,18 @@ def _owner_serves(data: bytes, deadline: float) -> bool:
     return result.returncode == 0 and result.stdout == data
 
 
-def _stop_owner(proc: subprocess.Popen) -> None:
-    """Best effort: stop an owner that never offered (its whole session)."""
-    try:
-        os.killpg(proc.pid, signal.SIGTERM)
-    except (ProcessLookupError, PermissionError):
-        pass
-
-
-def _start_owner(data: bytes, log) -> subprocess.Popen:
-    # Unlinked temp file: an owner that never reads (stalled display) cannot
-    # block Python on a full pipe buffer. Close our handle once Popen has
-    # inherited its copy; an early exit is reported from status and stderr.
-    with tempfile.TemporaryFile() as stdin:
-        stdin.write(data)
-        stdin.seek(0)
-        try:
-            return subprocess.Popen(
-                _XCLIP_WRITE_CMD,
-                stdin=stdin,
-                stdout=subprocess.DEVNULL,
-                stderr=log,
-                start_new_session=True,
-            )
-        except OSError as exc:
-            raise _text_launch_error(
-                _DESKTOP, "write", _XCLIP_WRITE_CMD[0], _PACKAGE, exc
-            ) from exc
-
-
 def _x11_text_clipboard_writer(text: str) -> None:
     """Replace CLIPBOARD with exactly ``text`` (already validated)."""
     data = text.encode("utf-8")
     deadline = time.monotonic() + _X11_TEXT_WRITE_TIMEOUT_S
     # stderr goes to an unlinked file, never a pipe the background owner holds.
     with tempfile.TemporaryFile() as log:
-        proc = _start_owner(data, log)
+        try:
+            proc = _start_helper_owner(_XCLIP_WRITE_CMD, data, log)
+        except OSError as exc:
+            raise _text_launch_error(
+                _DESKTOP, "write", _XCLIP_WRITE_CMD[0], _PACKAGE, exc
+            ) from exc
         while True:
             status = proc.poll()
             if status not in (None, 0):
@@ -158,7 +137,7 @@ def _x11_text_clipboard_writer(text: str) -> None:
             if _owner_serves(data, deadline):
                 return
             if time.monotonic() >= deadline:
-                _stop_owner(proc)
+                _stop_helper_owner(proc)
                 raise _text_error(
                     _DESKTOP,
                     "write",

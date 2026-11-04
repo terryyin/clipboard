@@ -7,7 +7,6 @@ Make the clipboard project true to its name.
 ## Taken
 
 - [Use the Linux primary selection explicitly](seeds/SEED-001-clipboard-true-to-its-name.md#primary-selection) — SEED-001#primary-selection ([plan](slice-plans/017-primary-selection/PLAN.md))
-- [Bound every helper-owner clipboard write behind one launcher](seeds/SEED-001-clipboard-true-to-its-name.md#bounded-helper-owner-write) — SEED-001#bounded-helper-owner-write ([plan](slice-plans/019-bounded-helper-owner-write/PLAN.md))
 
 ## Backlog list
 

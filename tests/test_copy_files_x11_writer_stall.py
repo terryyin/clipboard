@@ -14,7 +14,7 @@ import threading
 import time
 
 import clipboard
-from clipboard import _files_native_x11_writer, _text_native_x11
+from clipboard import _desktop, _files_native_x11_writer
 from clipboard._files_offer import _uri_list_body
 
 SESSION_VARS = ("DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE")
@@ -56,7 +56,7 @@ def test_large_uri_list_raises_within_bound_when_owner_never_reads_stdin(
         except (ProcessLookupError, PermissionError, OSError):
             pass
 
-    monkeypatch.setattr(_text_native_x11.os, "killpg", killpg, raising=False)
+    monkeypatch.setattr(_desktop.os, "killpg", killpg, raising=False)
 
     # ~2000 long paths → body well above a typical 64 KiB pipe buffer.
     paths = [str(tmp_path / f"{'n' * 80}_{i}.txt") for i in range(2000)]

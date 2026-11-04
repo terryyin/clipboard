@@ -6,18 +6,14 @@ import subprocess
 import tempfile
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from clipboard import _platform
-from clipboard._desktop import (
-    _helper_failure_detail,
-    _is_linux_wayland,
-    _xclip_targets_lenient,
-)
+from clipboard._desktop import _helper_failure_detail, _is_linux_wayland
 from clipboard._errors import ClipboardImageError
 from clipboard._image_read import _pillow_image, _raise_image_failure
+from clipboard._image_write_linux import _write_linux_wl_copy, _write_linux_xclip
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -30,12 +26,6 @@ def _temporary_png_offer(image: Image.Image) -> Iterator:
         path = Path(raw) / "offer.png"
         image.save(path, format="PNG")
         yield path
-
-
-def _png_bytes(image: Image.Image) -> bytes:
-    buf = BytesIO()
-    image.save(buf, format="PNG")
-    return buf.getvalue()
 
 
 def _write_macos_pngf(image: Image.Image) -> None:
@@ -59,93 +49,6 @@ def _write_macos_pngf(image: Image.Image) -> None:
                 "osascript clipboard write failed: "
                 f"{_helper_failure_detail(result, fallback='unknown error')}"
             )
-
-
-def _wait_xclip_image_png_offer(*, timeout_s: float = 5.0) -> None:
-    """Block until CLIPBOARD advertises ``image/png``, or raise.
-
-    Listing failures are lenient (empty TARGETS): treat as not yet offered.
-    """
-    import time
-
-    deadline = time.monotonic() + timeout_s
-    while time.monotonic() < deadline:
-        if b"image/png" in _xclip_targets_lenient():
-            return
-        time.sleep(0.05)
-    raise OSError("xclip clipboard write did not publish image/png in time")
-
-
-def _write_linux_xclip(image: Image.Image) -> None:
-    """Publish PNG bytes on X11 CLIPBOARD via ``xclip`` (``image/png``).
-
-    Feeds PNG on stdin and leaves ``xclip`` running as the CLIPBOARD owner so
-    the writing Python process can exit while the offer stays pasteable
-    (issue #5 writer-exit). Waiting for ``xclip`` to exit hangs under Xvfb;
-    instead wait until TARGETS includes ``image/png``.
-    """
-    png_bytes = _png_bytes(image)
-    try:
-        proc = subprocess.Popen(
-            [
-                "xclip",
-                "-selection",
-                "clipboard",
-                "-t",
-                "image/png",
-                "-i",
-            ],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
-    except FileNotFoundError as exc:
-        raise OSError(
-            "xclip is required for clipboard image write on Linux X11; "
-            "install xclip and ensure it is on PATH"
-        ) from exc
-    assert proc.stdin is not None
-    try:
-        proc.stdin.write(png_bytes)
-        proc.stdin.close()
-    except BrokenPipeError as exc:
-        raise OSError("xclip clipboard write failed: broken pipe") from exc
-    exit_code = proc.poll()
-    if exit_code not in (None, 0):
-        raise OSError(f"xclip clipboard write failed: exit {exit_code}")
-    _wait_xclip_image_png_offer()
-
-
-def _write_linux_wl_copy(image: Image.Image) -> None:
-    """Publish PNG bytes on Wayland via ``wl-copy`` (``image/png``).
-
-    ``wl-copy`` reads stdin, then the foreground helper exits while a
-    background owner keeps the offer pasteable after the writing Python
-    process exits (issue #5 writer-exit).
-    """
-    png_bytes = _png_bytes(image)
-    # Same pipe rule as xclip -quiet: wl-copy may background a server process.
-    try:
-        proc = subprocess.Popen(
-            ["wl-copy", "--type", "image/png"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except FileNotFoundError as exc:
-        raise OSError(
-            "wl-copy is required for clipboard image write on Linux Wayland; "
-            "install wl-clipboard and ensure wl-copy is on PATH"
-        ) from exc
-    try:
-        proc.communicate(input=png_bytes, timeout=30)
-    except subprocess.TimeoutExpired as exc:
-        proc.kill()
-        proc.wait(timeout=5)
-        raise OSError("wl-copy clipboard write timed out") from exc
-    if proc.returncode != 0:
-        raise OSError(f"wl-copy clipboard write failed: exit {proc.returncode}")
 
 
 def _default_writeclipboard(image: Image.Image) -> None:
