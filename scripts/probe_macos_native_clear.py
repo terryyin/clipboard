@@ -3,21 +3,22 @@
 
 **Independent** producers (osascript / AppKit, not clipboard.*) place an
 HTML+text dual offer and, separately, a PNG-only offer on the general
-pasteboard. A **child** Python process calls ``clipboard.clear()`` and exits.
-An **independent** consumer (JXA ``NSPasteboard types``, a different script
-stack from the library's AppleScriptObjC) then lists the types, and ``pbpaste``
-reads text. This process's public readers run afterwards as a consistency
-check. Also probes ``clear()`` twice on a cleared pasteboard and the
+pasteboard. A **child** Python process calls ``clipboard.clear()`` and exits
+(``native_clear_support.child_clear``). Each case then ends in the shared
+``native_clear_support.cleared_step`` rule: an **independent** consumer (JXA
+``NSPasteboard types``, a different script stack from the library's
+AppleScriptObjC) lists no types, ``pbpaste`` (a second independent consumer)
+prints nothing, and this process's public readers read absence. Also probes
+``clear()`` twice on a cleared pasteboard (two child clears) and the
 ``copy("")`` versus ``clear()`` contrast. Then an independent JXA producer
 writes a ``public.file-url`` (``NSURL fileURLWithPath:`` of an existing temp
 file) and, separately, only an unknown ``com.example.clipboard-probe`` type;
-each is followed by a child ``clear()``, the independent type list is empty
-and ``paste_files()`` is ``None``.
+each is followed by a child ``clear()`` and the same rule.
 
 Privacy prompts: the probe cannot see the screen. It records the screen-lock
-state, whether each child ``clear()`` finished within its bound, and how long
-it took; an on-screen prompt stays an evidence limit unless the operator
-watched the screen.
+state, whether each child ``clear()`` finished within its bound (from the
+child records), and how long it took; an on-screen prompt stays an evidence
+limit unless the operator watched the screen.
 
 Prints one JSON object on stdout. Exit 0 when every case passes. Requires
 darwin and ``clipboard[images]`` (for ``paste_image``). Does not run under
@@ -31,109 +32,71 @@ import tempfile
 from pathlib import Path
 
 from macos_native_clear_support import (
-    CHILD_TIMEOUT_S,
-    clear_in_child,
     copy_empty_in_child,
+    independent_listing,
     list_types_independent,
+    no_offer,
     produce_custom_type_independent,
     produce_file_url_independent,
     session_state,
 )
 from macos_native_inspect_support import (
-    consume_text_independent,
     produce_html_text_independent,
     produce_image_only_independent,
 )
+from native_clear_support import CHILD_TIMEOUT_S, child_clear, cleared_step
 from native_probe_common import macos_environment, require_darwin_and_images
 
-
-def readers_in_parent() -> dict:
-    """Consistency check through this process's public readers."""
-    import clipboard
-
-    for reset in (
-        clipboard.set_html_clipboard_reader,
-        clipboard.set_clipboard_inspector,
-        clipboard.set_files_clipboard_reader,
-    ):
-        reset(None)
-    snap = clipboard.inspect()
-    html = clipboard.paste_html()
-    text = clipboard.paste()
-    files = clipboard.paste_files()
-    image = clipboard.paste_image()
-    return {
-        "inspect_kinds": sorted(snap.kinds),
-        "inspect_formats": list(snap.formats),
-        "paste_html_is_none": html is None,
-        "paste": text,
-        "paste_files_is_none": files is None,
-        "paste_image_is_none": image is None,
-    }
+CLEAR_RECORD_KEYS = ("child_clear", "first", "second")
 
 
-def _empty_after(readers: dict, types: dict, pbpaste: str) -> bool:
-    return (
-        types["types"] == []
-        and pbpaste == ""
-        and readers["inspect_kinds"] == []
-        and readers["inspect_formats"] == []
-        and readers["paste_html_is_none"]
-        and readers["paste"] == ""
-        and readers["paste_files_is_none"]
-        and readers["paste_image_is_none"]
+def _cleared(name: str, *, held: bool = True, clears: tuple, **observed) -> dict:
+    """The shared "cleared" rule on the JXA listing + ``pbpaste``."""
+    result = cleared_step(
+        name, independent_listing, no_offer, held=held, clears=clears, **observed
     )
+    result["case"] = result.pop("step")
+    return result
 
 
 def _produced_case(name: str, produce, expected: tuple[str, ...]) -> dict:
     produce()
     before = list_types_independent()
     produced_ok = all(t in before["types"] for t in expected)
-    child = clear_in_child()
-    after = list_types_independent()
-    pbpaste = consume_text_independent()
-    readers = readers_in_parent()
-    ok = produced_ok and _empty_after(readers, after, pbpaste)
-    return {
-        "case": name,
-        "ok": ok,
-        "types_before": before["types"],
-        "produced_ok": produced_ok,
-        "child_clear": child,
-        "types_after": after["types"],
-        "change_count": [before["changeCount"], after["changeCount"]],
-        "pbpaste_after": pbpaste,
-        "readers_after": readers,
-    }
+    cleared = child_clear()
+    return _cleared(
+        name,
+        held=produced_ok,
+        clears=(cleared,),
+        types_before=before["types"],
+        change_count_before=before["changeCount"],
+        produced_ok=produced_ok,
+        child_clear=cleared,
+    )
 
 
 def _twice_case() -> dict:
-    child = clear_in_child(times=2)
-    after = list_types_independent()
-    return {
-        "case": "clear_twice_on_cleared",
-        "ok": after["types"] == [],
-        "child_clear": child,
-        "types_after": after["types"],
-    }
+    first = child_clear()
+    second = child_clear()
+    return _cleared(
+        "clear_twice_on_cleared", clears=(first, second), first=first, second=second
+    )
 
 
 def _copy_empty_contrast_case() -> dict:
     copy_child = copy_empty_in_child()
     after_copy = list_types_independent()
-    clear_child = clear_in_child()
-    after_clear = list_types_independent()
     has_text_type = "public.utf8-plain-text" in after_copy["types"]
-    ok = has_text_type and after_clear["types"] == []
-    return {
-        "case": "copy_empty_vs_clear",
-        "ok": ok,
-        "child_copy_empty": copy_child,
-        "types_after_copy_empty": after_copy["types"],
-        "copy_empty_left_text_offer": has_text_type,
-        "child_clear": clear_child,
-        "types_after_clear": after_clear["types"],
-    }
+    cleared = child_clear()
+    return _cleared(
+        "copy_empty_vs_clear",
+        held=copy_child.get("returncode") == 0 and has_text_type,
+        clears=(cleared,),
+        child_copy_empty=copy_child,
+        types_after_copy_empty=after_copy["types"],
+        copy_empty_left_text_offer=has_text_type,
+        child_clear=cleared,
+    )
 
 
 CUSTOM_UTI = "com.example.clipboard-probe"
@@ -162,8 +125,26 @@ def _custom_type_case() -> dict:
     )
 
 
+def _within_bound(cases: list[dict]) -> bool:
+    runs = [case[key] for case in cases for key in CLEAR_RECORD_KEYS if key in case]
+    return bool(runs) and all(
+        "error" not in run and run["elapsed_s"] <= CHILD_TIMEOUT_S for run in runs
+    )
+
+
 def main() -> None:
     require_darwin_and_images()
+    import clipboard
+
+    for reset in (
+        clipboard.set_text_clipboard_writer,
+        clipboard.set_text_clipboard_reader,
+        clipboard.set_html_clipboard_reader,
+        clipboard.set_clipboard_inspector,
+        clipboard.set_files_clipboard_reader,
+        clipboard.set_clipboard_clearer,
+    ):
+        reset(None)
     session_before = session_state()
     cases = [
         _produced_case(
@@ -203,7 +184,7 @@ def main() -> None:
         "session": {"before": session_before, "after": session_after},
         "cases": {case["case"]: case for case in cases},
         "privacy_prompt": {
-            "every_child_clear_finished_within_bound": True,
+            "every_child_clear_finished_within_bound": _within_bound(cases),
             "bound_s": CHILD_TIMEOUT_S,
             "on_screen_prompt": (
                 "not observable by this probe; evidence limit unless the "

@@ -211,7 +211,7 @@ Format still listed afterwards.
 
 ### 4. macOS clear probe on the shared child clear and readers
 Type: Structure
-Status: planned
+Status: done
 Proof: row "1 (macOS)" above.
 
 Correction (finding 1, macOS): the probe's cases use
@@ -225,6 +225,14 @@ from the child records instead of being a constant. Case names stay. The
 wrapper asserts exit 0, `ok`, the six case names and the macOS floors only.
 Run the gated probe on the owner's unlocked session (replaces the live
 clipboard).
+
+Accepted proof: `nix develop -c make check` 606 passed, 27 skipped; screen
+unlock checked, then `CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked
+--extra images pytest tests/test_clear_native_macos.py -v -rP` passed twice
+(implementation and post-refactor) with all six cases `ok`, types before
+and `{"types": [], "pbpaste": ""}` after, reads equal to `EMPTY_READS`;
+"clear twice" and the `copy("")` contrast now also require readers and
+`pbpaste` empty (stricter).
 
 ## Current decisions
 

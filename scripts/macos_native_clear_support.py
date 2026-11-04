@@ -1,24 +1,21 @@
-"""Independent JXA consumers and child-process drivers for the macOS clear probe.
+"""Independent JXA producers and consumers for the macOS clear probe.
 
 The JXA readers use ``osascript -l JavaScript``, a different script stack from
 the library's AppleScriptObjC, so their type listings are independent of
-``clipboard.*``. The child drivers run the library under test in a separate
-Python process that exits before anything is observed.
+``clipboard.*``. ``independent_listing`` pairs the JXA type list with
+``pbpaste`` (a second independent consumer); ``no_offer`` is its empty
+predicate for ``native_clear_support.cleared_step`` (no types, no text).
+``copy_empty_in_child`` runs the ``copy("")`` contrast in a child Python.
 """
 
 from __future__ import annotations
 
 import json
 import subprocess
-import sys
-import textwrap
-import time
-from pathlib import Path
 
+from macos_native_inspect_support import consume_text_independent
+from native_clear_support import child_python
 from native_probe_common import die
-
-ROOT = Path(__file__).resolve().parents[1]
-CHILD_TIMEOUT_S = 60
 
 _JXA_TYPES = """
 ObjC.import("AppKit");
@@ -102,55 +99,20 @@ def list_types_independent() -> dict:
     return _jxa(_JXA_TYPES, failure="independent JXA type listing failed")
 
 
+def independent_listing() -> dict:
+    """JXA types and change count, plus what ``pbpaste`` printed."""
+    return {**list_types_independent(), "pbpaste": consume_text_independent()}
+
+
+def no_offer(listing: dict) -> bool:
+    """Empty pasteboard: no types listed and ``pbpaste`` printed nothing."""
+    return listing["types"] == [] and listing["pbpaste"] == ""
+
+
 def session_state() -> dict:
     return _jxa(_JXA_SESSION, failure="CGSession state read failed")
 
 
-def _child(code: str, *, what: str) -> dict:
-    started = time.monotonic()
-    try:
-        result = subprocess.run(
-            [sys.executable, "-c", textwrap.dedent(code)],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=CHILD_TIMEOUT_S,
-        )
-    except subprocess.TimeoutExpired:
-        die(
-            f"child {what} did not finish within {CHILD_TIMEOUT_S}s "
-            "(a privacy prompt or contended pasteboard may be blocking it)"
-        )
-    elapsed = round(time.monotonic() - started, 3)
-    if result.returncode != 0:
-        die(
-            f"child {what} failed (returncode={result.returncode}; "
-            f"stderr={(result.stderr or result.stdout).strip()!r})"
-        )
-    return {"exited": True, "elapsed_s": elapsed, "stdout": result.stdout.strip()}
-
-
-def clear_in_child(times: int = 1) -> dict:
-    """Library under test: clipboard.clear() in a child process that exits."""
-    return _child(
-        f"""
-        import clipboard
-        clipboard.set_clipboard_clearer(None)
-        results = [clipboard.clear() for _ in range({times})]
-        assert results == [None] * {times}, results
-        print("cleared x{times}")
-        """,
-        what=f"clipboard.clear() x{times}",
-    )
-
-
 def copy_empty_in_child() -> dict:
-    return _child(
-        """
-        import clipboard
-        clipboard.copy("")
-        print("copied empty")
-        """,
-        what='clipboard.copy("")',
-    )
+    """The ``copy("")`` contrast: ``clipboard.copy("")`` in a child that exits."""
+    return child_python('import clipboard\nclipboard.copy("")\nprint("copied empty")')
