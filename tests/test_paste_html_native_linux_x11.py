@@ -2,7 +2,7 @@
 
 Default pytest stays green without a desktop. Enable under Xvfb with:
 
-  CLIPBOARD_NATIVE_PROBE=1 xvfb-run -a nix develop -c uv run --locked \\
+  CLIPBOARD_NATIVE_PROBE=1 xvfb-run -a ./scripts/dev uv run --locked \\
     pytest tests/test_paste_html_native_linux_x11.py -v
 
 The independent producer is ``xclip -t text/html -i``; the probe overwrites

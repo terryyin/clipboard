@@ -3,7 +3,7 @@
 Default pytest stays green without a desktop. Enable with:
 
   CLIPBOARD_NATIVE_PROBE=1 CLIPBOARD_WAYLAND_COMPOSITOR=<Name> \\
-    WAYLAND_DISPLAY=wayland-1 nix develop -c uv run --locked \\
+    WAYLAND_DISPLAY=wayland-1 ./scripts/dev uv run --locked \\
     pytest tests/test_inspect_native_linux_wayland.py -v
 
 Requires Linux + WAYLAND_DISPLAY + wl-clipboard + a **named** compositor.
