@@ -160,6 +160,13 @@ this review.
   failure 'libx11' is not display"; `make check` (612 passed) and
   `make lint-workflows` pass; the x86_64-linux shell evaluates the var to
   `libx11-1.8.14/lib`. O1 closes on the CI package job printing `display`.
+- CI run 41776343130 (`9f5e5ff`) still printed `libx11`: `mkShell {…} // {…}`
+  merged the variable onto the derivation value, not into `mkShell`'s
+  arguments, so it never reached the shell environment (and the check,
+  seeing no variable, accepted `libx11`). Fixed by `mkShell ({…} // {…})`;
+  `drvAttrs ? CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR` is now true on
+  x86_64-linux and false on aarch64-darwin. Check `drvAttrs`, not the
+  derivation's attributes, when proving a shell variable.
 
 
 ## Story obligations

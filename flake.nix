@@ -12,7 +12,7 @@
       devShells = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
         in {
-          default = pkgs.mkShell {
+          default = pkgs.mkShell ({
             packages = [ pkgs.python313 pkgs.uv pkgs.gnumake pkgs.actionlint ];
             # Use Nix's interpreter; uv manages only the project's virtualenv.
             UV_PYTHON_DOWNLOADS = "never";
@@ -26,7 +26,7 @@
             # Not on LD_LIBRARY_PATH, so system tools such as xclip keep
             # their own libX11.
             CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR = "${pkgs.libx11}/lib";
-          };
+          });
         });
     };
 }
