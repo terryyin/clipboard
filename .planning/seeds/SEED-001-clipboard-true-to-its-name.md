@@ -267,6 +267,9 @@ limit because the screen was locked.
 ### Split the native wait probe support along its harness and steps
 
 **Identity:** SEED-001#split-native-wait-support
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/019-split-native-wait-support/PLAN.md"}
+```
 
 **Goal:** Maintainers of the native wait probes can change the child wait
 harness or one probe step without reading a 384-line module that mixes both,
