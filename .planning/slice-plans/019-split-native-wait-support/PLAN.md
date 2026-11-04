@@ -40,7 +40,7 @@ the timing rules (`_observation_timing`, `returned_after_copy`,
 
 ### 1. Split the harness from the steps
 Type: Structure
-Status: planned
+Status: done
 Proof: `wc -l` on the resulting modules; `nix develop -c make check`; each
 `scripts/probe_*_native_wait.py` run directly exits 2 with `evidence_limit`
 off its desktop; the branch-push CI run's three wait jobs pass.
@@ -68,8 +68,10 @@ module.
   module; post-change refactor dropped the unused `INTERVAL_S` /
   `WaitDesktop` re-export from `native_wait_support` so probes import those
   from `native_wait_harness` (support 161 lines).
-- Accepted local proof (slice 1, pending E2 CI): `wc -l` harness 243 /
-  support 161 / macos 49; `nix develop -c make check` 769 passed; off-desktop
+- Accepted proof (slice 1): `wc -l` harness 243 / support 161 / macos 49;
+  `nix develop -c make check` 769 passed; off-desktop
   `probe_{linux_x11,linux_wayland,windows}_native_wait.py` exit 2 with
-  `evidence_limit`; live macOS Aqua probe exit 0 with the four step names.
-  Branch-push CI wait jobs (E2) still need the published revision.
+  `evidence_limit`; live macOS Aqua probe exit 0 with the four step names;
+  CI run 41932201965 wait jobs
+  `native-linux-x11-wait` / `native-linux-wayland-wait` /
+  `native-windows-wait` success with the same four step names.
