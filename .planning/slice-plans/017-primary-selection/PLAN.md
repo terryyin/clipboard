@@ -177,6 +177,19 @@ the selection parameter is one common rule extended by both rather than a
 per-desktop special case. This review identified no remaining slice-specific
 concern. The two early probes are bounded by their slices' first steps.
 
+## Execution complete
+
+Product advice: no backlog reprioritization. The story's outcome is delivered
+on X11 and Sway with no regressions (CI 41799207621, 41803370471). The
+retrospective found only low-impact residue, planned as the bounded
+correction [SEED-001#primary-selection-polish](../020-primary-selection-polish/PLAN.md)
+(PRIMARY input-rejection wording names "clipboard"; probe step names, README
+run id, test docs and evidence-limit duplication). Learning for later Linux
+stories: a "compositor without PRIMARY" could not be produced on Sway
+(`primary_selection disabled` observations conflict), so example 6 stays a
+desktop-free claim and an evidence limit; a GNOME / KDE observation would be
+the first native evidence if that ever matters.
+
 ## Learnings
 
 - **Slice 1 early probe (settled, 2026-11-04).** Run by the coordinator in a

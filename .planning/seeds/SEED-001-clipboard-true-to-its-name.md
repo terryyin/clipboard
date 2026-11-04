@@ -316,6 +316,26 @@ ordinary clipboard, and never pretends macOS or Windows have one.
 9. `copy_primary("a\x00b")` → `ClipboardContentError` before PRIMARY is
    replaced; the earlier selection is still readable.
 
+<a id="primary-selection-polish"></a>
+
+### Correct PRIMARY wording and probe evidence left by the primary-selection execution
+
+**Identity:** SEED-001#primary-selection-polish
+
+**Goal:** Python users calling `copy_primary` / `paste_primary` get error
+messages that always name the primary selection (never "clipboard"), and
+maintainers get native PRIMARY evidence whose step names, run ids and test
+documentation match the story examples, correcting residue from the
+SEED-001#primary-selection execution.
+
+**Scope:** `copy_primary` input-rejection wording; the X11-without-xclip
+message in a session that also sets `WAYLAND_DISPLAY`; the Wayland PRIMARY
+probe step names; the Wayland PRIMARY README Evidence run id; the
+disabled-Sway wording in PRIMARY test documentation; the duplicated
+evidence-limit reason chains in the PRIMARY probes. No behavior other than
+error text changes. Plan:
+[020-primary-selection-polish](../slice-plans/020-primary-selection-polish/PLAN.md).
+
 <a id="bounded-helper-owner-write"></a>
 
 ### Bound every helper-owner clipboard write behind one launcher
