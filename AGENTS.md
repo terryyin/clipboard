@@ -30,8 +30,12 @@ enumeration, or malformed-envelope failures raise
 offered). Linux session detection, helper-failure detail formatting,
 CLIPBOARD type listing (`xclip` TARGETS / `wl-paste --list-types`), and
 empty-clipboard classification (`xclip` no-owner / `wl-paste` nothing-copied
-wordings, which read as absence) live in private `clipboard/_desktop` with
-per-caller failure modes; content-kind
+wordings, which read as absence), and the helper-owner launch every Linux
+payload write uses (`_start_helper_owner`: payload from an unlinked temp-file
+`stdin`, never a pipe, helper in its own session; `_stop_helper_owner` stops
+that session) live in private `clipboard/_desktop` with
+per-caller failure modes (each writer keeps its deadline, readiness check and
+messages); content-kind
 modules must not copy those helpers. On a session with both `DISPLAY` and
 `WAYLAND_DISPLAY`, `paste_files` and `copy_files` still select X11 while
 HTML/inspect/image write/clear select Wayland. Gated Windows `paste_html` native proof fails the job
