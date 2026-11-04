@@ -129,44 +129,6 @@ limit because the screen was locked.
 2. Locked screen → the probe exits 2 with `evidence_limit` → no README claim
    changes.
 
-<a id="split-native-wait-support"></a>
-
-### Split the native wait probe support along its harness and steps
-
-**Identity:** SEED-001#split-native-wait-support
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/019-split-native-wait-support/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"e2b530bcf92209c7e0becf00010116231ed3b08d35a0d0625a6b3c196613b695","plan":"19f17982f225ec254b241fbb2d438e717fea6be6b55272f0f6b18af5a1f9df07"}}
-```
-
-**Goal:** Maintainers of the native wait probes can change the child wait
-harness or one probe step without reading a 384-line module that mixes both,
-bringing `scripts/native_wait_support.py` back under the project's 250-line
-file limit that every other native support module meets. Retrospective
-correction of SEED-001#wait-for-content.
-
-**Scope:**
-
-- Split `scripts/native_wait_support.py` along its cohesive seam (the child
-  wait harness and timing rules versus the four shared probe steps and their
-  runner) so each module is at most 250 lines; update the four
-  `scripts/probe_*_native_wait.py` imports.
-- No change to probe step names, pass conditions, report fields, gates,
-  floors, CI jobs or the wait API.
-- *Scope limits.* No new probe steps, timing-rule changes or macOS gated
-  evidence (that stays with SEED-001#macos-native-wait-evidence).
-- *Plan:* [019-split-native-wait-support](../slice-plans/019-split-native-wait-support/PLAN.md).
-
-**Key examples:**
-
-1. A maintainer opens the module that runs the child wait and judges its
-   timing → it holds the harness and timing rules only, ≤ 250 lines; the
-   four steps, runner and report live in another module, also ≤ 250 lines.
-2. The branch is pushed → CI's `native-linux-x11-wait`,
-   `native-linux-wayland-wait` and `native-windows-wait` jobs pass with the
-   same four step names as before.
-3. Any `scripts/probe_*_native_wait.py` run off its desktop (or on a locked
-   macOS session) → exits 2 with `evidence_limit`, as before the split.
-
 <a id="primary-selection-polish"></a>
 
 ### Correct PRIMARY wording and probe evidence left by the primary-selection execution

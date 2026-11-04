@@ -7,7 +7,6 @@ Make the clipboard project true to its name.
 ## Taken
 
 - [Correct PRIMARY wording and probe evidence left by the primary-selection execution](seeds/SEED-001-clipboard-true-to-its-name.md#primary-selection-polish) — SEED-001#primary-selection-polish ([plan](slice-plans/020-primary-selection-polish/PLAN.md))
-- [Split the native wait probe support along its harness and steps](seeds/SEED-001-clipboard-true-to-its-name.md#split-native-wait-support) — SEED-001#split-native-wait-support ([plan](slice-plans/019-split-native-wait-support/PLAN.md))
 
 ## Backlog list
 

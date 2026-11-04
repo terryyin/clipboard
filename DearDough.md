@@ -448,7 +448,7 @@ COMPLETE` without a size check, and the retrospective found it.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: unknown
-  - Evidence: slice 3 part 1 refactor return ("The harness is about 385 lines … File sizes: all fine"); `wc -l scripts/native_wait_support.py` = 384 at 0120396; `.claude/skills/dough-post-change-refactor/references/refactor-checks.md` "File size"; correction plan `.planning/slice-plans/019-split-native-wait-support/PLAN.md`
+  - Evidence: slice 3 part 1 refactor return ("The harness is about 385 lines … File sizes: all fine"); `wc -l scripts/native_wait_support.py` = 384 at 0120396; `.claude/skills/dough-post-change-refactor/references/refactor-checks.md` "File size"; correction plan at before-cleanup `6ba24e6:.planning/slice-plans/019-split-native-wait-support/PLAN.md`
   - Observed effect: The oversized module was committed and published; a correction story and plan were needed
   - Inference: Proof acceptance of a refactor return could include a mechanical `wc -l` over the diff's files rather than trusting the return's size claim
 
