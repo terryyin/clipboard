@@ -17,7 +17,8 @@ replaced), non-mutating offer inspection via `inspect`
 (kinds + native formats; no images extra), and `clear` (clearer seam
 `set_clipboard_clearer`; no offer at all afterwards; native on all four
 desktops: macOS Aqua, Linux Wayland (`wl-copy --clear`), Linux X11 (libX11
-`XSetSelectionOwner` via `ctypes` in a bounded child) and Windows (user32
+`XSetSelectionOwner` via `ctypes` in a bounded child; a frozen or
+archive-only runtime raises before launching it) and Windows (user32
 `EmptyClipboard` after inspect's bounded `OpenClipboard` retry), Linux with
 no session raises "no desktop session is visible", other platforms raise
 "not available"). Image access/helper/transfer or
@@ -45,6 +46,7 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 - Check GitHub Actions: `nix develop -c make lint-workflows`
 - Build and validate distributions: `nix develop -c make build`
 - Build and test installed distributions: `nix develop -c make test-package`
+  (also launches each installed X11 clear helper; see README Development)
 - Format Python: `nix develop -c make format`
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
