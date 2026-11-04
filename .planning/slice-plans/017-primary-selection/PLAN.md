@@ -52,10 +52,10 @@ public PRIMARY injection seam.
 - Preparation checkout: Darwin 25.6.0, no `xclip`, `wl-clipboard` or X
   server. All Linux native proof runs in GitHub Actions after a branch push
   (`ci.yml` runs on every branch push): Xvfb + `xclip 0.13` and Sway 1.11 +
-  `wl-clipboard 2.2.1` (`ubuntu-latest`, observed in run 41766361326).
-- Local gates (AGENTS.md): `./scripts/dev make check` every slice;
-  `./scripts/dev make lint-workflows` whenever `.github/workflows` changes
-  (both slices); `./scripts/dev make test-package` once in slice 1 because
+  `wl-clipboard 2.2.1` (`ubuntu-latest`, observed in run 41778191888).
+- Local gates (AGENTS.md): `nix develop -c make check` every slice;
+  `nix develop -c make lint-workflows` whenever `.github/workflows` changes
+  (both slices); `nix develop -c make test-package` once in slice 1 because
   `__all__` grows (installed distributions must export the new names).
 
 ## Outside-in proof
@@ -74,7 +74,7 @@ public PRIMARY injection seam.
 | Seam isolation | Desktop-free: with `set_text_clipboard_writer` / `_reader` fakes injected, `copy_primary` / `paste_primary` still reach the PRIMARY helper argv and the fakes record nothing | 1 |
 | Public surface | `import clipboard` without Pillow exposes `copy_primary` / `paste_primary` in `__all__` (`tests/test_no_pillow_extra.py`); `make test-package` installed wheel + sdist | 1 |
 | Documentation | README section and Evidence name X11 / Sway sessions, helper versions, the no-fallback rule, and evidence limits (GNOME, KDE, other compositors, XWayland PRIMARY bridging, clipboard managers syncing PRIMARY); AGENTS.md summary names the PRIMARY operations | 1 (X11), 2 (Wayland, AGENTS.md) |
-| Regression | `copy` / `paste` X11 and Wayland argv and native text probes unchanged; `./scripts/dev make check` green | 1, 2 |
+| Regression | `copy` / `paste` X11 and Wayland argv and native text probes unchanged; `nix develop -c make check` green | 1, 2 |
 
 A same-process write-then-read is only a consistency check; native claims
 need the independent helper processes above.
@@ -82,13 +82,14 @@ need the independent helper processes above.
 ## Decisive premises
 
 Observed in this workspace (Darwin 25.6.0, branch
-`claude/use-the-linux-primary-selection-explicitly` at c8f91a4):
+`claude/use-the-linux-primary-selection-explicitly` at 4667b4c, whose
+product code equals `master` 388dd5b):
 
 | Premise | Consuming operation | Observation | Result |
 | --- | --- | --- | --- |
-| The local gate runs in this checkout | Every slice's `./scripts/dev make check`, slice 1's `make test-package` | `./scripts/dev make check` → `error: Unable to start any build; either increase '--max-jobs' or enable remote builds.` Same in the integration checkout `/Users/terryyin/git/clipboard` (`./scripts/dev true`). `nix build --offline --option substitute false --dry-run .#devShells.<system>.default` → `these 1674 derivations will be built`: the pinned toolchain is not in the local Nix store | **Unsettled — pre-Take decision.** AGENTS.md: report the blocker; online setup (`nix develop -c uv sync --locked --extra images`) needs the maintainer's confirmation of an unmetered connection or authorization of the downloads. Then rerun `./scripts/dev make check` and record its result here |
-| Default suite and native text jobs are green at the start, on the CI venues this plan uses | Slice regression baseline; slices 1–2 native venues | `gh run view 41766361326` (head c8f91a4): every job `success`, including `Native Linux X11 text copy/paste (Xvfb)` and `Native Linux Wayland text copy/paste (Sway)`; logs: `xclip version 0.13`, `sway version 1.11`, `wl-clipboard 2.2.1` | Settled for CI |
-| `_text_session_owner` picks `x11` / `wayland` / `pyperclip` as documented, so PRIMARY can reuse it | Slice 1–2 dispatch | `tests/test_text_session.py` runs in the default suite, green in run 41766361326 | Settled |
+| The local gates run in this checkout | Every slice's `nix develop -c make check`, both slices' `make lint-workflows`, slice 1's `make test-package` | AGENTS.md now names `nix develop -c <command>` (the offline `./scripts/dev` wrapper was reverted in 0b08521). `nix develop -c make check` → `612 passed, 27 skipped`, exit 0; `nix develop -c make lint-workflows` → `actionlint`, exit 0; `nix develop -c make test-package` → wheel and sdist installed and checked, exit 0 (the installed X11 clear helper reports `failure libx11` on macOS, which the check accepts) | Settled |
+| Default suite and native text jobs are green at the start, on the CI venues this plan uses | Slice regression baseline; slices 1–2 native venues | `gh run view 41778191888` (master 388dd5b): `success`, including `Native Linux X11 text copy/paste (Xvfb)` and `Native Linux Wayland text copy/paste (Sway)`; logs: `xclip version 0.13`, `sway version 1.11`, `wl-clipboard 2.2.1` | Settled for CI |
+| `_text_session_owner` picks `x11` / `wayland` / `pyperclip` as documented, so PRIMARY can reuse it | Slice 1–2 dispatch | `tests/test_text_session.py` runs in the default suite, green locally (`make check` above) and in run 41778191888 | Settled |
 | Existing fakes model only CLIPBOARD | Slice 1–2 desktop-free proof needs per-selection fakes | `tests/fake_xclip_text.py` (`FakeX11.offers`, one owner) and `tests/fake_wl_clipboard_text.py` hold one selection | Settled: the fakes gain a selection dimension, CLIPBOARD behavior unchanged |
 | `xclip -selection primary` reports an unowned PRIMARY with the same no-owner wording `_desktop._xclip_reports_no_owner` recognizes, and a background `xclip -selection primary -i` owner survives writer exit without touching CLIPBOARD | Slice 1 absence classification and writer | Needs Xvfb | **Early probe** at the start of slice 1 (records-only CI step on a fresh Xvfb); different wording is added to the recognizer with that observation, unknown wording keeps raising |
 | `wl-paste --primary` reports nothing selected with a `_wl_paste_reports_nothing_copied` wording; `wl-copy --primary` sets only PRIMARY and its fork serves after exit; Sway 1.11 `primary_selection disabled` makes wl-clipboard 2.2.1 report PRIMARY unsupported distinctly | Slice 2 classification, writer, and example 6's native proof | Needs Sway | **Early probe** at the start of slice 2 (records-only CI step on two fresh Sways, enabled and disabled). No distinct unsupported report → the unsupported case is classified from wl-clipboard's own wording observed in the probe output, or, if none can be observed, any non-zero `--primary` exit raises (still no fallback) and example 6's native proof becomes a README evidence limit |
@@ -105,7 +106,7 @@ seam isolation); `tests/test_no_pillow_extra.py` names; new gated probe
 `tests/test_primary_native_linux_x11.py` (`CLIPBOARD_NATIVE_PROBE`, exit 2
 with `evidence_limit` off X11, fails on an evidence limit in CI) run by a new
 `ci.yml` job `native-linux-x11-primary` under Xvfb + `xclip`; local
-`./scripts/dev make check`, `make lint-workflows`, `make test-package`.
+`nix develop -c make check`, `make lint-workflows`, `make test-package`.
 
 Behavior: Linux X11 session with `xclip`, PRIMARY and CLIPBOARD owned by
 independent `xclip` processes with different text → `paste_primary()` /
@@ -141,7 +142,7 @@ gated probe `scripts/probe_linux_wayland_native_primary.py` with wrapper
 `.github/workflows/native-wayland-primary.yml` called from `ci.yml`
 (Sway + wl-clipboard, as `native-wayland-text.yml`), including a second
 Sway with `primary_selection disabled` when the early probe supports it;
-local `./scripts/dev make check`, `make lint-workflows`.
+local `nix develop -c make check`, `make lint-workflows`.
 
 Behavior: Sway session with wl-clipboard, PRIMARY and CLIPBOARD set by
 independent `wl-copy` processes with different text → `paste_primary()` /
@@ -173,6 +174,4 @@ Slice-plan refinement was not needed: the two slices are one cohesive
 outcome per desktop, each with its own native proof loop and CI venue, and
 the selection parameter is one common rule extended by both rather than a
 per-desktop special case. This review identified no remaining slice-specific
-concern. The local-gate blocker above is an environment premise, not a slice
-boundary concern; it blocks readiness until the maintainer decides on online
-setup.
+concern. The two early probes are bounded by their slices' first steps.

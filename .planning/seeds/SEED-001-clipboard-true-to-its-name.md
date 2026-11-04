@@ -220,7 +220,7 @@ can and cannot see.
 
 **Identity:** SEED-001#primary-selection
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/017-primary-selection/PLAN.md","assessment":"not-ready","reasons":["Local gate unavailable: ./scripts/dev make check cannot start because the pinned Nix toolchain is not in the local store (1674 derivations to build offline); every slice's make check and slice 1's make test-package wait for the maintainer to authorize online setup, then a fresh green make check"],"basis":{"document":"ebba7de01ba4eea61a1390381a7f7eee3282670efa9789c83cbb7067199d3ab6","plan":"147f89ffc869105076b804b7d8f37367959133b358d0cccbc0062fdaa5c867b3"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/017-primary-selection/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"ebba7de01ba4eea61a1390381a7f7eee3282670efa9789c83cbb7067199d3ab6","plan":"39909e95269bb078edb151bdb9d7b88ce77cc7d174def566539db191f2c47159"}}
 ```
 
 **Goal:** Python users and automation developers on a Linux desktop can take
