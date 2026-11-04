@@ -716,9 +716,33 @@ Evidence / verified platforms (native probes gated via
   runs so far on the owner's machine, macOS 26.6.2 (build 25G83) / Darwin
   25.6.0, arm64, stopped at an evidence limit (exit 2) because the screen
   was locked (the change steps included); the probe refuses a locked or
-  off-console session. Linux X11,
-  Linux Wayland and Windows waits are unobserved natively; they rely on
-  ``inspect``'s evidence above.
+  off-console session.
+* ``wait_for_kind`` / ``wait_for_text_change``: Linux X11 under Xvfb,
+  Linux Wayland under headless Sway and Windows desktop **verified** in
+  CI run 41798644132 (commit ``bf48f2c``) by the gated probes
+  ``scripts/probe_{linux_x11,linux_wayland,windows}_native_wait.py``
+  (wrappers ``tests/test_wait_native_{linux_x11,linux_wayland,windows}.py``,
+  jobs ``native-linux-x11-wait``, ``native-linux-wayland-wait`` and
+  ``native-windows-wait``, which fail on an evidence limit). They run the
+  same four steps as the macOS probe (shared
+  ``scripts/native_wait_support.py``) with an independent producer on a
+  freshly cleared clipboard: ``xclip -selection clipboard -i`` (xclip 0.13,
+  Xvfb 21.1.22, Ubuntu 26.04), ``wl-copy`` with no ``--type`` (wl-clipboard
+  2.2.1, Sway 1.11, Ubuntu 26.04) and Windows PowerShell 5.1
+  ``Set-Clipboard`` (Windows Server 2025, build 26100, runner image
+  win25-vs2026). On each, ``wait_for_kind("text", timeout=20)`` saw
+  no kinds, then ``"text"`` after the copy and returned that snapshot
+  (X11 ``TARGETS`` / ``UTF8_STRING``; Wayland ``text/plain`` and four more
+  types; Windows ``CF_UNICODETEXT`` with ``CF_TEXT`` / ``CF_OEMTEXT`` /
+  ``CF_LOCALE``) within 0.5 s of the producer finishing;
+  ``wait_for_kind("html", timeout=1)`` with nothing copied returned
+  ``None`` after 1.0 s; ``wait_for_text_change(timeout=20)`` returned the
+  second independently copied text; and after ``clear()`` and an identical
+  recopy ``wait_for_text_change(timeout=3)`` observed ``""`` then the old
+  text again and returned ``None`` at 3.0 s. Evidence limits: other
+  compositors, GNOME / KDE, interactive Windows sessions, and kinds other
+  than text (``image``, ``html``, ``files``) are not observed for the waits
+  themselves; they rely on ``inspect``'s evidence above.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
   been verified with an independent **browser** producer: Google Chrome

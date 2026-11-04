@@ -14,14 +14,17 @@ dual-offer writes and fragment reads via `copy_html` / `paste_html`, local file-
 reads via `paste_files`, local file-list copy offers via `copy_files` (writer
 seam `set_files_clipboard_writer`; validation before the clipboard is
 replaced), non-mutating offer inspection via `inspect`
-(kinds + native formats; no images extra), and `clear` (clearer seam
+(kinds + native formats; no images extra), `clear` (clearer seam
 `set_clipboard_clearer`; no offer at all afterwards; native on all four
 desktops: macOS Aqua, Linux Wayland (`wl-copy --clear`), Linux X11 (libX11
 `XSetSelectionOwner` via `ctypes` in a bounded child; a frozen or
 archive-only runtime raises before launching it) and Windows (user32
 `EmptyClipboard` after inspect's bounded `OpenClipboard` retry), Linux with
 no session raises "no desktop session is visible", other platforms raise
-"not available"). Image access/helper/transfer or
+"not available"), and bounded polling waits `wait_for_kind` /
+`wait_for_text_change` (one loop in `clipboard/_wait.py` observing through
+`inspect` / `paste` in the calling thread; `None` on deadline or cancel;
+observation failures raise at once, never retried). Image access/helper/transfer or
 malformed-image failures raise `ClipboardImageError` rather than returning
 `None` (or silently succeeding on write). HTML, file-list (`paste_files` and
 `copy_files`), inspect, and clear invalid-input, access, helper, transfer,
@@ -58,7 +61,9 @@ session; optional native text / pasteboard / file-list probes stay gated via
 `clear` probes `tests/test_clear_native_{macos,linux_wayland,linux_x11,windows}.py`
 (one "cleared" rule, `scripts/native_clear_support.py` `cleared_step`; their
 wrappers assert only exit, `ok`, the ordered steps and environment floors, so
-a new condition belongs in a step's `ok`), and the
+a new condition belongs in a step's `ok`), the wait probes
+`tests/test_wait_native_{macos,linux_x11,linux_wayland,windows}.py` (shared
+steps in `scripts/native_wait_support.py`), and the
 `copy_files` probes
 `scripts/probe_{macos,windows,linux_x11,linux_wayland}_native_copy_files.py`).
 Desktop-free tests must pass on every matrix OS: fake the platform only via

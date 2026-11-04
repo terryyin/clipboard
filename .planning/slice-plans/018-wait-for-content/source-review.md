@@ -8,12 +8,12 @@
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| G1 | Automation developers can wait for content that the user or another application copies, in one bounded call, instead of writing their own polling loops around `inspect` / `paste` with ad hoc sleeps, deadlines and error handling | slice 3 | |
-| G2 | A wait returns as soon as the content is observed | slice 3 | |
-| G3 | A wait ends predictably at its deadline or on cancellation | slice 3 | |
-| G4 | A wait never hides an access failure as "nothing copied yet" | slice 3 | |
-| G5 | Interactive automation ("copy the image you want to process") becomes practical using the content operations that already exist | slice 3 | |
-| G6 | Records honestly what a polling observer can and cannot see | slice 3 | |
+| G1 | Automation developers can wait for content that the user or another application copies, in one bounded call, instead of writing their own polling loops around `inspect` / `paste` with ad hoc sleeps, deadlines and error handling | slice 3 | observed: README.rst Waiting for content + clipboard/_wait.py; CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait step 1/3 returns after independent copy |
+| G2 | A wait returns as soon as the content is observed | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait step 1 latency after copy <= 0.29 s; desktop-free appearance tests |
+| G3 | A wait ends predictably at its deadline or on cancellation | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait steps 2 and 4 return None at timeout; desktop-free cancel tests |
+| G4 | A wait never hides an access failure as "nothing copied yet" | slice 3 | observed: failure-raised-at-once tests in tests/test_wait_for_kind_failures.py and tests/test_wait_for_text_change_failures.py |
+| G5 | Interactive automation ("copy the image you want to process") becomes practical using the content operations that already exist | slice 3 | observed: wait_for_kind observes existing inspect(), wait_for_text_change existing paste() (clipboard/_wait.py); README usage example |
+| G6 | Records honestly what a polling observer can and cannot see | slice 3 | observed: README.rst Observation limits paragraph and wait Evidence entries with evidence limits |
 | 1.1 | New public function `wait_for_kind(kind, *, timeout, interval=0.5, cancel=None)`. `kind` is keyword-or-positional; `timeout`, `interval` and `cancel` are keyword-only, with defaults interval=0.5 and cancel=None | slice 1 | observed: clipboard/_wait.py wait_for_kind signature; tests/test_wait_for_kind_failures.py::test_wait_for_kind_is_public |
 | 1.2 | `wait_for_kind` observes the current offer through `inspect` | slice 1 | observed: clipboard/_wait.py wait_for_kind observes _offer.inspect(); tests/test_wait_for_kind.py injected Inspector call records |
 | 1.3 | `wait_for_kind` returns the first `ClipboardOfferSnapshot` whose `kinds` contain `kind` | slice 1 | observed: tests/test_wait_for_kind.py::test_kind_appearing_after_several_observations_returns_that_snapshot (result is IMAGE snapshot) |
@@ -67,8 +67,8 @@
 | 5.8 | Invalid input: a `cancel` without `is_set` / `wait` | slice 2 | observed: cancel cases (object(), only is_set) in tests/test_wait_for_text_change_failures.py::test_invalid_argument_raises_before_any_read and tests/test_wait_for_kind_failures.py parametrized table |
 | 5.9 | `interval` must be positive because a zero interval busy-spins helper processes against the desktop | slice 2 | observed: interval 0 rejected in both invalid-argument tables; README.rst Observation limits (never busy-spins) |
 | 5.10 | `timeout` must be finite because the story's promise is a bounded wait | slice 2 | observed: timeout inf rejected in both invalid-argument tables |
-| 6.1 | The waits run wherever their observation operation runs, with that operation's session selection and errors | slice 3 | |
-| 6.2 | `wait_for_kind` runs through `inspect` on macOS Aqua, Windows desktop, Linux X11 TARGETS and Linux Wayland MIME list | slice 3 | |
+| 6.1 | The waits run wherever their observation operation runs, with that operation's session selection and errors | slice 3 | observed: README.rst Waiting for content (runs wherever inspect / paste run); CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait; E7 / sunos5 tests |
+| 6.2 | `wait_for_kind` runs through `inspect` on macOS Aqua, Windows desktop, Linux X11 TARGETS and Linux Wayland MIME list |  | G1 |
 | 6.3 | Elsewhere, `inspect`'s "not available" error is raised at the first observation | slice 1 | observed: tests/test_wait_for_kind_failures.py::test_platform_without_inspect_raises_naming_it_at_once (sunos5) |
 | 6.4 | `wait_for_text_change` runs through `paste` on all `paste` backends, including pyperclip delegation | slice 2 | observed: tests/test_wait_for_text_change_failures.py::test_default_reader_on_a_delegated_session_reads_through_pyperclip; wait_for_text_change observes _text.paste |
 | 6.5 | Injected seams (`set_clipboard_inspector`, `set_text_clipboard_reader`) are honoured | slice 2 | observed: inspector_installer / reader_installer (set_clipboard_inspector, set_text_clipboard_reader) in tests/fake_wait_clock.py drive tests/test_wait_for_kind.py and tests/test_wait_for_text_change.py |
@@ -88,26 +88,26 @@
 | 8.1.6 | Desktop-free test: failure propagates without retry | slice 2 | observed: tests/test_wait_for_kind_failures.py::test_failure_after_absent_observations_raises_at_once_never_retried; tests/test_wait_for_text_change_failures.py::test_failure_after_several_reads_raises_at_once_never_retried |
 | 8.1.7 | Desktop-free test: clearing during a change wait | slice 2 | observed: tests/test_wait_for_text_change.py::test_clearing_then_identical_recopy_is_not_a_change |
 | 8.1.8 | Desktop-free test: the invalid inputs | slice 2 | observed: tests/test_wait_for_kind_failures.py::test_invalid_argument_raises_before_any_observation; tests/test_wait_for_text_change_failures.py::test_invalid_argument_raises_before_any_read |
-| 8.2 | Gated native probes (`CLIPBOARD_NATIVE_PROBE`) run on four sessions | slice 3 | |
-| 8.2.1 | Gated native probe on macOS, producer `pbcopy` | slice 3 |  |
-| 8.2.2 | Gated native probe on Windows, producer PowerShell `Set-Clipboard` | slice 3 | |
-| 8.2.3 | Gated native probe on Linux X11 (Xvfb + `xclip`), producer `xclip` | slice 3 | |
-| 8.2.4 | Gated native probe on Linux Wayland (Sway + wl-clipboard), producer `wl-copy` | slice 3 | |
-| 8.3 | Each probe starts a wait, then copies with an independent producer | slice 3 | |
-| 8.3.1 | Probe check: `wait_for_kind("text")` from an empty clipboard returns within the deadline | slice 3 | |
-| 8.3.2 | Probe check: `wait_for_text_change` returns within the deadline | slice 3 | |
-| 8.3.3 | Probe check: a wait with nothing copied returns `None` after its timeout | slice 3 | |
+| 8.2 | Gated native probes (`CLIPBOARD_NATIVE_PROBE`) run on four sessions | slice 3 | observed: tests/test_wait_native_{macos,linux_x11,linux_wayland,windows}.py gated by CLIPBOARD_NATIVE_PROBE |
+| 8.2.1 | Gated native probe on macOS, producer `pbcopy` |  | G1 |
+| 8.2.2 | Gated native probe on Windows, producer PowerShell `Set-Clipboard` | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait native-windows-wait: Set-Clipboard producer, all four steps ok |
+| 8.2.3 | Gated native probe on Linux X11 (Xvfb + `xclip`), producer `xclip` | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait native-linux-x11-wait: xclip producer under Xvfb, all four steps ok |
+| 8.2.4 | Gated native probe on Linux Wayland (Sway + wl-clipboard), producer `wl-copy` | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait native-linux-wayland-wait: wl-copy producer under Sway, all four steps ok |
+| 8.3 | Each probe starts a wait, then copies with an independent producer | slice 3 | observed: scripts/native_wait_support.py steps start the child wait then copy with WaitDesktop producer; CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait |
+| 8.3.1 | Probe check: `wait_for_kind("text")` from an empty clipboard returns within the deadline | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait step 1: kinds [] ... ['text'], snapshot returned within 20 s deadline |
+| 8.3.2 | Probe check: `wait_for_text_change` returns within the deadline | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait step 3: returned 'wait probe new text' within 20 s deadline |
+| 8.3.3 | Probe check: a wait with nothing copied returns `None` after its timeout | slice 3 | observed: CI run 41798644132 (bf48f2c) jobs native-linux-x11-wait, native-linux-wayland-wait, native-windows-wait step 2: wait_for_kind('html', timeout=1) None after 1.0 s |
 | 8.4 | The README documents the two functions | slice 2 | observed: README.rst Waiting for content documents wait_for_kind and wait_for_text_change |
 | 8.5 | The README documents the observation limits | slice 2 | observed: README.rst Waiting for content Observation limits paragraph |
-| 8.6 | The README documents the observed sessions | slice 3 | |
-| 8.7 | Other kinds and other compositors rely on `inspect`'s existing native proof; they are evidence limits for the wait itself | slice 3 | |
-| X1 | Deferred, not rejected: native change notification as an optimization (macOS `changeCount`, Windows clipboard sequence number or format listener, X11 XFixes, `wl-paste --watch`) | slice 3 | |
-| X2 | Deferred: changed-value waits for images, HTML or files | slice 3 | |
-| X3 | Deferred: waiting on PRIMARY (SEED-001#primary-selection) | slice 3 | |
-| X4 | Deferred: async/awaitable waits | slice 3 | |
-| X5 | Deferred: callbacks or iterators over successive changes | slice 3 | |
-| X6 | Deferred: a background watcher | slice 3 | |
-| X7 | Deferred: any promise of lossless or per-event delivery | slice 3 | |
+| 8.6 | The README documents the observed sessions | slice 3 | observed: README.rst Evidence: wait entries for Xvfb+xclip, Sway+wl-clipboard, windows-latest (macOS entry not yet verified, G1) |
+| 8.7 | Other kinds and other compositors rely on `inspect`'s existing native proof; they are evidence limits for the wait itself | slice 3 | observed: README.rst wait Evidence entry Evidence limits sentence |
+| X1 | Deferred, not rejected: native change notification as an optimization (macOS `changeCount`, Windows clipboard sequence number or format listener, X11 XFixes, `wl-paste --watch`) | slice 3 | observed: not implemented: clipboard/_wait.py polls only, text-only change wait, CLIPBOARD selection, sync, no callbacks/iterators/watcher; README Observation limits |
+| X2 | Deferred: changed-value waits for images, HTML or files | slice 3 | observed: not implemented: clipboard/_wait.py polls only, text-only change wait, CLIPBOARD selection, sync, no callbacks/iterators/watcher; README Observation limits |
+| X3 | Deferred: waiting on PRIMARY (SEED-001#primary-selection) | slice 3 | observed: not implemented: clipboard/_wait.py polls only, text-only change wait, CLIPBOARD selection, sync, no callbacks/iterators/watcher; README Observation limits |
+| X4 | Deferred: async/awaitable waits | slice 3 | observed: not implemented: clipboard/_wait.py polls only, text-only change wait, CLIPBOARD selection, sync, no callbacks/iterators/watcher; README Observation limits |
+| X5 | Deferred: callbacks or iterators over successive changes | slice 3 | observed: not implemented: clipboard/_wait.py polls only, text-only change wait, CLIPBOARD selection, sync, no callbacks/iterators/watcher; README Observation limits |
+| X6 | Deferred: a background watcher | slice 3 | observed: not implemented: clipboard/_wait.py polls only, text-only change wait, CLIPBOARD selection, sync, no callbacks/iterators/watcher; README Observation limits |
+| X7 | Deferred: any promise of lossless or per-event delivery | slice 3 | observed: not implemented: clipboard/_wait.py polls only, text-only change wait, CLIPBOARD selection, sync, no callbacks/iterators/watcher; README Observation limits |
 | E1 | Empty clipboard → `wait_for_kind("image", timeout=30)` → the user copies a screenshot in another app 3 s later → returns a snapshot whose `kinds` contain `"image"` within about one interval of the copy | slice 1 | observed: tests/test_wait_for_kind.py::test_kind_appearing_after_several_observations_returns_that_snapshot (IMAGE after two 0.5 s sleeps) |
 | E2 | Clipboard already offers text → `wait_for_kind("text", timeout=5)` → returns at once after one observation | slice 1 | observed: tests/test_wait_for_kind.py::test_kind_already_offered_returns_at_once_after_one_observation |
 | E3 | Clipboard holds `"old"` → `wait_for_text_change(timeout=30)` → another app copies `"new"` → returns `"new"` | slice 2 | observed: tests/test_wait_for_text_change.py::test_new_text_after_the_baseline_is_returned |
