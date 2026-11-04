@@ -29,21 +29,41 @@ def _install_hint(helper: str, package: str) -> str:
     )
 
 
-def _text_error(desktop: str, operation: str, detail: str) -> ClipboardContentError:
+# Error subject: what the helper serves. A selection other than CLIPBOARD
+# names itself (e.g. "primary selection text") so it never reads as CLIPBOARD.
+_CLIPBOARD_TEXT = "clipboard text"
+# Selections the owned X11 and Wayland paths serve (named as ``xclip
+# -selection`` names them) and the subject each one's failures name.
+_CLIPBOARD = "clipboard"
+_PRIMARY = "primary"
+_SELECTION_SUBJECTS = {_CLIPBOARD: _CLIPBOARD_TEXT, _PRIMARY: "primary selection text"}
+# PRIMARY never falls back to CLIPBOARD; errors that could suggest one say so.
+_NO_CLIPBOARD_FALLBACK = "the ordinary clipboard is not used instead"
+
+
+def _text_error(
+    desktop: str, operation: str, detail: str, *, subject: str = _CLIPBOARD_TEXT
+) -> ClipboardContentError:
     return ClipboardContentError(
-        f"Linux {desktop} clipboard text {operation} failed: {detail}"
+        f"Linux {desktop} {subject} {operation} failed: {detail}"
     )
 
 
 def _text_launch_error(
-    desktop: str, operation: str, helper: str, package: str, exc: OSError
+    desktop: str,
+    operation: str,
+    helper: str,
+    package: str,
+    exc: OSError,
+    *,
+    subject: str = _CLIPBOARD_TEXT,
 ) -> ClipboardContentError:
     """A helper that could not start: missing from PATH (with hint) or OSError."""
     if isinstance(exc, FileNotFoundError):
         detail = f"{helper} was not found on PATH; {_install_hint(helper, package)}"
     else:
         detail = f"could not run {helper} ({exc})"
-    return _text_error(desktop, operation, detail)
+    return _text_error(desktop, operation, detail, subject=subject)
 
 
 def _remaining(deadline: float, bound: float) -> float:
@@ -63,6 +83,7 @@ def _run_text_helper(
     package: str,
     deadline: float,
     bound: float,
+    subject: str = _CLIPBOARD_TEXT,
 ) -> subprocess.CompletedProcess[bytes]:
     """Run a read-only helper (stdin from /dev/null) before ``deadline``.
 
@@ -83,9 +104,12 @@ def _run_text_helper(
             operation,
             f"{' '.join(cmd)} did not answer within the {bound:g}s bound "
             "(clipboard owner stalled or display contended)",
+            subject=subject,
         ) from exc
     except OSError as exc:
-        raise _text_launch_error(desktop, operation, cmd[0], package, exc) from exc
+        raise _text_launch_error(
+            desktop, operation, cmd[0], package, exc, subject=subject
+        ) from exc
 
 
 def _text_exit_error(
@@ -93,6 +117,8 @@ def _text_exit_error(
     operation: str,
     cmd: list[str],
     result: subprocess.CompletedProcess[bytes],
+    *,
+    subject: str = _CLIPBOARD_TEXT,
 ) -> ClipboardContentError:
     """Quote a failed helper run's status and stderr; cause keeps the output."""
     detail = _helper_stderr_detail(result)
@@ -101,6 +127,7 @@ def _text_exit_error(
         operation,
         f"{' '.join(cmd)} exited with status {result.returncode}"
         + (f": {detail}" if detail else ""),
+        subject=subject,
     )
     error.__cause__ = subprocess.CalledProcessError(
         result.returncode, cmd, result.stdout, result.stderr
@@ -108,13 +135,20 @@ def _text_exit_error(
     return error
 
 
-def _decode_text(raw: bytes, encoding: str, desktop: str, what: str) -> str:
+def _decode_text(
+    raw: bytes,
+    encoding: str,
+    desktop: str,
+    what: str,
+    *,
+    subject: str = _CLIPBOARD_TEXT,
+) -> str:
     """Decode helper output by its declared encoding; never leak decode errors."""
     try:
         return raw.decode(encoding)
     except UnicodeDecodeError as exc:
         raise _text_error(
-            desktop, "read", f"{what} is not valid {encoding} ({exc})"
+            desktop, "read", f"{what} is not valid {encoding} ({exc})", subject=subject
         ) from exc
 
 
@@ -131,7 +165,13 @@ def _helper_log_suffix(log) -> str:
 
 
 def _logged_exit_error(
-    desktop: str, operation: str, cmd: list[str], status: int, log
+    desktop: str,
+    operation: str,
+    cmd: list[str],
+    status: int,
+    log,
+    *,
+    subject: str = _CLIPBOARD_TEXT,
 ) -> ClipboardContentError:
     """``_text_exit_error`` for a writer helper whose stderr went to ``log``."""
     return _text_exit_error(
@@ -139,4 +179,5 @@ def _logged_exit_error(
         operation,
         cmd,
         subprocess.CompletedProcess(cmd, status, None, _helper_log(log)),
+        subject=subject,
     )

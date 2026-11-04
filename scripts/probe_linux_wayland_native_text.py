@@ -21,10 +21,7 @@ Scoped to Sway; it does not generalize to other compositors.
 
 from __future__ import annotations
 
-import os
-import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
@@ -34,6 +31,7 @@ from linux_wayland_native_text_support import (
     UTF8_TYPE,
     child_copy_then_consume,
     clear,
+    evidence_limit,
     failures_within_bound,
     immediate_visibility,
     offer,
@@ -46,7 +44,7 @@ from linux_wayland_native_text_support import (
     wl_paste,
 )
 from linux_x11_native_text_support import BOUND_S, TEXT, child, paste_now, record, step
-from native_probe_wayland import COMPOSITOR, sway_running
+from native_probe_wayland import COMPOSITOR
 from stdlib_png import solid_red_png_bytes
 
 
@@ -189,15 +187,7 @@ def _probe(observed: dict) -> list[dict]:
 
 
 def main() -> int:
-    reason = None
-    if not sys.platform.startswith("linux"):
-        reason = f"not Linux (platform {sys.platform!r})"
-    elif not os.environ.get("WAYLAND_DISPLAY"):
-        reason = "no Wayland session (WAYLAND_DISPLAY unset)"
-    elif shutil.which("wl-paste") is None or shutil.which("wl-copy") is None:
-        reason = "wl-paste/wl-copy not found on PATH (apt install wl-clipboard)"
-    elif not sway_running():
-        reason = f"no running {COMPOSITOR}; this probe proves the named compositor only"
+    reason = evidence_limit()
     if reason is not None:
         report(
             ok=False,

@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 27
+- Highest allocated local number: 29
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
@@ -391,6 +391,14 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Evidence: after publishing `progress: true` increments 7d55a1b and 1f75f4a, the coordinator observed CI with a background `gh run list --commit … && gh run watch --exit-status` shell command (not the attached observer `/tmp/dough-ci-501/watch-7nRVt0`, which notifies only failures), then wrote records-only done commits 0cd07be and 16e6241
   - Observed effect: Two extra publications and CI runs solely to flip `Status: done` and record CI observations; the observation step was again inferred, this time as a direct `gh` watch
   - Inference: Same gap as the first row; a named read-only observation step for `progress: true` slices would avoid a coordinator-invented watch
+- Execution: SEED-001#primary-selection
+  - Timestamp: 2026-11-04T19:06:49+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: slice-2 publish 15252dd with `progress: true` (obligation G3, Wayland native proof CI-owned); coordinator observed CI with `gh run list/view` (run 41803370471) rather than an Open Dough command; records-only done commit 0abf1a4
+  - Observed effect: One extra publication and CI run solely to close G3 and flip slice 2 to done; recurrence of the same path
+  - Inference: Same unnamed observation step as the first occurrence; the coordinator again had to choose its own read-only CI check
 
 ## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
 
@@ -436,3 +444,40 @@ COMPLETE` without a size check, and the retrospective found it.
   - Evidence: slice 3 part 1 refactor return ("The harness is about 385 lines … File sizes: all fine"); `wc -l scripts/native_wait_support.py` = 384 at 0120396; `.claude/skills/dough-post-change-refactor/references/refactor-checks.md` "File size"; correction plan `.planning/slice-plans/019-split-native-wait-support/PLAN.md`
   - Observed effect: The oversized module was committed and published; a correction story and plan were needed
   - Inference: Proof acceptance of a refactor return could include a mechanical `wc -l` over the diff's files rather than trusting the return's size claim
+
+## DD-028 — Single local premise probe recorded as settled, then contradicted by a rerun
+A coordinator's one-off local container probe (headless Sway 1.9, wl-clipboard
+2.2.1, `primary_selection disabled`) concluded that `wl-copy --primary` exits 0
+while the write is dropped, and the plan's Learnings and the slice 2 brief
+stated it as settled. The implementation agent's rerun in the same image saw
+PRIMARY still served through wlroots data-control v2. The probe output had
+shown an unexplained `wl_display_dispatch: Broken pipe` after a compositor
+restart in the same container.
+
+### Occurrences
+- Execution: SEED-001#primary-selection
+  - Timestamp: 2026-11-04T15:56:08+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: plan 017 Learnings "Slice 2 early probe" (as first written, then corrected before 15252dd); slice 2 return "Contrary evidence on one premise"; README Evidence records both observations
+  - Observed effect: No rework: either result made that compositor a story evidence limit, and the read-back confirmation stayed as a defensive check; plan and docstring text needed correcting
+  - Inference: A premise from one probe run with an unexplained anomaly (here a second compositor started in the same container) should be stated as a single observation, or rerun in a fresh container, before a brief treats it as settled
+
+## DD-029 — Local Linux containers replaced CI records-only early-probe steps
+The plan scheduled records-only CI steps (branch pushes) for both slices'
+early premise probes. The coordinator ran them instead in a local Docker
+`ubuntu:24.04` container (via colima) with the same `xclip 0.13` and
+wl-clipboard 2.2.1 as CI, before delegating; the implementation agents also
+ran the new native probes there before returning. CI then confirmed both
+probes on its first runs.
+
+### Occurrences
+- Execution: SEED-001#primary-selection
+  - Timestamp: 2026-11-04T14:13:33+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: plan 017 Learnings "Slice 1 early probe" / "Slice 2 early probe" (Docker ubuntu:24.04); CI runs 41799207621 and 41803370471 passed the X11 and Wayland PRIMARY probes on first publication
+  - Observed effect: No probe-only commits or CI round trips; no native CI repair was needed
+  - Inference: Useful practice where a container runtime is available; it does not replace CI evidence (Sway 1.9 locally vs 1.11 in CI), so CI remains the native proof owner

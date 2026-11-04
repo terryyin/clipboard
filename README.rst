@@ -121,6 +121,52 @@ For desktop-free tests, or deliberate delegation as above, inject with
 default. A writer receives the already validated ``str``; a reader takes no
 arguments and returns a ``str`` (or ``None`` when no text is offered).
 
+Linux primary selection (select, then middle-click paste) text, beside the
+ordinary clipboard:
+
+::
+
+   clipboard.copy_primary("for middle click")
+   selected = clipboard.paste_primary()
+
+``copy_primary(text)`` replaces only the PRIMARY selection, and
+``paste_primary()`` reads only PRIMARY; CLIPBOARD is neither read nor
+changed, and ``copy`` / ``paste`` keep reaching CLIPBOARD only and leave
+PRIMARY as it was. ``copy_primary`` applies ``copy``'s input rules
+(``str()`` coercion; ``"\x00"`` or non-UTF-8-encodable text raises
+``ClipboardContentError`` before PRIMARY is replaced), and ``paste_primary``
+returns ``""`` when nothing is selected or the owner offers no text (never
+``None``), with line endings untranslated. On Linux X11 they run
+``xclip -selection primary`` (``xclip`` on ``PATH`` is required); on Linux
+Wayland they run wl-clipboard's ``wl-copy --primary`` / ``wl-paste --primary``
+(``wl-copy`` and ``wl-paste`` on ``PATH`` are required), which works only
+where the compositor offers wl-clipboard a primary-selection protocol. Both
+share the 10 s bound of ``copy`` / ``paste``; written text stays pasteable
+by middle-click after Python exits, served by a background ``xclip`` or by
+``wl-copy``'s forked source. On Wayland ``copy_primary`` returns only once
+an exact ``wl-paste --primary`` read-back serves the written text, so a
+write the compositor drops raises instead of reporting success;
+``copy_primary("")`` leaves PRIMARY offering empty text, which reads ``""``.
+
+There is no fallback to CLIPBOARD: wherever PRIMARY cannot be reached, both
+raise ``ClipboardContentError`` naming the reason and run no helper or
+pyperclip mechanism: "not available" on macOS, Windows, WSL and other
+platforms; Linux with no desktop session; X11 without ``xclip`` (even where
+``paste()`` still works through pyperclip's ``xsel``, Klipper or Qt) and
+Wayland without wl-clipboard, each with an install hint; and a Wayland
+compositor for which wl-clipboard reports that primary selection is
+unsupported (``The compositor does not seem to support primary selection``,
+which is not "nothing selected": that reads ``""``). Other helper failures
+and timeouts raise as for ``paste`` / ``copy``, with messages naming the
+primary selection. The session is chosen as for ``copy`` / ``paste``:
+Wayland when ``WAYLAND_DISPLAY`` is set and both wl-clipboard helpers are on
+``PATH``, otherwise X11 with ``DISPLAY``, so a session with both variables
+reaches PRIMARY and CLIPBOARD text through the same desktop. ``set_text_clipboard_writer`` /
+``set_text_clipboard_reader`` do not apply: an injected text writer or
+reader never receives PRIMARY traffic. A clipboard manager or desktop
+setting that copies PRIMARY into CLIPBOARD (or back) on its own is a newer
+offer by that program, outside this promise.
+
 Image read/write needs the optional ``images`` extra (Pillow):
 
 ::
@@ -590,6 +636,56 @@ Evidence / verified platforms (native probes gated via
   ``tests/test_text_native_windows.py``; each wrapper runs its
   ``scripts/probe_*_native_text.py`` probe and fails rather than skips on an
   evidence limit.
+* Primary selection ``copy_primary`` / ``paste_primary`` on Linux X11, by
+  ``scripts/probe_linux_x11_native_primary.py`` (wrapper
+  ``tests/test_primary_native_linux_x11.py``, run under ``xvfb-run -a`` as a
+  step of gated job ``native-linux-x11-text``, run 41799207621; xclip 0.13,
+  also observed locally under Xvfb on Ubuntu 24.04). Independent background
+  ``xclip -selection primary|clipboard -i`` producers and
+  ``xclip -selection primary|clipboard -o`` consumers; every library call
+  runs in a child Python that exits first. Steps: a fresh, unowned PRIMARY
+  reads ``""`` (xclip 0.13 reports ``Error: target TARGETS not available``);
+  different PRIMARY and CLIPBOARD owners are read apart by
+  ``paste_primary()`` / ``paste()``; a child's ``copy_primary`` is read by
+  the independent PRIMARY consumer after it exits while CLIPBOARD is
+  unchanged; a child's ``copy`` leaves PRIMARY unchanged; a refused
+  ``copy_primary("a\x00b")`` leaves PRIMARY readable; and with a ``PATH``
+  holding ``xsel`` but no ``xclip``, ``paste()`` still reads CLIPBOARD
+  through pyperclip while both PRIMARY calls raise naming ``xclip`` within
+  the bound. Evidence limits: a headless Xvfb CI session, not an owner-held
+  desktop; real middle-click pastes in terminals or toolkits, GNOME, KDE,
+  XWayland bridging of PRIMARY, and clipboard managers that sync PRIMARY
+  with CLIPBOARD are unobserved.
+* Primary selection ``copy_primary`` / ``paste_primary`` on Linux Wayland
+  (Sway), by ``scripts/probe_linux_wayland_native_primary.py`` (wrapper
+  ``tests/test_primary_native_linux_wayland.py``, run in its own fresh
+  headless Sway as a step of gated job ``native-linux-wayland-text``:
+  Sway 1.11, wl-clipboard 2.2.1; also observed locally on headless Sway 1.9
+  with wl-clipboard 2.2.1 on Ubuntu 24.04). Independent
+  ``wl-copy [--primary] --type text/plain;charset=utf-8`` producers and
+  ``wl-paste [--primary] -n`` consumers; every library call runs in a child
+  Python (no ``DISPLAY``) that exits first. Steps: a fresh, unselected
+  PRIMARY reads ``""`` (wl-paste reports ``Nothing is copied``); different
+  PRIMARY and CLIPBOARD offers are read apart by ``paste_primary()`` /
+  ``paste()``; a child's ``copy_primary`` is read by the independent
+  ``wl-paste --primary -n`` after it exits while ``wl-paste -n`` still gives
+  the CLIPBOARD text; a child's ``copy`` leaves PRIMARY unchanged; a refused
+  ``copy_primary("a\x00b")`` leaves PRIMARY readable; a child's
+  ``copy_primary("")`` leaves PRIMARY reading ``""``; and with a ``PATH``
+  lacking ``wl-paste`` both PRIMARY calls raise naming wl-clipboard within
+  the bound. Evidence limits: Sway only (the compositor is not
+  generalized); GNOME, KDE and other compositors, XWayland bridging of
+  PRIMARY, real middle-click pastes, and clipboard managers or desktop
+  settings that sync PRIMARY with CLIPBOARD (a newer offer by that program)
+  are unobserved. A native compositor without primary-selection support is
+  unobserved too: the unsupported report is classified from wl-clipboard
+  2.2.1's own wording in desktop-free tests only. Sway's
+  ``primary_selection disabled`` is not such a compositor for wl-clipboard:
+  one local Sway 1.9 observation saw ``wl-copy --primary`` exit 0 with the
+  write dropped and reads saying ``Nothing is copied`` (``copy_primary``'s
+  read-back turns that into an error, and ``paste_primary`` reads ``""``),
+  while another saw the primary-selection protocol withdrawn but PRIMARY
+  still written and read through wlroots data-control.
 * Image **reads**: macOS Aqua verified (``scripts/probe_macos_native_paste_image.py``).
   Windows / X11 / Wayland reads remain evidence-limited (no usable session in
   that verification); do not generalize Wayland from X11 or an unstated compositor.

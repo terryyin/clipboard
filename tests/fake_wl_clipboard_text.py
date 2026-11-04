@@ -1,12 +1,20 @@
-"""In-memory Wayland selection and wl-clipboard helpers standing in for ``subprocess``.
+"""In-memory Wayland selections and wl-clipboard helpers standing in for ``subprocess``.
 
-``FakeWayland.run`` answers ``wl-paste --list-types`` and ``wl-paste -n -t T``
-like wl-clipboard 2.x (``Nothing is copied`` / ``No suitable type of content
-copied`` on stderr, exit 1); ``FakeWayland.popen`` returns a ``FakeWlCopy``
-holding the payload read from the launcher's file stdin; waiting on its
-foreground part sets (or clears) the selection, exits with a given status and
-stderr, or stalls past the bound. ``install_fake_wayland`` routes the public
-``copy`` / ``paste`` through it on a Wayland text session.
+Each selection has its own offers: ``FakeWayland.offers`` is the regular
+selection (CLIPBOARD; ``None``: nothing is copied) and ``FakeWayland.primary``
+is PRIMARY, reached by argv carrying ``--primary``. ``FakeWayland.run``
+answers ``wl-paste [--primary] --list-types`` and ``wl-paste [--primary] -n
+-t T`` like wl-clipboard 2.x (``Nothing is copied`` / ``No suitable type of
+content copied`` on stderr, exit 1); ``FakeWayland.popen`` returns a
+``FakeWlCopy`` holding the payload read from the launcher's file stdin;
+waiting on its foreground part sets (or clears) its selection, exits with a
+given status and stderr, or stalls past the bound.
+``primary_unsupported`` makes every ``--primary`` run report wl-clipboard
+2.2.1's unsupported wording (exit 1); ``drops_primary`` makes
+``wl-copy --primary`` exit 0 without changing PRIMARY (Sway with
+``primary_selection disabled``). ``install_fake_wayland`` routes
+``subprocess`` to a new fake in a Wayland-only text session, so the public
+``copy`` / ``paste`` (and ``copy_primary`` / ``paste_primary``) reach it.
 """
 
 import subprocess
@@ -15,6 +23,7 @@ from fake_pyperclip import FakePyperclip
 
 TEXT = "  héllo 👋 ﾃｽﾄ\nline 2 "
 STALE_SOCKET = b"Failed to connect to a Wayland server: No such file or directory\n"
+PRIMARY_UNSUPPORTED = b"The compositor does not seem to support primary selection\n"
 
 # What wl-copy 2.x lists for a text type: the type plus its generic family.
 WL_COPY_TEXT_FAMILY = (
@@ -24,6 +33,11 @@ WL_COPY_TEXT_FAMILY = (
     "STRING",
     "UTF8_STRING",
 )
+
+
+def text_offer(text):
+    """What wl-copy offers for ``text``: its UTF-8 bytes under the text family."""
+    return dict.fromkeys(WL_COPY_TEXT_FAMILY, text.encode())
 
 
 class FakeWlCopy:
@@ -45,16 +59,25 @@ class FakeWlCopy:
         self.wayland.wait_timeouts.append(timeout)
         if self.wayland.stalls:
             raise subprocess.TimeoutExpired(self.cmd, timeout)
+        selection = self.wayland.selection(self.cmd)
         if self.wayland.copy_exit is not None:
             status, stderr = self.wayland.copy_exit
             self.log.write(stderr)
             self.returncode = status
             return status
-        if "--clear" in self.cmd:
-            self.wayland.offers = None
-        else:
-            self.wayland.offers = dict.fromkeys(WL_COPY_TEXT_FAMILY, self.input)
+        if selection == "primary" and self.wayland.primary_unsupported:
+            self.log.write(PRIMARY_UNSUPPORTED)
+            self.returncode = 1
+            return 1
         self.returncode = 0
+        if selection == "primary" and self.wayland.drops_primary:
+            return 0
+        if "--clear" in self.cmd:
+            self.wayland.selections[selection] = None
+        else:
+            self.wayland.selections[selection] = dict.fromkeys(
+                WL_COPY_TEXT_FAMILY, self.input
+            )
         return 0
 
     def kill(self):
@@ -63,7 +86,9 @@ class FakeWlCopy:
 
 class FakeWayland:
     def __init__(self):
-        self.offers = None  # None: nothing is copied
+        self.selections = {"clipboard": None, "primary": None}  # None: nothing
+        self.primary_unsupported = False
+        self.drops_primary = False
         self.calls = []
         self.run_error = None
         self.run_failure = None  # (returncode, stderr) for every run
@@ -72,6 +97,32 @@ class FakeWayland:
         self.copy_exit = None  # (status, stderr) for wl-copy's foreground part
         self.stalls = False
         self.wait_timeouts = []
+
+    @property
+    def offers(self):
+        return self.selections["clipboard"]
+
+    @offers.setter
+    def offers(self, offers):
+        self.selections["clipboard"] = offers
+
+    @property
+    def primary(self):
+        return self.selections["primary"]
+
+    @primary.setter
+    def primary(self, offers):
+        self.selections["primary"] = offers
+
+    def only_primary_ran(self):
+        """Whether every wl-paste run and wl-copy start carried ``--primary``."""
+        return all("--primary" in c["cmd"] for c in self.calls) and all(
+            "--primary" in proc.cmd for proc in self.popens
+        )
+
+    @staticmethod
+    def selection(cmd):
+        return "primary" if "--primary" in cmd else "clipboard"
 
     def run(self, cmd, *, stdin, capture_output, check, timeout):
         assert stdin is subprocess.DEVNULL
@@ -83,15 +134,21 @@ class FakeWayland:
         if self.run_failure is not None:
             returncode, stderr = self.run_failure
             return subprocess.CompletedProcess(cmd, returncode, b"", stderr)
-        if not self.offers:
+        selection = self.selection(cmd)
+        flags = ["--primary"] if selection == "primary" else []
+        if selection == "primary" and self.primary_unsupported:
+            return self._fail(cmd, PRIMARY_UNSUPPORTED)
+        offers = self.selections[selection]
+        if not offers:
             return self._fail(cmd, b"Nothing is copied\n")
-        if cmd == ["wl-paste", "--list-types"]:
-            listing = "".join(f"{t}\n" for t in self.offers)
+        if cmd == ["wl-paste", *flags, "--list-types"]:
+            listing = "".join(f"{t}\n" for t in offers)
             return subprocess.CompletedProcess(cmd, 0, listing.encode(), b"")
-        assert cmd[:3] == ["wl-paste", "-n", "-t"] and len(cmd) == 4
-        if cmd[3] not in self.offers:
+        assert cmd[: 3 + len(flags)] == ["wl-paste", *flags, "-n", "-t"], cmd
+        assert len(cmd) == 4 + len(flags), cmd
+        if cmd[-1] not in offers:
             return self._fail(cmd, b"No suitable type of content copied\n")
-        return subprocess.CompletedProcess(cmd, 0, self.offers[cmd[3]], b"")
+        return subprocess.CompletedProcess(cmd, 0, offers[cmd[-1]], b"")
 
     @staticmethod
     def _fail(cmd, stderr):
@@ -108,7 +165,7 @@ class FakeWayland:
 
 
 def install_fake_wayland(text_session, monkeypatch):
-    """Replace ``subprocess`` with a ``FakeWayland`` on a Wayland text session.
+    """Replace ``subprocess`` with a ``FakeWayland`` on a Wayland-only text session.
 
     ``fake.pyperclip`` records any (unexpected) delegated pyperclip write.
     """

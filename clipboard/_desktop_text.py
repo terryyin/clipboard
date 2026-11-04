@@ -38,6 +38,11 @@ def _read_proc_version() -> str:
         return ""
 
 
+def _is_wsl() -> bool:
+    """Linux under Windows: ``/proc/version`` mentions ``microsoft``."""
+    return "microsoft" in _read_proc_version().lower()
+
+
 def _qt_binding_installed() -> bool:
     """True when pyperclip's Qt fallback (``qtpy`` or ``PyQt5``) is importable.
 
@@ -74,7 +79,7 @@ def _text_session_owner() -> str:
         return _TEXT_OWNER_MACOS
     if not platform.startswith("linux"):
         return _TEXT_OWNER_PYPERCLIP
-    if "microsoft" in _read_proc_version().lower():
+    if _is_wsl():
         return _TEXT_OWNER_PYPERCLIP
     wayland = os.environ.get("WAYLAND_DISPLAY")
     display = os.environ.get("DISPLAY")

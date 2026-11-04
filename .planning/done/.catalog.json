@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_primary-selection.json",
+      "identity": "SEED-001#primary-selection",
+      "completedAt": "2026-11-04T12:19:26.402Z",
+      "blob": "edab4bb31e42bcbd733f5bd3b4505533f5447b8b"
+    },
+    {
       "fileName": "SEED-001_bounded-helper-owner-write.json",
       "identity": "SEED-001#bounded-helper-owner-write",
       "completedAt": "2026-11-04T09:27:16.046Z",

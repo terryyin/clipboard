@@ -8,7 +8,13 @@ platforms; a resolved pyperclip mechanism never displaces an owned backend,
 only `set_text_clipboard_writer` / `set_text_clipboard_reader` delegate
 deliberately); every text
 failure raises `ClipboardContentError` (`paste()` returns `""` for absence,
-never `None`). It also offers optional image read/write via `paste_image` /
+never `None`). `copy_primary` / `paste_primary` reach only the Linux PRIMARY
+selection, X11 through `xclip -selection primary` and Wayland through
+wl-clipboard `--primary` (Wayland writes confirmed by exact read-back), with
+the text session rule; everywhere else (other platforms, WSL, no session, a
+missing owned helper, a compositor wl-clipboard reports without PRIMARY)
+they raise `ClipboardContentError`, never falling back to CLIPBOARD or
+pyperclip, and the injected text seams never see PRIMARY. It also offers optional image read/write via `paste_image` /
 `copy_image` when the `clipboard[images]` extra (Pillow) is installed, HTML
 dual-offer writes and fragment reads via `copy_html` / `paste_html`, local file-list
 reads via `paste_files`, local file-list copy offers via `copy_files` (writer
