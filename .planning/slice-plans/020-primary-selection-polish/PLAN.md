@@ -89,7 +89,7 @@ headless-Sway launch block across Wayland workflows; `_clear_wayland.py`'s own
 
 ### 1. Name the primary selection everywhere and align PRIMARY probe evidence
 Type: Behavior
-Status: planned
+Status: done
 Proof: as the table; local `nix develop -c make check` and
 `nix develop -c make lint-workflows`; native proof owned by CI on push.
 
@@ -126,5 +126,6 @@ identified no remaining slice-specific concern.
 - Mixed-session: `test_mixed_session_incomplete_wl_clipboard_with_xsel_names_both_helpers`.
 - evidence_limit Darwin smoke: five X11/Wayland probes exit 2 with
   `evidence_limit`.
-- Native Wayland/X11 PRIMARY green: owned by CI on the published revision
-  (`progress: true` until observed).
+- Native CI on published revision `90a8e7b` (run 41928637574) success,
+  including Native Linux Wayland text copy/paste (Sway) and Native Linux X11
+  text copy/paste (Xvfb).
