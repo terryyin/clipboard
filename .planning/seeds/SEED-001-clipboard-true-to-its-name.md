@@ -116,6 +116,33 @@ platform distinctions, reuse candidates, and uncertainty.
 - **Safe stopping point:** Callers gain predictable waiting without hidden
   history, payload logging, busy spinning, or stranded monitoring resources.
 
+<a id="x11-clear-packaged-apps"></a>
+
+### Fail fast when packaged apps cannot run the X11 clear helper
+
+**Identity:** SEED-001#x11-clear-packaged-apps
+```json dough-story-state
+{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+```
+
+- **For / why:** Developers shipping Python apps on X11 get an immediate,
+  actionable error when their deployment cannot run the clipboard clear
+  helper. A frozen app can otherwise launch a second copy of itself and
+  wait for the helper timeout.
+- **Evaluation:** In a recognized frozen runtime or an archive-only
+  installation without a filesystem path to the helper, `clipboard.clear()`
+  raises an X11-specific `ClipboardContentError` before starting a child
+  process. The README documents the limit. For both the wheel and sdist,
+  `make test-package` launches the helper from an isolated install and
+  verifies its structured failure with an unusable `DISPLAY`, without
+  requiring a desktop session.
+- **Boundary:** Retain the bounded helper for ordinary installations.
+  Adding frozen or archive-only X11 support and reorganizing native clear
+  probes are outside this story. The packaging check proves the installed
+  helper can launch and report a failure. Native clearing has its own proof.
+- **Effort hypothesis:** **S**, medium confidence, assuming the guard and
+  smoke check can use the existing launcher and packaging check.
+
 <a id="primary-selection"></a>
 
 ### Use the Linux primary selection explicitly
