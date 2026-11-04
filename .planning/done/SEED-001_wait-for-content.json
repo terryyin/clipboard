@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#wait-for-content",
+  "title": "Wait for clipboard content with bounded cancellation and timeouts",
+  "completedAt": "2026-11-04T08:51:25.272Z",
+  "developer": "Terry Yin",
+  "agent": "Tsubomi-chan",
+  "host": "claude",
+  "model": "opus"
+}

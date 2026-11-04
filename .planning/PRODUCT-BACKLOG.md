@@ -6,8 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Wait for clipboard content with bounded cancellation and timeouts](seeds/SEED-001-clipboard-true-to-its-name.md#wait-for-content) — SEED-001#wait-for-content ([plan](slice-plans/018-wait-for-content/PLAN.md))
-
 ## Backlog list
 
 - [Split the native wait probe support along its harness and steps](seeds/SEED-001-clipboard-true-to-its-name.md#split-native-wait-support) — SEED-001#split-native-wait-support

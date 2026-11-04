@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_wait-for-content.json",
+      "identity": "SEED-001#wait-for-content",
+      "completedAt": "2026-11-04T08:51:25.272Z",
+      "blob": "ae1ecfb3a489259b0a848b22fc81b719c81fa69a"
+    },
+    {
       "fileName": "SEED-001_x11-clear-packaged-apps.json",
       "identity": "SEED-001#x11-clear-packaged-apps",
       "completedAt": "2026-11-04T05:12:39.421Z",

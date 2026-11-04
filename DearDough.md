@@ -269,7 +269,7 @@ Distinct executions, original provenance, observations and qualified inferences 
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: unknown
-  - Evidence: plan 018 slice 1 proof required the gated macOS wait probe run on the developer machine; `IOConsoleLocked` was `<true/>` at every check across slices 1–3; the probe exited 2 (`evidence_limit`, locked screen); the developer later said "im not at the mac now" and the proof moved to SEED-001#macos-native-wait-evidence (commit 0120396)
+  - Evidence: `3477f8f:.planning/slice-plans/018-wait-for-content/PLAN.md` slice 1 proof required the gated macOS wait probe run on the developer machine; `IOConsoleLocked` was `<true/>` at every check across slices 1–3; the probe exited 2 (`evidence_limit`, locked screen); the developer later said "im not at the mac now" and the proof moved to SEED-001#macos-native-wait-evidence (commit 0120396)
   - Observed effect: The obligation travelled slice 1 → 2 → 3 and blocked completion until the developer amended the story
   - Inference: A plan whose slice proof needs the developer's unlocked desktop could check the session at execution start and offer the split before slice 1 instead of carrying it to the end
 

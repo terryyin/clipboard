@@ -6,7 +6,7 @@
 ## Provenance and findings
 
 Retrospective correction of SEED-001#wait-for-content (plan
-`018-wait-for-content`, commits 24938ab, 5d0afdb, bf48f2c, 2f4be58, 0120396).
+`3477f8f:.planning/slice-plans/018-wait-for-content/PLAN.md`, commits 24938ab, 5d0afdb, bf48f2c, 2f4be58, 0120396).
 Finding (2026-11-04, current revision 0120396): `scripts/native_wait_support.py`
 is 384 lines, over the post-change refactor check's 250-line limit; every
 other `scripts/*_support.py` is ≤ 249 lines. It arrived in bf48f2c (slice 3)
