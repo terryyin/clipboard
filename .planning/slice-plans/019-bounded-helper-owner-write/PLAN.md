@@ -127,7 +127,7 @@ pass on the launcher; reuse it for the Wayland stand-in.
 
 ### 2. Wayland owner writes through the launcher, image bound at 10 s
 Type: Behavior
-Status: planned
+Status: done
 Proof: early probe first (push, Sway write jobs green with temp-file
 `stdin`); new desktop-free test for example 4 fails first (30 s bound, no
 stderr detail) then passes; existing Wayland text / file-list / image
@@ -151,9 +151,9 @@ passed, 27 skipped. Refactor: Linux PNG owners moved to
 `clipboard/_image_write_linux.py` (shared launch-error / exit-status helpers);
 Wayland writer tests split into `tests/test_text_wayland_writer.py`. Wayland text
 and file-list timeouts keep `proc.kill()` of the foreground helper (the story's
-session stop is a `copy_image` promise). Pending: Native Linux Wayland copy_image /
-text / copy_files (Sway) on the pushed revision — the temp-file `stdin` early
-probe (commitments 17.4–17.6).
+session stop is a `copy_image` promise). Native proof: GHA run 41805764901 on
+1f75f4a — Native Linux Wayland copy_image / text / copy_files (Sway) and all X11
+jobs success; `wl-copy` serves a regular-file `stdin` (early probe holds).
 
 ## Plan concern evidence
 
