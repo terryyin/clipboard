@@ -20,6 +20,12 @@
             shellHook = ''
               echo "Run 'make deps' to sync the locked Python environment."
             '';
+          } // nixpkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+            # libX11 for `make test-package`'s installed X11 clear helper
+            # check only (it would otherwise report "libx11", not "display").
+            # Not on LD_LIBRARY_PATH, so system tools such as xclip keep
+            # their own libX11.
+            CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR = "${pkgs.libx11}/lib";
           };
         });
     };

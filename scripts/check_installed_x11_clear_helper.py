@@ -6,6 +6,10 @@ no X server serves, so no desktop session is needed: the helper must start,
 exit 3 and print one JSON line whose ``failure`` is ``display`` (Linux with
 libX11) or ``libx11`` (no libX11, e.g. macOS). It proves only that the
 distribution ships a helper that launches, not that a clipboard is cleared.
+
+When ``CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR`` names a libX11 directory (the
+Linux Nix dev shell sets it), only the helper child gets it on
+``LD_LIBRARY_PATH`` and its failure must be ``display``.
 """
 
 import json
@@ -19,6 +23,7 @@ from clipboard import _clear_x11
 
 SOURCE_TREE = Path(__file__).resolve().parents[1]
 UNUSABLE_DISPLAY = ":65535"
+LIBX11_DIR = os.environ.get("CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR", "")
 
 
 def fail(message):
@@ -39,6 +44,10 @@ def main():
         fail(f"helper {helper} is missing from the distribution")
     env = {k: v for k, v in os.environ.items() if k != "DISPLAY"}
     env["DISPLAY"] = UNUSABLE_DISPLAY
+    if LIBX11_DIR:
+        env["LD_LIBRARY_PATH"] = os.pathsep.join(
+            filter(None, [LIBX11_DIR, env.get("LD_LIBRARY_PATH")])
+        )
     with tempfile.TemporaryDirectory() as cwd:
         result = subprocess.run(
             command,
@@ -60,8 +69,10 @@ def main():
         failure = json.loads(lines[0])["failure"]
     except (ValueError, TypeError, KeyError):
         fail(f"helper output is not a JSON failure line: {detail}")
-    if failure not in {"display", "libx11"}:
-        fail(f"helper failure {failure!r} is not display or libx11: {detail}")
+    expected = {"display"} if LIBX11_DIR else {"display", "libx11"}
+    if failure not in expected:
+        wanted = " or ".join(sorted(expected))
+        fail(f"helper failure {failure!r} is not {wanted}: {detail}")
     print(f"Installed X11 clear helper {helper} launched: failure {failure}")
 
 

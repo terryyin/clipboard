@@ -151,6 +151,15 @@ this review.
   not hold. E5a stays open (O1) awaiting the developer's choice: add libX11
   to the Linux dev shell so CI exercises `display`, or amend the story's
   example to accept `libx11` in the Nix package job.
+- Developer decision (2026-11-04): option 1, add libX11 to the Linux dev
+  shell. `flake.nix` sets `CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR` on Linux only
+  (not `LD_LIBRARY_PATH`, so system `xclip` keeps its own libX11); the check
+  puts it on the helper child's `LD_LIBRARY_PATH` and then requires
+  `display`. Local proof: `make test-package` still `libx11` on macOS (var
+  unset); forcing the var to `/nonexistent` fails the target with "helper
+  failure 'libx11' is not display"; `make check` (612 passed) and
+  `make lint-workflows` pass; the x86_64-linux shell evaluates the var to
+  `libx11-1.8.14/lib`. O1 closes on the CI package job printing `display`.
 
 
 ## Story obligations
