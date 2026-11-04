@@ -36,22 +36,16 @@ modules must not copy those helpers. On a session with both `DISPLAY` and
 HTML/inspect/image write/clear select Wayland. Gated Windows `paste_html` native proof fails the job
 when the probe reports an evidence limit (no skip).
 
-All coding agents use `./scripts/dev <command>` from the repository root for
-local tooling. It runs Nix and uv in offline mode. Nix pins the interpreter and
-tools in `flake.lock`, and uv pins Python dependencies in `uv.lock`. Run Git
-commands directly.
+Use Nix for development tools, as in the neighboring Lizard project. Run tools
+with `nix develop -c <command>`; Git commands can run directly. Nix pins the
+interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 
-If dependencies are missing, report the blocker. Run online setup with
-`nix develop -c uv sync --locked --extra images` only after the user confirms
-an unmetered connection or authorizes the downloads. Then return to
-`./scripts/dev` for local tooling.
-
-- Sync cached dependencies: `./scripts/dev make deps`
-- Check Python: `./scripts/dev make check`
-- Check GitHub Actions: `./scripts/dev make lint-workflows`
-- Build and validate distributions: `./scripts/dev make build`
-- Build and test installed distributions: `./scripts/dev make test-package`
-- Format Python: `./scripts/dev make format`
+- Setup: `nix develop -c make deps`
+- Check Python: `nix develop -c make check`
+- Check GitHub Actions: `nix develop -c make lint-workflows`
+- Build and validate distributions: `nix develop -c make build`
+- Build and test installed distributions: `nix develop -c make test-package`
+- Format Python: `nix develop -c make format`
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop

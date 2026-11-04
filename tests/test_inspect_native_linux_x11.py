@@ -2,7 +2,7 @@
 
 Default pytest stays green without a desktop. Enable with:
 
-  CLIPBOARD_NATIVE_PROBE=1 ./scripts/dev uv run --locked \\
+  CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked \\
     pytest tests/test_inspect_native_linux_x11.py -v
 
 Requires Linux + DISPLAY + xclip. On hosts without that session the probe

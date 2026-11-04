@@ -3,7 +3,7 @@
 Default pytest stays green without a desktop. Enable under Sway with:
 
   CLIPBOARD_NATIVE_PROBE=1 WAYLAND_DISPLAY=wayland-1 \\
-    ./scripts/dev uv run --locked --extra images \\
+    nix develop -c uv run --locked --extra images \\
     pytest tests/test_copy_image_native_linux_wayland.py -v
 """
 

@@ -743,14 +743,13 @@ Development
 Nix flakes (`Nix <https://nixos.org/download/>`_), like Lizard: ``flake.lock``
 pins Python 3.13, uv, Make, actionlint; ``uv.lock`` pins deps.
 
-Run local checks using cached Nix tools and uv dependencies::
+::
 
-   ./scripts/dev make check lint-workflows test-package
+   nix develop
+   make deps check lint-workflows build test-package
 
-If dependencies are missing, set them up on an unmetered connection with
-``nix develop -c uv sync --locked --extra images``, then rerun the checks.
-Without Nix: Python 3.13 + uv + same Make targets. Windows:
-``uv sync --locked``, ``uv run --locked --extra images
+Or ``nix develop -c make check``. Without Nix: Python 3.13 + uv + same Make
+targets. Windows: ``uv sync --locked``, ``uv run --locked --extra images
 pytest``, ``uv run --locked ruff check .``. Do not install into system Python.
 GHA covers Nix plus Python 3.10–3.14, installs wheel/sdist outside the tree,
 and uses an in-memory clipboard (no desktop). X11/Wayland image-write probes

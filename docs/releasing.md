@@ -40,11 +40,11 @@ The environment name must agree between PyPI and the workflow.
 1. Choose an unused version newer than the latest version on
    [PyPI](https://pypi.org/project/clipboard/#history). Do not reuse a published
    version: PyPI does not allow replacing uploaded distribution filenames.
-2. Update only `VERSION` in `clipboard/__init__.py`. On an unmetered connection,
-   refresh the project entry with `nix develop -c uv lock` and commit both changes.
-3. Run `./scripts/dev make check lint-workflows build`, review the changes, and
+2. Update only `VERSION` in `clipboard/__init__.py`. Refresh the project entry in the
+   lockfile with `nix develop -c uv lock` and commit both changes.
+3. Run `nix develop -c make check lint-workflows build`, review the changes, and
    merge them into `master`. Wait for the cross-platform CI checks to pass.
-   `./scripts/dev make test-package` also tests installation of both distributions.
+   `nix develop -c make test-package` also tests installation of both distributions.
 4. On a clean, up-to-date `master`, create and push the chosen tag. For example,
    **only after setting `VERSION = "0.0.5"` and completing the checks**:
 
@@ -81,8 +81,6 @@ release job receives repository write permission.
   partly created, inspect it and attach missing artifacts with `gh release upload`.
 
 ## Updating dependencies
-
-Run dependency updates on an unmetered connection.
 
 - `nix develop -c uv lock --upgrade` updates Python dependencies within the
   ranges in `pyproject.toml`; commit `uv.lock` and run the checks.

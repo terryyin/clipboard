@@ -2,7 +2,7 @@
 
 Default pytest stays green without a desktop. Enable with:
 
-  CLIPBOARD_NATIVE_PROBE=1 ./scripts/dev uv run --locked \\
+  CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked \\
     pytest tests/test_copy_html_native_macos.py -v
 """
 

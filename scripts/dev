@@ -1,4 +1,0 @@
-#!/bin/sh
-
-UV_OFFLINE=1 exec nix develop --offline --option substitute false \
-  --no-update-lock-file --max-jobs 0 --builders '' -c "$@"
