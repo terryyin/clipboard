@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Nao-chan",
-  "email": "nao-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-001#primary-selection-polish",
-  "host": "cursor",
-  "model": "auto"
-}

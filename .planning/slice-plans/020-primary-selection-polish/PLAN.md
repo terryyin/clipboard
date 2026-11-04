@@ -44,6 +44,23 @@ Out of scope (pre-existing, not this execution's residue): the duplicated
 headless-Sway launch block across Wayland workflows; `_clear_wayland.py`'s own
 `wl-copy --clear` runner.
 
+## Settled premises (preparation workspace observation)
+
+1. `copy_primary("a\x00b")` raises
+   `"clipboard text write rejected: text contains a NUL character…"` —
+   contains `"clipboard"`, not `"primary selection"` (uv run in this
+   checkout). Slice 1 consumes this for the rejection-wording change.
+2. With `DISPLAY` and `WAYLAND_DISPLAY` set and `PATH` carrying only a
+   stub `xsel` (no `xclip`, no wl-clipboard), `copy_primary("x")` raises
+   naming `xclip` and "Linux X11" only — no wl-clipboard mention (same
+   run). Slice 1 consumes this for the mixed-session message.
+3. Probe/wrapper step ids, README Wayland PRIMARY bullet (no run id),
+   Sway-disabled wording in the failure test / fake, and the duplicated
+   X11 / remaining Wayland evidence-limit chains are present in the
+   named files at this revision; rename, cite, reword and share as
+   planned. No early probe: native CI after publish owns green
+   Wayland/X11 PRIMARY jobs.
+
 ## Preserved promises and constraints
 
 - All behavior of `copy` / `paste` / `copy_primary` / `paste_primary`
@@ -80,3 +97,10 @@ error name the primary selection (and wl-clipboard where `WAYLAND_DISPLAY`
 is set); probe step names, README run id and test docs match the story
 examples and the recorded observations; evidence-limit rules have one home
 per desktop. `copy` messages and all other behavior unchanged.
+
+## Plan refinement and concerns
+
+Slice-plan refinement was not needed: one Behavior slice owns the whole
+bounded correction outcome, proof maps 1:1 to the six key examples, and
+no independent second outcome or Structure-only seam remains. This review
+identified no remaining slice-specific concern.
