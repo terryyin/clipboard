@@ -37,8 +37,6 @@ pytest.
 from __future__ import annotations
 
 import os
-import shutil
-import sys
 
 from linux_native_clear_steps import (
     HTML_BODY,
@@ -56,7 +54,7 @@ from linux_x11_native_clear_support import (
     absent_display,
     raw_relinquish_ends_html_owner,
 )
-from linux_x11_native_text_support import xvfb_version
+from linux_x11_native_text_support import evidence_limit, xvfb_version
 from native_clear_support import child_clear, distro, report, step
 from native_probe_common import linux_x11_environment
 
@@ -103,13 +101,7 @@ def _probe(observed: dict) -> list[dict]:
 
 
 def main() -> int:
-    reason = None
-    if not sys.platform.startswith("linux"):
-        reason = f"not Linux (platform {sys.platform!r})"
-    elif not os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
-        reason = "needs an X11-only session (DISPLAY set, no WAYLAND_DISPLAY)"
-    elif shutil.which("xclip") is None:
-        reason = "xclip not found on PATH (apt install xclip)"
+    reason = evidence_limit()
     if reason is not None:
         report(ok=False, verified=False, evidence_limit=True, reason=reason)
         return 2

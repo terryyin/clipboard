@@ -36,7 +36,6 @@ from __future__ import annotations
 
 import os
 import shutil
-import sys
 
 from linux_native_clear_steps import (
     HTML_BODY,
@@ -53,8 +52,9 @@ from linux_wayland_native_clear_support import (
     WAYLAND,
     raw_clear_ends_foreground_owner,
 )
+from linux_wayland_native_text_support import evidence_limit
 from native_clear_support import child_clear, distro, report, step
-from native_probe_wayland import COMPOSITOR, sway_running, wayland_paste_environment
+from native_probe_wayland import COMPOSITOR, wayland_paste_environment
 
 TEXT_TYPE = "text/plain;charset=utf-8"
 TEXT_BODY = b"clear probe text"
@@ -114,15 +114,7 @@ def _probe(observed: dict) -> list[dict]:
 
 
 def main() -> int:
-    reason = None
-    if not sys.platform.startswith("linux"):
-        reason = f"not Linux (platform {sys.platform!r})"
-    elif not os.environ.get("WAYLAND_DISPLAY"):
-        reason = "no Wayland session (WAYLAND_DISPLAY unset)"
-    elif shutil.which("wl-paste") is None or shutil.which("wl-copy") is None:
-        reason = "wl-paste/wl-copy not found on PATH (apt install wl-clipboard)"
-    elif not sway_running():
-        reason = f"no running {COMPOSITOR}; this probe proves the named compositor only"
+    reason = evidence_limit()
     if reason is not None:
         report(
             ok=False,

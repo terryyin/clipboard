@@ -111,8 +111,9 @@ def test_line_endings_are_untranslated(wayland):
 
 @pytest.mark.parametrize("bad", ["a\x00b", "\ud800"])
 def test_rejected_text_never_starts_wl_copy_and_primary_stays(wayland, bad):
-    with pytest.raises(clipboard.ClipboardContentError):
+    with pytest.raises(clipboard.ClipboardContentError) as caught:
         clipboard.copy_primary(bad)
+    assert "primary selection" in str(caught.value)
 
     assert wayland.popens == []
     assert wayland.calls == []

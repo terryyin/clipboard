@@ -30,7 +30,7 @@ to repeat the file-manager proof through its public API.
 That API-level proof is the separate `native-linux-x11-copy-files` job
 (`tests/test_copy_files_native_linux_x11.py`): the public `copy_files` writes
 `text/uri-list` from a child process that exits, then Thunar pastes it. Its
-result is recorded in the README Evidence section.
+result is recorded in docs/evidence-wait-html-files.rst.
 
 ## What the probe checks
 

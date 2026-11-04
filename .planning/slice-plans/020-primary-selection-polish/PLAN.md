@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#primary-selection-polish
 **Source:** [Correct PRIMARY wording and probe evidence](../../seeds/SEED-001-clipboard-true-to-its-name.md#primary-selection-polish)
+**Source review:** [source-review.md](source-review.md)
 **Provenance:** execution retrospective of SEED-001#primary-selection
 (commits f823f1d, 15252dd, 0abf1a4 from base 68e5ea9; CI runs 41799207621
 and 41803370471 green). Original contract and plan, recoverable from
@@ -104,3 +105,26 @@ Slice-plan refinement was not needed: one Behavior slice owns the whole
 bounded correction outcome, proof maps 1:1 to the six key examples, and
 no independent second outcome or Structure-only seam remains. This review
 identified no remaining slice-specific concern.
+
+## Learnings
+
+- Empty-string Wayland PRIMARY probe step has no seed example number; renamed
+  to `empty_copy_primary_reads_empty` (dropped false `5_`) while the missing-
+  helper step is `8_…` for the example 8 analogue.
+- Post-change refactor stopped on pre-existing `README.rst` oversize (1016 /
+  250). Developer authorized option 1 packaging split: Usage / Installation /
+  Evidence / Development moved under `docs/*.rst` (each ≤250); short
+  `README.rst` landing keeps `pyproject.toml` `readme`; Evidence run
+  `41803370471` lives in `docs/evidence-text-primary-clear.rst`.
+
+## Accepted proof (slice 1)
+
+- Desktop-free: `nix develop -c make check` (770 passed, 33 skipped);
+  `nix develop -c make lint-workflows`; focused primary + copy wording suites.
+- Live: `copy("a\\x00b")` still "clipboard text write rejected…";
+  `copy_primary` names "primary selection".
+- Mixed-session: `test_mixed_session_incomplete_wl_clipboard_with_xsel_names_both_helpers`.
+- evidence_limit Darwin smoke: five X11/Wayland probes exit 2 with
+  `evidence_limit`.
+- Native Wayland/X11 PRIMARY green: owned by CI on the published revision
+  (`progress: true` until observed).

@@ -16,6 +16,8 @@ deliberately not consulted.
 
 from __future__ import annotations
 
+import os
+
 from clipboard import (
     _desktop_text,
     _platform,
@@ -78,7 +80,17 @@ def _primary_session() -> str:
         return owner
     if _desktop_text._is_wsl():
         raise _unavailable("is not available on WSL (Linux under Windows)")
-    # Linux X11 whose text would go through pyperclip (no xclip on PATH).
+    # Text would go through pyperclip (no owned PRIMARY helper on PATH).
+    if os.environ.get("WAYLAND_DISPLAY"):
+        # Mixed DISPLAY + WAYLAND_DISPLAY with incomplete wl-clipboard and no
+        # xclip: name both helpers that could have served PRIMARY.
+        raise _unavailable(
+            "needs xclip (Linux X11) or wl-clipboard (Linux Wayland); neither "
+            "was found complete on PATH (pyperclip's xsel / Klipper / Qt "
+            "fallbacks are not used); "
+            f"{_install_hint('xclip', 'xclip')}; "
+            f"{_install_hint('wl-copy', 'wl-clipboard')}"
+        )
     raise _unavailable(
         "on Linux X11 needs xclip, which was not found on PATH (pyperclip's "
         f"xsel / Klipper / Qt fallbacks are not used); "
@@ -110,7 +122,7 @@ def copy_primary(text) -> None:
     wl-clipboard reports without primary-selection support) and for any
     helper failure; never falls back to CLIPBOARD.
     """
-    validated = _validate_copy_text(text)
+    validated = _validate_copy_text(text, subject="primary selection")
     _call_content_backend("primary selection text write", _primary_writer, validated)
 
 

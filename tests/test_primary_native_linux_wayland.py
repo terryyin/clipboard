@@ -31,8 +31,8 @@ STEPS = [
     "2_child_copy_primary_exits_then_independent_consumers",
     "3_child_copy_leaves_primary",
     "9_rejected_copy_primary_keeps_primary",
-    "5_child_copy_primary_empty_reads_empty",
-    "7_path_without_wl_paste_names_wl_clipboard_within_bound",
+    "empty_copy_primary_reads_empty",
+    "8_path_without_wl_paste_names_wl_clipboard_within_bound",
 ]
 
 pytestmark = [

@@ -59,13 +59,14 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 - Check GitHub Actions: `nix develop -c make lint-workflows`
 - Build and validate distributions: `nix develop -c make build`
 - Build and test installed distributions: `nix develop -c make test-package`
-  (also launches each installed X11 clear helper; see README Development)
+  (also launches each installed X11 clear helper; see docs/development.rst)
 - Format Python: `nix develop -c make format`
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop
 session; optional native text / pasteboard / file-list probes stay gated via
-`CLIPBOARD_NATIVE_PROBE` (see README Evidence, e.g.
+`CLIPBOARD_NATIVE_PROBE` (see docs/evidence-text-primary-clear.rst and
+docs/evidence-wait-html-files.rst, e.g.
 `scripts/probe_macos_native_paste_image.py`, the text probes
 `tests/test_text_native_{macos,linux_x11,linux_wayland,windows}.py`, the
 `clear` probes `tests/test_clear_native_{macos,linux_wayland,linux_x11,windows}.py`

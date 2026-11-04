@@ -108,10 +108,26 @@ def test_x11_with_xsel_only_still_pastes_clipboard_through_pyperclip(
     assert pyperclip.writes == []
 
 
+def test_mixed_session_incomplete_wl_clipboard_with_xsel_names_both_helpers(
+    text_session, nothing_runs
+):
+    # DISPLAY + WAYLAND_DISPLAY, only xsel: text would use pyperclip, but
+    # PRIMARY names both owned helpers and runs nothing.
+    text_session(
+        "linux",
+        {"DISPLAY": ":0", "WAYLAND_DISPLAY": "wayland-0"},
+        ("xsel",),
+    )
+
+    _both_raise("xclip", "wl-clipboard")
+
+
 def test_validation_precedes_the_platform_check(text_session, nothing_runs):
     text_session("darwin")
 
     with pytest.raises(clipboard.ClipboardContentError) as caught:
         clipboard.copy_primary("a\x00b")
+    message = str(caught.value)
     # Rejected as input (shared with ``copy``), not as an unavailable platform.
-    assert "macOS" not in str(caught.value)
+    assert "macOS" not in message
+    assert "primary selection" in message

@@ -109,28 +109,31 @@ def set_text_clipboard_reader(reader: Callable[[], object] | None) -> None:
     )
 
 
-def _validate_copy_text(text: object) -> str:
-    """Coerce like pyperclip (``str()``) and reject text the clipboard would
-    silently lose, before anything is replaced.
+def _validate_copy_text(text: object, *, subject: str = "clipboard") -> str:
+    """Coerce like pyperclip (``str()``) and reject text that would be
+    silently lost, before anything is replaced.
+
+    ``subject`` names the write target in rejection messages (``"clipboard"``
+    for ``copy``; ``"primary selection"`` for ``copy_primary``).
     """
     if not isinstance(text, str):
         try:
             text = str(text)
         except Exception as exc:
             raise ClipboardContentError(
-                f"clipboard text write failed: cannot convert "
+                f"{subject} text write failed: cannot convert "
                 f"{type(text).__name__} to str: {exc}"
             ) from exc
     if "\x00" in text:
         raise ClipboardContentError(
-            "clipboard text write rejected: text contains a NUL character "
+            f"{subject} text write rejected: text contains a NUL character "
             "('\\x00'), which native clipboards would silently truncate"
         )
     try:
         text.encode("utf-8")
     except UnicodeEncodeError as exc:
         raise ClipboardContentError(
-            "clipboard text write rejected: text is not UTF-8 encodable "
+            f"{subject} text write rejected: text is not UTF-8 encodable "
             f"(lone surrogate or invalid code point): {exc}"
         ) from exc
     return text
