@@ -352,7 +352,14 @@ a child process bounded at 10 s; it needs nothing beyond libX11 (``libx11-6``
 on Debian / Ubuntu), which ``xclip`` already requires, and leaves the
 PRIMARY selection untouched. A missing libX11 raises
 ``ClipboardContentError`` naming ``libx11-6``, and a ``DISPLAY`` that cannot
-be opened raises one naming ``DISPLAY`` and its value. On Linux with neither
+be opened raises one naming ``DISPLAY`` and its value. The X11 child runs
+``clipboard/_x11_relinquish.py`` with ``sys.executable``, so it needs an
+ordinary Python installation: a frozen application (``sys.frozen`` set, as
+PyInstaller, cx_Freeze and py2exe do) or a package imported from an archive
+(the helper is not a file on disk) raises ``ClipboardContentError`` naming
+that condition and ``set_clipboard_clearer`` before any child starts; such
+apps install their own clearer with ``clipboard.set_clipboard_clearer``.
+The Wayland, macOS and Windows clearers are unaffected. On Linux with neither
 ``DISPLAY`` nor ``WAYLAND_DISPLAY``, ``clear()`` raises
 ``ClipboardContentError`` saying no desktop session is visible. Windows
 desktop calls user32 ``EmptyClipboard`` through ``ctypes`` (no

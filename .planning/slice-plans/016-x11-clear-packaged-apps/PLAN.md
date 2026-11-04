@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#x11-clear-packaged-apps
 **Source:** [Fail fast when packaged apps cannot run the X11 clear helper](../../seeds/SEED-001-clipboard-true-to-its-name.md#x11-clear-packaged-apps)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -48,7 +49,7 @@ target, so it is that slice's local proof.
 
 ### 1. X11 clear refuses frozen and archive-only runtimes
 Type: Behavior
-Status: planned
+Status: done
 Proof: rows 1–4 and README above; `./scripts/dev make check`.
 
 Behavior: Linux X11 session (`DISPLAY` only) in a frozen runtime, or with the
@@ -127,4 +128,10 @@ this review.
 
 ## Learnings
 
-_(none yet)_
+- Local gates run as `nix develop -c make …` (AGENTS.md); `./scripts/dev`
+  named above was reverted in `0b08521`, and the online dev shell now starts.
+- Slice 1 accepted proof: `nix develop -c uv run --locked --extra images pytest
+  tests/test_clear_x11.py tests/test_clear_wayland.py -q` (24 passed; 4 new
+  tests failed first) and `nix develop -c make check` (612 passed, 27
+  skipped). The guard message uses the plain helper path, not `repr`, so the
+  Windows matrix assertion `str(script) in message` holds.

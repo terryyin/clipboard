@@ -38,6 +38,24 @@ def _error(detail: str) -> ClipboardContentError:
     return ClipboardContentError(f"Linux X11 clipboard clear failed: {detail}")
 
 
+def _unlaunchable_reason() -> str | None:
+    """Why ``_relinquish_command()`` cannot run here, or ``None`` if it can.
+
+    A frozen app's ``sys.executable`` is the app itself, not a Python that
+    runs a script; a helper inside an archive (zip import) is no file a
+    child Python can open.
+    """
+    remedy = (
+        "the native X11 clear helper needs an ordinary Python installation; "
+        "install a clearer with clipboard.set_clipboard_clearer"
+    )
+    if getattr(sys, "frozen", False):
+        return f"this is a frozen application (sys.frozen is set); {remedy}"
+    if not _RELINQUISH_SCRIPT.is_file():
+        return f"the helper script {_RELINQUISH_SCRIPT} is not a file; {remedy}"
+    return None
+
+
 def _outcome(stdout: str) -> dict | None:
     lines = (stdout or "").strip().splitlines()
     if not lines:
@@ -71,8 +89,12 @@ def _x11_clipboard_clearer() -> None:
 
     A missing libX11 (naming ``libx11-6``), a ``DISPLAY`` that cannot be
     opened (naming ``DISPLAY`` and its value), a timeout, or any other child
-    failure raises ``ClipboardContentError``.
+    failure raises ``ClipboardContentError``. A frozen runtime or a helper
+    script that is not a file raises before any child starts.
     """
+    reason = _unlaunchable_reason()
+    if reason is not None:
+        raise _error(reason)
     display = _linux_x11_display() or ""
     try:
         result = subprocess.run(

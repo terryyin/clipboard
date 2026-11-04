@@ -130,3 +130,69 @@ def test_x11_clear_times_out_within_bound_on_a_hung_child(
     assert time.monotonic() - started < 5
     assert "timed out (limit 0.5s)" in str(excinfo.value)
     assert "DISPLAY=':0'" in str(excinfo.value)
+
+
+@pytest.fixture
+def frozen(monkeypatch):
+    """Pretend a freezer (PyInstaller, cx_Freeze, py2exe) built this app."""
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+
+
+def _assert_x11_guard_error(excinfo):
+    assert not isinstance(excinfo.value, clipboard.ClipboardImageError)
+    message = str(excinfo.value)
+    assert "X11" in message
+    assert "set_clipboard_clearer" in message
+
+
+@pytest.mark.parametrize(
+    "helper", ["bundled", "missing"], ids=["helper-file", "no-helper-file"]
+)
+def test_x11_clear_refuses_frozen_runtime_before_any_child(
+    x11_session, frozen, monkeypatch, tmp_path, helper
+):
+    child = x11_session()
+    if helper == "missing":
+        monkeypatch.setattr(
+            _clear_x11, "_RELINQUISH_SCRIPT", tmp_path / "gone" / "_x11_relinquish.py"
+        )
+    else:
+        assert _clear_x11._RELINQUISH_SCRIPT.is_file()
+    with pytest.raises(clipboard.ClipboardContentError) as excinfo:
+        clipboard.clear()
+    _assert_x11_guard_error(excinfo)
+    assert "frozen" in str(excinfo.value)
+    assert child.calls == []
+
+
+@pytest.mark.parametrize("where", ["zip", "nonexistent"])
+def test_x11_clear_refuses_helper_that_is_not_a_file(
+    x11_session, monkeypatch, tmp_path, where
+):
+    child = x11_session()
+    if where == "zip":
+        archive = tmp_path / "app.zip"
+        archive.write_bytes(b"PK\x05\x06" + b"\x00" * 18)
+        script = archive / "clipboard" / "_x11_relinquish.py"
+    else:
+        script = tmp_path / "clipboard" / "_x11_relinquish.py"
+    monkeypatch.setattr(_clear_x11, "_RELINQUISH_SCRIPT", script)
+    with pytest.raises(clipboard.ClipboardContentError) as excinfo:
+        clipboard.clear()
+    _assert_x11_guard_error(excinfo)
+    assert str(script) in str(excinfo.value)
+    assert child.calls == []
+
+
+def test_frozen_wayland_clear_still_runs_wl_copy(linux_clear_session, frozen):
+    helper = linux_clear_session(wayland="wayland-1")
+    assert clipboard.clear() is None
+    assert [args for args, _ in helper.calls] == [["wl-copy", "--clear"]]
+
+
+def test_frozen_x11_caller_clearer_is_used_without_guard(linux_clear_session, frozen):
+    linux_clear_session(display=":0")  # x11_child None: an X11 launch fails
+    calls = []
+    clipboard.set_clipboard_clearer(lambda: calls.append(None))
+    assert clipboard.clear() is None
+    assert calls == [None]

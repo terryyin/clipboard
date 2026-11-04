@@ -1,0 +1,61 @@
+# Source review: SEED-001#x11-clear-packaged-apps
+
+Launch: fresh general-purpose subagent (no conversation inheritance), 2026-11-04,
+coordinator Mana-chan. Input: only the story's Goal, Scope, Key examples and
+exclusions from `.planning/seeds/SEED-001-clipboard-true-to-its-name.md#x11-clear-packaged-apps`,
+with instructions to read no project files and change nothing. No plan, return,
+product or proof was supplied. Commitments below are its returned ids and text
+(lightly shortened, backticks removed).
+
+## Commitments
+
+| Id | Source commitment | Slice | Observation or obligation |
+| --- | --- | --- | --- |
+| G1 | On Linux X11, when a deployment cannot run the bounded libX11 clear helper, developers get an immediate, actionable ClipboardContentError from clipboard.clear() | slice 1 | observed: tests/test_clear_x11.py::test_x11_clear_refuses_frozen_runtime_before_any_child (ClipboardContentError naming X11, frozen, set_clipboard_clearer; child.calls == []); tests/test_clear_x11.py::test_x11_clear_refuses_helper_that_is_not_a_file (zip/nonexistent: error names X11, helper path, set_clipboard_clearer; no launch) |
+| G1.1 | This replaces a frozen app silently launching a second copy of itself (its sys.executable is the app, not Python) | slice 1 | observed: tests/test_clear_x11.py::test_x11_clear_refuses_frozen_runtime_before_any_child (ClipboardContentError naming X11, frozen, set_clipboard_clearer; child.calls == []) |
+| G1.2 | This replaces the caller waiting out the 10 s helper bound | slice 1 | observed: clipboard/_clear_x11.py _unlaunchable_reason checked first in _x11_clipboard_clearer, before subprocess.run; tests/test_clear_x11.py::test_x11_clear_refuses_frozen_runtime_before_any_child (ClipboardContentError naming X11, frozen, set_clipboard_clearer; child.calls == []) |
+| G2 | Maintainers get a packaging check proving that ordinary wheel and sdist installs ship a helper that actually launches | slice 2 | |
+| G3 | SEED-001#clear-clipboard's "a failed clear is reported" promise stays honest for packaged deployments | slice 2 | |
+| R1 | On the native Linux X11 clear path (DISPLAY only), clear() raises ClipboardContentError before starting any child process when R1a or R1b holds | slice 1 | observed: clipboard/_clear_x11.py _unlaunchable_reason checked first in _x11_clipboard_clearer, before subprocess.run; tests/test_clear_x11.py::test_x11_clear_refuses_frozen_runtime_before_any_child (ClipboardContentError naming X11, frozen, set_clipboard_clearer; child.calls == []); tests/test_clear_x11.py::test_x11_clear_refuses_helper_that_is_not_a_file (zip/nonexistent: error names X11, helper path, set_clipboard_clearer; no launch) |
+| R1a | Recognized frozen runtime: sys.frozen set and truthy; applies even when the helper source file is bundled | slice 1 | observed: tests/test_clear_x11.py::test_x11_clear_refuses_frozen_runtime_before_any_child (ClipboardContentError naming X11, frozen, set_clipboard_clearer; child.calls == []) [helper-file] param: still raises with bundled helper |
+| R1b | The helper script clipboard/_x11_relinquish.py is not a file on the filesystem (zipapp, zipimport, archive-only) | slice 1 | observed: tests/test_clear_x11.py::test_x11_clear_refuses_helper_that_is_not_a_file (zip/nonexistent: error names X11, helper path, set_clipboard_clearer; no launch) |
+| R2.1 | The message is X11-specific: it names Linux X11 clear, like the existing X11 clear failures | slice 1 | observed: clipboard/_clear_x11.py _error prefix 'Linux X11 clipboard clear failed:'; tests assert X11 |
+| R2.2 | The message says which of the two conditions applies | slice 1 | observed: clipboard/_clear_x11.py _unlaunchable_reason: 'frozen application (sys.frozen is set)' vs 'helper script <path> is not a file'; tests assert frozen / path |
+| R2.3 | The message points to set_clipboard_clearer | slice 1 | observed: _unlaunchable_reason remedy names clipboard.set_clipboard_clearer; _assert_x11_guard_error asserts it |
+| R3.1 | README X11 clear paragraph: native X11 clear needs an ordinary installation whose Python interpreter can run the shipped helper file | slice 1 | observed: README.rst X11 clear paragraph: needs an ordinary Python installation running clipboard/_x11_relinquish.py with sys.executable |
+| R3.2 | README: frozen and archive-only apps get the error | slice 1 | observed: README.rst X11 clear paragraph: frozen apps and archive imports raise ClipboardContentError before any child starts |
+| R4.1 | make test-package check runs locally and in the CI ubuntu-latest package job | slice 2 | |
+| R4.2 | It covers both the wheel and the sdist | slice 2 | |
+| R4.3 | It installs each distribution in isolation | slice 2 | |
+| R4.4 | It launches the installed helper, path resolved inside the isolated install, not the source tree | slice 2 | |
+| R4.5 | It launches the helper through the library's own launch command | slice 2 | |
+| R4.6 | It launches the helper with an unusable DISPLAY | slice 2 | |
+| R4.7 | It verifies exit status 3 | slice 2 | |
+| R4.8 | It verifies one JSON line whose failure is display or libx11 | slice 2 | |
+| R4.9 | It needs no desktop session or X server | slice 2 | |
+| R4.10 | It fails the target if a distribution is missing the helper or the helper cannot start | slice 2 | |
+| X1 | There is no restriction beyond the guard itself | slice 1 | observed: diff adds only the guard in clipboard/_clear_x11.py |
+| X1.1 | Rationale: launching sys.executable in a frozen app runs the app again; launching a missing script cannot clear anything | slice 1 | observed: clipboard/_clear_x11.py _unlaunchable_reason docstring states the rationale |
+| S1.1 | Ordinary installations keep the same command | slice 1 | observed: tests/test_clear_x11.py existing launch-command, failure-classification and hung-child timeout tests pass unchanged; _relinquish_command and _X11_CLEAR_TIMEOUT_S unchanged in diff |
+| S1.2 | Ordinary installations keep the same timeout | slice 1 | observed: tests/test_clear_x11.py existing launch-command, failure-classification and hung-child timeout tests pass unchanged; _relinquish_command and _X11_CLEAR_TIMEOUT_S unchanged in diff |
+| S1.3 | Ordinary installations keep the same classification | slice 1 | observed: tests/test_clear_x11.py existing launch-command, failure-classification and hung-child timeout tests pass unchanged; _relinquish_command and _X11_CLEAR_TIMEOUT_S unchanged in diff |
+| S1.4 | Ordinary installations keep the same messages | slice 1 | observed: tests/test_clear_x11.py existing launch-command, failure-classification and hung-child timeout tests pass unchanged; _relinquish_command and _X11_CLEAR_TIMEOUT_S unchanged in diff |
+| S2 | Out of scope: making frozen or archive-only X11 clear work | slice 1 | observed: diff touches only clipboard/_clear_x11.py, its tests and README; no extraction/fallback, other platforms, writers, flagless-frozen detection or probes changed |
+| S3 | Out of scope: guarding other platforms | slice 1 | observed: diff touches only clipboard/_clear_x11.py, its tests and README; no extraction/fallback, other platforms, writers, flagless-frozen detection or probes changed |
+| S4 | Out of scope: guarding other helper-launching writers | slice 1 | observed: diff touches only clipboard/_clear_x11.py, its tests and README; no extraction/fallback, other platforms, writers, flagless-frozen detection or probes changed |
+| S5 | Out of scope: recognizing frozen runtimes that set no sys.frozen; they still fail fast through R1b | slice 1 | observed: diff touches only clipboard/_clear_x11.py, its tests and README; no extraction/fallback, other platforms, writers, flagless-frozen detection or probes changed |
+| S6 | Out of scope: reorganizing the native clear probes | slice 1 | observed: diff touches only clipboard/_clear_x11.py, its tests and README; no extraction/fallback, other platforms, writers, flagless-frozen detection or probes changed |
+| S7 | The packaging check proves only that the installed helper launches and reports a failure; native clearing keeps its own gated proof | slice 2 | |
+| B1 | A caller-supplied clearer (set_clipboard_clearer) is not guarded | slice 1 | observed: tests/test_clear_x11.py::test_frozen_x11_caller_clearer_is_used_without_guard |
+| B2.1 | Wayland untouched, including on a frozen runtime | slice 1 | observed: tests/test_clear_x11.py::test_frozen_wayland_clear_still_runs_wl_copy |
+| B2.2 | macOS untouched, including on a frozen runtime | slice 1 | observed: clipboard/_clear.py _default_clipboard_clearer: guard reached only via the X11 branch (line 62); darwin/win32/no-session branches unchanged and covered by existing tests |
+| B2.3 | Windows untouched, including on a frozen runtime | slice 1 | observed: clipboard/_clear.py _default_clipboard_clearer: guard reached only via the X11 branch (line 62); darwin/win32/no-session branches unchanged and covered by existing tests |
+| B2.4 | The no-desktop-session path untouched, including on a frozen runtime | slice 1 | observed: clipboard/_clear.py _default_clipboard_clearer: guard reached only via the X11 branch (line 62); darwin/win32/no-session branches unchanged and covered by existing tests |
+| E1 | PyInstaller app on X11 (sys.frozen=True, DISPLAY=:0, no WAYLAND_DISPLAY) calls clear() -> ClipboardContentError naming Linux X11 clear, the frozen runtime and set_clipboard_clearer, at once; no child starts | slice 1 | observed: tests/test_clear_x11.py::test_x11_clear_refuses_frozen_runtime_before_any_child (ClipboardContentError naming X11, frozen, set_clipboard_clearer; child.calls == []) |
+| E2 | Zipapp install on X11 with the helper only inside the archive -> ClipboardContentError naming Linux X11 clear, the missing helper file and set_clipboard_clearer; no child starts | slice 1 | observed: tests/test_clear_x11.py::test_x11_clear_refuses_helper_that_is_not_a_file (zip/nonexistent: error names X11, helper path, set_clipboard_clearer; no launch) [zip] |
+| E3 | Ordinary virtualenv install on X11 -> bounded helper runs exactly as today (success or existing classified libx11-6 / DISPLAY / timeout errors) | slice 1 | observed: tests/test_clear_x11.py existing launch-command, classification and timeout tests pass unchanged |
+| E4a | Frozen app on Wayland calls clear() -> unaffected by the guard | slice 1 | observed: tests/test_clear_x11.py::test_frozen_wayland_clear_still_runs_wl_copy |
+| E4b | App with its own set_clipboard_clearer clearer calls clear() -> unaffected by the guard | slice 1 | observed: tests/test_clear_x11.py::test_frozen_x11_caller_clearer_is_used_without_guard |
+| E5a | make test-package on CI Linux, wheel then sdist: installed helper with unusable DISPLAY exits 3 printing failure display | slice 2 | |
+| E5b | make test-package on a macOS developer machine prints failure libx11 | slice 2 | |
+| E5c | A distribution missing the helper, or a helper that cannot start, fails the target | slice 2 | |
