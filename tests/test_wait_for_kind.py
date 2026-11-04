@@ -21,6 +21,7 @@ from fake_wait_clock import (
     assert_capped_pauses,
     inspector_installer,
     install_fake_clock,
+    no_plain_sleep,
 )
 
 import clipboard
@@ -119,7 +120,7 @@ def test_cancel_set_from_another_thread_ends_the_wait_promptly(
     monkeypatch, restore_clipboard_inspector
 ):
     """Real clock and Event: a 30 s interval is cut short by the setter."""
-    monkeypatch.setattr(_wait, "_sleep", _no_plain_sleep)
+    monkeypatch.setattr(_wait, "_sleep", no_plain_sleep)
     calls = []
 
     def empty() -> clipboard.ClipboardOfferSnapshot:
@@ -141,10 +142,6 @@ def test_cancel_set_from_another_thread_ends_the_wait_promptly(
     assert elapsed < 10
     assert len(calls) == 1
     assert threading.active_count() == before
-
-
-def _no_plain_sleep(seconds: float) -> None:
-    raise AssertionError(f"plain sleep({seconds}) used while cancel was given")
 
 
 def test_cancel_wait_is_the_pause_and_set_cancel_stops_observing(clock, inspector):

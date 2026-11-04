@@ -1,4 +1,5 @@
-"""Optional macOS native wait_for_kind probe (skipped unless enabled).
+"""Optional macOS native wait probe (skipped unless enabled): wait_for_kind and
+wait_for_text_change.
 
 Default pytest stays green without a desktop. Enable with (replaces the live
 clipboard):
@@ -26,6 +27,8 @@ PROBE = ROOT / "scripts" / "probe_macos_native_wait.py"
 STEPS = [
     "1_wait_for_text_returns_after_independent_pbcopy",
     "2_wait_for_html_with_nothing_copied_returns_none_at_timeout",
+    "3_wait_for_text_change_returns_independent_new_text",
+    "4_wait_for_text_change_ignores_clear_then_identical_recopy",
 ]
 
 pytestmark = [
@@ -37,7 +40,7 @@ pytestmark = [
 ]
 
 
-def test_macos_wait_for_kind_independent_producer_probe():
+def test_macos_wait_independent_producer_probe():
     result = subprocess.run(
         [sys.executable, str(PROBE)],
         cwd=ROOT,

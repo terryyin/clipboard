@@ -1,7 +1,9 @@
 """Bounded, cancellable waits over clipboard observations.
 
 One observation loop (``_observe_until``) owns the deadline, cancellation and
-sleep rules; each public wait supplies its observation and predicate. The
+sleep rules; each public wait supplies its observation and predicate (kind
+membership through ``inspect``; changed text against a baseline through
+``paste``, where the baseline is the loop's first observation). The
 loop runs in the calling thread on a monotonic clock, starts no thread or
 helper of its own, and lets every observation failure propagate at once.
 ``_monotonic`` and ``_sleep`` are module attributes so desktop-free tests can
@@ -16,13 +18,15 @@ import time
 from collections.abc import Callable
 from typing import Protocol, TypeVar, get_args
 
-from clipboard import _offer
+from clipboard import _offer, _text
 from clipboard._errors import ClipboardContentError
 from clipboard._offer import ClipboardKind, ClipboardOfferSnapshot
 
 _T = TypeVar("_T")
 
 _KINDS: tuple[str, ...] = get_args(ClipboardKind)
+
+_NO_BASELINE = object()
 
 _monotonic: Callable[[], float] = time.monotonic
 _sleep: Callable[[float], object] = time.sleep
@@ -133,6 +137,50 @@ def wait_for_kind(
     return _observe_until(
         _offer.inspect,
         lambda snapshot: kind in snapshot.kinds,
+        timeout=timeout,
+        interval=interval,
+        cancel=cancel,
+    )
+
+
+def wait_for_text_change(
+    *,
+    timeout: float,
+    interval: float = 0.5,
+    cancel: _Cancel | None = None,
+) -> str | None:
+    """Wait until the clipboard text changes; return the new text.
+
+    The first observation is one ``paste()``, kept as the baseline; each
+    later ``paste()`` is compared with it, and the first observed text that
+    is non-empty and differs from the baseline is returned. Clearing (``""``)
+    or an offer with no text is not a change, and the wait continues.
+    "Changed" compares observed values, not copy events: an identical recopy,
+    and values that come and go between two observations, are missed. Only
+    the baseline is kept and no text is logged.
+
+    ``timeout``, ``interval`` and ``cancel`` follow ``wait_for_kind``: the
+    baseline read is the wait's first observation and counts against the
+    deadline, so ``timeout=0`` reads only the baseline and returns ``None``.
+    Returns ``None`` at the deadline or once ``cancel`` is set (an
+    already-set ``cancel`` reads nothing), without another observation. Any
+    ``ClipboardContentError`` from ``paste()``, including the baseline read,
+    is raised at once and never retried. An invalid ``timeout``,
+    ``interval`` or ``cancel`` raises ``ClipboardContentError`` before the
+    clipboard is read.
+    """
+    baseline: object = _NO_BASELINE
+
+    def changed(text: str) -> bool:
+        nonlocal baseline
+        if baseline is _NO_BASELINE:
+            baseline = text
+            return False
+        return text != "" and text != baseline
+
+    return _observe_until(
+        _text.paste,
+        changed,
         timeout=timeout,
         interval=interval,
         cancel=cancel,

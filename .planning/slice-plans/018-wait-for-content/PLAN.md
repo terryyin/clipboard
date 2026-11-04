@@ -136,7 +136,7 @@ with the measured observation time.
 
 ### 2. Wait for changed text on the same bounded loop
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests through public `clipboard.wait_for_text_change`
 in `tests/test_wait_for_text_change.py` with an injected text reader and the
 same clock / cancel fakes (examples 3, 4, 5–9 for the change wait); the
@@ -155,9 +155,23 @@ in slice 1 through the same loop.
 README: the section gains `wait_for_text_change`, the baseline rule and the
 missed-change limits.
 
+Accepted proof (2026-11-04): `nix develop -c make check` 703 passed / 28
+skipped (`tests/test_wait_for_text_change.py`,
+`tests/test_wait_for_text_change_failures.py`; slice 1 wait tests unchanged
+and green); `nix develop -c make test-package` pass. `wait_for_text_change`
+reuses `_observe_until` unchanged with a stateful predicate whose first
+observation is the baseline (counts against the deadline; `timeout=0` reads
+only it; an already-set cancel reads nothing). The macOS probe gained steps
+3–4 but did not run: the screen stayed locked (`IOConsoleLocked` true), so
+G1 and commitment 8.2.1 move to slice 3.
+
 ### 3. Native wait evidence on Linux X11, Linux Wayland and Windows
 Type: Behavior
 Status: planned
+Received: G1 — run the four-step macOS probe
+(`CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked pytest
+tests/test_wait_native_macos.py -q`) on an unlocked session and update the
+README macOS Evidence entry from "not yet verified".
 Proof: new gated probes `scripts/probe_linux_x11_native_wait.py`,
 `scripts/probe_linux_wayland_native_wait.py`,
 `scripts/probe_windows_native_wait.py` with wrappers
@@ -199,7 +213,7 @@ its early probe. This review identified no remaining slice-specific concern.
 
 ## Story obligations
 
-### G1. macOS native wait_for_kind probe not yet observed on an unlocked session
+### G1. macOS native wait probe not yet observed on an unlocked session (first reported in slice 1)
 Reported: slice 1 — "The gated macOS wait probe stopped at its evidence limit (exit 2) because the screen was locked; no native macOS wait_for_kind observation exists yet."
 Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) on macOS, Windows, Linux X11 (Xvfb + `xclip`) and Linux Wayland (Sway + wl-clipboard) start a wait, then copy with an independent producer"
-Disposition: receiving slice 2
+Disposition: receiving slice 3

@@ -163,6 +163,18 @@ assert clipboard.wait_for_kind("image", timeout=0) is offer
 clipboard.set_clipboard_inspector(None)
 assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
 """,
+    "wait_for_text_change": """\
+import clipboard
+
+assert callable(clipboard.wait_for_text_change)
+assert "wait_for_text_change" in clipboard.__all__
+
+texts = iter(["old", "new"])
+clipboard.set_text_clipboard_reader(lambda: next(texts))
+assert clipboard.wait_for_text_change(timeout=5, interval=0.01) == "new"
+clipboard.set_text_clipboard_reader(None)
+assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
+""",
 }
 
 

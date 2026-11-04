@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Gated probe: macOS Aqua ``wait_for_kind`` against an independent producer.
+"""Gated probe: macOS Aqua ``wait_for_kind`` / ``wait_for_text_change``
+against an independent producer.
 
 Setup: ``clipboard.clear()`` in this process; an independent JXA
 ``NSPasteboard types`` listing must then be empty.
@@ -20,6 +21,20 @@ with nothing copied returns ``None`` no earlier than the timeout and no later
 than the timeout plus one observation (plus 0.1 s of process slack), with no
 observation started after the deadline.
 
+Step 3: an independent ``pbcopy`` copies the old text, then a child
+``wait_for_text_change(timeout=20)`` reads it as its baseline and announces
+that read; about 1 s later an independent ``pbcopy`` copies the new text.
+Holds when the baseline observation saw the old text, the child returned the
+new text, and it returned after the copy within the step 1 latency bound.
+
+Step 4: an independent ``pbcopy`` copies the old text, a child
+``wait_for_text_change(timeout=3)`` reads it as its baseline, then
+``clear()`` empties the pasteboard and about 1 s later an independent
+``pbcopy`` copies the identical old text again. Holds when an observation saw
+the cleared pasteboard (``""``), a later one saw the old text again, and the
+wait returned ``None`` within the step 2 timeout bound, with no observation
+started after the deadline (clearing and identical recopy are not changes).
+
 Prints one JSON object on stdout. Exit 0 when every step holds, 1 naming the
 failed steps, and 2 with ``evidence_limit`` off a macOS Aqua session
 (not darwin, no console session, or a locked screen; the wrapper fails on it,
@@ -35,19 +50,25 @@ import time
 
 from macos_native_clear_support import list_types_independent
 from macos_native_wait_support import (
+    INTERVAL_S,
+    ended_at_timeout,
     finish_child,
     pbcopy_independent,
+    returned_after_copy,
     session_state,
-    start_child,
+    start_kind_child,
+    start_text_change_child,
 )
 from native_probe_common import macos_environment
 
 WAIT_TIMEOUT_S = 20
 NONE_TIMEOUT_S = 1
-INTERVAL_S = 0.5
 COPY_DELAY_S = 1.0
-SLACK_S = 0.1
 PRODUCED_TEXT = "wait probe text"
+CHANGE_TIMEOUT_S = 20
+RECOPY_TIMEOUT_S = 3
+OLD_TEXT = "wait probe old text"
+NEW_TEXT = "wait probe new text"
 
 
 def report(**fields) -> None:
@@ -68,25 +89,17 @@ def _cleared(list_types) -> dict:
 
 def _text_appears_step(list_types) -> dict:
     setup = _cleared(list_types)
-    child = start_child("text", WAIT_TIMEOUT_S)
+    child = start_kind_child("text", WAIT_TIMEOUT_S)
     time.sleep(COPY_DELAY_S)
     copied = pbcopy_independent(PRODUCED_TEXT)
     run = finish_child(child, WAIT_TIMEOUT_S + 30)
-    outcome = run.get("outcome") or {}
-    snapshot = outcome.get("snapshot") or {}
-    observations = outcome.get("observations", [])
-    longest = max((o["duration_s"] for o in observations), default=0.0)
-    latency = outcome.get("finished_at", float("inf")) - copied["finished_at"]
+    timely, observations, evidence = returned_after_copy(run, copied, WAIT_TIMEOUT_S)
+    snapshot = (run.get("outcome") or {}).get("snapshot")
     ok = (
         setup["empty"]
-        and copied["returncode"] == 0
-        and run.get("returncode") == 0
-        and outcome.get("raised") is None
-        and "text" in snapshot.get("kinds", [])
+        and timely
+        and "text" in (snapshot or {}).get("kinds", [])
         and any("text" not in o["kinds"] for o in observations[:-1])
-        and outcome["finished_at"] > copied["started_at"]
-        and outcome["elapsed_s"] < WAIT_TIMEOUT_S
-        and latency <= INTERVAL_S + 2 * longest + SLACK_S
     )
     return step(
         "1_wait_for_text_returns_after_independent_pbcopy",
@@ -94,43 +107,82 @@ def _text_appears_step(list_types) -> dict:
         setup=setup,
         producer=copied,
         child=run,
-        snapshot=outcome.get("snapshot"),
-        elapsed_s=outcome.get("elapsed_s"),
-        latency_after_copy_s=latency,
-        observation_count=len(observations),
-        longest_observation_s=longest,
+        snapshot=snapshot,
+        **evidence,
     )
 
 
 def _nothing_copied_step(list_types) -> dict:
     setup = _cleared(list_types)
-    child = start_child("html", NONE_TIMEOUT_S)
+    child = start_kind_child("html", NONE_TIMEOUT_S)
     run = finish_child(child, NONE_TIMEOUT_S + 30)
-    outcome = run.get("outcome") or {}
-    observations = outcome.get("observations", [])
-    longest = max((o["duration_s"] for o in observations), default=0.0)
-    elapsed = outcome.get("elapsed_s", float("inf"))
-    deadline = outcome.get("deadline", float("-inf"))
-    ok = (
-        setup["empty"]
-        and run.get("returncode") == 0
-        and outcome.get("raised") is None
-        and "snapshot" in outcome
-        and outcome["snapshot"] is None
-        and bool(observations)
-        and all(o["started_at"] <= deadline for o in observations)
-        and NONE_TIMEOUT_S <= elapsed <= NONE_TIMEOUT_S + longest + SLACK_S
-    )
+    bounded, _, evidence = ended_at_timeout(run, "snapshot", NONE_TIMEOUT_S)
     return step(
         "2_wait_for_html_with_nothing_copied_returns_none_at_timeout",
-        ok,
+        setup["empty"] and bounded,
         setup=setup,
         child=run,
-        result=outcome.get("snapshot", "missing"),
-        elapsed_s=elapsed,
-        timeout_s=NONE_TIMEOUT_S,
-        observation_count=len(observations),
-        longest_observation_s=longest,
+        **evidence,
+    )
+
+
+def _text_change_step() -> dict:
+    baseline = pbcopy_independent(OLD_TEXT)
+    child = start_text_change_child(CHANGE_TIMEOUT_S)
+    time.sleep(COPY_DELAY_S)
+    copied = pbcopy_independent(NEW_TEXT)
+    run = finish_child(child, CHANGE_TIMEOUT_S + 30)
+    timely, observations, evidence = returned_after_copy(run, copied, CHANGE_TIMEOUT_S)
+    texts = [o["text"] for o in observations]
+    text = (run.get("outcome") or {}).get("text", "missing")
+    ok = (
+        baseline["returncode"] == 0
+        and timely
+        and texts[:1] == [OLD_TEXT]
+        and text == NEW_TEXT
+    )
+    return step(
+        "3_wait_for_text_change_returns_independent_new_text",
+        ok,
+        baseline_producer=baseline,
+        producer=copied,
+        child=run,
+        text=text,
+        observed_texts=texts,
+        **evidence,
+    )
+
+
+def _clear_then_recopy_step(list_types) -> dict:
+    import clipboard
+
+    baseline = pbcopy_independent(OLD_TEXT)
+    child = start_text_change_child(RECOPY_TIMEOUT_S)
+    cleared = _cleared(list_types)
+    time.sleep(COPY_DELAY_S)
+    recopied = pbcopy_independent(OLD_TEXT)
+    run = finish_child(child, RECOPY_TIMEOUT_S + 30)
+    bounded, observations, evidence = ended_at_timeout(run, "text", RECOPY_TIMEOUT_S)
+    texts = [o["text"] for o in observations]
+    first_clear = texts.index("") if "" in texts else len(texts)
+    ok = (
+        baseline["returncode"] == 0
+        and cleared["empty"]
+        and recopied["returncode"] == 0
+        and bounded
+        and texts[:1] == [OLD_TEXT]
+        and OLD_TEXT in texts[first_clear + 1 :]
+    )
+    clipboard.clear()
+    return step(
+        "4_wait_for_text_change_ignores_clear_then_identical_recopy",
+        ok,
+        baseline_producer=baseline,
+        clear=cleared,
+        producer=recopied,
+        child=run,
+        observed_texts=texts,
+        **evidence,
     )
 
 
@@ -155,16 +207,24 @@ def main() -> int:
             session=session,
         )
         return 2
-    for reset in (clipboard.set_clipboard_inspector, clipboard.set_clipboard_clearer):
+    for reset in (
+        clipboard.set_clipboard_inspector,
+        clipboard.set_clipboard_clearer,
+        clipboard.set_text_clipboard_reader,
+    ):
         reset(None)
     steps = [
         _text_appears_step(list_types_independent),
         _nothing_copied_step(list_types_independent),
+        _text_change_step(),
+        _clear_then_recopy_step(list_types_independent),
     ]
     failed = [s["step"] for s in steps if not s["ok"]]
     env = macos_environment(
         producer="pbcopy (independent process, LANG=en_US.UTF-8)",
-        library_under_test="clipboard.wait_for_kind in a child Python",
+        library_under_test=(
+            "clipboard.wait_for_kind / clipboard.wait_for_text_change in a child Python"
+        ),
         type_consumer="osascript -l JavaScript NSPasteboard.generalPasteboard.types",
         helper="osascript + pbcopy (macOS built-in)",
     )

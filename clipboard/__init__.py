@@ -33,7 +33,7 @@ from clipboard._text import (
     set_text_clipboard_reader,
     set_text_clipboard_writer,
 )
-from clipboard._wait import wait_for_kind
+from clipboard._wait import wait_for_kind, wait_for_text_change
 
 VERSION = "0.0.5"
 
@@ -64,6 +64,7 @@ __all__ = [
     "set_text_clipboard_reader",
     "set_text_clipboard_writer",
     "wait_for_kind",
+    "wait_for_text_change",
 ]
 
 

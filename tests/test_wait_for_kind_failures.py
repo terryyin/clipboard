@@ -6,15 +6,15 @@ raise before the clipboard is observed.
 
 from __future__ import annotations
 
-import math
-
 import pytest
 from fake_wait_clock import (
     EMPTY,
+    INVALID_WAIT_OPTIONS,
     START,
     TEXT,
     inspector_installer,
     install_fake_clock,
+    option_id,
 )
 
 import clipboard
@@ -101,41 +101,14 @@ def test_platform_without_inspect_raises_naming_it_at_once(
     assert clock.sleeps == []
 
 
-class _OnlyIsSet:
-    def is_set(self) -> bool:
-        return False
+_INVALID_KINDS = ["rtf", "TEXT", "", None, ["text"]]
 
 
 @pytest.mark.parametrize(
     ("named", "kind", "options"),
-    [
-        ("kind", "rtf", {"timeout": 1}),
-        ("kind", "TEXT", {"timeout": 1}),
-        ("kind", "", {"timeout": 1}),
-        ("kind", None, {"timeout": 1}),
-        ("kind", ["text"], {"timeout": 1}),
-        ("timeout", "text", {"timeout": -1}),
-        ("timeout", "text", {"timeout": -0.001}),
-        ("timeout", "text", {"timeout": math.nan}),
-        ("timeout", "text", {"timeout": math.inf}),
-        ("timeout", "text", {"timeout": -math.inf}),
-        ("timeout", "text", {"timeout": True}),
-        ("timeout", "text", {"timeout": False}),
-        ("timeout", "text", {"timeout": "1"}),
-        ("timeout", "text", {"timeout": None}),
-        ("interval", "text", {"timeout": 1, "interval": 0}),
-        ("interval", "text", {"timeout": 1, "interval": 0.0}),
-        ("interval", "text", {"timeout": 1, "interval": -0.5}),
-        ("interval", "text", {"timeout": 1, "interval": math.nan}),
-        ("interval", "text", {"timeout": 1, "interval": math.inf}),
-        ("interval", "text", {"timeout": 1, "interval": True}),
-        ("interval", "text", {"timeout": 1, "interval": "0.5"}),
-        ("interval", "text", {"timeout": 1, "interval": None}),
-        ("cancel", "text", {"timeout": 1, "cancel": object()}),
-        ("cancel", "text", {"timeout": 1, "cancel": _OnlyIsSet()}),
-        ("cancel", "text", {"timeout": 1, "cancel": True}),
-    ],
-    ids=lambda value: repr(value) if not isinstance(value, dict) else None,
+    [("kind", kind, {"timeout": 1}) for kind in _INVALID_KINDS]
+    + [(named, "text", options) for named, options in INVALID_WAIT_OPTIONS],
+    ids=option_id,
 )
 def test_invalid_argument_raises_before_any_observation(
     clock, inspector, named, kind, options
