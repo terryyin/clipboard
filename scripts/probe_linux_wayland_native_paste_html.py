@@ -21,15 +21,14 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
-import sys
 import tempfile
 import time
 from pathlib import Path
 
+from linux_wayland_native_text_support import evidence_limit
 from native_probe_paste_html import FRAGMENT, PLAIN_TEXT, child_paste_html, paste_html
-from native_probe_wayland import COMPOSITOR, sway_running, wayland_paste_environment
+from native_probe_wayland import COMPOSITOR, wayland_paste_environment
 from stdlib_png import solid_red_png_bytes
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -184,18 +183,9 @@ def _probe_failures(runtime_dir: Path) -> dict:
 
 
 def main() -> int:
-    if not sys.platform.startswith("linux"):
-        return _evidence_limit(f"not Linux (platform {sys.platform!r})")
-    if not os.environ.get("WAYLAND_DISPLAY"):
-        return _evidence_limit("no Wayland session (WAYLAND_DISPLAY unset)")
-    if shutil.which("wl-paste") is None or shutil.which("wl-copy") is None:
-        return _evidence_limit(
-            "wl-paste/wl-copy not found on PATH (apt install wl-clipboard)"
-        )
-    if not sway_running():
-        return _evidence_limit(
-            f"no running {COMPOSITOR}; this probe proves the named compositor only"
-        )
+    reason = evidence_limit()
+    if reason is not None:
+        return _evidence_limit(reason)
     try:
         html = _probe_html()
         absent = _probe_absent()

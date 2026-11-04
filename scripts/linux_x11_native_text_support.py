@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import shutil
 import signal
 import subprocess
 import sys
@@ -223,3 +224,14 @@ def environment(selections: str = "clipboard") -> dict:
 def report(selections: str = "clipboard", **fields) -> None:
     fields.setdefault("environment", environment(selections))
     print(json.dumps(fields, indent=2, sort_keys=True, ensure_ascii=False))
+
+
+def evidence_limit() -> str | None:
+    """Why this host cannot give X11-only text evidence, or ``None`` when it can."""
+    if not sys.platform.startswith("linux"):
+        return f"not Linux (platform {sys.platform!r})"
+    if not os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+        return "needs an X11-only session (DISPLAY set, no WAYLAND_DISPLAY)"
+    if shutil.which("xclip") is None:
+        return "xclip not found on PATH (apt install xclip)"
+    return None

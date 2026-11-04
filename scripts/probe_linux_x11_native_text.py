@@ -18,9 +18,7 @@ the CLIPBOARD (kills every xclip owner). Not run by default pytest.
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
-import sys
 
 from linux_x11_native_text_support import (
     BOUND_S,
@@ -30,6 +28,7 @@ from linux_x11_native_text_support import (
     child,
     dead_display,
     errors_within_bound,
+    evidence_limit,
     own,
     paste_now,
     record,
@@ -151,13 +150,7 @@ def _probe(observed: dict) -> list[dict]:
 
 
 def main() -> int:
-    reason = None
-    if not sys.platform.startswith("linux"):
-        reason = f"not Linux (platform {sys.platform!r})"
-    elif not os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
-        reason = "needs an X11-only session (DISPLAY set, no WAYLAND_DISPLAY)"
-    elif shutil.which("xclip") is None:
-        reason = "xclip not found on PATH (apt install xclip)"
+    reason = evidence_limit()
     if reason is not None:
         report(ok=False, verified=False, evidence_limit=True, reason=reason)
         return 2

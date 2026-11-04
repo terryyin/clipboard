@@ -24,13 +24,13 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 
 from linux_x11_native_text_support import (
     BOUND_S,
     SLACK_S,
     child,
+    evidence_limit,
     own,
     record,
     release_all,
@@ -163,14 +163,8 @@ def _probe(observed: dict, xsel_dir: str) -> list[dict]:
 
 
 def main() -> int:
-    reason = None
-    if not sys.platform.startswith("linux"):
-        reason = f"not Linux (platform {sys.platform!r})"
-    elif not os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
-        reason = "needs an X11-only session (DISPLAY set, no WAYLAND_DISPLAY)"
-    elif shutil.which("xclip") is None:
-        reason = "xclip not found on PATH (apt install xclip)"
-    elif shutil.which("xsel") is None:
+    reason = evidence_limit()
+    if reason is None and shutil.which("xsel") is None:
         reason = "xsel not found on PATH (apt install xsel; example 8 needs it)"
     if reason is not None:
         report(SELECTIONS, ok=False, verified=False, evidence_limit=True, reason=reason)

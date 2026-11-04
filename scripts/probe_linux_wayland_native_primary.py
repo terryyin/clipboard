@@ -11,8 +11,8 @@ SEED-001#primary-selection example 5 (examples 1–4 and 9 on Sway): a fresh,
 unselected PRIMARY reads ``""``; different PRIMARY / CLIPBOARD offers are
 read apart; ``copy_primary`` leaves CLIPBOARD; ``copy`` leaves PRIMARY;
 rejected text leaves PRIMARY; ``copy_primary("")`` leaves PRIMARY reading
-``""``; a ``PATH`` without ``wl-paste`` raises naming wl-clipboard within the
-bound.
+``""`` (empty-string write); a ``PATH`` without ``wl-paste`` raises naming
+wl-clipboard within the bound (example 8 analogue).
 
 Prints one JSON object on stdout. Exit 0 when every step holds, 1 naming the
 failed steps, and 2 with ``evidence_limit`` when no Wayland session, no
@@ -169,7 +169,7 @@ def _probe(observed: dict) -> list[dict]:
     reader = child([["paste_primary"]], env)
     steps.append(
         step(
-            "5_child_copy_primary_empty_reads_empty",
+            "empty_copy_primary_reads_empty",
             _ops_ok(kid)
             and primary["returncode"] == 0
             and primary["text"] == ""
@@ -190,7 +190,7 @@ def _probe(observed: dict) -> list[dict]:
     hint = "apt-get install wl-clipboard"
     steps.append(
         step(
-            "7_path_without_wl_paste_names_wl_clipboard_within_bound",
+            "8_path_without_wl_paste_names_wl_clipboard_within_bound",
             failures_within_bound(kid, {"paste_primary": hint, "copy_primary": hint})
             and all("primary selection" in op["error"] for op in kid["ops"])
             and primary["text"] == ""

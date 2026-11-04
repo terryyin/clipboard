@@ -137,8 +137,9 @@ def test_line_endings_are_untranslated(x11):
 
 @pytest.mark.parametrize("bad", ["a\x00b", "\ud800"])
 def test_rejected_text_never_starts_xclip_and_primary_stays(x11, bad):
-    with pytest.raises(clipboard.ClipboardContentError):
+    with pytest.raises(clipboard.ClipboardContentError) as caught:
         clipboard.copy_primary(bad)
+    assert "primary selection" in str(caught.value)
 
     assert x11.popens == []
     assert x11.calls == []

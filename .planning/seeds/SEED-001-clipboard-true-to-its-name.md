@@ -167,64 +167,6 @@ correction of SEED-001#wait-for-content.
 3. Any `scripts/probe_*_native_wait.py` run off its desktop (or on a locked
    macOS session) → exits 2 with `evidence_limit`, as before the split.
 
-<a id="primary-selection-polish"></a>
-
-### Correct PRIMARY wording and probe evidence left by the primary-selection execution
-
-**Identity:** SEED-001#primary-selection-polish
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/020-primary-selection-polish/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"cb28a9be01c98c6033700fccb664e97498594b3130782acbd1d93403c3a2abfa","plan":"1d890ecd55c73bd89bbdbd55a462b1cd6c60597d4df77f5dfc6f4af04336cdd5"}}
-```
-
-**Goal:** Python users calling `copy_primary` / `paste_primary` get error
-messages that always name the primary selection (never "clipboard"), and
-maintainers get native PRIMARY evidence whose step names, run ids and test
-documentation match the story examples, correcting residue from the
-SEED-001#primary-selection execution.
-
-**Scope:**
-
-- *Required behavior.* `copy_primary` input-rejection messages name the
-  primary selection (never "clipboard"); `copy`'s rejection wording stays
-  "clipboard". With both `DISPLAY` and `WAYLAND_DISPLAY` set, incomplete
-  wl-clipboard, no `xclip`, and a pyperclip owner present, PRIMARY calls
-  name both `xclip` and wl-clipboard and run nothing.
-- *Evidence and docs.* Wayland PRIMARY probe and wrapper step names match
-  the primary-selection story's example numbers; the Wayland PRIMARY README
-  Evidence bullet cites CI run 41803370471; PRIMARY Wayland failure tests
-  and the wl-clipboard fake describe Sway `primary_selection disabled` as
-  the recorded conflicting observations (as README already does), not as
-  settled fact that writes are dropped; X11 PRIMARY/text/clear probes share
-  one `evidence_limit` helper, and the remaining Wayland clear/paste_html
-  probes use the existing `evidence_limit()`.
-- *Scope limits.* No behavior other than error text; no CLIPBOARD/pyperclip
-  fallback; probe wrappers still assert only exit, `ok`, ordered steps and
-  floors; evidence-limit exit 2 / CI failure outcomes stay the same.
-- *Plan:* [020-primary-selection-polish](../slice-plans/020-primary-selection-polish/PLAN.md).
-
-**Key examples:**
-
-1. Linux PRIMARY in use → `copy_primary("a\x00b")` → `ClipboardContentError`
-   naming "primary selection" (not "clipboard"); the earlier PRIMARY offer
-   is still readable. The same input to `copy` still names "clipboard".
-2. Linux with `DISPLAY` and `WAYLAND_DISPLAY` set, `PATH` carrying only
-   `xsel` (no `xclip`, no `wl-copy` / `wl-paste`) → `copy_primary` /
-   `paste_primary` raise naming both `xclip` and wl-clipboard; neither
-   PRIMARY nor CLIPBOARD is read or replaced.
-3. Wayland PRIMARY probe and its wrapper → step ids match the
-   primary-selection examples (empty-string write; PATH without `wl-paste`),
-   not the misnumbered `5_…` / `7_…` labels left from CLIPBOARD text probes.
-4. README Wayland PRIMARY Evidence bullet → cites gated job run
-   41803370471 beside the X11 bullet's 41799207621.
-5. `tests/test_primary_wayland_failures.py` and
-   `tests/fake_wl_clipboard_text.py` → describe Sway
-   `primary_selection disabled` as conflicting observations (one drop, one
-   write-through), matching README; they do not state the drop as fact.
-6. Off an X11-only or Wayland session → each of the three X11
-   text/clear/PRIMARY probes and the remaining Wayland clear/paste_html
-   probes still exits 2 with `evidence_limit` from the shared helper for
-   that desktop.
-
 ## Ordering and Scope Reduction
 
 The global queue follows the maintainer's images/rich-content priority: image

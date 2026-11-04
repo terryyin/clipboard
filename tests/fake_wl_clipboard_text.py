@@ -11,10 +11,11 @@ waiting on its foreground part sets (or clears) its selection, exits with a
 given status and stderr, or stalls past the bound.
 ``primary_unsupported`` makes every ``--primary`` run report wl-clipboard
 2.2.1's unsupported wording (exit 1); ``drops_primary`` makes
-``wl-copy --primary`` exit 0 without changing PRIMARY (Sway with
-``primary_selection disabled``). ``install_fake_wayland`` routes
-``subprocess`` to a new fake in a Wayland-only text session, so the public
-``copy`` / ``paste`` (and ``copy_primary`` / ``paste_primary``) reach it.
+``wl-copy --primary`` exit 0 without changing PRIMARY (one recorded Sway
+``primary_selection disabled`` observation; another saw write-through).
+``install_fake_wayland`` routes ``subprocess`` to a new fake in a
+Wayland-only text session, so the public ``copy`` / ``paste`` (and
+``copy_primary`` / ``paste_primary``) reach it.
 """
 
 import subprocess

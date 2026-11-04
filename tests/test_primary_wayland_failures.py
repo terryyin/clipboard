@@ -1,10 +1,11 @@
 """Desktop-free failure and bound tests for Wayland ``copy_primary`` /
 ``paste_primary``.
 
-The unsupported wording is wl-clipboard 2.2.1's own; Sway with
-``primary_selection disabled`` drops a write while ``wl-copy --primary``
-exits 0 (``drops_primary``). Every failure names the primary selection and
-leaves CLIPBOARD neither read nor changed.
+The unsupported wording is wl-clipboard 2.2.1's own. Sway with
+``primary_selection disabled`` has recorded conflicting observations (one
+drop while ``wl-copy --primary`` exits 0, one write-through); ``drops_primary``
+stands in for the drop observation. Every failure names the primary
+selection and leaves CLIPBOARD neither read nor changed.
 """
 
 import subprocess
