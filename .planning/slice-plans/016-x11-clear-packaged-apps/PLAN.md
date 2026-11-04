@@ -61,7 +61,7 @@ wording (AGENTS.md test rule).
 
 ### 2. Packaging check launches the installed X11 clear helper
 Type: Behavior
-Status: planned
+Status: done
 Proof: row 5 above; `./scripts/dev make test-package`; CI package job.
 
 Behavior: built wheel and sdist → `make test-package` → each isolated install
@@ -174,5 +174,4 @@ this review.
 ### O1. CI Linux package job reports libx11, not display
 Reported: slice 2 — "make test-package was observed only on macOS (failure libx11); the ubuntu-latest package job running the new check needs the published revision."
 Story clause: "on the CI Linux runner, wheel then sdist"
-Disposition: return
-Commitment: E5a
+Disposition: proved by slice 2: CI run 41776839169 (a7c6e5a) 'Lint and package (Nix)' on ubuntu-latest: make test-package printed 'Installed X11 clear helper /home/runner/.cache/uv/archive-v0/.../site-packages/clipboard/_x11_relinquish.py launched: failure display' for wheel and sdist; check requires display when the Linux shell supplies libX11
