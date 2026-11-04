@@ -143,12 +143,20 @@ this review.
   (`~/.cache/uv/archive-v0/.../site-packages`), not under `sys.prefix`, so
   the installed-helper check matches a `site-packages` entry. The Linux
   `display` outcome awaits the CI package job (obligation O1).
+- CI run 41773836492 (`e600e48`, all jobs green): the `ubuntu-latest`
+  "Lint and package (Nix)" job printed `failure libx11` for both
+  distributions, not `display`. The Nix dev shell (`flake.nix` packages:
+  python313, uv, gnumake, actionlint) exposes no libX11 to its Python, so
+  `load_libx11` finds none; premise 3's "expected to be `display`" on CI does
+  not hold. E5a stays open (O1) awaiting the developer's choice: add libX11
+  to the Linux dev shell so CI exercises `display`, or amend the story's
+  example to accept `libx11` in the Nix package job.
 
 
 ## Story obligations
 
-### O1. CI Linux package job not yet observed
+### O1. CI Linux package job reports libx11, not display
 Reported: slice 2 — "make test-package was observed only on macOS (failure libx11); the ubuntu-latest package job running the new check needs the published revision."
 Story clause: "on the CI Linux runner, wheel then sdist"
 Disposition: return
-Commitment: G2, R4.1, E5a
+Commitment: E5a
