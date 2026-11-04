@@ -75,3 +75,13 @@ module.
   CI run 41932201965 wait jobs
   `native-linux-x11-wait` / `native-linux-wayland-wait` /
   `native-windows-wait` success with the same four step names.
+
+## Execution complete
+
+Product advice: Outcome matches the story — harness and timing live in
+`scripts/native_wait_harness.py` (243 lines) and the four steps, runner and
+report in `scripts/native_wait_support.py` (161 lines); probe step names,
+pass conditions, report fields, gates, floors, CI jobs and the wait API are
+unchanged. No product correction or backlog change; macOS gated evidence
+remains with `SEED-001#macos-native-wait-evidence`. Residual note: harness
+sits at 243/250, so future harness edits still need the size check.

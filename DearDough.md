@@ -399,6 +399,13 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Evidence: slice-2 publish 15252dd with `progress: true` (obligation G3, Wayland native proof CI-owned); coordinator observed CI with `gh run list/view` (run 41803370471) rather than an Open Dough command; records-only done commit 0abf1a4
   - Observed effect: One extra publication and CI run solely to close G3 and flip slice 2 to done; recurrence of the same path
   - Inference: Same unnamed observation step as the first occurrence; the coordinator again had to choose its own read-only CI check
+- Execution: SEED-001#split-native-wait-support
+  - Timestamp: 2026-11-05T06:14:28+07:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.82
+  - Evidence: sole Structure slice published a50e0f6 with `progress: true` for E2 (branch-push `native-*-wait` jobs); plan Status remains `planned`; retrospective started while observer `/tmp/dough-ci-501/watch-BKyy1N` still pending overall (wait jobs later green on run 41932201965); no named read-only observation command before the expected records-only done flip
+  - Observed effect: Implementation delivered under `progress: true`; slice done transition and E2 source-review cell still deferred to a later records-only commit after CI observation, same unnamed-step gap as prior rows (Structure rather than Behavior)
+  - Inference: Recurrence of the unnamed observation step for a final CI-owned proof slice; Structure vs Behavior does not change the gap
 
 ## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
 
