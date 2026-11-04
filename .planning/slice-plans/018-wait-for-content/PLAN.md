@@ -167,7 +167,7 @@ G1 and commitment 8.2.1 move to slice 3.
 
 ### 3. Native wait evidence on Linux X11, Linux Wayland and Windows
 Type: Behavior
-Status: planned
+Status: done
 Progress (2026-11-04): probes `scripts/probe_{linux_x11,linux_wayland,windows}_native_wait.py`
 on shared `scripts/native_wait_support.py` (macOS probe now uses it too),
 wrappers `tests/test_wait_native_{linux_x11,linux_wayland,windows}.py`, CI jobs
@@ -181,6 +181,10 @@ Early probe settled (2026-11-04): CI run 41798644132 (bf48f2c) — native
 Windows; all four steps passed on each desktop (`CI passed` success). README
 Evidence and the AGENTS.md summary now record it. Remaining: G1 only (macOS
 run needs an unlocked session; `IOConsoleLocked` still true).
+Developer decision (2026-11-04): the macOS native run moved to the new
+backlog story SEED-001#macos-native-wait-evidence (the developer is away from
+the Mac); G1 is `owner changed` and the story's Proof bullet records the
+move. The fresh source review replaced the first one.
 Received: G1 — run the four-step macOS probe
 (`CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked pytest
 tests/test_wait_native_macos.py -q`) on an unlocked session and update the
@@ -229,4 +233,5 @@ its early probe. This review identified no remaining slice-specific concern.
 ### G1. macOS native wait probe not yet observed on an unlocked session (first reported in slice 1)
 Reported: slice 1 — "The gated macOS wait probe stopped at its evidence limit (exit 2) because the screen was locked; no native macOS wait_for_kind observation exists yet."
 Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) on macOS, Windows, Linux X11 (Xvfb + `xclip`) and Linux Wayland (Sway + wl-clipboard) start a wait, then copy with an independent producer"
-Disposition: receiving slice 3
+Disposition: owner changed "The macOS native wait observation moved to SEED-001#macos-native-wait-evidence at the developer's request (2026-11-04)"
+Commitment: 6.2, 6.2.1, 8.2.1

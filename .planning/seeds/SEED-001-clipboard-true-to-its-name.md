@@ -173,8 +173,12 @@ can and cannot see.
   (`pbcopy`, PowerShell `Set-Clipboard`, `xclip`, `wl-copy`) and check that
   `wait_for_kind("text")` from an empty clipboard and
   `wait_for_text_change` both return within the deadline, and that a wait
-  with nothing copied returns `None` after its timeout. The README documents
-  the two functions, the observation limits, and the observed sessions;
+  with nothing copied returns `None` after its timeout. The macOS native
+  wait observation moved to SEED-001#macos-native-wait-evidence at the
+  developer's request (2026-11-04): it needs an unlocked console session the
+  developer will provide later, so this story closes with the macOS probe
+  written but its README Evidence entry still "not yet verified". The README
+  documents the two functions, the observation limits, and the observed sessions;
   other kinds and other compositors rely on `inspect`'s existing native
   proof and are evidence limits for the wait itself.
 - *Scope limits (deferred, not rejected).* Native change notification
@@ -213,6 +217,50 @@ can and cannot see.
    before the clipboard is observed.
 9. `wait_for_text_change(timeout=0)` → reads the baseline once and returns
    `None`.
+
+<a id="macos-native-wait-evidence"></a>
+
+### Verify the clipboard waits natively on macOS Aqua
+
+**Identity:** SEED-001#macos-native-wait-evidence
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planless"}
+```
+
+**Goal:** Automation developers on macOS can rely on `wait_for_kind` and
+`wait_for_text_change` with the same stated evidence the Linux X11, Linux
+Wayland and Windows desktops already have. Today the README marks the macOS
+wait Evidence entry "not yet verified": the gated probe was written with
+SEED-001#wait-for-content, but every run so far stopped at its evidence
+limit because the screen was locked.
+
+**Scope:**
+
+- *Required behavior.* On the developer's Mac with an unlocked Aqua console
+  session, run the existing gated probe
+  (`CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked pytest
+  tests/test_wait_native_macos.py -q -rP`, probe
+  `scripts/probe_macos_native_wait.py`). Its four steps use an independent
+  `pbcopy` producer: `wait_for_kind("text")` from a cleared pasteboard
+  returns a snapshot listing `"text"` after the copy; `wait_for_kind("html",
+  timeout=1)` with nothing copied returns `None` at its timeout;
+  `wait_for_text_change` returns the second independently copied text; and
+  clear-then-identical-recopy leaves it returning `None`.
+- *Documentation.* Replace the README macOS wait Evidence entry's "not yet
+  verified" with the observed result (macOS version and build, per-step
+  outcome and timing) or, if a step fails, the observed limitation; a failing
+  step is a defect to fix in the wait or the probe before claiming
+  verification.
+- *Scope limits.* No change to the wait API or other desktops' evidence.
+  The probe is developer-run (it needs the developer's unlocked session); it
+  does not become a CI job.
+
+**Key examples:**
+
+1. Unlocked macOS Aqua session → the gated probe → exit 0, four steps ok,
+   README macOS wait Evidence entry records the observed version and timings.
+2. Locked screen → the probe exits 2 with `evidence_limit` → no README claim
+   changes.
 
 <a id="primary-selection"></a>
 
