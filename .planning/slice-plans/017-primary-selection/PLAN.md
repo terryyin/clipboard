@@ -135,7 +135,7 @@ README: new PRIMARY section (API, X11 helper, absence, no-fallback rule,
 
 ### 2. Explicit PRIMARY text on Wayland, with unsupported compositors reported
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests with per-selection fake wl-clipboard (example 5
 dispatch / argv, example 6 with the probe-observed unsupported wording, the
 mixed `DISPLAY` + `WAYLAND_DISPLAY` session following the text rule); new
@@ -245,4 +245,4 @@ Disposition: proved by slice 2: CI run 41799207621 (story-branch push f823f1d), 
 ### G3. Wayland PRIMARY native proof observed only in a local Sway 1.9 container until CI runs
 Reported: slice 2 — "CI run pending. The official Sway 1.11 run of the new step needs a branch push."
 Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) under the existing Xvfb + `xclip` and Sway + wl-clipboard CI jobs"
-Disposition: interim until slices 2
+Disposition: proved by slice 2: CI run 41803370471 on 15252dd, `tests/test_primary_native_linux_wayland.py::test_linux_wayland_native_primary_probe PASSED` (Sway 1.11) and `tests/test_primary_native_linux_x11.py::test_linux_x11_native_primary_probe PASSED` after the refactor
