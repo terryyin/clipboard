@@ -168,6 +168,14 @@ G1 and commitment 8.2.1 move to slice 3.
 ### 3. Native wait evidence on Linux X11, Linux Wayland and Windows
 Type: Behavior
 Status: planned
+Progress (2026-11-04): probes `scripts/probe_{linux_x11,linux_wayland,windows}_native_wait.py`
+on shared `scripts/native_wait_support.py` (macOS probe now uses it too),
+wrappers `tests/test_wait_native_{linux_x11,linux_wayland,windows}.py`, CI jobs
+`native-linux-x11-wait`, `native-windows-wait`, `native-linux-wayland-wait`
+(`native-wayland-wait.yml`) wired into `CI passed`; local `make lint-workflows`
+and `make check` (703 passed / 31 skipped) pass. Published as a progress
+increment for the early probe; README Evidence and AGENTS.md wait until the
+CI run is read.
 Received: G1 — run the four-step macOS probe
 (`CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked pytest
 tests/test_wait_native_macos.py -q`) on an unlocked session and update the
