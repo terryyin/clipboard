@@ -37,8 +37,10 @@ from clipboard._desktop import (
     _xclip_reports_no_owner,
 )
 from clipboard._text_native_linux import (
-    _CLIPBOARD_TEXT,
+    _CLIPBOARD,
     _LINUX_TEXT_TIMEOUT_S,
+    _PRIMARY,
+    _SELECTION_SUBJECTS,
     _decode_text,
     _helper_log_suffix,
     _logged_exit_error,
@@ -58,12 +60,9 @@ _DESKTOP = "X11"
 _PACKAGE = "xclip"
 # Text targets in preference order with their ICCCM encodings.
 _X11_TEXT_TARGETS = (("UTF8_STRING", "utf-8"), ("STRING", "latin-1"))
-# ``xclip -selection`` names; CLIPBOARD argv stays what ``copy`` / ``paste``
-# always ran.
-_CLIPBOARD = "clipboard"
-_PRIMARY = "primary"
+# The selection names are xclip's ``-selection`` values; CLIPBOARD argv stays
+# what ``copy`` / ``paste`` always ran.
 _TARGETS_CMDS = {_CLIPBOARD: _XCLIP_TARGETS_CMD, _PRIMARY: _XCLIP_PRIMARY_TARGETS_CMD}
-_SUBJECTS = {_CLIPBOARD: _CLIPBOARD_TEXT, _PRIMARY: "primary selection text"}
 
 
 def _xclip_read_cmd(target: str, selection: str) -> list[str]:
@@ -84,7 +83,7 @@ def _run_xclip(
         package=_PACKAGE,
         deadline=deadline,
         bound=_X11_TEXT_READ_TIMEOUT_S,
-        subject=_SUBJECTS[selection],
+        subject=_SELECTION_SUBJECTS[selection],
     )
 
 
@@ -97,7 +96,7 @@ def _x11_text_targets(deadline: float, selection: str) -> set[str] | None:
         if _xclip_reports_no_owner(stderr):
             return None
         raise _text_exit_error(
-            _DESKTOP, "read", cmd, result, subject=_SUBJECTS[selection]
+            _DESKTOP, "read", cmd, result, subject=_SELECTION_SUBJECTS[selection]
         )
     return {
         line.strip()
@@ -107,7 +106,7 @@ def _x11_text_targets(deadline: float, selection: str) -> set[str] | None:
 
 def _x11_text_clipboard_reader(selection: str = _CLIPBOARD) -> str:
     """Return the selection's text exactly (``""`` when unowned or text-less)."""
-    subject = _SUBJECTS[selection]
+    subject = _SELECTION_SUBJECTS[selection]
     deadline = time.monotonic() + _X11_TEXT_READ_TIMEOUT_S
     targets = _x11_text_targets(deadline, selection)
     if targets is None:
@@ -170,13 +169,18 @@ def _start_owner(data: bytes, log, cmd: list[str], selection: str) -> subprocess
             )
         except OSError as exc:
             raise _text_launch_error(
-                _DESKTOP, "write", cmd[0], _PACKAGE, exc, subject=_SUBJECTS[selection]
+                _DESKTOP,
+                "write",
+                cmd[0],
+                _PACKAGE,
+                exc,
+                subject=_SELECTION_SUBJECTS[selection],
             ) from exc
 
 
 def _x11_text_clipboard_writer(text: str, selection: str = _CLIPBOARD) -> None:
     """Replace the selection with exactly ``text`` (already validated)."""
-    subject = _SUBJECTS[selection]
+    subject = _SELECTION_SUBJECTS[selection]
     cmd = _xclip_write_cmd(selection)
     data = text.encode("utf-8")
     deadline = time.monotonic() + _X11_TEXT_WRITE_TIMEOUT_S

@@ -73,16 +73,16 @@ def test_linux_without_a_session_raises(text_session, nothing_runs):
 
 
 @pytest.mark.parametrize(
-    "env",
-    [
-        {"WAYLAND_DISPLAY": "wayland-0"},
-        {"WAYLAND_DISPLAY": "wayland-0", "DISPLAY": ":0"},
-    ],
+    "helpers",
+    [("wl-copy",), ("wl-paste", "xclip", "xsel"), ("xsel",), ()],
 )
-def test_wayland_is_not_yet_supported(text_session, nothing_runs, env):
-    text_session("linux", env, ("wl-copy", "wl-paste", "xclip"))
+def test_wayland_without_wl_clipboard_names_wl_clipboard(
+    text_session, nothing_runs, helpers
+):
+    # Wayland-only session: no DISPLAY, so neither xclip nor pyperclip serves.
+    text_session("linux", {"WAYLAND_DISPLAY": "wayland-0"}, helpers)
 
-    _both_raise("Wayland")
+    _both_raise("WAYLAND_DISPLAY", "wl-clipboard")
 
 
 @pytest.mark.parametrize(

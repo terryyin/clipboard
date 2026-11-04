@@ -1,4 +1,10 @@
-"""Linux Wayland plain-text clipboard: owned wl-clipboard path (regular selection).
+"""Linux Wayland plain text: owned wl-clipboard path for one selection.
+
+The selection is a parameter: the regular selection (CLIPBOARD, the default,
+``copy`` / ``paste``) or PRIMARY (``copy_primary`` / ``paste_primary``,
+every helper run with ``--primary``); CLIPBOARD argv is what ``copy`` /
+``paste`` always ran, and failures name the selection ("clipboard text" /
+"primary selection text"). Writing lives in ``_text_native_wayland_writer``.
 
 Reading lists ``wl-paste --list-types`` first, so absence never depends on the
 wording of a failed text conversion: wl-paste's known "nothing copied" stderr
@@ -11,47 +17,42 @@ decoded as Latin-1 because that name declares the ICCCM ``STRING`` encoding
 beside ``text/plain;charset=utf-8``, which is preferred. Any other non-zero
 exit (for example "Failed to connect to a Wayland server" for a stale
 ``WAYLAND_DISPLAY``), timeout, or missing helper raises
-``ClipboardContentError`` quoting wl-paste's stderr.
+``ClipboardContentError`` quoting wl-paste's stderr. A read shares one 10 s
+bound across its helper runs.
 
-Writing pipes UTF-8 to ``wl-copy --type text/plain;charset=utf-8``. wl-copy
-forks a background source that keeps serving the selection after Python
-exits; the foreground helper exits once the selection is set. The explicit
-type stops wl-copy from guessing a MIME type from the content (a script-like
-or markup-like text could otherwise be offered under a non-text type);
-wl-copy still lists its generic text family (``text/plain``,
-``UTF8_STRING``, ``TEXT``, ``STRING``) beside a text type, so independent
-consumers keep finding the text. ``copy("")`` runs ``wl-copy --clear``
-(pyperclip's choice), so ``paste()`` reads ``""``. Read and write each share
-one 10 s bound across their helper runs.
+For PRIMARY, wl-clipboard's "compositor does not seem to support primary
+selection" (``_desktop._wl_clipboard_reports_primary_unsupported``) raises
+saying so (``_check_primary_supported``, which the writer shares), distinct
+from nothing selected (``""``), and no other selection is tried.
 """
 
 from __future__ import annotations
 
 import subprocess
-import tempfile
 import time
 
 from clipboard._desktop import (
     _WL_PASTE_LIST_TYPES_HTML_CMD,
+    _WL_PASTE_PRIMARY_LIST_TYPES_CMD,
+    _wl_clipboard_reports_primary_unsupported,
     _wl_paste_reports_nothing_copied,
 )
+from clipboard._errors import ClipboardContentError
 from clipboard._text_native_linux import (
+    _CLIPBOARD,
     _LINUX_TEXT_TIMEOUT_S,
+    _NO_CLIPBOARD_FALLBACK,
+    _PRIMARY,
+    _SELECTION_SUBJECTS,
     _decode_text,
-    _helper_log_suffix,
-    _logged_exit_error,
-    _remaining,
     _run_text_helper,
     _text_error,
     _text_exit_error,
-    _text_launch_error,
 )
 
 _WAYLAND_TEXT_READ_TIMEOUT_S = _LINUX_TEXT_TIMEOUT_S
-_WAYLAND_TEXT_WRITE_TIMEOUT_S = _LINUX_TEXT_TIMEOUT_S
 _DESKTOP = "Wayland"
 _PACKAGE = "wl-clipboard"
-_WRITE_TYPE = "text/plain;charset=utf-8"
 # Text types in preference order with their declared encodings.
 _WAYLAND_TEXT_TYPES = (
     ("text/plain;charset=utf-8", "utf-8"),
@@ -60,17 +61,34 @@ _WAYLAND_TEXT_TYPES = (
     ("TEXT", "utf-8"),
     ("STRING", "latin-1"),
 )
-_LIST_TYPES_CMD = list(_WL_PASTE_LIST_TYPES_HTML_CMD)
-_WL_COPY_WRITE_CMD = ["wl-copy", "--type", _WRITE_TYPE]
-_WL_COPY_CLEAR_CMD = ["wl-copy", "--clear"]
+# wl-clipboard's selection flags; CLIPBOARD argv carries none.
+_SELECTION_FLAGS = {_CLIPBOARD: [], _PRIMARY: ["--primary"]}
+_LIST_TYPES_CMDS = {
+    _CLIPBOARD: _WL_PASTE_LIST_TYPES_HTML_CMD,
+    _PRIMARY: _WL_PASTE_PRIMARY_LIST_TYPES_CMD,
+}
 
 
-def _wl_paste_read_cmd(mime_type: str) -> list[str]:
-    return ["wl-paste", "-n", "-t", mime_type]
+def _wl_paste_read_cmd(mime_type: str, selection: str) -> list[str]:
+    return ["wl-paste", *_SELECTION_FLAGS[selection], "-n", "-t", mime_type]
+
+
+def _check_primary_supported(
+    selection: str, operation: str, cmd: list[str], stderr: str
+) -> None:
+    """Raise when wl-clipboard says the compositor offers no PRIMARY."""
+    if selection == _PRIMARY and _wl_clipboard_reports_primary_unsupported(stderr):
+        raise _text_error(
+            _DESKTOP,
+            operation,
+            "the compositor does not support the primary selection "
+            f"({' '.join(cmd)}: {stderr.strip()}); {_NO_CLIPBOARD_FALLBACK}",
+            subject=_SELECTION_SUBJECTS[selection],
+        )
 
 
 def _run_wl_paste(
-    cmd: list[str], deadline: float
+    cmd: list[str], deadline: float, selection: str
 ) -> subprocess.CompletedProcess[bytes]:
     return _run_text_helper(
         cmd,
@@ -79,17 +97,30 @@ def _run_wl_paste(
         package=_PACKAGE,
         deadline=deadline,
         bound=_WAYLAND_TEXT_READ_TIMEOUT_S,
+        subject=_SELECTION_SUBJECTS[selection],
     )
 
 
-def _wayland_offered_types(deadline: float) -> list[str] | None:
+def _wl_paste_failed(
+    selection: str, cmd: list[str], result: subprocess.CompletedProcess[bytes]
+) -> ClipboardContentError:
+    """A failed wl-paste run: PRIMARY unsupported raises, else the exit error."""
+    stderr = (result.stderr or b"").decode("utf-8", "replace")
+    _check_primary_supported(selection, "read", cmd, stderr)
+    return _text_exit_error(
+        _DESKTOP, "read", cmd, result, subject=_SELECTION_SUBJECTS[selection]
+    )
+
+
+def _wayland_offered_types(deadline: float, selection: str) -> list[str] | None:
     """The selection's MIME types, or ``None`` when nothing is copied."""
-    result = _run_wl_paste(_LIST_TYPES_CMD, deadline)
+    cmd = list(_LIST_TYPES_CMDS[selection])
+    result = _run_wl_paste(cmd, deadline, selection)
     if result.returncode != 0:
         stderr = (result.stderr or b"").decode("utf-8", "replace")
         if _wl_paste_reports_nothing_copied(stderr):
             return None
-        raise _text_exit_error(_DESKTOP, "read", _LIST_TYPES_CMD, result)
+        raise _wl_paste_failed(selection, cmd, result)
     listing = (result.stdout or b"").decode("utf-8", "replace")
     return [line.strip() for line in listing.splitlines() if line.strip()]
 
@@ -110,68 +141,25 @@ def _pick_text_type(offered: list[str]) -> tuple[str, str] | None:
     return None
 
 
-def _wayland_text_clipboard_reader() -> str:
+def _wayland_text_clipboard_reader(selection: str = _CLIPBOARD) -> str:
     """Return the Wayland selection's text exactly (``""`` when absent)."""
     deadline = time.monotonic() + _WAYLAND_TEXT_READ_TIMEOUT_S
-    offered = _wayland_offered_types(deadline)
+    offered = _wayland_offered_types(deadline, selection)
     if offered is None:
         return ""
     picked = _pick_text_type(offered)
     if picked is None:
         return ""
     mime_type, encoding = picked
-    cmd = _wl_paste_read_cmd(mime_type)
-    result = _run_wl_paste(cmd, deadline)
+    cmd = _wl_paste_read_cmd(mime_type, selection)
+    result = _run_wl_paste(cmd, deadline, selection)
     if result.returncode != 0:
         # Listed but not delivered (or replaced in between): not absence.
-        raise _text_exit_error(_DESKTOP, "read", cmd, result)
+        raise _wl_paste_failed(selection, cmd, result)
     return _decode_text(
-        result.stdout or b"", encoding, _DESKTOP, f"wl-paste {mime_type}"
+        result.stdout or b"",
+        encoding,
+        _DESKTOP,
+        f"wl-paste {mime_type}",
+        subject=_SELECTION_SUBJECTS[selection],
     )
-
-
-def _run_wl_copy(cmd: list[str], data: bytes | None) -> None:
-    """Run wl-copy to completion of its foreground part, within the bound.
-
-    stderr goes to an unlinked file, never a pipe the forked source would
-    hold open; stdin is the text (or /dev/null for ``--clear``).
-    """
-    deadline = time.monotonic() + _WAYLAND_TEXT_WRITE_TIMEOUT_S
-    with tempfile.TemporaryFile() as log:
-        try:
-            proc = subprocess.Popen(
-                cmd,
-                stdin=subprocess.PIPE if data is not None else subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=log,
-                start_new_session=True,
-            )
-        except OSError as exc:
-            raise _text_launch_error(_DESKTOP, "write", cmd[0], _PACKAGE, exc) from exc
-        try:
-            proc.communicate(
-                input=data, timeout=_remaining(deadline, _WAYLAND_TEXT_WRITE_TIMEOUT_S)
-            )
-        except subprocess.TimeoutExpired as exc:
-            proc.kill()
-            try:
-                proc.wait(timeout=1)
-            except subprocess.TimeoutExpired:
-                pass
-            raise _text_error(
-                _DESKTOP,
-                "write",
-                f"{' '.join(cmd)} did not finish within the "
-                f"{_WAYLAND_TEXT_WRITE_TIMEOUT_S:g}s bound (compositor stalled "
-                "or not answering)" + _helper_log_suffix(log),
-            ) from exc
-        if proc.returncode != 0:
-            raise _logged_exit_error(_DESKTOP, "write", cmd, proc.returncode, log)
-
-
-def _wayland_text_clipboard_writer(text: str) -> None:
-    """Replace the Wayland selection with exactly ``text`` (already validated)."""
-    if text == "":
-        _run_wl_copy(_WL_COPY_CLEAR_CMD, None)
-        return
-    _run_wl_copy(_WL_COPY_WRITE_CMD, text.encode("utf-8"))

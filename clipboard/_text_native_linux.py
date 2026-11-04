@@ -32,6 +32,13 @@ def _install_hint(helper: str, package: str) -> str:
 # Error subject: what the helper serves. A selection other than CLIPBOARD
 # names itself (e.g. "primary selection text") so it never reads as CLIPBOARD.
 _CLIPBOARD_TEXT = "clipboard text"
+# Selections the owned X11 and Wayland paths serve (named as ``xclip
+# -selection`` names them) and the subject each one's failures name.
+_CLIPBOARD = "clipboard"
+_PRIMARY = "primary"
+_SELECTION_SUBJECTS = {_CLIPBOARD: _CLIPBOARD_TEXT, _PRIMARY: "primary selection text"}
+# PRIMARY never falls back to CLIPBOARD; errors that could suggest one say so.
+_NO_CLIPBOARD_FALLBACK = "the ordinary clipboard is not used instead"
 
 
 def _text_error(

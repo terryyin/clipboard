@@ -10,8 +10,7 @@ backend.
 import subprocess
 
 import pytest
-from fake_pyperclip import FakePyperclip
-from fake_wl_clipboard_text import WL_COPY_TEXT_FAMILY, FakeWayland
+from fake_wl_clipboard_text import WL_COPY_TEXT_FAMILY, install_wayland_text_session
 
 import clipboard
 from clipboard import _text, _text_native_wayland
@@ -27,12 +26,7 @@ def read(mime_type):
 
 @pytest.fixture
 def wayland(text_session, monkeypatch):
-    fake = FakeWayland()
-    monkeypatch.setattr(subprocess, "run", fake.run)
-    monkeypatch.setattr(subprocess, "Popen", fake.popen)
-    text_session("linux", {"WAYLAND_DISPLAY": "wayland-0"}, ("wl-copy", "wl-paste"))
-    fake.pyperclip = FakePyperclip(monkeypatch)
-    return fake
+    return install_wayland_text_session(text_session, monkeypatch)
 
 
 def test_wayland_session_selects_the_owned_path(wayland):

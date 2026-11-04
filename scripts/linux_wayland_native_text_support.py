@@ -12,13 +12,15 @@ from __future__ import annotations
 import json
 import os
 import platform
+import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
 
 from linux_x11_native_text_support import BOUND_S, SLACK_S, child, paste_now, record
-from native_probe_wayland import wayland_paste_environment
+from native_probe_wayland import COMPOSITOR, sway_running, wayland_paste_environment
 
 UTF8_TYPE = "text/plain;charset=utf-8"
 NEWLINE_TEXT = "line 1\nline 2\n"
@@ -182,7 +184,22 @@ def package_version(package: str) -> str | None:
     return _version(["dpkg-query", "-W", "-f=${Version}", package])
 
 
-def environment() -> dict:
+def evidence_limit() -> str | None:
+    """Why this host cannot give Sway text evidence, or ``None`` when it can."""
+    if not sys.platform.startswith("linux"):
+        return f"not Linux (platform {sys.platform!r})"
+    if not os.environ.get("WAYLAND_DISPLAY"):
+        return "no Wayland session (WAYLAND_DISPLAY unset)"
+    if shutil.which("wl-paste") is None or shutil.which("wl-copy") is None:
+        return "wl-paste/wl-copy not found on PATH (apt install wl-clipboard)"
+    if not sway_running():
+        return f"no running {COMPOSITOR}; this probe proves the named compositor only"
+    return None
+
+
+def environment(flags: str = "") -> dict:
+    """Environment floors; ``flags`` (e.g. ``"[--primary] "``) names the
+    selection flags the independent producers and consumers ran with."""
     try:
         distro = platform.freedesktop_os_release().get("PRETTY_NAME")
     except OSError:
@@ -192,11 +209,11 @@ def environment() -> dict:
         kernel=platform.release(),
         sway_package=package_version("sway"),
         wl_clipboard_package=package_version("wl-clipboard"),
-        producer="wl-copy [--type T] (independent, forks its own source)",
-        consumer="wl-paste -n [-t T] (independent)",
+        producer=f"wl-copy {flags}[--type T] (independent, forks its own source)",
+        consumer=f"wl-paste {flags}-n [-t T] (independent)",
     )
 
 
-def report(**fields) -> None:
-    fields.setdefault("environment", environment())
+def report(flags: str = "", **fields) -> None:
+    fields.setdefault("environment", environment(flags))
     print(json.dumps(fields, indent=2, sort_keys=True, ensure_ascii=False))

@@ -9,7 +9,7 @@ so ``import clipboard`` never makes pyperclip pick a mechanism); a mechanism
 the caller resolved in pyperclip never displaces an owned path;
 macOS (``_text_native_macos``: ``pbcopy`` / ``pbpaste``), Linux X11 with
 ``xclip`` (``_text_native_x11``), and Linux Wayland with wl-clipboard
-(``_text_native_wayland``) are owned paths.
+(``_text_native_wayland`` / ``_text_native_wayland_writer``) are owned paths.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from . import (
     _desktop_text,
     _text_native_macos,
     _text_native_wayland,
+    _text_native_wayland_writer,
     _text_native_x11,
 )
 from ._errors import ClipboardContentError, _call_content_backend
@@ -42,7 +43,7 @@ _OWNED_TEXT_WRITERS: dict[str, Callable[[str], None]] = {
     _desktop_text._TEXT_OWNER_MACOS: _text_native_macos._macos_text_clipboard_writer,
     _desktop_text._TEXT_OWNER_X11: _text_native_x11._x11_text_clipboard_writer,
     _desktop_text._TEXT_OWNER_WAYLAND: (
-        _text_native_wayland._wayland_text_clipboard_writer
+        _text_native_wayland_writer._wayland_text_clipboard_writer
     ),
 }
 _OWNED_TEXT_READERS: dict[str, Callable[[], object]] = {

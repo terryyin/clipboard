@@ -19,7 +19,14 @@ _INSPECT_LISTING_TIMEOUT_S = 15.0
 # selection" (also on Pillow's ImageGrab silent-error list).
 _XCLIP_NO_OWNER_MARKERS = ("target TARGETS not available", "There is no owner for the")
 # wl-paste stderr when the selection has no offer (wl-clipboard 2.x variants).
+# (Sway 1.9 + wl-clipboard 2.2.1 also say "Nothing is copied" for an empty
+# PRIMARY, including with ``primary_selection disabled``.)
 _WL_PASTE_NOTHING_COPIED = frozenset({"Nothing is copied", "No selection"})
+# wl-clipboard 2.2.1 (``wl-copy`` / ``wl-paste --primary``, from its binary
+# strings) when the compositor offers it no primary-selection protocol.
+_WL_CLIPBOARD_PRIMARY_UNSUPPORTED = (
+    "The compositor does not seem to support primary selection"
+)
 
 _XCLIP_TARGETS_CMD = ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"]
 # PRIMARY listing for ``paste_primary`` (text only); same no-owner wording.
@@ -27,6 +34,8 @@ _XCLIP_PRIMARY_TARGETS_CMD = ["xclip", "-selection", "primary", "-o", "-t", "TAR
 # HTML read uses the long flag; inspect keeps ``-l`` (tests assert argv).
 _WL_PASTE_LIST_TYPES_HTML_CMD = ["wl-paste", "--list-types"]
 _WL_PASTE_LIST_TYPES_INSPECT_CMD = ["wl-paste", "-l"]
+# PRIMARY listing for ``paste_primary`` (text only); same nothing-copied wording.
+_WL_PASTE_PRIMARY_LIST_TYPES_CMD = ["wl-paste", "--primary", "--list-types"]
 
 
 def _is_linux_wayland() -> bool:
@@ -68,6 +77,15 @@ def _xclip_reports_no_owner(stderr: str) -> bool:
 def _wl_paste_reports_nothing_copied(stderr: str) -> bool:
     """Whether wl-paste stderr says the selection has no offer at all."""
     return stderr.strip() in _WL_PASTE_NOTHING_COPIED
+
+
+def _wl_clipboard_reports_primary_unsupported(stderr: str) -> bool:
+    """Whether wl-copy / wl-paste stderr says the compositor has no PRIMARY.
+
+    Distinct from ``_wl_paste_reports_nothing_copied`` (nothing selected,
+    which reads as absence): this is a session that cannot reach PRIMARY.
+    """
+    return _WL_CLIPBOARD_PRIMARY_UNSUPPORTED in stderr
 
 
 def _helper_failure_detail(result, *, fallback: str = "") -> str:

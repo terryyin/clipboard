@@ -193,10 +193,14 @@ concern. The two early probes are bounded by their slices' first steps.
   copied`, exit 1 (the existing nothing-copied wording); `wl-copy --primary`
   from an exiting shell keeps serving PRIMARY while CLIPBOARD keeps its own
   text; `copy_primary("")`-equivalent leaves PRIMARY offering empty text.
-  `primary_selection disabled`: wl-clipboard reports nothing distinct —
-  `wl-paste --primary` says `Nothing is copied`, `wl-copy --primary` exits 0
-  and the write is silently dropped. So that compositor is the story's
-  evidence limit (source 5g), not example 6's native proof; slice 2 has no
+  `primary_selection disabled`: wl-clipboard reports nothing distinct.
+  Observations conflict: the coordinator's run saw `wl-copy --primary` exit 0
+  with the write dropped (`Nothing is copied`); the slice 2 agent's rerun
+  (same image, config confirmed in the Sway log) saw only
+  `zwp_primary_selection_device_manager_v1` removed while wlroots
+  data-control v2 kept serving PRIMARY to wl-clipboard. Either way that
+  compositor is no unsupported report, so it stays the story's evidence
+  limit (source 5g), not example 6's native proof; slice 2 has no
   disabled-Sway step. wl-clipboard 2.2.1's own unsupported wording, taken
   from its binary strings, is `The compositor does not seem to support
   primary selection`: classify it as unsupported in desktop-free tests
@@ -217,15 +221,28 @@ concern. The two early probes are bounded by their slices' first steps.
   selection parameter (`_text_native_x11._CLIPBOARD` / `_PRIMARY`, error
   `subject`) and `_desktop_text._is_wsl`, and replaces `_primary.py`'s
   interim Wayland error (obligation G1).
+- **Slice 2 accepted proof (2026-11-04).** After refactor (writer split into
+  `clipboard/_text_native_wayland_writer.py`; selection names, subjects and
+  the no-fallback phrase shared in `_text_native_linux`), `nix develop -c
+  make check` → 665 passed, 29 skipped; `make lint-workflows` exit 0. The
+  pre-refactor Wayland probe passed 7 steps on local Sway 1.9; the post-refactor
+  native runs of both Wayland probes are owned by CI (obligation G3).
+  `copy_primary("")` on Wayland offers empty text rather than `--clear`, so
+  the read-back confirms every write the same way.
 
 ## Story obligations
 
 ### G1. Wayland PRIMARY raises "not yet supported" after slice 1
 Reported: slice 1 — "Wayland → \"is not yet supported on Wayland\"."
 Story clause: "Linux Wayland on Sway → examples 1–3 hold through `wl-copy --primary` / `wl-paste --primary` and their non-primary counterparts."
-Disposition: interim until slices 2
+Disposition: proved by slice 2: clipboard/_primary.py `_PRIMARY_PATHS` Wayland path; tests/test_primary_wayland.py, tests/test_primary_wayland_failures.py; scripts/probe_linux_wayland_native_primary.py (local Sway 1.9 run, 7 steps ok)
 
 ### G2. X11 PRIMARY native proof observed only in a local container until CI runs
 Reported: slice 1 — "The official native proof is CI-owned and needs a branch push; the CI venue has not run this yet."
+Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) under the existing Xvfb + `xclip` and Sway + wl-clipboard CI jobs"
+Disposition: proved by slice 2: CI run 41799207621 (story-branch push f823f1d), `tests/test_primary_native_linux_x11.py::test_linux_x11_native_primary_probe PASSED` in job native-linux-x11-text, xclip 0.13
+
+### G3. Wayland PRIMARY native proof observed only in a local Sway 1.9 container until CI runs
+Reported: slice 2 — "CI run pending. The official Sway 1.11 run of the new step needs a branch push."
 Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) under the existing Xvfb + `xclip` and Sway + wl-clipboard CI jobs"
 Disposition: interim until slices 2

@@ -5,18 +5,31 @@ operations reach PRIMARY only: CLIPBOARD is never read or written, and every
 case where PRIMARY cannot be reached raises ``ClipboardContentError`` instead
 of falling back to CLIPBOARD (a fallback would overwrite what the user
 copied). Session choice follows the text rule of ``copy`` / ``paste``
-(``_desktop_text._text_session_owner``), but only the owned X11 ``xclip``
-path serves PRIMARY: pyperclip (``xsel``, Klipper, Qt) is never used, nor
-are its internal ``primary=`` flags. The injected ``copy`` / ``paste`` seams
-(``set_text_clipboard_writer`` / ``_reader``) are deliberately not consulted.
+(``_desktop_text._text_session_owner``), but only the owned paths serve
+PRIMARY: X11 through ``xclip -selection primary`` and Wayland through
+wl-clipboard's ``--primary`` (a compositor wl-clipboard reports without
+primary-selection support raises). pyperclip (``xsel``, Klipper, Qt) is
+never used, nor are its internal ``primary=`` flags. The injected ``copy`` /
+``paste`` seams (``set_text_clipboard_writer`` / ``_reader``) are
+deliberately not consulted.
 """
 
 from __future__ import annotations
 
-from clipboard import _desktop_text, _platform, _text_native_x11
+from clipboard import (
+    _desktop_text,
+    _platform,
+    _text_native_wayland,
+    _text_native_wayland_writer,
+    _text_native_x11,
+)
 from clipboard._errors import ClipboardContentError, _call_content_backend
 from clipboard._text import _validate_copy_text
-from clipboard._text_native_linux import _install_hint
+from clipboard._text_native_linux import (
+    _NO_CLIPBOARD_FALLBACK,
+    _PRIMARY,
+    _install_hint,
+)
 
 _PLATFORM_NAMES = {"darwin": "macOS", "win32": "Windows"}
 
@@ -24,15 +37,31 @@ _PLATFORM_NAMES = {"darwin": "macOS", "win32": "Windows"}
 def _unavailable(predicate: str) -> ClipboardContentError:
     """``"the primary selection <predicate>"``, stating that there is no fallback."""
     return ClipboardContentError(
-        f"the primary selection {predicate}; the ordinary clipboard is not used instead"
+        f"the primary selection {predicate}; {_NO_CLIPBOARD_FALLBACK}"
     )
 
 
-def _x11_primary_session() -> None:
-    """Return when PRIMARY is reachable through ``xclip``; raise otherwise.
+# Owned text paths that also serve PRIMARY, by text session owner:
+# (writer, reader), each called with ``_PRIMARY``.
+_PRIMARY_PATHS = {
+    _desktop_text._TEXT_OWNER_X11: (
+        _text_native_x11._x11_text_clipboard_writer,
+        _text_native_x11._x11_text_clipboard_reader,
+    ),
+    _desktop_text._TEXT_OWNER_WAYLAND: (
+        _text_native_wayland_writer._wayland_text_clipboard_writer,
+        _text_native_wayland._wayland_text_clipboard_reader,
+    ),
+}
+
+
+def _primary_session() -> str:
+    """The text owner serving PRIMARY (X11 or Wayland); raise otherwise.
 
     Runs no helper and no pyperclip: only the session variables, ``PATH``
-    and ``/proc/version`` are consulted.
+    and ``/proc/version`` are consulted. A Wayland-only session without
+    both wl-clipboard helpers raises from ``_text_session_owner`` (naming
+    ``wl-copy`` / ``wl-paste`` and wl-clipboard).
     """
     platform = _platform.current()
     if not platform.startswith("linux"):
@@ -45,10 +74,8 @@ def _x11_primary_session() -> None:
         owner = _desktop_text._text_session_owner()
     except ClipboardContentError as exc:
         raise _unavailable(f"cannot be reached: {exc}") from exc
-    if owner == _desktop_text._TEXT_OWNER_X11:
-        return
-    if owner == _desktop_text._TEXT_OWNER_WAYLAND:
-        raise _unavailable("is not yet supported on Wayland")
+    if owner in _PRIMARY_PATHS:
+        return owner
     if _desktop_text._is_wsl():
         raise _unavailable("is not available on WSL (Linux under Windows)")
     # Linux X11 whose text would go through pyperclip (no xclip on PATH).
@@ -60,13 +87,13 @@ def _x11_primary_session() -> None:
 
 
 def _primary_writer(text: str) -> None:
-    _x11_primary_session()
-    _text_native_x11._x11_text_clipboard_writer(text, _text_native_x11._PRIMARY)
+    writer, _reader = _PRIMARY_PATHS[_primary_session()]
+    writer(text, _PRIMARY)
 
 
 def _primary_reader() -> str:
-    _x11_primary_session()
-    return _text_native_x11._x11_text_clipboard_reader(_text_native_x11._PRIMARY)
+    _writer, reader = _PRIMARY_PATHS[_primary_session()]
+    return reader(_PRIMARY)
 
 
 def copy_primary(text) -> None:
@@ -74,12 +101,14 @@ def copy_primary(text) -> None:
 
     Input rules are those of ``copy``: non-``str`` values via ``str()``, and
     text containing ``"\\x00"`` or not UTF-8 encodable is rejected before
-    PRIMARY is replaced. Linux X11 through ``xclip`` (the text stays
-    pasteable by middle-click after Python exits). Raises
-    ``ClipboardContentError`` wherever PRIMARY cannot be reached (macOS,
-    Windows, WSL, other platforms, no desktop session, X11 without
-    ``xclip``, Wayland for now) and for any helper failure; never falls back
-    to CLIPBOARD.
+    PRIMARY is replaced. Linux X11 through ``xclip`` and Wayland through
+    ``wl-copy --primary`` (confirmed by an exact ``wl-paste --primary``
+    read-back); the text stays pasteable by middle-click after Python
+    exits. Raises ``ClipboardContentError`` wherever PRIMARY cannot be
+    reached (macOS, Windows, WSL, other platforms, no desktop session, X11
+    without ``xclip``, Wayland without wl-clipboard, a compositor
+    wl-clipboard reports without primary-selection support) and for any
+    helper failure; never falls back to CLIPBOARD.
     """
     validated = _validate_copy_text(text)
     _call_content_backend("primary selection text write", _primary_writer, validated)
