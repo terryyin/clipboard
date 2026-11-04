@@ -52,7 +52,8 @@ import sys
 
 from macos_native_wait_support import MACOS, session_state
 from native_probe_common import macos_environment
-from native_wait_support import INTERVAL_S, report, run_steps
+from native_wait_harness import INTERVAL_S
+from native_wait_support import report, run_steps
 
 
 def main() -> int:

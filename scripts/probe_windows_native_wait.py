@@ -36,7 +36,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from native_wait_support import INTERVAL_S, WaitDesktop, report, run_steps
+from native_wait_harness import INTERVAL_S, WaitDesktop
+from native_wait_support import report, run_steps
 from windows_native_clear_support import consumer_formats, no_formats
 from windows_powershell_producers import PRODUCERS, powershell
 

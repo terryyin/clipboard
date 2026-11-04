@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_split-native-wait-support.json",
+      "identity": "SEED-001#split-native-wait-support",
+      "completedAt": "2026-11-04T23:28:07.732Z",
+      "blob": "17acaf499e21ed835ee809f3f89fc18d4882bfea"
+    },
+    {
       "fileName": "SEED-001_primary-selection-polish.json",
       "identity": "SEED-001#primary-selection-polish",
       "completedAt": "2026-11-04T23:02:19.908Z",

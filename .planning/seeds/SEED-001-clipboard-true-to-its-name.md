@@ -129,96 +129,60 @@ limit because the screen was locked.
 2. Locked screen → the probe exits 2 with `evidence_limit` → no README claim
    changes.
 
-<a id="split-native-wait-support"></a>
+<a id="primary-selection-polish"></a>
 
-### Split the native wait probe support along its harness and steps
+### Correct PRIMARY wording and probe evidence left by the primary-selection execution
 
-**Identity:** SEED-001#split-native-wait-support
+**Identity:** SEED-001#primary-selection-polish
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/019-split-native-wait-support/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"e2b530bcf92209c7e0becf00010116231ed3b08d35a0d0625a6b3c196613b695","plan":"19f17982f225ec254b241fbb2d438e717fea6be6b55272f0f6b18af5a1f9df07"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/020-primary-selection-polish/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"cb28a9be01c98c6033700fccb664e97498594b3130782acbd1d93403c3a2abfa","plan":"1d890ecd55c73bd89bbdbd55a462b1cd6c60597d4df77f5dfc6f4af04336cdd5"}}
 ```
 
-**Goal:** Maintainers of the native wait probes can change the child wait
-harness or one probe step without reading a 384-line module that mixes both,
-bringing `scripts/native_wait_support.py` back under the project's 250-line
-file limit that every other native support module meets. Retrospective
-correction of SEED-001#wait-for-content.
+**Goal:** Python users calling `copy_primary` / `paste_primary` get error
+messages that always name the primary selection (never "clipboard"), and
+maintainers get native PRIMARY evidence whose step names, run ids and test
+documentation match the story examples, correcting residue from the
+SEED-001#primary-selection execution.
 
 **Scope:**
 
-- Split `scripts/native_wait_support.py` along its cohesive seam (the child
-  wait harness and timing rules versus the four shared probe steps and their
-  runner) so each module is at most 250 lines; update the four
-  `scripts/probe_*_native_wait.py` imports.
-- No change to probe step names, pass conditions, report fields, gates,
-  floors, CI jobs or the wait API.
-- *Scope limits.* No new probe steps, timing-rule changes or macOS gated
-  evidence (that stays with SEED-001#macos-native-wait-evidence).
-- *Plan:* [019-split-native-wait-support](../slice-plans/019-split-native-wait-support/PLAN.md).
+- *Required behavior.* `copy_primary` input-rejection messages name the
+  primary selection (never "clipboard"); `copy`'s rejection wording stays
+  "clipboard". With both `DISPLAY` and `WAYLAND_DISPLAY` set, incomplete
+  wl-clipboard, no `xclip`, and a pyperclip owner present, PRIMARY calls
+  name both `xclip` and wl-clipboard and run nothing.
+- *Evidence and docs.* Wayland PRIMARY probe and wrapper step names match
+  the primary-selection story's example numbers; the Wayland PRIMARY README
+  Evidence bullet cites CI run 41803370471; PRIMARY Wayland failure tests
+  and the wl-clipboard fake describe Sway `primary_selection disabled` as
+  the recorded conflicting observations (as README already does), not as
+  settled fact that writes are dropped; X11 PRIMARY/text/clear probes share
+  one `evidence_limit` helper, and the remaining Wayland clear/paste_html
+  probes use the existing `evidence_limit()`.
+- *Scope limits.* No behavior other than error text; no CLIPBOARD/pyperclip
+  fallback; probe wrappers still assert only exit, `ok`, ordered steps and
+  floors; evidence-limit exit 2 / CI failure outcomes stay the same.
+- *Plan:* [020-primary-selection-polish](../slice-plans/020-primary-selection-polish/PLAN.md).
 
 **Key examples:**
 
-1. A maintainer opens the module that runs the child wait and judges its
-   timing → it holds the harness and timing rules only, ≤ 250 lines; the
-   four steps, runner and report live in another module, also ≤ 250 lines.
-2. The branch is pushed → CI's `native-linux-x11-wait`,
-   `native-linux-wayland-wait` and `native-windows-wait` jobs pass with the
-   same four step names as before.
-3. Any `scripts/probe_*_native_wait.py` run off its desktop (or on a locked
-   macOS session) → exits 2 with `evidence_limit`, as before the split.
-
-## Ordering and Scope Reduction
-
-The global queue follows the maintainer's images/rich-content priority: image
-reading, image writing, HTML writing, then HTML reading. Image reading has
-direct user demand and a strong reuse candidate, so it tests useful scope
-early. HTML writing precedes reading because its paired rich/plain offer
-tests the more consequential multi-format assumption. Inspection follows
-those concrete workflows; it is not a prerequisite framework project.
-
-File input/output expands to another everyday content type. Text reliability,
-clear, waits, and explicit PRIMARY finish the selected ordinary desktop
-behaviors. All first seven stories retain their own text compatibility,
-failure semantics, native lifetime, and installation obligations; their order
-does not postpone those requirements. Priority is not a dependency chain.
-No genuine blocking dependency has been identified, so none is recorded.
-
-Effort distribution: **4 L, 6 M, 1 S**, with confidence stated per story. Each
-read or write is independently useful; combining both would hide distinct
-consumers and proof. These are decomposition hypotheses, not ready execution
-plans. Refine one selected story before execution planning, splitting further
-if native evidence makes its outcome too large.
-
-If scope must shrink, drop PRIMARY first, then waits, then outbound files,
-then inbound files. Stop after any delivered content workflow with its
-compatibility and safety obligations complete. Preserve the image/HTML core
-unless the maintainer revises the direction; native evidence that invalidates
-it requires a scope decision rather than silently reducing platform coverage.
-
-## Open Decisions
-
-No remaining parent-level selection or order decision blocks this decomposition.
-The research recommendations and effort hypotheses remain reviewable. Story
-refinement must settle concrete supported platform combinations, image value
-shapes, HTML context exposure, absence/error results, dependency installation,
-and native proof. Those are not implementation decisions made by this seed.
-
-RTF, arbitrary typed binary transfer, snapshot/restore, sensitive-data hints,
-a CLI, async streams, history, cloud synchronization, and mobile are unqueued
-extension possibilities in the research, not additional selected promises.
-
-## When to Surface
-
-Now, when selecting the first improvement that makes `clipboard` more than a
-text wrapper; revisit the ordering after the first independent native image
-interoperability evidence.
-
-## Breadcrumbs
-
-- Terry Yin's 2026-11-02 request to research the domain, decompose stories,
-  queue them, and set the initial near-future direction.
-- Terry's explicit replies: prioritize images/rich content; use the proposed
-  planning conventions and comparative S/M/L bands.
-- [Domain research and linked primary sources](../research/2026-11-02-clipboard-domain.md).
-- [Product backlog](../PRODUCT-BACKLOG.md).
-- [Repository contribution constraints](../../AGENTS.md).
+1. Linux PRIMARY in use → `copy_primary("a\x00b")` → `ClipboardContentError`
+   naming "primary selection" (not "clipboard"); the earlier PRIMARY offer
+   is still readable. The same input to `copy` still names "clipboard".
+2. Linux with `DISPLAY` and `WAYLAND_DISPLAY` set, `PATH` carrying only
+   `xsel` (no `xclip`, no `wl-copy` / `wl-paste`) → `copy_primary` /
+   `paste_primary` raise naming both `xclip` and wl-clipboard; neither
+   PRIMARY nor CLIPBOARD is read or replaced.
+3. Wayland PRIMARY probe and its wrapper → step ids match the
+   primary-selection examples (empty-string write; PATH without `wl-paste`),
+   not the misnumbered `5_…` / `7_…` labels left from CLIPBOARD text probes.
+4. README Wayland PRIMARY Evidence bullet → cites gated job run
+   41803370471 beside the X11 bullet's 41799207621.
+5. `tests/test_primary_wayland_failures.py` and
+   `tests/fake_wl_clipboard_text.py` → describe Sway
+   `primary_selection disabled` as conflicting observations (one drop, one
+   write-through), matching README; they do not state the drop as fact.
+6. Off an X11-only or Wayland session → each of the three X11
+   text/clear/PRIMARY probes and the remaining Wayland clear/paste_html
+   probes still exits 2 with `evidence_limit` from the shared helper for
+   that desktop.

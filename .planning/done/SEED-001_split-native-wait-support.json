@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#split-native-wait-support",
+  "title": "Split the native wait probe support along its harness and steps",
+  "completedAt": "2026-11-04T23:28:07.732Z",
+  "developer": "Terry Yin",
+  "agent": "Aino-chan",
+  "host": "cursor",
+  "model": "auto"
+}

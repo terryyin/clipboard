@@ -439,6 +439,13 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Evidence: sole Behavior slice published `90a8e7b` with `progress: true`; coordinator observed with `gh run watch 41928637574 --exit-status` (not an Open Dough observation command; attached observer `/tmp/dough-ci-501/watch-UZnVa9` left running); records-only done `03a223d` recorded run 41928637574; plan 020 Accepted proof
   - Observed effect: One extra publication and CI run solely to flip `Status: done` and record native CI proof on a single-slice plan; nothing mid-plan was blocked
   - Inference: Same unnamed observation step as prior ODF-418 rows; the ODF-416-shaped `progress: true` → done pair recurred here as final-slice paperwork rather than a mid-plan block
+- Execution: SEED-001#split-native-wait-support
+  - Timestamp: 2026-11-05T06:14:28+07:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.82
+  - Evidence: sole Structure slice published a50e0f6 with `progress: true` for E2 (branch-push `native-*-wait` jobs); plan Status remains `planned`; retrospective started while observer `/tmp/dough-ci-501/watch-BKyy1N` still pending overall (wait jobs later green on run 41932201965); no named read-only observation command before the expected records-only done flip
+  - Observed effect: Implementation delivered under `progress: true`; slice done transition and E2 source-review cell still deferred to a later records-only commit after CI observation, same unnamed-step gap as prior rows (Structure rather than Behavior)
+  - Inference: Recurrence of the unnamed observation step for a final CI-owned proof slice; Structure vs Behavior does not change the gap
 
 ## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
 
@@ -481,7 +488,7 @@ COMPLETE` without a size check, and the retrospective found it.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: unknown
-  - Evidence: slice 3 part 1 refactor return ("The harness is about 385 lines … File sizes: all fine"); `wc -l scripts/native_wait_support.py` = 384 at 0120396; `.claude/skills/dough-post-change-refactor/references/refactor-checks.md` "File size"; correction plan `.planning/slice-plans/019-split-native-wait-support/PLAN.md`
+  - Evidence: slice 3 part 1 refactor return ("The harness is about 385 lines … File sizes: all fine"); `wc -l scripts/native_wait_support.py` = 384 at 0120396; `.claude/skills/dough-post-change-refactor/references/refactor-checks.md` "File size"; correction plan at before-cleanup `6ba24e6:.planning/slice-plans/019-split-native-wait-support/PLAN.md`
   - Observed effect: The oversized module was committed and published; a correction story and plan were needed
   - Inference: Proof acceptance of a refactor return could include a mechanical `wc -l` over the diff's files rather than trusting the return's size claim
 

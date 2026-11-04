@@ -41,7 +41,8 @@ from linux_wayland_native_clear_support import WAYLAND
 from linux_wayland_native_text_support import UTF8_TYPE, offer
 from native_clear_support import distro
 from native_probe_wayland import COMPOSITOR, sway_running, wayland_paste_environment
-from native_wait_support import INTERVAL_S, WaitDesktop, report, run_steps
+from native_wait_harness import INTERVAL_S, WaitDesktop
+from native_wait_support import report, run_steps
 
 
 def wl_copy_produce(text: str) -> dict:
