@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Mihiro-chan",
+  "email": "mihiro-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-001#split-native-wait-support",
+  "host": "claude",
+  "model": "opus"
+}
