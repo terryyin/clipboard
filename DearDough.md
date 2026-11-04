@@ -97,6 +97,14 @@ split) after implementation was done.
 ### Occurrences
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-415](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-415.md); source recovery remains in this project’s pre-compaction revision.
+- Execution: SEED-001#primary-selection-polish
+  - Timestamp: 2026-11-04T22:49:00+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: plan 020 Findings/Settled premises omit the pre-existing `README.rst` oversize; post-change refactor return stopped on 1016 / 250 lines; coordinator DEVELOPER ATTENTION with packaging options; developer authorized option 1 (`1`); PLAN.md Learnings record the split
+  - Observed effect: Slice-1 product proof was already accepted before the size gate surfaced; delivery paused overnight until packaging authorization, then a short README landing plus `docs/*.rst` modules unblocked publish of `90a8e7b`
+  - Inference: Recurrence of the planning-gap pattern — a known-oversize packaging home touched by Evidence wording edits should be named as a premise or Structure concern before the first Behavior refactor stop
 
 ## DD-008 — Prior native-venue findings reused; every gated CI probe passed first run
 Reusing the project's recorded native venues (Xvfb with an owning xclip,
@@ -144,6 +152,14 @@ jobs pass on their first published run, with no CI repair cycle.
   - Evidence: slice 1 progress increment 7d55a1b → run 41802978191 (all 26 jobs incl. Native Linux X11 copy_image / text / copy_files) success first run → records-only done 0cd07be; slice 2 progress 1f75f4a → run 41805764901 (Sway copy_image / text / copy_files) success first run → records-only done 16e6241; both plan "early probes" (exact `image/png` read-back, `wl-copy` regular-file stdin) ran inside the first published increment
   - Observed effect: No CI repair; each slice's done status cost a records-only publication and its own full CI run; slice 2 was not overlapped with slice 1's CI because the plan gated slice 2 on the X11 probe outcome
   - Inference: Practice holds; overlap is unavailable when a plan makes the next slice depend on the previous probe's result
+- Execution: SEED-001#primary-selection-polish
+  - Timestamp: 2026-11-05T05:51:00+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: progress increment `90a8e7b` → run 41928637574 success first attempt including Native Linux Wayland text (Sway PRIMARY) and Native Linux X11 text (Xvfb); records-only done `03a223d`; no native repair commits; observer `/tmp/dough-ci-501/watch-UZnVa9`
+  - Observed effect: Renamed Wayland PRIMARY steps and shared `evidence_limit` helpers landed green on the first product publish; no CI repair cycle
+  - Inference: Practice holds for a wording/evidence polish that reuses the same Xvfb/Sway text jobs rather than adding new venues
 
 ## ODF-258 — Producer-kind gap carried three slices before developer decision
 
@@ -170,6 +186,14 @@ When the 250-line refactor check required splitting an oversize module into a pa
   - Evidence: coordinator transcript eb2ce85d… DEVELOPER ATTENTION on clipboard.py 517 lines / 250-line gate; user authorized option 1 package split; commit acb5e62 (injectable seam + `clipboard/` package); PLAN.md Learnings slice 1
   - Observed effect: Slice-1 delivery paused until human authorization; authorized split preserved public `import clipboard` / `VERSION` and unblocked later slices
   - Inference: Useful practice — file-size fixes that cross delivered subsystem seams are human-owned packaging decisions, parallel to venue stops for mandatory native proof (DD-006)
+- Execution: SEED-001#primary-selection-polish
+  - Timestamp: 2026-11-04T22:49:00+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: coordinator DEVELOPER ATTENTION after refactor stop on `README.rst` (1016 / 250); options included packaging split vs defer; user reply `1`; authorized split kept `pyproject.toml` `readme = README.rst` as a short landing and moved Usage / Evidence / Development under `docs/*.rst` (each ≤250)
+  - Observed effect: No unauthorized docs packaging change; after authorization the split completed and product delivery resumed
+  - Inference: Useful practice holds for a documentation-home split that preserves the packaging entry point while clearing the file-size gate
 
 ## ODF-416 — progress:true left mid-plan Behavior slice unfinished until local-proof done commit
 
@@ -213,6 +237,14 @@ Distinct executions, original provenance, observations and qualified inferences 
   - Evidence: run 41654014945 attempt 1: `Python 3.10 on macos-latest` cancelled after about 15 minutes with empty `runner_name` and no steps; `ci-github-diagnostic` showed only `CI passed` failing on `TEST_RESULT: abandoned`; `gh run rerun --failed` → attempt 2 green
   - Observed effect: Classified as runner acquisition on the first report; no wrong cause stated; one rerun for coverage
   - Inference: The ODF-289 (former DD-014) practice was applied directly; it worked when the classification checked runner and steps before naming a cause
+- Execution: SEED-001#primary-selection-polish
+  - Timestamp: 2026-11-05T05:49:30+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: Take SHA `95f86ba` run 41856855757 — `Python 3.14/3.10 on macos-latest` cancelled with 0 steps and `runnerName` null (`completedAt` 2026-11-04T15:37Z); progress publish `90a8e7b` at 2026-11-04T22:49Z; coordinator text after listing that run: "Take SHA failure is superseded ancestry"
+  - Observed effect: Claim-only CI was left unrepaired (correct for ancestry), but the cancel times predate the progress SHA by ~7 h, so supersession by `90a8e7b` cannot explain the cancel; runner/steps pattern matches acquisition failure
+  - Inference: Recurrence of naming supersession/ancestry before the cancel-time-equals-newer-run check; that check would have rejected progress-SHA supersession and left runner acquisition as the remaining explanation
 
 ## ODF-141 — Fresh refactor agent for small CI repairs returned no change
 
@@ -399,6 +431,14 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Evidence: slice-2 publish 15252dd with `progress: true` (obligation G3, Wayland native proof CI-owned); coordinator observed CI with `gh run list/view` (run 41803370471) rather than an Open Dough command; records-only done commit 0abf1a4
   - Observed effect: One extra publication and CI run solely to close G3 and flip slice 2 to done; recurrence of the same path
   - Inference: Same unnamed observation step as the first occurrence; the coordinator again had to choose its own read-only CI check
+- Execution: SEED-001#primary-selection-polish
+  - Timestamp: 2026-11-05T05:51:41+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.82
+  - Evidence: sole Behavior slice published `90a8e7b` with `progress: true`; coordinator observed with `gh run watch 41928637574 --exit-status` (not an Open Dough observation command; attached observer `/tmp/dough-ci-501/watch-UZnVa9` left running); records-only done `03a223d` recorded run 41928637574; plan 020 Accepted proof
+  - Observed effect: One extra publication and CI run solely to flip `Status: done` and record native CI proof on a single-slice plan; nothing mid-plan was blocked
+  - Inference: Same unnamed observation step as prior ODF-418 rows; the ODF-416-shaped `progress: true` → done pair recurred here as final-slice paperwork rather than a mid-plan block
 
 ## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
 

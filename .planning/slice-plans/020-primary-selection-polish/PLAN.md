@@ -129,3 +129,12 @@ identified no remaining slice-specific concern.
 - Native CI on published revision `90a8e7b` (run 41928637574) success,
   including Native Linux Wayland text copy/paste (Sway) and Native Linux X11
   text copy/paste (Xvfb).
+
+## Execution complete
+
+Product advice: no change. Contract matched delivered tree and green native
+CI on `90a8e7b`. Authorized README→`docs/` packaging split is intentional.
+Queued `SEED-001#split-native-wait-support` still owns the oversize
+`scripts/native_wait_support.py`. Optional assimilation only: NORTH-STAR /
+seed phrasing still says "README Evidence" while bullets live under
+`docs/evidence-*.rst`.
