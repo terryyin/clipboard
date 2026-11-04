@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 23
+- Highest allocated local number: 24
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
@@ -128,6 +128,14 @@ jobs pass on their first published run, with no CI repair cycle.
   - Evidence: slices 3–6 each published a `progress: true` increment (342f12c, 0da29c3, c16d2c1, 8a7368d) then a records-only done commit with observed CI values (81ab56e, f93e1b4, 8184a23, e0c0643); runs 41649816028, 41651498162, 41654014945, 41658893626 had every native clear probe (X11, Sway, windows-latest) pass on its first run; the plan's "early probe at the start of the slice" became the probe's first step in the same increment, because an implementation agent cannot publish
   - Observed effect: No probe or product CI repair in six slices; each CI wait took about 10–15 minutes while the next slice waited
   - Inference: Useful practice holds; plans that schedule a CI-only premise "before" implementation should expect it to run inside the first published increment
+- Execution: SEED-001#shared-native-clear-proof
+  - Timestamp: 2026-11-03T23:47:15Z
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: slice 2 progress increment f071961 → run 41741871109 (X11, Sway, windows-latest clear) success first run → records-only done 511bef4; slice 3 delegated while that run was queued, published 147119b → run 41742684361 success → done 16260fd; slice 4 macOS live probe ran locally during slice 3's CI
+  - Observed effect: Structure refactor of all four native clear probes landed with no CI repair; the next slice's implementation overlapped each CI wait instead of idling 3–4 minutes
+  - Inference: Useful practice — when remaining slices touch disjoint files, delegate the next slice while the previous progress increment's native CI runs; each records-only done commit still costs one extra full CI run (~3 min here)
 
 ## ODF-258 — Producer-kind gap carried three slices before developer decision
 
@@ -319,6 +327,23 @@ unknown event timestamps: SEED-001#bounded-x11-text-write (slice 1
 one tool call without affecting work or proof. The existing waiting rule
 covers both. Full rows are recoverable from the pre-compaction revision
 above and retained at [ODF-325](https://github.com/terryyin/open-dough/blob/main/docs/maintainer/findings/ODF-325.md#odf-325).
+
+## DD-024 — Refactor pass dropped a step-ok condition the old wrapper asserted
+A post-change refactor agent, briefed that native probe step `ok` "may only
+get stricter", removed the `waited_s <= bound_s` owner-exit check from the
+shared "cleared" rule as redundant with `wait_pids_exit`, although the
+replaced X11 wrapper had asserted it for the `copy_image` step. It also left a
+ruff E501 docstring line while reporting the project formatter had run.
+
+### Occurrences
+- Execution: SEED-001#shared-native-clear-proof
+  - Timestamp: unknown
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: before slice-2 publication f071961 (CI run created 2026-11-03T23:47:15Z); slice-2 refactor return (deleted `owner_exited`, "caller decision" note); `git show 9eb5a3c:tests/test_clear_native_linux_x11.py` line 96 asserts `waited_s <= bound_s`; coordinator restored `_owner_exited` and a late-owner test case and fixed `scripts/linux_native_clear_steps.py:10` before publishing f071961
+  - Observed effect: Coordinator's `make check` caught the lint failure; comparing the dropped check against the old wrapper caught the loosening; no loosened step was published
+  - Inference: A refactor brief for "stricter, never looser" proof should name the base revision's wrapper assertions as the comparison baseline; the refactor agent judged redundancy against the new code instead. Later refactor briefs that stated this explicitly (slices 3–4) produced no loosening
 
 ## ODF-418 — CI-owned final-slice proof has no named observation step before the done transition
 

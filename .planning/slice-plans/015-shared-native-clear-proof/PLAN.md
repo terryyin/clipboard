@@ -262,3 +262,12 @@ producer-owner exit is settled by the library owner's identical `wl-copy
 --type <mime>` mechanism, not by observing an independent producer's owner;
 if Sway shows it surviving, slice 2 stops under the preserved-promise rule
 and returns the observation rather than dropping the check.
+
+## Execution complete
+
+Product advice: no change. The correction changed proof structure and one
+docstring only; every native clear probe (X11, Sway, windows-latest, macOS)
+passed unchanged step lists on its first run under the single
+`cleared_step` rule. Observation for wrap-up, not a correction: the macOS
+probe's `on_console` field reads false even on the console session README
+describes (pre-existing, cosmetic).
