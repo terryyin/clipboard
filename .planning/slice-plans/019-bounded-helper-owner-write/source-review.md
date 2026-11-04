@@ -56,16 +56,16 @@ Returned commitments are reproduced unchanged below; Slice and Observation colum
 | 15.3 | a Wayland `wl-copy` stand-in that never finishes raises within the bound with its stderr | slice 2 | |
 | 16 | Proof: every Linux writer's launch goes through the one launcher, checked by the launcher's own tests plus the existing writer suites. | slice 2 | |
 | 17 | Proof: the existing gated (`CLIPBOARD_NATIVE_PROBE`) probes keep passing, including writer-exit pasteability: | slice 2 | |
-| 17.1 | Xvfb + `xclip` `copy_image` probe | slice 1 | |
-| 17.2 | Xvfb + `xclip` text probe | slice 1 | |
-| 17.3 | Xvfb + `xclip` `copy_files` probe | slice 1 | |
+| 17.1 | Xvfb + `xclip` `copy_image` probe | slice 1 | observed: GHA run 41802978191 on 7d55a1b: Native Linux X11 copy_image (Xvfb) success (tests/test_copy_image_native_linux_x11.py, writer-exit) |
+| 17.2 | Xvfb + `xclip` text probe | slice 1 | observed: GHA run 41802978191 on 7d55a1b: Native Linux X11 text copy/paste (Xvfb) success |
+| 17.3 | Xvfb + `xclip` `copy_files` probe | slice 1 | observed: GHA run 41802978191 on 7d55a1b: Native Linux X11 copy_files (xclip + Thunar/Xvfb) success |
 | 17.4 | Sway + wl-clipboard `copy_image` probe | slice 2 | |
 | 17.5 | Sway + wl-clipboard text probe | slice 2 | |
 | 17.6 | Sway + wl-clipboard `copy_files` probe | slice 2 | |
 | 18 | Evidence limit: a truly stalled X server or compositor is proved by the stand-in only, as for text. | slice 2 | |
 | 19 | Key example 1: Linux X11 whose `xclip` never reads its input (stalled display) → `copy_image` of a 480 KB PNG → `ClipboardImageError` naming `xclip` and the 10 s bound about 10 s later; no owner from this call is left running. (Observed 2026-11-04: today the call is still blocked after 12 s, no bound.) | slice 1 | observed: tests/test_copy_image_x11_write_stall.py::test_large_png_raises_within_bound_when_owner_never_reads_stdin; README Bounds paragraph names X11 copy_image 10 s bound |
 | 20 | Key example 2: Linux X11, CLIPBOARD already holds an earlier `copy_image` (lists `image/png`), new `xclip` never takes ownership → `copy_image` raises `ClipboardImageError` within the bound rather than returning as if the new image were offered. | slice 1 | observed: tests/test_copy_image_x11_write_stall.py::test_previous_image_owner_does_not_pass_for_the_new_png |
-| 21 | Key example 3: Linux X11 working normally → `copy_image(img)` returns once `xclip -o -selection clipboard -t image/png` gives exactly the written PNG; after the Python process exits the image still pastes. | slice 1 | |
+| 21 | Key example 3: Linux X11 working normally → `copy_image(img)` returns once `xclip -o -selection clipboard -t image/png` gives exactly the written PNG; after the Python process exits the image still pastes. | slice 1 | observed: GHA run 41802978191 on 7d55a1b: Native Linux X11 copy_image (Xvfb) success: _write_linux_xclip returns only after exact image/png read-back; independent xclip consumer and writer-exit check green |
 | 22 | Key example 4: Linux Wayland whose `wl-copy` never finishes → `copy_image` raises `ClipboardImageError` within 10 s (today 30 s), quoting what `wl-copy` wrote to stderr. | slice 2 | |
 | 23 | Key example 5: Linux X11, 200 000 characters of text or a file list above 64 KiB with a non-reading owner → `copy` / `copy_files` raise `ClipboardContentError` within their bound as today, now launched through the shared launcher. | slice 1 | observed: tests/test_text_x11_write_stall.py, tests/test_copy_files_x11_writer_stall.py green; both writers launch via _desktop._start_helper_owner |
 | 24 | Key example 6: Linux X11 with no `xclip` on PATH → `copy_image` raises `ClipboardImageError` and `copy_files` raises `ClipboardContentError`, each with its install hint; the clipboard is unchanged. | slice 1 | observed: tests/test_copy_image_failures.py::test_missing_xclip_raises_clipboard_image_error and copy_files missing-xclip tests in tests/test_copy_files_x11_writer.py green |

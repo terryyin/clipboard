@@ -95,7 +95,7 @@ the uncommitted seed refinement):
 
 ### 1. Bounded, self-confirmed X11 image write through one launcher
 Type: Behavior
-Status: planned
+Status: done
 Proof: new desktop-free tests through public `clipboard.copy_image` (examples
 1, 2, temp-file failure) fail first, then pass; existing X11 text and
 file-list stall tests and `tests/test_copy_image_failures.py` stay green;
@@ -117,9 +117,10 @@ past 6 s / returned success / `Popen` with `stdin=PIPE`) and
 621 passed, 27 skipped. The four existing X11 text / file-list fixtures now fake
 `os.killpg` via `_desktop.os` (one line each; assertions unchanged). Refactor:
 `_X11_FILES_WRITE_TIMEOUT_S` reuses `_LINUX_TEXT_TIMEOUT_S`; the full-temp-dir
-stand-in lives in `tests/fake_full_temp_dir.py`. Pending: Native Linux X11
-copy_image / text / copy_files jobs on the pushed revision (exact `image/png`
-read-back early probe; commitments 17.1–17.3, 21).
+stand-in lives in `tests/fake_full_temp_dir.py`. Native proof: GHA run
+41802978191 on 7d55a1b — Native Linux X11 copy_image / text / copy_files (and
+all Wayland jobs) success; the exact `image/png` read-back early probe holds,
+so the readiness rule stays byte-exact.
 Learning for slice 2: faking `subprocess.Popen` to substitute the stall command
 while stubbing `subprocess.run` makes one test fail first on the old pipe code and
 pass on the launcher; reuse it for the Wayland stand-in.
