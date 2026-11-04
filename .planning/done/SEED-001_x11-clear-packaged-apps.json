@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#x11-clear-packaged-apps",
+  "title": "Fail fast when packaged apps cannot run the X11 clear helper",
+  "completedAt": "2026-11-04T05:12:39.421Z",
+  "developer": "Terry Yin",
+  "agent": "Mana-chan",
+  "host": "claude",
+  "model": "opus"
+}

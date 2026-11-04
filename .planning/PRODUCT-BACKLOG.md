@@ -6,8 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Fail fast when packaged apps cannot run the X11 clear helper](seeds/SEED-001-clipboard-true-to-its-name.md#x11-clear-packaged-apps) — SEED-001#x11-clear-packaged-apps ([plan](slice-plans/016-x11-clear-packaged-apps/PLAN.md))
-
 ## Backlog list
 
 - [Wait for clipboard content with bounded cancellation and timeouts](seeds/SEED-001-clipboard-true-to-its-name.md#wait-for-content) — SEED-001#wait-for-content

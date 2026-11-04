@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_x11-clear-packaged-apps.json",
+      "identity": "SEED-001#x11-clear-packaged-apps",
+      "completedAt": "2026-11-04T05:12:39.421Z",
+      "blob": "c9d3ab73612ac97cc01af7372cb2b7b8d62f689a"
+    },
+    {
       "fileName": "SEED-001_shared-native-clear-proof.json",
       "identity": "SEED-001#shared-native-clear-proof",
       "completedAt": "2026-11-04T00:08:33.310Z",

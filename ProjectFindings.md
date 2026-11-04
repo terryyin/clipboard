@@ -89,7 +89,7 @@ developer decision and two more CI cycles.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.82
-  - Evidence: plan 016 "Decisive premises" 3 ("on CI Linux the classification is expected to be `display`"); CI run https://github.com/terryyin/clipboard/actions/runs/41773836492 (e600e48) "Lint and package (Nix)" printed `failure libx11`; obligation O1; developer chose option 1; fixes 9f5e5ff, a7c6e5a; CI run https://github.com/terryyin/clipboard/actions/runs/41776839169 printed `failure display`
+  - Evidence: plan 016 "Decisive premises" 3 (`8ffb85613222db6e76068115adf4bae0bd22fdb0:.planning/slice-plans/016-x11-clear-packaged-apps/PLAN.md`) ("on CI Linux the classification is expected to be `display`"); CI run https://github.com/terryyin/clipboard/actions/runs/41773836492 (e600e48) "Lint and package (Nix)" printed `failure libx11`; obligation O1; developer chose option 1; fixes 9f5e5ff, a7c6e5a; CI run https://github.com/terryyin/clipboard/actions/runs/41776839169 printed `failure display`
   - Observed effect: Execution stopped for a human decision after slice 2 publication; three extra commits and CI waits (about 2–5 minutes each)
   - Inference: A premise about this project's CI environment should be checked against that job's actual shell (here `nix develop` on ubuntu-latest, not the system Python) before it backs a key example; the source-only review's separate E5a commitment is what exposed the mismatch, since the rule R4.8 alone accepted either value
 
