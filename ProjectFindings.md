@@ -75,3 +75,36 @@ adopted guard and the desktop-free matrix.
   - Evidence: runs 41558761684 (5787804: 12 setup errors `OSError: [Errno 22] Invalid argument` for the fixture file named with `"` and `\` on windows-latest) and 41559117116 (5df300b: 8 failures `No module named '_scproxy'` because the darwin_helper fixture patched the shared `sys.platform` to darwin on Windows, sending `Path.as_uri` into urllib's macOS branch); repairs 5df300b and 152faa2
   - Observed effect: Two consecutive story-branch CI repair cycles right after slice 3 (about 5 minutes of CI wait each); product code unchanged
   - Inference: Same root as the earlier rows: desktop-free tests encoded a POSIX host (file-name characters, platform faking on the shared `sys`); after the slice 4–6 briefs warned about it, the X11 and Wayland writer tests faked only a module-local `sys` and passed on every matrix OS first time
+
+## DD-025 — Plan premise predicted a CI classification without observing the CI environment
+A decisive planning premise stated the CI package job would classify the
+installed X11 clear helper as `display`, but it was observed only on macOS
+(`libx11`). The CI job runs inside the Nix dev shell, whose Python saw no
+libX11, so the story's key example failed after publication and needed a
+developer decision and two more CI cycles.
+
+### Occurrences
+- Execution: SEED-001#x11-clear-packaged-apps
+  - Timestamp: 2026-11-04T04:34:03Z
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: plan 016 "Decisive premises" 3 ("on CI Linux the classification is expected to be `display`"); CI run https://github.com/terryyin/clipboard/actions/runs/41773836492 (e600e48) "Lint and package (Nix)" printed `failure libx11`; obligation O1; developer chose option 1; fixes 9f5e5ff, a7c6e5a; CI run https://github.com/terryyin/clipboard/actions/runs/41776839169 printed `failure display`
+  - Observed effect: Execution stopped for a human decision after slice 2 publication; three extra commits and CI waits (about 2–5 minutes each)
+  - Inference: A premise about this project's CI environment should be checked against that job's actual shell (here `nix develop` on ubuntu-latest, not the system Python) before it backs a key example; the source-only review's separate E5a commitment is what exposed the mismatch, since the rule R4.8 alone accepted either value
+
+## DD-026 — Nix shell variable merged onto the mkShell result, so CI never saw it
+`pkgs.mkShell { … } // optionalAttrs isLinux { VAR = …; }` attaches `VAR` to
+the derivation value, not to `mkShell`'s arguments, so it is not exported to
+the shell. The check treated an absent variable as "libX11 not supplied" and
+accepted `libx11`, so CI went green without the intended `display` proof.
+
+### Occurrences
+- Execution: SEED-001#x11-clear-packaged-apps
+  - Timestamp: 2026-11-04T05:00:30Z
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: 9f5e5ff `flake.nix`; local proof `nix eval … devShells.x86_64-linux.default.CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR` (derivation attribute, not `drvAttrs`); CI run https://github.com/terryyin/clipboard/actions/runs/41776343130 green with `failure libx11`; fix a7c6e5a `mkShell ({ … } // …)` with `drvAttrs ? CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR` true on x86_64-linux
+  - Observed effect: One misleading green CI run and one extra fix cycle (about 5 minutes)
+  - Inference: Prove a dev-shell variable through `drvAttrs` or by printing it inside that platform's shell; a check whose strictness depends on a variable being present should be paired with proof that the variable arrives

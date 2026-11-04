@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 24
+- Highest allocated local number: 26
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.

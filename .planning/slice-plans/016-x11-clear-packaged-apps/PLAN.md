@@ -71,6 +71,16 @@ desktop session. Keep the check small (a script under `scripts/` called from
 the existing loop, or an inline `python -I -c`), choosing whichever stays
 readable; it must not import the source tree.
 
+## Execution complete
+
+Product advice: reasoned no-change. The delivered guard and packaging check
+match the story, and no correction is needed. The sibling
+SEED-001#bounded-helper-owner-write already owns frozen/archive behaviour for
+the other helper-launching writers, so no new backlog item is recommended.
+Process findings DD-025 (CI-environment premise not observed) and DD-026
+(mkShell variable merged onto the derivation) are recorded in
+ProjectFindings.md.
+
 ## Current decisions
 
 - "Recognized frozen runtime" means `getattr(sys, "frozen", False)` is truthy;
