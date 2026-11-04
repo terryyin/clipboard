@@ -321,6 +321,9 @@ ordinary clipboard, and never pretends macOS or Windows have one.
 ### Correct PRIMARY wording and probe evidence left by the primary-selection execution
 
 **Identity:** SEED-001#primary-selection-polish
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/020-primary-selection-polish/PLAN.md"}
+```
 
 **Goal:** Python users calling `copy_primary` / `paste_primary` get error
 messages that always name the primary selection (never "clipboard"), and

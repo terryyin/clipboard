@@ -11,4 +11,5 @@ Make the clipboard project true to its name.
 
 ## Backlog list
 
+- [Correct PRIMARY wording and probe evidence left by the primary-selection execution](seeds/SEED-001-clipboard-true-to-its-name.md#primary-selection-polish) — SEED-001#primary-selection-polish
 - [Bound every helper-owner clipboard write behind one launcher](seeds/SEED-001-clipboard-true-to-its-name.md#bounded-helper-owner-write) — SEED-001#bounded-helper-owner-write
