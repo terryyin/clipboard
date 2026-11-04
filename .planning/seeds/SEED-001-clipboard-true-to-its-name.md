@@ -135,7 +135,7 @@ limit because the screen was locked.
 
 **Identity:** SEED-001#split-native-wait-support
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/019-split-native-wait-support/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/019-split-native-wait-support/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"e2b530bcf92209c7e0becf00010116231ed3b08d35a0d0625a6b3c196613b695","plan":"19f17982f225ec254b241fbb2d438e717fea6be6b55272f0f6b18af5a1f9df07"}}
 ```
 
 **Goal:** Maintainers of the native wait probes can change the child wait
@@ -152,7 +152,20 @@ correction of SEED-001#wait-for-content.
   `scripts/probe_*_native_wait.py` imports.
 - No change to probe step names, pass conditions, report fields, gates,
   floors, CI jobs or the wait API.
+- *Scope limits.* No new probe steps, timing-rule changes or macOS gated
+  evidence (that stays with SEED-001#macos-native-wait-evidence).
 - *Plan:* [019-split-native-wait-support](../slice-plans/019-split-native-wait-support/PLAN.md).
+
+**Key examples:**
+
+1. A maintainer opens the module that runs the child wait and judges its
+   timing → it holds the harness and timing rules only, ≤ 250 lines; the
+   four steps, runner and report live in another module, also ≤ 250 lines.
+2. The branch is pushed → CI's `native-linux-x11-wait`,
+   `native-linux-wayland-wait` and `native-windows-wait` jobs pass with the
+   same four step names as before.
+3. Any `scripts/probe_*_native_wait.py` run off its desktop (or on a locked
+   macOS session) → exits 2 with `evidence_limit`, as before the split.
 
 <a id="primary-selection-polish"></a>
 

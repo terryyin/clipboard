@@ -47,4 +47,19 @@ off its desktop; the branch-push CI run's three wait jobs pass.
 Move the harness and timing rules to their own support module (for example
 `scripts/native_wait_harness.py`), keep the steps, runner and report in
 `scripts/native_wait_support.py`, and update imports in the four probes and
-`scripts/macos_native_wait_support.py`.
+`scripts/macos_native_wait_support.py`. Update the module docstrings and the
+probes' docstrings that name `native_wait_support` as the home of the
+harness, and the AGENTS.md wait-probe sentence if it should name the new
+module.
+
+## Current decisions
+
+- Settled premise (observed 2026-11-04 at 3747d57): the harness and timing
+  rules occupy lines 1–253 of the 384-line module, of which nine step-only
+  constants (`WAIT_TIMEOUT_S` … `NEW_TEXT`) move with the steps, so the
+  harness module lands just under 250 lines and the steps module near 140.
+  If the harness module still exceeds 250, put the timing rules
+  (`_observation_timing`, `returned_after_copy`, `ended_at_timeout`) in their
+  own module rather than trimming docstrings.
+- Settled premise: `ci.yml` runs on every branch push and holds the three
+  wait jobs, so the branch-push run is the cross-desktop proof.
