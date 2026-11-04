@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#primary-selection",
+  "title": "Use the Linux primary selection explicitly",
+  "completedAt": "2026-11-04T12:19:26.402Z",
+  "developer": "Terry Yin",
+  "agent": "Tsukasa-chan",
+  "host": "claude",
+  "model": "opus"
+}

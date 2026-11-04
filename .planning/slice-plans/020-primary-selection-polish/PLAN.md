@@ -3,10 +3,12 @@
 **Identity:** SEED-001#primary-selection-polish
 **Source:** [Correct PRIMARY wording and probe evidence](../../seeds/SEED-001-clipboard-true-to-its-name.md#primary-selection-polish)
 **Provenance:** execution retrospective of SEED-001#primary-selection
-(plan 017, commits f823f1d, 15252dd, 0abf1a4 from base 68e5ea9; CI runs
-41799207621 and 41803370471 green). Original contract: story
-`SEED-001#primary-selection` key examples 1–9 and the required restriction
-"Unsupported never falls back to CLIPBOARD".
+(commits f823f1d, 15252dd, 0abf1a4 from base 68e5ea9; CI runs 41799207621
+and 41803370471 green). Original contract and plan, recoverable from
+before-cleanup commit 7c9e2546ff4e664bba661a39a57b92d7e5edd4ed:
+`.planning/seeds/SEED-001-clipboard-true-to-its-name.md#primary-selection`
+(key examples 1–9 and the required restriction "Unsupported never falls back
+to CLIPBOARD") and `.planning/slice-plans/017-primary-selection/PLAN.md`.
 
 ## Findings (current at 0abf1a4)
 
