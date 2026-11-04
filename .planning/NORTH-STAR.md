@@ -28,7 +28,7 @@ evidence-limited (2026-11-02); domain research reuse of
 Pillow `ImageGrab.grabclipboard`; macOS Aqua image reads independently
 verified; Windows, X11+`xclip`, and Wayland+`wl-paste` image reads documented
 with explicit evidence limits when no usable native session was available
-(README Evidence); delivered `paste_html` fragment reads (no extra) with
+(`docs/evidence-*.rst`); delivered `paste_html` fragment reads (no extra) with
 macOS Aqua verified by a real browser producer and Linux X11 (Xvfb CI),
 Wayland (Sway CI) and Windows (`windows-latest` CI) verified with named
 independent helper producers, browser interoperability there unobserved
@@ -39,7 +39,7 @@ after the writer exits on macOS Aqua (local probe), Windows
 (`windows-latest` CI), X11 (Xvfb CI) and Wayland (Sway CI), file-manager
 paste verified only with the Explorer shell Paste verb (Windows CI) and
 Thunar (X11 CI), and Finder and Wayland file-manager paste evidence-limited
-(README Evidence) (2026-11-03).
+(`docs/evidence-*.rst`) (2026-11-03).
 
 **Text (delivered 2026-11-03, SEED-001#portable-text):** `copy` / `paste` keep
 their names and pyperclip stays a dependency, but they are no longer bare
@@ -52,7 +52,7 @@ text; Windows keeps pyperclip's bounded `CF_UNICODETEXT` backend, and
 pyperclip remains the delegate for WSL and unowned environments with failure
 translation only. Verified with independent producers / consumers on macOS
 Aqua (local probe), X11 (Xvfb CI), Wayland (Sway CI), and Windows
-(`windows-latest` CI); delegated paths unverified (README Evidence).
+(`windows-latest` CI); delegated paths unverified (`docs/evidence-*.rst`).
 
 **Clear (delivered 2026-11-03):** explicit `clear()` (no extra) leaves no
 offer at all, unlike `copy("")`, with native clears on macOS Aqua
@@ -61,7 +61,7 @@ offer at all, unlike `copy("")`, with native clears on macOS Aqua
 with independent producers of text, HTML, image, file list and unknown types
 and independent consumers: macOS by local probe, X11 / Sway /
 `windows-latest` in CI. An unowned or nothing-copied Linux clipboard now reads
-as an empty `inspect()` snapshot (README Evidence).
+as an empty `inspect()` snapshot (`docs/evidence-*.rst`).
 
 **Affects:** Later file and further rich-content stories should follow the same
 explicit-API + optional-extra shape unless evidence forces a revision.
