@@ -53,7 +53,10 @@ session; optional native text / pasteboard / file-list probes stay gated via
 `CLIPBOARD_NATIVE_PROBE` (see README Evidence, e.g.
 `scripts/probe_macos_native_paste_image.py`, the text probes
 `tests/test_text_native_{macos,linux_x11,linux_wayland,windows}.py`, the
-`clear` probes `tests/test_clear_native_{macos,linux_wayland,linux_x11,windows}.py`, and the
+`clear` probes `tests/test_clear_native_{macos,linux_wayland,linux_x11,windows}.py`
+(one "cleared" rule, `scripts/native_clear_support.py` `cleared_step`; their
+wrappers assert only exit, `ok`, the ordered steps and environment floors, so
+a new condition belongs in a step's `ok`), and the
 `copy_files` probes
 `scripts/probe_{macos,windows,linux_x11,linux_wayland}_native_copy_files.py`).
 Desktop-free tests must pass on every matrix OS: fake the platform only via
