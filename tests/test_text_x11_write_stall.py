@@ -26,11 +26,11 @@ def test_large_text_raises_within_bound_when_owner_never_reads_stdin(
     text_session("linux", {"DISPLAY": ":0"}, ("xclip",))
     # Sleep forever; never read stdin.
     stall_cmd = [sys.executable, "-c", "import time; time.sleep(3600)"]
-    monkeypatch.setattr(_text_native_x11, "_XCLIP_WRITE_CMD", stall_cmd)
+    monkeypatch.setattr(_text_native_x11, "_xclip_write_cmd", lambda _sel: stall_cmd)
     # Read-backs never serve: the helper does not exist.
     missing = str(tmp_path / "no-such-xclip")
     monkeypatch.setattr(
-        _text_native_x11, "_xclip_read_cmd", lambda target: [missing, target]
+        _text_native_x11, "_xclip_read_cmd", lambda target, _sel: [missing, target]
     )
     bound_s = 1.0
     monkeypatch.setattr(_text_native_x11, "_X11_TEXT_WRITE_TIMEOUT_S", bound_s)

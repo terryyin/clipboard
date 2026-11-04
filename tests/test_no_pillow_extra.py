@@ -149,6 +149,22 @@ assert calls == [None]
 clipboard.set_clipboard_clearer(None)
 assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
 """,
+    "primary": """\
+import clipboard
+from clipboard import _platform
+
+assert "copy_primary" in clipboard.__all__
+assert "paste_primary" in clipboard.__all__
+_platform.current = lambda: "sunos5"
+for call in (lambda: clipboard.copy_primary("x"), clipboard.paste_primary):
+    try:
+        call()
+    except clipboard.ClipboardContentError as exc:
+        assert "(sunos5)" in str(exc), exc
+    else:
+        raise AssertionError("PRIMARY should be unavailable off Linux")
+assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
+""",
 }
 
 

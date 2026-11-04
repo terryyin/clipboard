@@ -1,4 +1,7 @@
-"""Cross-platform clipboard: text, image, HTML, files, inspect, and clear."""
+"""Cross-platform clipboard: text, image, HTML, files, inspect, and clear.
+
+``copy_primary`` / ``paste_primary`` reach the Linux PRIMARY selection only.
+"""
 
 from __future__ import annotations
 
@@ -27,6 +30,7 @@ from clipboard._offer import (
     inspect,
     set_clipboard_inspector,
 )
+from clipboard._primary import copy_primary, paste_primary
 from clipboard._text import (
     copy,
     paste,
@@ -47,11 +51,13 @@ __all__ = [
     "copy_files",
     "copy_html",
     "copy_image",
+    "copy_primary",
     "inspect",
     "paste",
     "paste_files",
     "paste_html",
     "paste_image",
+    "paste_primary",
     "set_clipboard_clearer",
     "set_clipboard_inspector",
     "set_files_clipboard_reader",

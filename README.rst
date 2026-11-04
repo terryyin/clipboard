@@ -116,6 +116,40 @@ For desktop-free tests, or deliberate delegation as above, inject with
 default. A writer receives the already validated ``str``; a reader takes no
 arguments and returns a ``str`` (or ``None`` when no text is offered).
 
+Linux primary selection (select, then middle-click paste) text, beside the
+ordinary clipboard:
+
+::
+
+   clipboard.copy_primary("for middle click")
+   selected = clipboard.paste_primary()
+
+``copy_primary(text)`` replaces only the PRIMARY selection, and
+``paste_primary()`` reads only PRIMARY; CLIPBOARD is neither read nor
+changed, and ``copy`` / ``paste`` keep reaching CLIPBOARD only and leave
+PRIMARY as it was. ``copy_primary`` applies ``copy``'s input rules
+(``str()`` coercion; ``"\x00"`` or non-UTF-8-encodable text raises
+``ClipboardContentError`` before PRIMARY is replaced), and ``paste_primary``
+returns ``""`` when nothing is selected or the owner offers no text (never
+``None``), with line endings untranslated. On Linux X11 they run
+``xclip -selection primary`` (``xclip`` on ``PATH`` is required) with the
+same 10 s bound as ``copy`` / ``paste``; written text stays pasteable by
+middle-click after Python exits, served by a background ``xclip``.
+
+There is no fallback to CLIPBOARD: wherever PRIMARY cannot be reached, both
+raise ``ClipboardContentError`` naming the reason and run no helper or
+pyperclip mechanism: "not available" on macOS, Windows, WSL and other
+platforms; Linux with no desktop session; X11 without ``xclip`` (even where
+``paste()`` still works through pyperclip's ``xsel``, Klipper or Qt), with
+an install hint; and Linux Wayland, which is **not yet supported**. Other
+helper failures and timeouts raise as for ``paste`` / ``copy``, with
+messages naming the primary selection. The session is chosen as for
+``copy`` / ``paste``. ``set_text_clipboard_writer`` /
+``set_text_clipboard_reader`` do not apply: an injected text writer or
+reader never receives PRIMARY traffic. A clipboard manager or desktop
+setting that copies PRIMARY into CLIPBOARD (or back) on its own is a newer
+offer by that program, outside this promise.
+
 Image read/write needs the optional ``images`` extra (Pillow):
 
 ::
@@ -497,6 +531,26 @@ Evidence / verified platforms (native probes gated via
   ``tests/test_text_native_windows.py``; each wrapper runs its
   ``scripts/probe_*_native_text.py`` probe and fails rather than skips on an
   evidence limit.
+* Primary selection ``copy_primary`` / ``paste_primary``, Linux X11 only, by
+  ``scripts/probe_linux_x11_native_primary.py`` (wrapper
+  ``tests/test_primary_native_linux_x11.py``, run under ``xvfb-run -a`` as a
+  step of gated job ``native-linux-x11-text``; xclip 0.13, also observed
+  locally under Xvfb on Ubuntu 24.04). Independent background
+  ``xclip -selection primary|clipboard -i`` producers and
+  ``xclip -selection primary|clipboard -o`` consumers; every library call
+  runs in a child Python that exits first. Steps: a fresh, unowned PRIMARY
+  reads ``""`` (xclip 0.13 reports ``Error: target TARGETS not available``);
+  different PRIMARY and CLIPBOARD owners are read apart by
+  ``paste_primary()`` / ``paste()``; a child's ``copy_primary`` is read by
+  the independent PRIMARY consumer after it exits while CLIPBOARD is
+  unchanged; a child's ``copy`` leaves PRIMARY unchanged; a refused
+  ``copy_primary("a\x00b")`` leaves PRIMARY readable; and with a ``PATH``
+  holding ``xsel`` but no ``xclip``, ``paste()`` still reads CLIPBOARD
+  through pyperclip while both PRIMARY calls raise naming ``xclip`` within
+  the bound. Evidence limits: a headless Xvfb CI session, not an owner-held
+  desktop; real middle-click pastes in terminals or toolkits, GNOME, KDE,
+  XWayland bridging of PRIMARY, and clipboard managers that sync PRIMARY
+  with CLIPBOARD are unobserved. Wayland PRIMARY is not yet supported.
 * Image **reads**: macOS Aqua verified (``scripts/probe_macos_native_paste_image.py``).
   Windows / X11 / Wayland reads remain evidence-limited (no usable session in
   that verification); do not generalize Wayland from X11 or an unstated compositor.

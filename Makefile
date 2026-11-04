@@ -29,7 +29,7 @@ build:
 test-package: build
 	set -eu; for distribution in dist/*; do \
 		uv run --isolated --no-project --with "$$distribution" python -I -c \
-		'import clipboard, importlib.metadata; assert callable(clipboard.copy); assert callable(clipboard.paste); assert callable(clipboard.clear); assert callable(clipboard.set_clipboard_clearer); assert clipboard.VERSION == importlib.metadata.version("clipboard")'; \
+		'import clipboard, importlib.metadata; assert callable(clipboard.copy); assert callable(clipboard.paste); assert callable(clipboard.clear); assert callable(clipboard.set_clipboard_clearer); assert {"copy_primary", "paste_primary"} <= set(clipboard.__all__); assert clipboard.VERSION == importlib.metadata.version("clipboard")'; \
 		uv run --isolated --no-project --directory / --with "$(CURDIR)/$$distribution" \
 		python -I "$(CURDIR)/scripts/check_installed_x11_clear_helper.py"; \
 	done

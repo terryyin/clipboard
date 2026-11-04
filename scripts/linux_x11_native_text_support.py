@@ -1,9 +1,11 @@
-"""Independent xclip producers / consumers and child runs for the X11 text probe.
+"""Independent xclip producers / consumers and child runs for the X11 text probes.
 
-Producers are background ``xclip -selection clipboard [-t T] -i`` owners and
-consumers are ``xclip -selection clipboard -o -t T`` runs, never this
-library. ``child`` runs ``clipboard.copy`` / ``paste`` in another Python that
-exits before the caller looks, timing each operation.
+Producers are background ``xclip -selection S [-t T] -i`` owners and
+consumers are ``xclip -selection S -o -t T`` runs, never this library; ``S``
+is ``clipboard`` (the default) or ``primary`` (the PRIMARY probe). ``child``
+runs public ``clipboard`` text calls (``copy`` / ``paste`` /
+``copy_primary`` / ``paste_primary``) in another Python that exits before
+the caller looks, timing each operation.
 """
 
 from __future__ import annotations
@@ -40,10 +42,11 @@ for op in json.loads(sys.argv[1]):
     entry = {"op": op[0]}
     started = time.monotonic()
     try:
-        if op[0] == "copy":
-            clipboard.copy(op[1])
+        call = getattr(clipboard, op[0])
+        if op[0].startswith("copy"):
+            call(op[1])
         else:
-            entry["paste"] = clipboard.paste()
+            entry[op[0]] = call()
     except Exception as exc:
         entry["error_type"] = type(exc).__name__
         entry["error"] = str(exc)
@@ -70,9 +73,11 @@ def child(ops: list[list[str]], env: dict | None = None) -> dict:
     return out
 
 
-def xclip_out(target: str, env: dict | None = None) -> subprocess.CompletedProcess:
+def xclip_out(
+    target: str, env: dict | None = None, selection: str = "clipboard"
+) -> subprocess.CompletedProcess:
     return subprocess.run(
-        ["xclip", "-selection", "clipboard", "-o", "-t", target],
+        ["xclip", "-selection", selection, "-o", "-t", target],
         stdin=subprocess.DEVNULL,
         capture_output=True,
         env=env,
@@ -89,17 +94,19 @@ def record(result: subprocess.CompletedProcess) -> dict:
     }
 
 
-def targets() -> list[str]:
-    result = xclip_out("TARGETS")
+def targets(selection: str = "clipboard") -> list[str]:
+    result = xclip_out("TARGETS", selection=selection)
     return [] if result.returncode else result.stdout.decode("ascii", "replace").split()
 
 
-def own(data: bytes, target: str | None, expect: str) -> None:
+def own(
+    data: bytes, target: str | None, expect: str, selection: str = "clipboard"
+) -> None:
     """Independent producer: a background xclip owner serving ``data`` as ``expect``."""
     args = [
         "xclip",
         "-selection",
-        "clipboard",
+        selection,
         *(["-t", target] if target else []),
         "-i",
     ]
@@ -116,7 +123,7 @@ def own(data: bytes, target: str | None, expect: str) -> None:
     proc.stdin.close()
     deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
-        served = xclip_out(expect)
+        served = xclip_out(expect, selection=selection)
         if served.returncode == 0 and served.stdout == data:
             return
         time.sleep(0.05)
@@ -124,7 +131,9 @@ def own(data: bytes, target: str | None, expect: str) -> None:
 
 
 def release_all() -> None:
-    """Stop every xclip owner (producers and the library's) so CLIPBOARD is unowned."""
+    """Stop every xclip owner (producers and the library's): CLIPBOARD and
+    PRIMARY are both unowned afterwards.
+    """
     for proc in _producers:
         try:
             os.killpg(proc.pid, signal.SIGTERM)
@@ -132,7 +141,10 @@ def release_all() -> None:
             pass
     subprocess.run(["pkill", "-x", "xclip"], capture_output=True, check=False)
     deadline = time.monotonic() + 10
-    while time.monotonic() < deadline and xclip_out("TARGETS").returncode == 0:
+    while time.monotonic() < deadline and any(
+        xclip_out("TARGETS", selection=s).returncode == 0
+        for s in ("clipboard", "primary")
+    ):
         time.sleep(0.05)
 
 
@@ -194,7 +206,7 @@ def xvfb_version() -> str | None:
     )
 
 
-def environment() -> dict:
+def environment(selections: str = "clipboard") -> dict:
     try:
         distro = platform.freedesktop_os_release().get("PRETTY_NAME")
     except OSError:
@@ -203,11 +215,11 @@ def environment() -> dict:
         distro=distro,
         kernel=platform.release(),
         xvfb_version=xvfb_version(),
-        producer="xclip -selection clipboard [-t T] -i (independent, background)",
-        consumer="xclip -selection clipboard -o -t UTF8_STRING (independent)",
+        producer=f"xclip -selection {selections} [-t T] -i (independent, background)",
+        consumer=f"xclip -selection {selections} -o -t UTF8_STRING (independent)",
     )
 
 
-def report(**fields) -> None:
-    fields.setdefault("environment", environment())
+def report(selections: str = "clipboard", **fields) -> None:
+    fields.setdefault("environment", environment(selections))
     print(json.dumps(fields, indent=2, sort_keys=True, ensure_ascii=False))

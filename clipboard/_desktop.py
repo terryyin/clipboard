@@ -12,15 +12,18 @@ _IMAGE_XCLIP_TARGETS_TIMEOUT_S = 2.0
 _HTML_LISTING_TIMEOUT_S = 10.0
 _INSPECT_LISTING_TIMEOUT_S = 15.0
 
-# Version-dependent xclip stderr when CLIPBOARD has no owner (ICCCM owners must
-# answer TARGETS): older releases report the missing TARGETS conversion; newer
-# ones say "xclip: Error: There is no owner for the CLIPBOARD selection" (also
-# on Pillow's ImageGrab silent-error list).
+# Version-dependent xclip stderr when a selection (CLIPBOARD or PRIMARY) has no
+# owner (ICCCM owners must answer TARGETS): older releases report the missing
+# TARGETS conversion (xclip 0.13 also for an unowned PRIMARY, observed under
+# Xvfb); newer ones say "xclip: Error: There is no owner for the CLIPBOARD
+# selection" (also on Pillow's ImageGrab silent-error list).
 _XCLIP_NO_OWNER_MARKERS = ("target TARGETS not available", "There is no owner for the")
 # wl-paste stderr when the selection has no offer (wl-clipboard 2.x variants).
 _WL_PASTE_NOTHING_COPIED = frozenset({"Nothing is copied", "No selection"})
 
 _XCLIP_TARGETS_CMD = ["xclip", "-selection", "clipboard", "-o", "-t", "TARGETS"]
+# PRIMARY listing for ``paste_primary`` (text only); same no-owner wording.
+_XCLIP_PRIMARY_TARGETS_CMD = ["xclip", "-selection", "primary", "-o", "-t", "TARGETS"]
 # HTML read uses the long flag; inspect keeps ``-l`` (tests assert argv).
 _WL_PASTE_LIST_TYPES_HTML_CMD = ["wl-paste", "--list-types"]
 _WL_PASTE_LIST_TYPES_INSPECT_CMD = ["wl-paste", "-l"]
@@ -58,7 +61,7 @@ def _linux_wayland_without_x11() -> bool:
 
 
 def _xclip_reports_no_owner(stderr: str) -> bool:
-    """Whether xclip stderr says CLIPBOARD has no owner (an empty clipboard)."""
+    """Whether xclip stderr says the selection has no owner (nothing offered)."""
     return any(marker in stderr for marker in _XCLIP_NO_OWNER_MARKERS)
 
 

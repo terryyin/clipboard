@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#primary-selection
 **Source:** [Use the Linux primary selection explicitly](../../seeds/SEED-001-clipboard-true-to-its-name.md#primary-selection)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -98,14 +99,15 @@ product code equals `master` 388dd5b):
 
 ### 1. Explicit PRIMARY text on X11, unavailable everywhere else
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests through public `clipboard.copy_primary` /
 `clipboard.paste_primary` with per-selection fake `xclip` (examples 1–4, 7–9,
 seam isolation); `tests/test_no_pillow_extra.py` names; new gated probe
 `scripts/probe_linux_x11_native_primary.py` with wrapper
 `tests/test_primary_native_linux_x11.py` (`CLIPBOARD_NATIVE_PROBE`, exit 2
-with `evidence_limit` off X11, fails on an evidence limit in CI) run by a new
-`ci.yml` job `native-linux-x11-primary` under Xvfb + `xclip`; local
+with `evidence_limit` off X11, fails on an evidence limit in CI) run as an
+added step of the existing native Linux X11 text job under Xvfb + `xclip`
+(source 5a: "under the existing ... CI jobs"); local
 `nix develop -c make check`, `make lint-workflows`, `make test-package`.
 
 Behavior: Linux X11 session with `xclip`, PRIMARY and CLIPBOARD owned by
@@ -138,10 +140,9 @@ Proof: desktop-free tests with per-selection fake wl-clipboard (example 5
 dispatch / argv, example 6 with the probe-observed unsupported wording, the
 mixed `DISPLAY` + `WAYLAND_DISPLAY` session following the text rule); new
 gated probe `scripts/probe_linux_wayland_native_primary.py` with wrapper
-`tests/test_primary_native_linux_wayland.py` run by a new reusable workflow
-`.github/workflows/native-wayland-primary.yml` called from `ci.yml`
-(Sway + wl-clipboard, as `native-wayland-text.yml`), including a second
-Sway with `primary_selection disabled` when the early probe supports it;
+`tests/test_primary_native_linux_wayland.py` run as an added step of the
+existing `.github/workflows/native-wayland-text.yml` Sway + wl-clipboard job
+(source 5b); no disabled-PRIMARY Sway step (early probe: no distinct report);
 local `nix develop -c make check`, `make lint-workflows`.
 
 Behavior: Sway session with wl-clipboard, PRIMARY and CLIPBOARD set by
@@ -175,3 +176,56 @@ outcome per desktop, each with its own native proof loop and CI venue, and
 the selection parameter is one common rule extended by both rather than a
 per-desktop special case. This review identified no remaining slice-specific
 concern. The two early probes are bounded by their slices' first steps.
+
+## Learnings
+
+- **Slice 1 early probe (settled, 2026-11-04).** Run by the coordinator in a
+  local Docker `ubuntu:24.04` container with Xvfb + `xclip 0.13` (same `xclip`
+  as CI; CI still owns native proof). Unowned `xclip -selection primary -o -t
+  TARGETS` → stderr `Error: target TARGETS not available`, exit 1 (already in
+  `_desktop._XCLIP_NO_OWNER_MARKERS`); a `xclip -selection primary -i` owner
+  launched from a shell that exits keeps serving PRIMARY (`TARGETS`,
+  `UTF8_STRING`) while a separate CLIPBOARD owner still serves its own text.
+  No recognizer change.
+- **Slice 2 early probe (settled, 2026-11-04).** Local Docker `ubuntu:24.04`,
+  headless Sway 1.9 (CI: 1.11) + `wl-clipboard 2.2.1`. Enabled: nothing
+  selected → `wl-paste --primary --list-types` / `-n` stderr `Nothing is
+  copied`, exit 1 (the existing nothing-copied wording); `wl-copy --primary`
+  from an exiting shell keeps serving PRIMARY while CLIPBOARD keeps its own
+  text; `copy_primary("")`-equivalent leaves PRIMARY offering empty text.
+  `primary_selection disabled`: wl-clipboard reports nothing distinct —
+  `wl-paste --primary` says `Nothing is copied`, `wl-copy --primary` exits 0
+  and the write is silently dropped. So that compositor is the story's
+  evidence limit (source 5g), not example 6's native proof; slice 2 has no
+  disabled-Sway step. wl-clipboard 2.2.1's own unsupported wording, taken
+  from its binary strings, is `The compositor does not seem to support
+  primary selection`: classify it as unsupported in desktop-free tests
+  (example 6). Since a dropped write exits 0, `copy_primary` on Wayland should
+  confirm by exact `wl-paste --primary` read-back (as X11 does) and raise on
+  mismatch rather than report false success.
+
+- **Slice 1 accepted proof (2026-11-04).** `nix develop -c make check`
+  (643 passed, 28 skipped), `make lint-workflows`, `make test-package` exit 0;
+  after refactor `nix develop -c uv run pytest tests/test_primary_x11.py
+  tests/test_primary_unavailable.py tests/test_text_x11.py
+  tests/test_text_session.py tests/test_text_dispatch.py tests/test_clipboard.py
+  tests/test_text_native_linux_bound.py tests/test_text_wayland.py
+  tests/test_no_pillow_extra.py -q` → 153 passed. Native
+  `tests/test_primary_native_linux_x11.py` passed all 6 steps in a local
+  Docker `ubuntu:24.04` Xvfb + `xclip 0.13` container; the CI step in
+  `native-linux-x11-text` is pending (obligation G2). Slice 2 reuses the
+  selection parameter (`_text_native_x11._CLIPBOARD` / `_PRIMARY`, error
+  `subject`) and `_desktop_text._is_wsl`, and replaces `_primary.py`'s
+  interim Wayland error (obligation G1).
+
+## Story obligations
+
+### G1. Wayland PRIMARY raises "not yet supported" after slice 1
+Reported: slice 1 — "Wayland → \"is not yet supported on Wayland\"."
+Story clause: "Linux Wayland on Sway → examples 1–3 hold through `wl-copy --primary` / `wl-paste --primary` and their non-primary counterparts."
+Disposition: interim until slices 2
+
+### G2. X11 PRIMARY native proof observed only in a local container until CI runs
+Reported: slice 1 — "The official native proof is CI-owned and needs a branch push; the CI venue has not run this yet."
+Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) under the existing Xvfb + `xclip` and Sway + wl-clipboard CI jobs"
+Disposition: interim until slices 2
