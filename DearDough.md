@@ -136,6 +136,14 @@ jobs pass on their first published run, with no CI repair cycle.
   - Evidence: slice 2 progress increment f071961 → run 41741871109 (X11, Sway, windows-latest clear) success first run → records-only done 511bef4; slice 3 delegated while that run was queued, published 147119b → run 41742684361 success → done 16260fd; slice 4 macOS live probe ran locally during slice 3's CI
   - Observed effect: Structure refactor of all four native clear probes landed with no CI repair; the next slice's implementation overlapped each CI wait instead of idling 3–4 minutes
   - Inference: Useful practice — when remaining slices touch disjoint files, delegate the next slice while the previous progress increment's native CI runs; each records-only done commit still costs one extra full CI run (~3 min here)
+- Execution: SEED-001#bounded-helper-owner-write
+  - Timestamp: 2026-11-04T16:17:17+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: slice 1 progress increment 7d55a1b → run 41802978191 (all 26 jobs incl. Native Linux X11 copy_image / text / copy_files) success first run → records-only done 0cd07be; slice 2 progress 1f75f4a → run 41805764901 (Sway copy_image / text / copy_files) success first run → records-only done 16e6241; both plan "early probes" (exact `image/png` read-back, `wl-copy` regular-file stdin) ran inside the first published increment
+  - Observed effect: No CI repair; each slice's done status cost a records-only publication and its own full CI run; slice 2 was not overlapped with slice 1's CI because the plan gated slice 2 on the X11 probe outcome
+  - Inference: Practice holds; overlap is unavailable when a plan makes the next slice depend on the previous probe's result
 
 ## ODF-258 — Producer-kind gap carried three slices before developer decision
 
@@ -367,6 +375,14 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Evidence: slice-2 publish 5380548 with `progress: true`; `await-revision /tmp/dough-ci-501/watch-bS46pD 5380548…` → exact success (run 41656910713); records-only done commit 663dca6; `references/fresh-increment.md` (`progress` row) and `references/ci-completion-wait.md` ("Never invoke it after ordinary slice delivery")
   - Observed effect: One extra publication and CI run solely to record CI proof and the done status; coordinator spent reads choosing between `await-revision` and `complete-revision`
   - Inference: Naming the read-only observation command for `progress: true` slices (or letting the completion operation settle a final CI-owned slice) would remove the inference and possibly the extra commit
+- Execution: SEED-001#bounded-helper-owner-write
+  - Timestamp: 2026-11-04T15:55:19+07:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82
+  - Evidence: after publishing `progress: true` increments 7d55a1b and 1f75f4a, the coordinator observed CI with a background `gh run list --commit … && gh run watch --exit-status` shell command (not the attached observer `/tmp/dough-ci-501/watch-7nRVt0`, which notifies only failures), then wrote records-only done commits 0cd07be and 16e6241
+  - Observed effect: Two extra publications and CI runs solely to flip `Status: done` and record CI observations; the observation step was again inferred, this time as a direct `gh` watch
+  - Inference: Same gap as the first row; a named read-only observation step for `progress: true` slices would avoid a coordinator-invented watch
 
 ## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
 

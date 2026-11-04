@@ -164,3 +164,18 @@ loop on the Sway jobs; one common launch rule, with readiness kept per
 caller because each confirms a different offer. Each slice's one
 unobserved native premise is bounded by its early probe. This review
 identified no remaining slice-specific concern.
+
+## Execution complete
+
+Product advice: no change to direction or queue order. Every source-review
+commitment is observed (desktop-free stand-ins plus GHA runs 41802978191 and
+41805764901). Watch items for later stories, not corrections:
+- `.planning/slice-plans/017-primary-selection/PLAN.md` (SEED-001#primary-selection,
+  taken in parallel) edits `clipboard/_text_native_wayland.py` and
+  `tests/fake_wl_clipboard_text.py`; it must now hand its payload through
+  `_desktop._start_helper_owner` and model `wait()` / `wait_timeouts` in the fake.
+- Wayland text and file-list write timeouts still kill only the foreground
+  `wl-copy` (the story promises the session stop for `copy_image` only); align
+  them only if a later story asks for it.
+- `_LINUX_TEXT_TIMEOUT_S` now bounds Linux text, file-list and image writes;
+  a neutral name is optional cleanup.
