@@ -389,6 +389,88 @@ For desktop-free tests, inject a fake with
 ``clipboard.set_clipboard_clearer(None)``. The clearer takes no arguments and
 must leave the clipboard with no offer at all or raise.
 
+Waiting for content (no ``clipboard[images]`` required):
+
+::
+
+   import threading
+   import clipboard
+
+   snapshot = clipboard.wait_for_kind("image", timeout=30)
+   if snapshot is None:
+       print("nothing copied in time")
+
+   stop = threading.Event()  # another thread may call stop.set()
+   clipboard.wait_for_kind("text", timeout=60, interval=1, cancel=stop)
+
+   new_text = clipboard.wait_for_text_change(timeout=30)
+   if new_text is None:
+       print("no new text copied in time")
+
+``wait_for_kind(kind, *, timeout, interval=0.5, cancel=None)`` waits until
+the clipboard offers ``kind`` (``"text"``, ``"image"``, ``"html"`` or
+``"files"``) and returns the ``ClipboardOfferSnapshot`` that showed it. It is
+a **state** wait: each observation is one ``inspect()``, so it reads no
+payload, needs no images extra and leaves the clipboard unchanged, and when
+the kind is already offered it returns at once after one observation. A
+caller who needs content copied *after* the call uses ``wait_for_text_change``
+(for text) or clears the clipboard first.
+
+``wait_for_text_change(*, timeout, interval=0.5, cancel=None)`` is a
+**change** wait on text. Its first observation is one ``paste()``, kept as
+the baseline; each later observation is one ``paste()``, and the first
+observed text that is non-empty and differs from the baseline is returned.
+Clearing (``paste()`` reads ``""``) or an offer with no text (an image only,
+say) is not a change: the wait continues, and a text different from the
+baseline copied afterwards is returned. It keeps only the baseline, logs no
+text, runs wherever ``paste`` runs (every ``paste`` backend, including
+pyperclip delegation) with ``paste``'s session selection and errors, and
+honours ``set_text_clipboard_reader`` fakes.
+
+Outcomes (both waits):
+
+* the kind is observed / changed text is observed: the snapshot / text is
+  returned;
+* the deadline passes: ``None``. ``timeout`` is required, in seconds on a
+  monotonic clock, and must be a non-negative finite number; ``timeout=0``
+  observes exactly once, and for ``wait_for_text_change`` that one
+  observation is the baseline read, so it returns ``None``. The baseline
+  read counts against the deadline like any other observation;
+* ``cancel`` is set: ``None``, with no further observation. ``cancel`` is a
+  ``threading.Event`` or any object with ``is_set()`` and ``wait(seconds)``;
+  the pause between observations waits on it, so setting it from another
+  thread ends the wait without waiting out the interval;
+* an observation fails: the ``ClipboardContentError`` from ``inspect()`` or
+  ``paste()``, including the baseline read (no
+  desktop session, missing helper, denied access, helper failure or timeout,
+  a platform where ``inspect`` is not available) is raised at once and never
+  retried, so a timeout or cancellation (``None``) is never mistaken for a
+  failure. An empty clipboard is absence, not failure (``inspect`` lists no
+  kinds, ``paste`` reads ``""``), and the wait keeps observing;
+* an invalid argument (an unknown ``kind`` for ``wait_for_kind``; a negative, NaN, infinite,
+  boolean or non-numeric ``timeout``; an ``interval`` that is not a positive
+  finite number; a ``cancel`` without ``is_set`` / ``wait``) raises
+  ``ClipboardContentError`` before the clipboard is observed.
+
+``KeyboardInterrupt`` propagates. Each wait runs in the calling thread and
+starts no thread or helper of its own. ``wait_for_kind`` runs wherever
+``inspect`` runs, with ``inspect``'s session selection and errors, and
+honours ``set_clipboard_inspector`` fakes.
+
+Observation limits: the waits poll, they are not change notifications. They
+pause ``min(interval, time left)`` between observations (``interval`` must
+be positive, so they never busy-spin helper processes), and a kind or a text
+that is offered and withdrawn between two observations is missed.
+``wait_for_text_change`` compares observed values, not copy events: an
+identical recopy of the baseline text (even after a clear) is not a change,
+and only the last value seen at an observation counts. No new observation
+starts after the deadline; one already running finishes within its
+operation's own helper bound, so a wait returns no later than ``timeout``
+plus one observation. On macOS one ``inspect()`` runs
+``osascript`` and has taken from about 0.2 s to over 1 s on the owner's
+machine, so a kind is seen up to about one interval plus two observations
+after it is copied (one observation may have started just before the copy).
+
 Installation
 ------------
 
@@ -614,6 +696,53 @@ Evidence / verified platforms (native probes gated via
   15.1 s with ``last_error=5`` and ``HTML Format`` / ``CF_UNICODETEXT`` (13)
   were still listed after release. Evidence limits: Win+V clipboard history and cloud clipboard
   copies are not erased or checked.
+* ``wait_for_kind`` / ``wait_for_text_change``: macOS Aqua **not yet
+  verified**. The gated probe
+  ``scripts/probe_macos_native_wait.py`` (wrapper
+  ``tests/test_wait_native_macos.py``; no images extra) clears the
+  pasteboard, has a child Python start ``wait_for_kind("text", timeout=20)``,
+  copies with an independent ``pbcopy`` about 1 s after the child's first
+  empty observation, and requires the returned snapshot to list ``"text"``
+  within one interval plus two observations of the copy; then a child
+  ``wait_for_kind("html", timeout=1)`` with nothing copied must return
+  ``None`` between the timeout and the timeout plus one observation. For
+  the change wait, an independent ``pbcopy`` copies an old text, a child
+  ``wait_for_text_change(timeout=20)`` reads it as its baseline, and a
+  second independent ``pbcopy`` about 1 s later must make it return the new
+  text within the same latency bound; then, after an old-text baseline,
+  ``clear()`` and an independent identical recopy about 1 s later must leave
+  ``wait_for_text_change(timeout=3)`` returning ``None`` at its timeout, with
+  the cleared and the recopied text both observed. Its
+  runs so far on the owner's machine, macOS 26.6.2 (build 25G83) / Darwin
+  25.6.0, arm64, stopped at an evidence limit (exit 2) because the screen
+  was locked (the change steps included); the probe refuses a locked or
+  off-console session.
+* ``wait_for_kind`` / ``wait_for_text_change``: Linux X11 under Xvfb,
+  Linux Wayland under headless Sway and Windows desktop **verified** in
+  CI run 41798644132 (commit ``bf48f2c``) by the gated probes
+  ``scripts/probe_{linux_x11,linux_wayland,windows}_native_wait.py``
+  (wrappers ``tests/test_wait_native_{linux_x11,linux_wayland,windows}.py``,
+  jobs ``native-linux-x11-wait``, ``native-linux-wayland-wait`` and
+  ``native-windows-wait``, which fail on an evidence limit). They run the
+  same four steps as the macOS probe (shared
+  ``scripts/native_wait_support.py``) with an independent producer on a
+  freshly cleared clipboard: ``xclip -selection clipboard -i`` (xclip 0.13,
+  Xvfb 21.1.22, Ubuntu 26.04), ``wl-copy`` with no ``--type`` (wl-clipboard
+  2.2.1, Sway 1.11, Ubuntu 26.04) and Windows PowerShell 5.1
+  ``Set-Clipboard`` (Windows Server 2025, build 26100, runner image
+  win25-vs2026). On each, ``wait_for_kind("text", timeout=20)`` saw
+  no kinds, then ``"text"`` after the copy and returned that snapshot
+  (X11 ``TARGETS`` / ``UTF8_STRING``; Wayland ``text/plain`` and four more
+  types; Windows ``CF_UNICODETEXT`` with ``CF_TEXT`` / ``CF_OEMTEXT`` /
+  ``CF_LOCALE``) within 0.5 s of the producer finishing;
+  ``wait_for_kind("html", timeout=1)`` with nothing copied returned
+  ``None`` after 1.0 s; ``wait_for_text_change(timeout=20)`` returned the
+  second independently copied text; and after ``clear()`` and an identical
+  recopy ``wait_for_text_change(timeout=3)`` observed ``""`` then the old
+  text again and returned ``None`` at 3.0 s. Evidence limits: other
+  compositors, GNOME / KDE, interactive Windows sessions, and kinds other
+  than text (``image``, ``html``, ``files``) are not observed for the waits
+  themselves; they rely on ``inspect``'s evidence above.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
   been verified with an independent **browser** producer: Google Chrome

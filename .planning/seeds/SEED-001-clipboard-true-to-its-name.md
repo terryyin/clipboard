@@ -85,134 +85,74 @@ platform distinctions, reuse candidates, and uncertainty.
 
 ## Story Decomposition
 
-<a id="wait-for-content"></a>
+<a id="macos-native-wait-evidence"></a>
 
-### Wait for clipboard content with bounded cancellation and timeouts
+### Verify the clipboard waits natively on macOS Aqua
 
-**Identity:** SEED-001#wait-for-content
+**Identity:** SEED-001#macos-native-wait-evidence
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/018-wait-for-content/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"43b8af3b29c58c0897efc418c2e41e03e86ddc7b6790ace4b99fe26742786d80","plan":"beae2ac3d900293b2f4b01a98c778551d7a7768162f2da825f907981542a01a0"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planless"}
 ```
 
-**Goal:** Automation developers can wait, in one bounded call, for the user
-(or another application) to copy content their script needs, instead of
-writing their own polling loops around `inspect` / `paste` with ad hoc
-sleeps, deadlines and error handling. A wait returns as soon as the content
-is observed, ends predictably at its deadline or on cancellation, and never
-hides an access failure as "nothing copied yet". This makes interactive
-automation ("copy the image you want to process") practical with the content
-operations already delivered, and records honestly what a polling observer
-can and cannot see.
+**Goal:** Automation developers on macOS can rely on `wait_for_kind` and
+`wait_for_text_change` with the same stated evidence the Linux X11, Linux
+Wayland and Windows desktops already have. Today the README marks the macOS
+wait Evidence entry "not yet verified": the gated probe was written with
+SEED-001#wait-for-content, but every run so far stopped at its evidence
+limit because the screen was locked.
 
 **Scope:**
 
-- *Required behavior: wait for a kind.* A new public function
-  `wait_for_kind(kind, *, timeout, interval=0.5, cancel=None)` observes the
-  current offer through `inspect` and returns the first
-  `ClipboardOfferSnapshot` whose `kinds` contain `kind` (one of
-  `"text"`, `"image"`, `"html"`, `"files"`). It is a state wait: when the
-  kind is already offered at the first observation it returns at once (a
-  caller who needs *new* content uses the text-change wait, or clears first).
-  It reads no payload, so it needs no images extra, and it leaves the
-  clipboard unchanged.
-- *Required behavior: wait for changed text.* A new public function
-  `wait_for_text_change(*, timeout, interval=0.5, cancel=None)` reads the
-  text through `paste` once as its baseline, then returns the first later
-  observed text that is non-empty and differs from that baseline. Clearing,
-  or an offer with no text, is not a change: the wait continues. "Changed"
-  compares observed values, not copy events: an identical recopy, and values
-  that come and go between two observations, are missed (documented, not a
-  defect).
-- *Required behavior: deadline and cancellation.* `timeout` is required and
-  is a non-negative finite number of seconds measured on a monotonic clock;
-  there is no unbounded wait. `timeout=0` makes exactly one observation
-  (for the text-change wait, only the baseline). When the deadline passes, or
-  when `cancel` (a `threading.Event`, or any object with `is_set()` and
-  `wait(seconds)`) is set, the wait returns `None` without another
-  observation. Between observations the wait sleeps on `cancel.wait(...)` (or
-  an equivalent sleep), so setting `cancel` from another thread ends it
-  without waiting out the interval, and no time is spent busy spinning. No
-  new observation starts after the deadline; an observation already in
-  flight finishes within its own existing helper bound, so a wait returns no
-  later than `timeout` plus one observation. `KeyboardInterrupt` propagates.
-- *Required behavior: failures end the wait.* Any `ClipboardContentError`
-  from an observation (no desktop session, missing helper, denied access,
-  enumeration or helper failure or helper timeout, "not available" on the
-  platform) is raised at once and is never retried, so a refused permission
-  cannot be asked for again by the wait itself. An empty clipboard is
-  absence, not failure: `inspect` yields no kinds and `paste` yields `""`,
-  and the wait keeps observing. A timeout or cancellation returns `None`,
-  so it can never be mistaken for a failure.
-- *Required behavior: invalid input.* An unknown `kind`, a negative, NaN,
-  infinite, boolean or non-numeric `timeout`, an `interval` that is not a
-  positive finite number, or a `cancel` without `is_set` / `wait` raises
-  `ClipboardContentError` before any observation, following the library's
-  invalid-input rule. Required restriction: `interval` must be positive
-  because a zero interval busy-spins helper processes against the desktop;
-  `timeout` must be finite because the story's promise is a bounded wait.
-- *Platforms.* The waits run wherever their observation operation runs, with
-  that operation's session selection and errors: `wait_for_kind` through
-  `inspect` (macOS Aqua, Windows desktop, Linux X11 TARGETS, Linux Wayland
-  MIME list; elsewhere `inspect`'s "not available" error is raised at the
-  first observation), `wait_for_text_change` through `paste` (all `paste`
-  backends, including pyperclip delegation). Injected seams
-  (`set_clipboard_inspector`, `set_text_clipboard_reader`) are honoured, so
-  desktop-free tests need no new seam.
-- *Resources and privacy.* The wait runs in the calling thread, starts no
-  background watcher, thread or long-lived helper, keeps no history beyond the
-  one baseline text it compares against, and logs no payload. Every helper it
-  starts is the bounded helper of the observation operation, finished before
-  the wait returns or raises.
-- *Proof.* Desktop-free default tests (in-memory inspector and reader, fake
-  clock and cancel) cover immediate return, appearance after several
-  observations, deadline, `timeout=0`, cancellation from another thread,
-  failure propagation without retry, clearing during a change wait, and the
-  invalid inputs. Gated native probes (`CLIPBOARD_NATIVE_PROBE`) on macOS,
-  Windows, Linux X11 (Xvfb + `xclip`) and Linux Wayland (Sway +
-  wl-clipboard) start a wait, then copy with an independent producer
-  (`pbcopy`, PowerShell `Set-Clipboard`, `xclip`, `wl-copy`) and check that
-  `wait_for_kind("text")` from an empty clipboard and
-  `wait_for_text_change` both return within the deadline, and that a wait
-  with nothing copied returns `None` after its timeout. The README documents
-  the two functions, the observation limits, and the observed sessions;
-  other kinds and other compositors rely on `inspect`'s existing native
-  proof and are evidence limits for the wait itself.
-- *Scope limits (deferred, not rejected).* Native change notification
-  (macOS `changeCount`, Windows clipboard sequence number or format
-  listener, X11 XFixes, `wl-paste --watch`) as an optimization; changed-value
-  waits for images, HTML or files; waiting on PRIMARY
-  (SEED-001#primary-selection); async/awaitable waits; callbacks or
-  iterators over successive changes; a background watcher; any promise of
-  lossless or per-event delivery.
-- *Plan:* [018-wait-for-content](../slice-plans/018-wait-for-content/PLAN.md).
+- *Required behavior.* On the developer's Mac with an unlocked Aqua console
+  session, run the existing gated probe
+  (`CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked pytest
+  tests/test_wait_native_macos.py -q -rP`, probe
+  `scripts/probe_macos_native_wait.py`). Its four steps use an independent
+  `pbcopy` producer: `wait_for_kind("text")` from a cleared pasteboard
+  returns a snapshot listing `"text"` after the copy; `wait_for_kind("html",
+  timeout=1)` with nothing copied returns `None` at its timeout;
+  `wait_for_text_change` returns the second independently copied text; and
+  clear-then-identical-recopy leaves it returning `None`.
+- *Documentation.* Replace the README macOS wait Evidence entry's "not yet
+  verified" with the observed result (macOS version and build, per-step
+  outcome and timing) or, if a step fails, the observed limitation; a failing
+  step is a defect to fix in the wait or the probe before claiming
+  verification.
+- *Scope limits.* No change to the wait API or other desktops' evidence.
+  The probe is developer-run (it needs the developer's unlocked session); it
+  does not become a CI job.
 
 **Key examples:**
 
-1. Empty clipboard → `wait_for_kind("image", timeout=30)` → the user copies a
-   screenshot in another app 3 s later → returns a snapshot whose `kinds`
-   contain `"image"` within about one interval of the copy.
-2. Clipboard already offers text → `wait_for_kind("text", timeout=5)` →
-   returns at once after one observation.
-3. Clipboard holds `"old"` → `wait_for_text_change(timeout=30)` → another app
-   copies `"new"` → returns `"new"`.
-4. Clipboard holds `"old"` → `wait_for_text_change(timeout=30)` → the
-   clipboard is cleared, then `"old"` is copied again → the wait keeps
-   observing and returns `None` at 30 s (clearing and identical recopy are
-   not changes).
-5. Nothing copied → `wait_for_kind("html", timeout=2)` → returns `None` about
-   2 s later, with no observation started after the deadline.
-6. A wait with `cancel=event` and `timeout=60` → another thread sets `event`
-   after 1 s → the wait returns `None` without waiting out the interval or
-   the timeout.
-7. Linux with no desktop session → `wait_for_kind("text", timeout=10)` →
-   raises `ClipboardContentError` ("no desktop session") at once, not after
-   10 s and not `None`.
-8. `wait_for_kind("rtf", timeout=1)`, `wait_for_text_change(timeout=-1)`,
-   `wait_for_kind("text", timeout=float("inf"))`, or
-   `wait_for_kind("text", timeout=1, interval=0)` → `ClipboardContentError`
-   before the clipboard is observed.
-9. `wait_for_text_change(timeout=0)` → reads the baseline once and returns
-   `None`.
+1. Unlocked macOS Aqua session → the gated probe → exit 0, four steps ok,
+   README macOS wait Evidence entry records the observed version and timings.
+2. Locked screen → the probe exits 2 with `evidence_limit` → no README claim
+   changes.
+
+<a id="split-native-wait-support"></a>
+
+### Split the native wait probe support along its harness and steps
+
+**Identity:** SEED-001#split-native-wait-support
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/019-split-native-wait-support/PLAN.md"}
+```
+
+**Goal:** Maintainers of the native wait probes can change the child wait
+harness or one probe step without reading a 384-line module that mixes both,
+bringing `scripts/native_wait_support.py` back under the project's 250-line
+file limit that every other native support module meets. Retrospective
+correction of SEED-001#wait-for-content.
+
+**Scope:**
+
+- Split `scripts/native_wait_support.py` along its cohesive seam (the child
+  wait harness and timing rules versus the four shared probe steps and their
+  runner) so each module is at most 250 lines; update the four
+  `scripts/probe_*_native_wait.py` imports.
+- No change to probe step names, pass conditions, report fields, gates,
+  floors, CI jobs or the wait API.
+- *Plan:* [019-split-native-wait-support](../slice-plans/019-split-native-wait-support/PLAN.md).
 
 <a id="primary-selection"></a>
 
