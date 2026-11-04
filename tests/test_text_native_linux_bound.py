@@ -53,7 +53,7 @@ def test_wayland_read_timeouts_stay_within_the_bound(wayland):
 def test_wayland_write_timeout_stays_within_the_bound(wayland):
     clipboard.copy("x")
 
-    assert wayland.communicate_timeouts == [10.0]
+    assert wayland.wait_timeouts == [10.0]
 
 
 def test_x11_read_timeouts_stay_within_the_bound(x11):

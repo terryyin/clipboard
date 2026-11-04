@@ -19,7 +19,7 @@ import pytest
 from PIL import Image
 
 import clipboard
-from clipboard import _image_write
+from clipboard import _image_write_linux
 
 # Typical pipe buffer; a PNG larger than this blocked the old pipe write.
 _PIPE_BUFFER_FLOOR = 64 * 1024
@@ -37,8 +37,8 @@ def _run_stalled_copy(monkeypatch, image, *, run_xclip, bound_s=1.0):
     Returns ``(outcome, owners, signalled)``; ``run_xclip`` answers every
     ``xclip`` read (TARGETS / ``-o``) the writer makes.
     """
-    clipboard.set_image_writeclipboard(_image_write._write_linux_xclip)
-    monkeypatch.setattr(_image_write, "_X11_IMAGE_WRITE_TIMEOUT_S", bound_s)
+    clipboard.set_image_writeclipboard(_image_write_linux._write_linux_xclip)
+    monkeypatch.setattr(_image_write_linux, "_X11_IMAGE_WRITE_TIMEOUT_S", bound_s)
 
     owners: list[subprocess.Popen] = []
     launched: list[list[str]] = []
@@ -116,7 +116,7 @@ def test_large_png_raises_within_bound_when_owner_never_reads_stdin(
 ):
     """Example 1: a PNG above a pipe buffer must not hang copy_image()."""
     image = _noise_png_image(200)
-    assert len(_image_write._png_bytes(image)) > _PIPE_BUFFER_FLOOR
+    assert len(_image_write_linux._png_bytes(image)) > _PIPE_BUFFER_FLOOR
 
     def unowned(cmd):
         no_owner = b"xclip: Error: There is no owner for the CLIPBOARD selection\n"
@@ -133,8 +133,8 @@ def test_previous_image_owner_does_not_pass_for_the_new_png(
 ):
     """Example 2: an earlier owner listing image/png is not the new offer."""
     image = Image.new("RGB", (8, 8), color="red")
-    previous_png = _image_write._png_bytes(Image.new("RGB", (8, 8), color="blue"))
-    assert previous_png != _image_write._png_bytes(image)
+    previous_png = _image_write_linux._png_bytes(Image.new("RGB", (8, 8), color="blue"))
+    assert previous_png != _image_write_linux._png_bytes(image)
 
     def previous_owner(cmd):
         target = cmd[cmd.index("-t") + 1] if "-t" in cmd else ""
@@ -154,7 +154,7 @@ def test_unwritable_temp_file_raises_image_error_before_any_helper_starts(
     unwritable_temp_files, restore_image_writeclipboard
 ):
     """The payload file cannot be written → ClipboardImageError, no xclip run."""
-    clipboard.set_image_writeclipboard(_image_write._write_linux_xclip)
+    clipboard.set_image_writeclipboard(_image_write_linux._write_linux_xclip)
 
     with pytest.raises(clipboard.ClipboardImageError) as raised:
         clipboard.copy_image(Image.new("RGB", (1, 1), color="red"))

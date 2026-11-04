@@ -1,13 +1,14 @@
 """In-memory Wayland selection standing in for ``subprocess`` in copy_files tests.
 
 ``FakeWaylandFiles.popen`` returns a ``FakeWlCopyFiles`` whose foreground part
-takes the ``text/uri-list`` body on stdin and exits (status 0, or a scripted
-status and stderr, or stalls past the bound); its background server takes the
-selection after ``delay`` wl-paste runs, never, or with ``served`` bytes in
-place of the body. ``FakeWaylandFiles.run`` answers ``wl-paste --list-types``
-and ``wl-paste --type T --no-newline`` like wl-clipboard 2.x (``Nothing is
-copied`` / ``No suitable type of content copied`` on stderr, exit 1). No
-compositor, helper, or real clipboard is touched.
+takes the ``text/uri-list`` body from the launcher's file stdin and exits
+(status 0, or a scripted status and stderr, or stalls past the bound); its
+background server takes the selection after ``delay`` wl-paste runs, never,
+or with ``served`` bytes in place of the body. ``FakeWaylandFiles.run``
+answers ``wl-paste --list-types`` and ``wl-paste --type T --no-newline`` like
+wl-clipboard 2.x (``Nothing is copied`` / ``No suitable type of content
+copied`` on stderr, exit 1). No compositor, helper, or real clipboard is
+touched.
 """
 
 from __future__ import annotations
@@ -20,40 +21,40 @@ READ = ["wl-paste", "--type", URI_LIST, "--no-newline"]
 
 
 class FakeWlCopyFiles:
-    def __init__(self, wayland, cmd, stderr):
+    def __init__(self, wayland, cmd, stdin, stderr):
         self.wayland = wayland
         self.cmd = cmd
         self.log = stderr
-        self.input = None
+        # The launcher's temp file closes once Popen returns: read it now.
+        self.input = stdin.read()
         self.timeout = None
         self.returncode = None
         self.killed = False
 
-    def communicate(self, input=None, timeout=None):
+    def wait(self, timeout=None):
+        if self.killed:
+            self.returncode = -9
+            return self.returncode
         wayland = self.wayland
         assert 0 < timeout <= 10.0
-        self.input, self.timeout = input, timeout
+        self.timeout = timeout
         if wayland.stalls:
             raise subprocess.TimeoutExpired(self.cmd, timeout)
         if wayland.copy_exit is not None:
             status, stderr = wayland.copy_exit
             self.log.write(stderr)
             self.returncode = status
-            return None, None
+            return status
         if wayland.server_stderr:
             self.log.write(wayland.server_stderr)
         if not wayland.never_offers:
-            served = input if wayland.served is None else wayland.served
+            served = self.input if wayland.served is None else wayland.served
             wayland.pending = (wayland.delay, served)
         self.returncode = 0
-        return None, None
+        return 0
 
     def kill(self):
         self.killed = True
-
-    def wait(self, timeout=None):
-        self.returncode = -9
-        return self.returncode
 
 
 class FakeWaylandFiles:
@@ -100,12 +101,14 @@ class FakeWaylandFiles:
         return subprocess.CompletedProcess(cmd, 1, b"", stderr)
 
     def popen(self, cmd, *, stdin, stdout, stderr, start_new_session):
-        assert stdin is subprocess.PIPE and stdout is subprocess.DEVNULL
+        # The body arrives in a file (the shared launcher), never a pipe.
+        assert stdin is not subprocess.PIPE and hasattr(stdin, "read")
+        assert stdout is subprocess.DEVNULL
         # Never a pipe the background server would inherit and hold open.
         assert hasattr(stderr, "write") and stderr is not subprocess.PIPE
         assert start_new_session is True
         if self.popen_error is not None:
             raise self.popen_error
-        proc = FakeWlCopyFiles(self, cmd, stderr)
+        proc = FakeWlCopyFiles(self, cmd, stdin, stderr)
         self.popens.append(proc)
         return proc

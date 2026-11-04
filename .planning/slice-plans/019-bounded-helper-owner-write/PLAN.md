@@ -142,6 +142,19 @@ file-list and image writers' `wl-copy` start onto `_start_helper_owner`
 `wl-copy --clear` keeps its payload-free run) and completes the README
 bound text for Wayland.
 
+Accepted local proof (2026-11-04, Darwin): `tests/test_copy_image_wayland_write_stall.py`
+(example 4 failed first: blocked past 7 s on the old 30 s bound; temp-file test
+failed first: `Popen` with `stdin=PIPE`), Wayland text / file-list temp-file tests
+(`tests/test_text_wayland_writer.py`, `tests/test_copy_files_wayland_writer.py`,
+failed first against the base writers); `nix develop -c make check` → 625
+passed, 27 skipped. Refactor: Linux PNG owners moved to
+`clipboard/_image_write_linux.py` (shared launch-error / exit-status helpers);
+Wayland writer tests split into `tests/test_text_wayland_writer.py`. Wayland text
+and file-list timeouts keep `proc.kill()` of the foreground helper (the story's
+session stop is a `copy_image` promise). Pending: Native Linux Wayland copy_image /
+text / copy_files (Sway) on the pushed revision — the temp-file `stdin` early
+probe (commitments 17.4–17.6).
+
 ## Plan concern evidence
 
 Slice-plan refinement was not needed: the launcher is introduced with its

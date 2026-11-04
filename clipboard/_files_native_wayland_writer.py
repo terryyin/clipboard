@@ -1,9 +1,11 @@
 """Linux Wayland file-list copy writer: ``wl-copy --type text/uri-list``.
 
 The body is byte-identical to the X11 writer's (shared ``_uri_list_body``: one
-percent-encoded ``file://`` URI per path, CRLF-terminated), piped on stdin to
-``wl-copy --type text/uri-list``. wl-copy forks a background server that keeps
-serving the selection after Python exits (the Wayland text / image lifetime).
+percent-encoded ``file://`` URI per path, CRLF-terminated), handed to
+``wl-copy --type text/uri-list`` through the shared owner launcher (an
+unlinked temp-file stdin, never a pipe). wl-copy forks a background server
+that keeps serving the selection after Python exits (the Wayland text / image
+lifetime).
 
 Missing ``WAYLAND_DISPLAY`` or a missing ``wl-copy`` / ``wl-paste`` raises
 ``ClipboardContentError`` (with an install hint for the helpers) before any
@@ -28,6 +30,7 @@ import time
 from clipboard._desktop import (
     _WL_PASTE_LIST_TYPES_HTML_CMD,
     _helper_stderr_detail,
+    _start_helper_owner,
 )
 from clipboard._errors import ClipboardContentError
 from clipboard._files_offer import _uri_list_body
@@ -98,22 +101,13 @@ def _exit_error(status: int, log) -> ClipboardContentError:
 def _run_wl_copy(body: bytes, deadline: float, log) -> None:
     """Run wl-copy's foreground part (it forks the serving background part)."""
     try:
-        proc = subprocess.Popen(
-            _WL_COPY_URI_LIST_CMD,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=log,
-            start_new_session=True,
-        )
+        proc = _start_helper_owner(_WL_COPY_URI_LIST_CMD, body, log)
     except FileNotFoundError as exc:
         raise _error(_missing_detail("wl-copy")) from exc
     except OSError as exc:
         raise _error(f"could not run wl-copy ({exc})") from exc
     try:
-        proc.communicate(
-            input=body,
-            timeout=_remaining(deadline, _WAYLAND_FILES_WRITE_TIMEOUT_S),
-        )
+        proc.wait(timeout=_remaining(deadline, _WAYLAND_FILES_WRITE_TIMEOUT_S))
     except subprocess.TimeoutExpired as exc:
         proc.kill()
         try:

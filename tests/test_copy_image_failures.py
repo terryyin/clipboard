@@ -133,7 +133,7 @@ def test_missing_xclip_raises_clipboard_image_error(
     import clipboard
 
     monkeypatch.setenv("PATH", str(tmp_path))
-    clipboard.set_image_writeclipboard(clipboard._image_write._write_linux_xclip)
+    clipboard.set_image_writeclipboard(clipboard._image_write_linux._write_linux_xclip)
 
     with pytest.raises(clipboard.ClipboardImageError) as raised:
         clipboard.copy_image(Image.new("RGB", (1, 1), color="red"))
@@ -149,7 +149,9 @@ def test_missing_wl_copy_raises_clipboard_image_error(
     import clipboard
 
     monkeypatch.setenv("PATH", str(tmp_path))
-    clipboard.set_image_writeclipboard(clipboard._image_write._write_linux_wl_copy)
+    clipboard.set_image_writeclipboard(
+        clipboard._image_write_linux._write_linux_wl_copy
+    )
 
     with pytest.raises(clipboard.ClipboardImageError) as raised:
         clipboard.copy_image(Image.new("RGB", (1, 1), color="red"))

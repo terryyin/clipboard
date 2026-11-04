@@ -58,11 +58,12 @@ the exception's ``__cause__``:
 
 Bounds: on Linux each ``paste()`` and each ``copy()`` shares one 10 s bound
 across its helper runs (an X11 ``copy()`` returns only once the new
-background owner serves exactly the written bytes); on Linux X11 each
-``copy_image`` shares the same 10 s bound across starting ``xclip``, handing
-it the PNG and reading ``image/png`` back as exactly the written PNG, and
-past it raises ``ClipboardImageError`` naming ``xclip`` and the bound and
-stops that owner; on macOS each
+background owner serves exactly the written bytes); on Linux each
+``copy_image`` shares the same 10 s bound across starting its helper, handing
+it the PNG and confirming the offer (X11: ``image/png`` reads back as exactly
+the written PNG; Wayland: ``wl-copy``'s foreground part exits), and past it
+raises ``ClipboardImageError`` naming the helper (``xclip`` / ``wl-copy``)
+and the bound, quoting the helper's stderr, and stops that owner; on macOS each
 ``pbcopy`` / ``pbpaste`` run is bounded at 15 s; on Windows pyperclip retries
 ``OpenClipboard`` for about 0.5 s while another process holds the clipboard
 and then raises (no other bound is added there). Delegated paths carry no
@@ -419,10 +420,12 @@ replaced. Linux HTML **writes** need a multi-MIME helper (X11 multi-type
 ``xclip``; Wayland e.g. ``wl-copy`` on a **named** compositor — do not
 generalize). Linux image **writes**: X11 ``xclip`` (for example ``apt
 install xclip``), which keeps running in the background as the image's
-owner; ``copy_image`` returns once it serves the PNG, within a 10 s bound,
-and a missing ``xclip`` raises ``ClipboardImageError`` with an install hint
-before the clipboard is replaced. Wayland ``wl-copy`` (may keep a
-background owner). Windows/macOS
+owner; ``copy_image`` returns once it serves the PNG. Wayland ``wl-copy``
+from ``wl-clipboard`` (for example ``apt install wl-clipboard``), whose
+background part keeps serving the image; ``copy_image`` returns once its
+foreground part exits. Both share one 10 s bound, and a missing ``xclip`` /
+``wl-copy`` raises ``ClipboardImageError`` with an install hint before the
+clipboard is replaced. Windows/macOS
 need a usable desktop session; rich/image/file-list APIs are not guaranteed
 under WSL, SSH, containers, or headless CI.
 
@@ -512,8 +515,10 @@ Evidence / verified platforms (native probes gated via
   25.6.0, Pillow 11.3.0, Python 3.13, arm64; RGBA preserved;
   ``scripts/probe_macos_native_copy_image.py``). Linux X11 verified under gated
   GHA ``native-linux-x11-copy-image`` (Xvfb + ``xclip``, Python 3.13 / Pillow
-  11.3.0; headless CI, not owner desktop); a stalled X11 owner is proved by
-  desktop-free stand-ins only (``tests/test_copy_image_x11_write_stall.py``).
+  11.3.0; headless CI, not owner desktop); a stalled X11 owner or Wayland
+  compositor is proved by desktop-free stand-ins only
+  (``tests/test_copy_image_x11_write_stall.py``,
+  ``tests/test_copy_image_wayland_write_stall.py``).
   Wayland verified **only** under
   ``native-linux-wayland-copy-image`` with named compositor **Sway** (do not
   generalize). Windows writes: evidence limit (Darwin checkout; GHA Windows is

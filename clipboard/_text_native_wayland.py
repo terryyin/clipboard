@@ -13,7 +13,8 @@ exit (for example "Failed to connect to a Wayland server" for a stale
 ``WAYLAND_DISPLAY``), timeout, or missing helper raises
 ``ClipboardContentError`` quoting wl-paste's stderr.
 
-Writing pipes UTF-8 to ``wl-copy --type text/plain;charset=utf-8``. wl-copy
+Writing hands UTF-8 to ``wl-copy --type text/plain;charset=utf-8`` through the
+shared owner launcher (an unlinked temp-file stdin, never a pipe). wl-copy
 forks a background source that keeps serving the selection after Python
 exits; the foreground helper exits once the selection is set. The explicit
 type stops wl-copy from guessing a MIME type from the content (a script-like
@@ -33,6 +34,7 @@ import time
 
 from clipboard._desktop import (
     _WL_PASTE_LIST_TYPES_HTML_CMD,
+    _start_helper_owner,
     _wl_paste_reports_nothing_copied,
 )
 from clipboard._text_native_linux import (
@@ -134,24 +136,26 @@ def _run_wl_copy(cmd: list[str], data: bytes | None) -> None:
     """Run wl-copy to completion of its foreground part, within the bound.
 
     stderr goes to an unlinked file, never a pipe the forked source would
-    hold open; stdin is the text (or /dev/null for ``--clear``).
+    hold open; the text reaches wl-copy through the shared owner launcher
+    (``--clear`` runs payload-free with stdin from /dev/null).
     """
     deadline = time.monotonic() + _WAYLAND_TEXT_WRITE_TIMEOUT_S
     with tempfile.TemporaryFile() as log:
         try:
-            proc = subprocess.Popen(
-                cmd,
-                stdin=subprocess.PIPE if data is not None else subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=log,
-                start_new_session=True,
-            )
+            if data is None:
+                proc = subprocess.Popen(
+                    cmd,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=log,
+                    start_new_session=True,
+                )
+            else:
+                proc = _start_helper_owner(cmd, data, log)
         except OSError as exc:
             raise _text_launch_error(_DESKTOP, "write", cmd[0], _PACKAGE, exc) from exc
         try:
-            proc.communicate(
-                input=data, timeout=_remaining(deadline, _WAYLAND_TEXT_WRITE_TIMEOUT_S)
-            )
+            proc.wait(timeout=_remaining(deadline, _WAYLAND_TEXT_WRITE_TIMEOUT_S))
         except subprocess.TimeoutExpired as exc:
             proc.kill()
             try:
