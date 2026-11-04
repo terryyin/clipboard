@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_shared-native-clear-proof.json",
+      "identity": "SEED-001#shared-native-clear-proof",
+      "completedAt": "2026-11-04T00:08:33.310Z",
+      "blob": "44976770ad3f993865c5711532c484fa10a11536"
+    },
+    {
       "fileName": "SEED-001_clear-clipboard.json",
       "identity": "SEED-001#clear-clipboard",
       "completedAt": "2026-11-03T15:25:20.597Z",

@@ -6,8 +6,6 @@ Make the clipboard project true to its name.
 
 ## Taken
 
-- [Define "cleared" once across the native clear probes](seeds/SEED-001-clipboard-true-to-its-name.md#shared-native-clear-proof) — SEED-001#shared-native-clear-proof ([plan](slice-plans/015-shared-native-clear-proof/PLAN.md))
-
 ## Backlog list
 
 - [Wait for clipboard content with bounded cancellation and timeouts](seeds/SEED-001-clipboard-true-to-its-name.md#wait-for-content) — SEED-001#wait-for-content

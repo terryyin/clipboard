@@ -85,33 +85,6 @@ platform distinctions, reuse candidates, and uncertainty.
 
 ## Story Decomposition
 
-<a id="shared-native-clear-proof"></a>
-
-### Define "cleared" once across the native clear probes
-
-**Identity:** SEED-001#shared-native-clear-proof
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/015-shared-native-clear-proof/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"5933e11c2afbd5558d79a93b99a4dc5e1a352795af1faa7d266787c86ed2aef2","plan":"965fb568f70f1197c1da3910036d17caf4f7a02d36a0dddefefca3059d16218b"}}
-```
-
-**Goal:** Maintainers who change what the native `clear()` proof calls
-"cleared" make that change in one place, not in parallel copies across four
-probes and four wrappers, so the desktops' proofs cannot drift apart. The
-documentation names `clear()` wherever it lists the operations that pick
-Wayland on a mixed session.
-
-**Scope:** Correction of SEED-001#clear-clipboard's proof and documentation
-structure only: one shared "cleared" observation and one Linux step set
-behind the X11 / Wayland / Windows / macOS clear probes, wrappers that rely on
-each step's own `ok`, every touched probe file within 250 lines, `clear()`
-named in the `_is_linux_wayland` docstring and AGENTS.md session sentence,
-and `tests/test_clear.py` stops restating the no-Pillow scenario and private
-globals. Changes no product code or public API, and keeps every probe step's
-name, order and observed evidence. Excludes how X11 `clear()` launches its
-relinquish helper in frozen or zipped applications (a separate human
-decision).
-[Plan](../slice-plans/015-shared-native-clear-proof/PLAN.md)
-
 <a id="wait-for-content"></a>
 
 ### Wait for clipboard content with bounded cancellation and timeouts
