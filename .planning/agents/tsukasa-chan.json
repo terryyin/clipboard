@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Tsukasa-chan",
+  "email": "tsukasa-chan@example.org",
+  "identity": "SEED-001#primary-selection",
+  "mode": "story-branch",
+  "branch": "claude/use-the-linux-primary-selection-explicitly",
+  "host": "claude",
+  "model": "opus"
+}
