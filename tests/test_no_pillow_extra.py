@@ -149,6 +149,20 @@ assert calls == [None]
 clipboard.set_clipboard_clearer(None)
 assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
 """,
+    "wait_for_kind": """\
+import clipboard
+
+assert callable(clipboard.wait_for_kind)
+assert "wait_for_kind" in clipboard.__all__
+
+offer = clipboard.ClipboardOfferSnapshot(
+    kinds=frozenset({"image"}), formats=("image/png",)
+)
+clipboard.set_clipboard_inspector(lambda: offer)
+assert clipboard.wait_for_kind("image", timeout=0) is offer
+clipboard.set_clipboard_inspector(None)
+assert not any(m == "PIL" or m.startswith("PIL.") for m in sys.modules)
+""",
 }
 
 

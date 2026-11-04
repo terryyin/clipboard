@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#wait-for-content
 **Source:** [Wait for clipboard content with bounded cancellation and timeouts](../../seeds/SEED-001-clipboard-true-to-its-name.md#wait-for-content)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -97,7 +98,7 @@ the uncommitted seed refinement):
 
 ### 1. Wait for a clipboard kind with deadline and cancellation
 Type: Behavior
-Status: planned
+Status: done
 Proof: desktop-free tests through public `clipboard.wait_for_kind` in a new
 `tests/test_wait_for_kind.py` with an injected inspector, a monkeypatched
 clock / sleep and a real `threading.Event` (examples 1, 2, 5–9 and the
@@ -120,6 +121,18 @@ deadline, no zero-length sleep and no thread left behind.
 README: new "Waiting for content" section with `wait_for_kind`, its state
 semantics, deadline / cancellation / failure outcomes and observation
 limits; macOS Aqua Evidence entry naming the probe and macOS version.
+
+Accepted proof (2026-11-04): `nix develop -c make check` 659 passed / 28
+skipped (`tests/test_wait_for_kind.py`, `tests/test_wait_for_kind_failures.py`,
+shared fakes `tests/fake_wait_clock.py`); `nix develop -c make test-package`
+pass (installed `wait_for_kind` export). The loop is
+`clipboard/_wait.py::_observe_until(observe, satisfied, ...)`; slice 2 passes
+a `paste` observation and changed-text predicate to it. The macOS probe
+(`scripts/probe_macos_native_wait.py`, support
+`scripts/macos_native_wait_support.py`) stopped at its evidence limit on a
+locked screen (G1, received by slice 2). Learning: on a locked session one
+`inspect()` took 1.1–2.9 s (vs 0.19 s unlocked), so the probe's bounds scale
+with the measured observation time.
 
 ### 2. Wait for changed text on the same bounded loop
 Type: Behavior
@@ -183,3 +196,10 @@ common rule, not per-wait special cases), each with its own desktop-free and
 macOS proof loop; slice 3 is one native evidence loop on CI venues that slice
 1–2 cannot reach from this Mac, with its one unobserved premise bounded by
 its early probe. This review identified no remaining slice-specific concern.
+
+## Story obligations
+
+### G1. macOS native wait_for_kind probe not yet observed on an unlocked session
+Reported: slice 1 — "The gated macOS wait probe stopped at its evidence limit (exit 2) because the screen was locked; no native macOS wait_for_kind observation exists yet."
+Story clause: "Gated native probes (`CLIPBOARD_NATIVE_PROBE`) on macOS, Windows, Linux X11 (Xvfb + `xclip`) and Linux Wayland (Sway + wl-clipboard) start a wait, then copy with an independent producer"
+Disposition: receiving slice 2

@@ -389,6 +389,65 @@ For desktop-free tests, inject a fake with
 ``clipboard.set_clipboard_clearer(None)``. The clearer takes no arguments and
 must leave the clipboard with no offer at all or raise.
 
+Waiting for content (no ``clipboard[images]`` required):
+
+::
+
+   import threading
+   import clipboard
+
+   snapshot = clipboard.wait_for_kind("image", timeout=30)
+   if snapshot is None:
+       print("nothing copied in time")
+
+   stop = threading.Event()  # another thread may call stop.set()
+   clipboard.wait_for_kind("text", timeout=60, interval=1, cancel=stop)
+
+``wait_for_kind(kind, *, timeout, interval=0.5, cancel=None)`` waits until
+the clipboard offers ``kind`` (``"text"``, ``"image"``, ``"html"`` or
+``"files"``) and returns the ``ClipboardOfferSnapshot`` that showed it. It is
+a **state** wait: each observation is one ``inspect()``, so it reads no
+payload, needs no images extra and leaves the clipboard unchanged, and when
+the kind is already offered it returns at once after one observation. A
+caller who needs content copied *after* the call clears the clipboard first.
+
+Outcomes:
+
+* the kind is observed: the snapshot is returned;
+* the deadline passes: ``None``. ``timeout`` is required, in seconds on a
+  monotonic clock, and must be a non-negative finite number; ``timeout=0``
+  observes exactly once;
+* ``cancel`` is set: ``None``, with no further observation. ``cancel`` is a
+  ``threading.Event`` or any object with ``is_set()`` and ``wait(seconds)``;
+  the pause between observations waits on it, so setting it from another
+  thread ends the wait without waiting out the interval;
+* an observation fails: the ``ClipboardContentError`` from ``inspect()`` (no
+  desktop session, missing helper, denied access, helper failure or timeout,
+  a platform where ``inspect`` is not available) is raised at once and never
+  retried, so a timeout or cancellation (``None``) is never mistaken for a
+  failure. An empty clipboard is absence, not failure, and the wait keeps
+  observing;
+* an invalid argument (an unknown ``kind``; a negative, NaN, infinite,
+  boolean or non-numeric ``timeout``; an ``interval`` that is not a positive
+  finite number; a ``cancel`` without ``is_set`` / ``wait``) raises
+  ``ClipboardContentError`` before the clipboard is observed.
+
+``KeyboardInterrupt`` propagates. The wait runs in the calling thread and
+starts no thread or helper of its own; it runs wherever ``inspect`` runs,
+with ``inspect``'s session selection and errors, and honours
+``set_clipboard_inspector`` fakes.
+
+Observation limits: the wait polls, it is not a change notification. It
+pauses ``min(interval, time left)`` between observations (``interval`` must
+be positive, so it never busy-spins helper processes), and a kind that is
+offered and withdrawn between two observations is missed. No new
+observation starts after the deadline; one already running finishes within
+``inspect``'s own helper bound, so the wait returns no later than
+``timeout`` plus one observation. On macOS one ``inspect()`` runs
+``osascript`` and has taken from about 0.2 s to over 1 s on the owner's
+machine, so a kind is seen up to about one interval plus two observations
+after it is copied (one observation may have started just before the copy).
+
 Installation
 ------------
 
@@ -614,6 +673,20 @@ Evidence / verified platforms (native probes gated via
   15.1 s with ``last_error=5`` and ``HTML Format`` / ``CF_UNICODETEXT`` (13)
   were still listed after release. Evidence limits: Win+V clipboard history and cloud clipboard
   copies are not erased or checked.
+* ``wait_for_kind``: macOS Aqua **not yet verified**. The gated probe
+  ``scripts/probe_macos_native_wait.py`` (wrapper
+  ``tests/test_wait_native_macos.py``; no images extra) clears the
+  pasteboard, has a child Python start ``wait_for_kind("text", timeout=20)``,
+  copies with an independent ``pbcopy`` about 1 s after the child's first
+  empty observation, and requires the returned snapshot to list ``"text"``
+  within one interval plus two observations of the copy; then a child
+  ``wait_for_kind("html", timeout=1)`` with nothing copied must return
+  ``None`` between the timeout and the timeout plus one observation. Its
+  only run on the owner's machine, macOS 26.6.2 (build 25G83) / Darwin
+  25.6.0, arm64, stopped at an evidence limit (exit 2) because the screen
+  was locked; the probe refuses a locked or off-console session. Linux X11,
+  Linux Wayland and Windows waits are unobserved natively; they rely on
+  ``inspect``'s evidence above.
 * macOS Aqua HTML **reads** via ``paste_html`` (default reader: the
   pasteboard's ``public.html`` type via built-in ``osascript`` / AppKit) have
   been verified with an independent **browser** producer: Google Chrome
