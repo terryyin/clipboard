@@ -135,3 +135,20 @@ this review.
   tests failed first) and `nix develop -c make check` (612 passed, 27
   skipped). The guard message uses the plain helper path, not `repr`, so the
   Windows matrix assertion `str(script) in message` holds.
+- Slice 2 accepted local proof: `nix develop -c make test-package` (macOS,
+  wheel and sdist each `launched: failure libx11`); negative checks (helper
+  excluded via MANIFEST.in; `FAILURE_EXIT = 4`) each failed the target and
+  were restored; `make check` and `make lint-workflows` pass. uv
+  `--isolated --with` layers cached installs onto `sys.path`
+  (`~/.cache/uv/archive-v0/.../site-packages`), not under `sys.prefix`, so
+  the installed-helper check matches a `site-packages` entry. The Linux
+  `display` outcome awaits the CI package job (obligation O1).
+
+
+## Story obligations
+
+### O1. CI Linux package job not yet observed
+Reported: slice 2 — "make test-package was observed only on macOS (failure libx11); the ubuntu-latest package job running the new check needs the published revision."
+Story clause: "on the CI Linux runner, wheel then sdist"
+Disposition: return
+Commitment: G2, R4.1, E5a
