@@ -3,8 +3,8 @@
 ``pbcopy_independent`` is the independent producer, the JXA
 ``NSPasteboard types`` listing (``macos_native_clear_support``) the
 independent consumer, and ``MACOS`` describes this desktop to
-``native_wait_support``. ``session_state`` reads the CGSession dictionary
-through JXA (independent of ``clipboard.*``).
+``native_wait_harness.WaitDesktop``. ``session_state`` reads the CGSession
+dictionary through JXA (independent of ``clipboard.*``).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import os
 import subprocess
 
 from macos_native_clear_support import _jxa, list_types_independent
-from native_wait_support import WaitDesktop
+from native_wait_harness import WaitDesktop
 
 # The dictionary keys are spelled ``CGSSession...`` / ``kCGSSession...``.
 _JXA_SESSION = """

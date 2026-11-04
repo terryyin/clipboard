@@ -39,7 +39,8 @@ from linux_x11_native_clear_support import X11
 from linux_x11_native_text_support import own, release_all, xvfb_version
 from native_clear_support import distro
 from native_probe_common import linux_x11_environment
-from native_wait_support import INTERVAL_S, WaitDesktop, report, run_steps
+from native_wait_harness import INTERVAL_S, WaitDesktop
+from native_wait_support import report, run_steps
 
 PRODUCER = ["xclip", "-selection", "clipboard", "-i"]
 

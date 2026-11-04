@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#split-native-wait-support
 **Source:** [Split the native wait probe support along its harness and steps](../../seeds/SEED-001-clipboard-true-to-its-name.md#split-native-wait-support)
+**Source review:** [source-review.md](source-review.md)
 
 ## Provenance and findings
 
@@ -63,3 +64,12 @@ module.
   own module rather than trimming docstrings.
 - Settled premise: `ci.yml` runs on every branch push and holds the three
   wait jobs, so the branch-push run is the cross-desktop proof.
+- Learning (slice 1): harness landed at 243 lines without a third timing
+  module; post-change refactor dropped the unused `INTERVAL_S` /
+  `WaitDesktop` re-export from `native_wait_support` so probes import those
+  from `native_wait_harness` (support 161 lines).
+- Accepted local proof (slice 1, pending E2 CI): `wc -l` harness 243 /
+  support 161 / macos 49; `nix develop -c make check` 769 passed; off-desktop
+  `probe_{linux_x11,linux_wayland,windows}_native_wait.py` exit 2 with
+  `evidence_limit`; live macOS Aqua probe exit 0 with the four step names.
+  Branch-push CI wait jobs (E2) still need the published revision.

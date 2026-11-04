@@ -73,7 +73,8 @@ session; optional native text / pasteboard / file-list probes stay gated via
 wrappers assert only exit, `ok`, the ordered steps and environment floors, so
 a new condition belongs in a step's `ok`), the wait probes
 `tests/test_wait_native_{macos,linux_x11,linux_wayland,windows}.py` (shared
-steps in `scripts/native_wait_support.py`), and the
+steps in `scripts/native_wait_support.py`, child harness in
+`scripts/native_wait_harness.py`), and the
 `copy_files` probes
 `scripts/probe_{macos,windows,linux_x11,linux_wayland}_native_copy_files.py`).
 Desktop-free tests must pass on every matrix OS: fake the platform only via
