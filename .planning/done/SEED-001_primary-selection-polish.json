@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#primary-selection-polish",
+  "title": "Correct PRIMARY wording and probe evidence left by the primary-selection execution",
+  "completedAt": "2026-11-04T23:02:19.908Z",
+  "developer": "Terry Yin",
+  "agent": "Maria-chan",
+  "host": "cursor",
+  "model": "auto"
+}
