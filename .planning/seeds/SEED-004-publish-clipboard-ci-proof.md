@@ -15,7 +15,7 @@ scope: story
 
 **Identity:** SEED-004#publish-clipboard-ci-proof
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/021-publish-clipboard-ci-proof/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"7cd77fbd34984ef62f14637137f88c71f4724b8dcc414a54eb5411c2b224021e","plan":"6d90a17c5344cd3d8293af4f1451032359faec830a3e8467935302cd1b263ee9"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/021-publish-clipboard-ci-proof/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"7cd77fbd34984ef62f14637137f88c71f4724b8dcc414a54eb5411c2b224021e","plan":"4e2b49db8d2eda1fbf89e5bf6b335ec265a2573773d86de66ab1ef015014b8bc"}}
 ```
 
 **Goal**

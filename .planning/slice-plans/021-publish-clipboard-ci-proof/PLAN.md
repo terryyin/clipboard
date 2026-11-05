@@ -73,6 +73,11 @@ cannot close this slice.
   An independent proof job would rerun pytest, and log scraping would need
   new consumer logic. The installed collector already covers expectations,
   duplicates and attempt identity. [Recipe](../../../.agents/skills/dough-test-optimization/references/ci-proof-summary.md)
+- Follow the recipe's GitHub Actions path (steps 3 to 6). Open Dough 0.3.86
+  added a CI-adapter path for projects that set `ciAdapter`; Clipboard sets
+  none and its judged CI is `ci.yml`, so the adapter `proof` operation and
+  `--attempt-id` identity are out of scope. Copy the four modules from the
+  0.3.86 install; name the attempt with `--run-id` and `--attempt`.
 - Clipboard's planning and repository guidance identify no ADR catalog
   governing CI proof. The existing contract gives report production to
   Clipboard CI and artifact matching to Intent. Native interoperability
@@ -82,7 +87,11 @@ cannot close this slice.
 ## Decisive premises
 
 Observations on 2026-11-05 in the preparation worktree at `a545992e9`,
-unless the row names a hosted run.
+unless the row names a hosted run. At `526acfa23` (Open Dough 0.3.86), the
+recipe's GitHub Actions steps 3 to 6 are textually unchanged, and the updated
+collector's `summarize --run-id 1 --attempt 2 --expect tests=1` on an empty
+directory again reported part 1 missing with zero counts and wrote the
+GitHub identity fields `runId` and `runAttempt`.
 
 | Consuming operation | Observation and result | Remainder |
 | --- | --- | --- |
