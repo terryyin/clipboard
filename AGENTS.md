@@ -64,7 +64,11 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop
-session; optional native text / pasteboard / file-list probes stay gated via
+session. Judged `ci.yml` publishes one Intent CI-proof summary for the
+desktop-free pytest totals from the Ubuntu Python 3.13 matrix leg
+(`scripts/ci-proof-*.mjs`, `scripts/junit-outcomes.py`; skipped when the
+release workflow_call sets `release-tag`). Optional native text / pasteboard /
+file-list probes stay gated via
 `CLIPBOARD_NATIVE_PROBE` (see docs/evidence-text-primary-clear.rst and
 docs/evidence-wait-html-files.rst, e.g.
 `scripts/probe_macos_native_paste_image.py`, the text probes
