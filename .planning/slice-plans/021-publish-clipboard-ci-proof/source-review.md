@@ -8,8 +8,8 @@ implementation return, product, or proof.
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| 1 | A Clipboard developer reviewing an ordinary GitHub Actions run can see, in Intent → CI status, what pytest reported for the configured `tests` location. | slice 1 | |
-| 2 | A Clipboard developer reviewing that run can tell when the shown attempt has a gap in its evidence. | slice 1 | |
+| 1 | A Clipboard developer reviewing an ordinary GitHub Actions run can see, in Intent → CI status, what pytest reported for the configured `tests` location. | slice 1 | observed: Intent → CI status for story branch cursor/publish-clipboard-ci-proof-for-intent: Passed at 15d276b run 42028715651; Proof tests 770 passed and 33 other checks; 1 of 1 part present |
+| 2 | A Clipboard developer reviewing that run can tell when the shown attempt has a gap in its evidence. | slice 1 | observed: Same Intent Proof region reports 1 of 1 part present (gap would show missing); earlier failed ancestor 30f503e also showed matching tests totals when selected |
 | 3 | CI publishes one summary for the shown attempt of the judged `ci.yml` workflow. | slice 1 | observed: .github/workflows/ci.yml ci-proof job uploads ci-proof-summary-attempt-${{ github.run_attempt }} |
 | 4 | That summary counts the desktop-free pytest run from one existing, named matrix leg: Python 3.13 on `ubuntu-latest` (one repetition of the suite). | slice 1 | observed: .github/workflows/ci.yml WRITE_CI_PROOF only when matrix.os==ubuntu-latest && matrix.python==3.13 |
 | 5 | The workflow verdict continues to reflect the other matrix legs, native probes, and package checks (they are not collapsed into this summary’s counts). | slice 1 | observed: .github/workflows/ci.yml ci-passed still requires quality, full tests matrix, and native jobs; proof counts only tests=1 |

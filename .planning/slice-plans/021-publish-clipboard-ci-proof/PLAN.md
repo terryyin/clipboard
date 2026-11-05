@@ -24,7 +24,7 @@ their existing jobs. Per-platform and native proof breakdowns are deferred.
 
 ### 1. Show the representative pytest run's proof in Intent
 Type: Behavior
-Status: planned
+Status: done
 Proof: Run the local pipeline with actual pytest reports for the three
 examples, then `nix develop -c make lint-workflows` and
 `nix develop -c make check`. The former checks the changed workflow and
@@ -122,7 +122,7 @@ No slice-specific concern remains outside that slice's hosted check.
   bash `if` under the Windows PowerShell default; repair sets `shell: bash`
   on those steps.
 
-## Accepted proof (slice 1, local; hosted pending)
+## Accepted proof (slice 1)
 
 - Fail/skip/fixture-error under `tests/`: pytest exit 1; summarize
   passed=1 failed=2 other=1 through junit-outcomes → fragment → summarize.
@@ -130,6 +130,13 @@ No slice-specific concern remains outside that slice's hosted check.
   → part 1 missing with zero counts.
 - `nix develop -c make lint-workflows` and `nix develop -c make check`
   after implementation; lint-workflows re-run after the authorized split.
+- Hosted run 42027483878 (`30f503ec`): artifact `ci-proof-summary-attempt-1`
+  holds only `ci-proof-summary.json` with 770/0/33 and part 1 present;
+  Intent → CI status for the story branch showed those totals (Windows legs
+  then failed on bash-under-PowerShell).
+- Repair run 42028715651 (`15d276ba`): CI success; same summary shape;
+  Intent → CI status shows Passed at `15d276b` with
+  `tests: 770 passed and 33 other checks; 1 of 1 part present`.
 
 ## Story obligations
 
