@@ -106,3 +106,9 @@ claim).
 Slice-plan refinement was not needed: one Behavior owns the probe run and the
 Evidence claim, premises are settled or bounded by that run's session gate,
 and no independent second outcome remains.
+
+## Execution complete
+
+Product advice: no change. macOS Aqua waits now share the verified Evidence
+standing of the other three desktops; the North Star evidence line can note
+it at wrap-up assimilation. No new product work is suggested.
