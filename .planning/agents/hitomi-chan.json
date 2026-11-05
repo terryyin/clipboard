@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Hitomi-chan",
-  "email": "hitomi-chan@example.org",
-  "identity": "SEED-001#macos-native-wait-evidence",
-  "mode": "story-branch",
-  "branch": "claude/verify-the-clipboard-waits-natively-on-macos-aqu",
-  "host": "claude"
-}

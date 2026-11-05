@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_macos-native-wait-evidence.json",
+      "identity": "SEED-001#macos-native-wait-evidence",
+      "completedAt": "2026-11-05T15:28:05.627Z",
+      "blob": "dd8d84c8c4f16986c491bb1897a856b776e3e2f6"
+    },
+    {
       "fileName": "SEED-004_publish-clipboard-ci-proof.json",
       "identity": "SEED-004#publish-clipboard-ci-proof",
       "completedAt": "2026-11-05T12:54:47.004Z",

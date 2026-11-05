@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#macos-native-wait-evidence",
+  "title": "Verify the clipboard waits natively on macOS Aqua",
+  "completedAt": "2026-11-05T15:28:05.627Z",
+  "developer": "Terry Yin",
+  "agent": "Hitomi-chan",
+  "host": "claude"
+}
