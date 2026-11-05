@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Rio-chan",
+  "email": "rio-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-004#publish-clipboard-ci-proof",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}
