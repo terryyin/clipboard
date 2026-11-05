@@ -152,3 +152,11 @@ Reported: slice 1 — "source review — native out of deferred proof scope"
 Story clause: "Defer per-platform, native and installed-distribution proof breakdowns."
 Disposition: excluded "Defer per-platform, native and installed-distribution proof breakdowns."
 Commitment: 17
+
+## Execution complete
+
+Product advice: Outcome matches the story. Intent → CI status shows the
+ubuntu/3.13 desktop-free pytest totals as one reported part; release skip and
+deferred native/install breakdowns hold. The authorized `ci.yml` split is
+coherent with existing Wayland reusable workflows. No product correction or
+backlog change recommended.

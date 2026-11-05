@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 29
+- Highest allocated local number: 30
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
@@ -105,6 +105,14 @@ Distinct executions, original provenance, observations and qualified inferences 
   - Evidence: plan 020 Findings/Settled premises omit the pre-existing `README.rst` oversize; post-change refactor return stopped on 1016 / 250 lines; coordinator DEVELOPER ATTENTION with packaging options; developer authorized option 1 (`1`); PLAN.md Learnings record the split
   - Observed effect: Slice-1 product proof was already accepted before the size gate surfaced; delivery paused overnight until packaging authorization, then a short README landing plus `docs/*.rst` modules unblocked publish of `90a8e7b`
   - Inference: Recurrence of the planning-gap pattern — a known-oversize packaging home touched by Evidence wording edits should be named as a premise or Structure concern before the first Behavior refactor stop
+- Execution: SEED-004#publish-clipboard-ci-proof
+  - Timestamp: 2026-11-05T19:23:00+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: plan 021 Decisive premises omit pre-existing `.github/workflows/ci.yml` 503/250; post-change refactor stopped at 593/250; coordinator DEVELOPER ATTENTION with split vs defer options; developer reply `1` at 2026-11-05T19:23:00+07:00; authorized Wayland-style `native-x11-*` / `native-windows-*` plus `desktop-free-tests.yml` split; `ci.yml` landed at 241 lines in `30f503ec`
+  - Observed effect: Slice-1 Intent proof implementation and local pipeline were ready before the size gate surfaced; delivery paused for packaging authorization, then the multi-seam workflow split unblocked progress publish
+  - Inference: Recurrence of the planning-gap pattern — a known-oversize judged CI workflow that the Behavior slice must extend should be named as a premise or Structure concern before the first Behavior refactor stop
 
 ## DD-008 — Prior native-venue findings reused; every gated CI probe passed first run
 Reusing the project's recorded native venues (Xvfb with an owning xclip,
@@ -194,6 +202,14 @@ When the 250-line refactor check required splitting an oversize module into a pa
   - Evidence: coordinator DEVELOPER ATTENTION after refactor stop on `README.rst` (1016 / 250); options included packaging split vs defer; user reply `1`; authorized split kept `pyproject.toml` `readme = README.rst` as a short landing and moved Usage / Evidence / Development under `docs/*.rst` (each ≤250)
   - Observed effect: No unauthorized docs packaging change; after authorization the split completed and product delivery resumed
   - Inference: Useful practice holds for a documentation-home split that preserves the packaging entry point while clearing the file-size gate
+- Execution: SEED-004#publish-clipboard-ci-proof
+  - Timestamp: 2026-11-05T19:23:00+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: coordinator DEVELOPER ATTENTION after refactor stop on `.github/workflows/ci.yml` (593 / 250; already 503 before the slice); options authorized multi-seam split vs defer/exception; user reply `1`; authorized extract of native X11/Windows bodies and desktop-free tests/proof into reusable workflows
+  - Observed effect: No unauthorized CI packaging change; after authorization the split completed (`ci.yml` 241 lines) and progress delivery resumed
+  - Inference: Useful practice holds for a judged-workflow split that crosses native and desktop-free CI seams while clearing the file-size gate
 
 ## ODF-416 — progress:true left mid-plan Behavior slice unfinished until local-proof done commit
 
@@ -446,6 +462,14 @@ blocked; the gap is the unnamed observation step. Matching uncertain.
   - Evidence: sole Structure slice published a50e0f6 with `progress: true` for E2 (branch-push `native-*-wait` jobs); plan Status remains `planned`; retrospective started while observer `/tmp/dough-ci-501/watch-BKyy1N` still pending overall (wait jobs later green on run 41932201965); no named read-only observation command before the expected records-only done flip
   - Observed effect: Implementation delivered under `progress: true`; slice done transition and E2 source-review cell still deferred to a later records-only commit after CI observation, same unnamed-step gap as prior rows (Structure rather than Behavior)
   - Inference: Recurrence of the unnamed observation step for a final CI-owned proof slice; Structure vs Behavior does not change the gap
+- Execution: SEED-004#publish-clipboard-ci-proof
+  - Timestamp: 2026-11-05T19:47:13+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: sole Behavior slice published `30f503ec` then repair `15d276ba` with `progress: true` (hosted Intent → CI status proof); Intent confirmed 770/0/33 on run 42028715651; records-only done `4479368b` flipped Status and recorded Accepted proof (observer later success on run 42030109489); no named read-only observation command before the done flip
+  - Observed effect: One extra publication and CI run solely to flip `Status: done` and record hosted Intent proof on a single-slice plan after the repair already green; nothing mid-plan was blocked
+  - Inference: Same unnamed observation step as prior ODF-418 rows; Intent dashboard read plus records-only done again filled the gap for a final CI/Intent-owned proof slice
 
 ## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
 
@@ -528,3 +552,20 @@ probes on its first runs.
   - Evidence: plan 017 Learnings "Slice 1 early probe" / "Slice 2 early probe" (Docker ubuntu:24.04); CI runs 41799207621 and 41803370471 passed the X11 and Wayland PRIMARY probes on first publication
   - Observed effect: No probe-only commits or CI round trips; no native CI repair was needed
   - Inference: Useful practice where a container runtime is available; it does not replace CI evidence (Sway 1.9 locally vs 1.11 in CI), so CI remains the native proof owner
+
+## DD-030 — Multi-OS matrix bash steps first failed under Windows PowerShell
+POSIX shell conditionals (`if`, `$?`, `RUNNER_TEMP`) were added to a
+`ubuntu`/`macos`/`windows` desktop-free matrix without `shell: bash`. Windows
+runners default to PowerShell, so the first hosted run rejected those steps
+while the Ubuntu Intent proof fragment and summary already matched the named
+leg — one CI repair round-trip to set `shell: bash` on the affected steps.
+
+### Occurrences
+- Execution: SEED-004#publish-clipboard-ci-proof
+  - Timestamp: 2026-11-05T19:37:16+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: run 42027483878 on `30f503ec` failed Windows desktop-free jobs on bash-shaped proof-gate `run` under PowerShell; `ci-proof-summary-attempt-1` already held 770/0/33; repair `15d276ba` sets `shell: bash` on pytest and fragment steps; green run 42028715651
+  - Observed effect: One hosted CI failure and repair commit solely for matrix shell dialect; Intent proof producer on ubuntu/3.13 had already succeeded
+  - Inference: When extending a multi-OS matrix with POSIX shell, declare `shell: bash` (or write a Windows-safe form) before the first branch push — local macOS/Linux workflow lint will not catch the PowerShell default
