@@ -1,0 +1,50 @@
+name: Native X11 copy-files
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  native-linux-x11-copy-files:
+    name: Native Linux X11 copy_files (xclip + Thunar/Xvfb)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install isolated X11 file-manager environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y thunar xclip xdotool xvfb xauth dbus-x11 openbox
+      - run: uv sync --locked
+      - name: Paste the copy_files offer with Thunar after the writer exits
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+          CLIPBOARD_FILE_MANAGER_ISOLATED: '1'
+          CLIPBOARD_PROBE_ARTIFACTS: artifacts/copy-files-x11
+          GDK_BACKEND: x11
+        run: |
+          mkdir -p "$CLIPBOARD_PROBE_ARTIFACTS"
+          # Variables in the nested shell and trap expand in that session.
+          # shellcheck disable=SC2016
+          dbus-run-session -- xvfb-run -a sh -eu -c '
+            openbox >"$CLIPBOARD_PROBE_ARTIFACTS/openbox.log" 2>&1 &
+            openbox_pid=$!
+            trap '\''kill "$openbox_pid" 2>/dev/null || true'\'' EXIT
+            uv run --locked pytest tests/test_copy_files_native_linux_x11.py -v -rsP
+          '
+      - name: Retain copy_files X11 interoperability evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: copy-files-x11-${{ github.run_attempt }}
+          path: artifacts/copy-files-x11/
+          if-no-files-found: error

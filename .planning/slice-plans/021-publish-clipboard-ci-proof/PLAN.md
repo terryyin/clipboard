@@ -2,6 +2,7 @@
 
 **Identity:** SEED-004#publish-clipboard-ci-proof
 **Source:** [Publish Clipboard CI proof for Intent](../../seeds/SEED-004-publish-clipboard-ci-proof.md#publish-clipboard-ci-proof)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -105,3 +106,36 @@ GitHub identity fields `runId` and `runAttempt`.
 Slice-plan refinement was unnecessary. The existing producer, collector,
 and dashboard read form one observable delivery with one proof owner.
 No slice-specific concern remains outside that slice's hosted check.
+
+## Learnings
+
+- Developer authorized option 1 after post-change refactor stopped on
+  pre-existing oversize `.github/workflows/ci.yml` (503→593/250). Split along
+  cohesive seams: Wayland-style `native-x11-*.yml` and `native-windows-*.yml`
+  callers, and `desktop-free-tests.yml` for the matrix producer plus Intent
+  proof fragments. `ci.yml` is 241 lines; proof semantics unchanged. Hosted
+  Intent → CI status confirmation still owes the first published branch run.
+
+## Accepted proof (slice 1, local; hosted pending)
+
+- Fail/skip/fixture-error under `tests/`: pytest exit 1; summarize
+  passed=1 failed=2 other=1 through junit-outcomes → fragment → summarize.
+- Collection exit 2 gated (no fragment); empty and earlier-attempt summarize
+  → part 1 missing with zero counts.
+- `nix develop -c make lint-workflows` and `nix develop -c make check`
+  after implementation; lint-workflows re-run after the authorized split.
+
+## Story obligations
+
+### G1. Per-platform native and installed-distribution breakdowns deferred
+Reported: slice 1 — "source review — deferred breakdowns"
+Story clause: "Defer per-platform, native and installed-distribution proof breakdowns."
+Disposition: excluded "Defer per-platform, native and installed-distribution proof breakdowns."
+Commitment: 12
+
+
+### G2. Native interoperability remains independently evidenced
+Reported: slice 1 — "source review — native out of deferred proof scope"
+Story clause: "Defer per-platform, native and installed-distribution proof breakdowns."
+Disposition: excluded "Defer per-platform, native and installed-distribution proof breakdowns."
+Commitment: 17

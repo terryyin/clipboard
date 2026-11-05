@@ -1,0 +1,97 @@
+name: Desktop-free tests
+
+on:
+  workflow_call:
+    inputs:
+      release-tag:
+        description: Non-empty when called from the release workflow
+        type: string
+        default: ''
+      revision:
+        description: Git revision recorded in CI proof fragments
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Python ${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    env:
+      WRITE_CI_PROOF: ${{ matrix.os == 'ubuntu-latest' && matrix.python == '3.13' && inputs.release-tag == '' }}
+      CI_PROOF_REVISION: ${{ inputs.revision }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ['3.10', '3.14']
+        include:
+          - os: ubuntu-latest
+            python: '3.11'
+          - os: ubuntu-latest
+            python: '3.12'
+          - os: ubuntu-latest
+            python: '3.13'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --locked --extra images
+      # One Intent proof part: desktop-free pytest on ubuntu-latest / Python 3.13.
+      # Other matrix legs and the release workflow_call keep plain pytest.
+      - name: Run desktop-free pytest
+        id: pytest
+        run: |
+          if [ "${WRITE_CI_PROOF}" != "true" ]; then
+            uv run --locked --extra images pytest
+          else
+            report="${RUNNER_TEMP}/ci-proof-junit.xml"
+            set +e
+            uv run --locked --extra images pytest -o junit_family=xunit1 --junitxml="${report}"
+            status=$?
+            echo "status=${status}" >> "${GITHUB_OUTPUT}"
+            exit "${status}"
+          fi
+      - name: Set up Node for CI proof
+        if: ${{ !cancelled() && env.WRITE_CI_PROOF == 'true' && steps.pytest.outcome != 'skipped' }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '20.19'
+      - name: Write the CI proof fragments
+        if: ${{ !cancelled() && env.WRITE_CI_PROOF == 'true' && steps.pytest.outcome != 'skipped' }}
+        env:
+          PYTEST_STATUS: ${{ steps.pytest.outputs.status }}
+        run: |
+          report="${RUNNER_TEMP}/ci-proof-junit.xml"
+          outcomes="${RUNNER_TEMP}/ci-proof-outcomes.txt"
+          case "${PYTEST_STATUS}" in
+            0|1) ;;
+            *) exit 0 ;;
+          esac
+          if [ ! -f "${report}" ]; then
+            exit 0
+          fi
+          if ! uv run --locked python scripts/junit-outcomes.py "${report}" > "${outcomes}"; then
+            rm -f -- "${outcomes}"
+            exit 0
+          fi
+          node scripts/ci-proof-summary.mjs fragment \
+            --outcomes "${outcomes}" --entry tests \
+            --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
+            --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
+      - name: Keep the CI proof fragments
+        if: ${{ !cancelled() && env.WRITE_CI_PROOF == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-proof-fragments-${{ github.job }}-1-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-proof/
+          if-no-files-found: ignore
+          retention-days: 1

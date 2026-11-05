@@ -23,6 +23,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CI_PROOF_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   quality:
     name: Lint and package (Nix)
@@ -52,263 +55,39 @@ jobs:
           if-no-files-found: error
 
   tests:
-    name: Python ${{ matrix.python }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python: ['3.10', '3.14']
-        include:
-          - os: ubuntu-latest
-            python: '3.11'
-          - os: ubuntu-latest
-            python: '3.12'
-          - os: ubuntu-latest
-            python: '3.13'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: ${{ matrix.python }}
-          enable-cache: true
-      - run: uv sync --locked --extra images
-      - run: uv run --locked --extra images pytest
+    name: Desktop-free tests
+    uses: ./.github/workflows/desktop-free-tests.yml
+    with:
+      release-tag: ${{ inputs.release-tag }}
+      revision: ${{ github.event.pull_request.head.sha || github.sha }}
 
   native-linux-x11-copy-image:
     name: Native Linux X11 copy_image (Xvfb)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - name: Install X11 clipboard helpers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xclip xvfb
-      - run: uv sync --locked --extra images
-      - name: Gated X11 copy_image probe under Xvfb
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: >
-          xvfb-run -a
-          uv run --locked --extra images
-          pytest tests/test_copy_image_native_linux_x11.py -v
+    uses: ./.github/workflows/native-x11-copy-image.yml
 
   native-linux-x11-clear:
     name: Native Linux X11 clear (Xvfb)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - name: Install X11 clipboard helpers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xclip xvfb
-      - run: uv sync --locked --extra images
-      - name: Early probe of xclip on a fresh unowned CLIPBOARD (records only)
-        # Records the version-dependent no-owner wording; never fails the job.
-        run: |
-          xvfb-run -a sh -c '
-            xclip -version 2>&1 || true
-            xclip -selection clipboard -o -t TARGETS
-            echo "xclip TARGETS exit code: $?"
-          ' 2>&1 || true
-      - name: Gated X11 clear probe under a fresh Xvfb
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: >
-          xvfb-run -a
-          uv run --locked --extra images
-          pytest tests/test_clear_native_linux_x11.py -v -rP
+    uses: ./.github/workflows/native-x11-clear.yml
 
   native-linux-x11-paste-html:
     name: Native Linux X11 paste_html (Xvfb)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - name: Install X11 clipboard helpers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xclip xvfb
-      - run: uv sync --locked
-      - name: Gated X11 paste_html probe under Xvfb
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: >
-          xvfb-run -a
-          uv run --locked
-          pytest tests/test_paste_html_native_linux_x11.py -v
+    uses: ./.github/workflows/native-x11-paste-html.yml
 
   native-linux-x11-text:
     name: Native Linux X11 text copy/paste (Xvfb)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - name: Install X11 clipboard helpers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xclip xsel xvfb
-      - run: uv sync --locked
-      - name: Gated X11 text probe under Xvfb
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: >
-          xvfb-run -a
-          uv run --locked
-          pytest tests/test_text_native_linux_x11.py -v -rP
-      # Fresh Xvfb, so PRIMARY starts unowned; xsel serves example 8's
-      # pyperclip CLIPBOARD read on a PATH without xclip.
-      - name: Gated X11 PRIMARY probe under Xvfb
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: >
-          xvfb-run -a
-          uv run --locked
-          pytest tests/test_primary_native_linux_x11.py -v -rP
+    uses: ./.github/workflows/native-x11-text.yml
 
   native-linux-x11-wait:
     name: Native Linux X11 wait (Xvfb)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - name: Install X11 clipboard helpers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xclip xvfb
-      - run: uv sync --locked
-      - name: Gated X11 wait probe under Xvfb
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: >
-          xvfb-run -a
-          uv run --locked
-          pytest tests/test_wait_native_linux_x11.py -v -rP
+    uses: ./.github/workflows/native-x11-wait.yml
 
   native-linux-x11-file-manager-offers:
     name: Native Linux file-manager offers (Thunar/Xvfb)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - name: Install isolated X11 file-manager environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y thunar xclip xdotool xvfb xauth dbus-x11 openbox
-      - run: uv sync --locked
-      - name: Paste each helper-owned file offer with Thunar
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-          CLIPBOARD_FILE_MANAGER_ISOLATED: '1'
-          CLIPBOARD_PROBE_ARTIFACTS: artifacts/file-manager-offers
-          GDK_BACKEND: x11
-        run: |
-          mkdir -p "$CLIPBOARD_PROBE_ARTIFACTS"
-          # Variables in the nested shell and trap expand in that session.
-          # shellcheck disable=SC2016
-          dbus-run-session -- xvfb-run -a sh -eu -c '
-            openbox >"$CLIPBOARD_PROBE_ARTIFACTS/openbox.log" 2>&1 &
-            openbox_pid=$!
-            trap '\''kill "$openbox_pid" 2>/dev/null || true'\'' EXIT
-            uv run --locked pytest tests/test_file_manager_offers_native_linux_x11.py -v -rP
-          '
-      - name: Retain file-manager interoperability evidence
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: file-manager-offers-${{ github.run_attempt }}
-          path: artifacts/file-manager-offers/
-          if-no-files-found: error
+    uses: ./.github/workflows/native-x11-file-manager-offers.yml
 
   native-linux-x11-copy-files:
     name: Native Linux X11 copy_files (xclip + Thunar/Xvfb)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - name: Install isolated X11 file-manager environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y thunar xclip xdotool xvfb xauth dbus-x11 openbox
-      - run: uv sync --locked
-      - name: Paste the copy_files offer with Thunar after the writer exits
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-          CLIPBOARD_FILE_MANAGER_ISOLATED: '1'
-          CLIPBOARD_PROBE_ARTIFACTS: artifacts/copy-files-x11
-          GDK_BACKEND: x11
-        run: |
-          mkdir -p "$CLIPBOARD_PROBE_ARTIFACTS"
-          # Variables in the nested shell and trap expand in that session.
-          # shellcheck disable=SC2016
-          dbus-run-session -- xvfb-run -a sh -eu -c '
-            openbox >"$CLIPBOARD_PROBE_ARTIFACTS/openbox.log" 2>&1 &
-            openbox_pid=$!
-            trap '\''kill "$openbox_pid" 2>/dev/null || true'\'' EXIT
-            uv run --locked pytest tests/test_copy_files_native_linux_x11.py -v -rsP
-          '
-      - name: Retain copy_files X11 interoperability evidence
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: copy-files-x11-${{ github.run_attempt }}
-          path: artifacts/copy-files-x11/
-          if-no-files-found: error
+    uses: ./.github/workflows/native-x11-copy-files.yml
 
   native-linux-wayland-copy-image:
     name: Native Linux Wayland copy_image (Sway)
@@ -336,100 +115,56 @@ jobs:
 
   native-windows-paste-html:
     name: Native Windows paste_html (windows-latest)
-    runs-on: windows-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - run: uv sync --locked
-      - name: Gated Windows paste_html probe (skips on an evidence limit)
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: uv run --locked pytest tests/test_paste_html_native_windows.py -v -rsP
+    uses: ./.github/workflows/native-windows-paste-html.yml
 
   native-windows-text:
     name: Native Windows text copy/paste (windows-latest)
-    runs-on: windows-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - run: uv sync --locked
-      - name: Gated Windows text probe (fails on an evidence limit)
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: uv run --locked pytest tests/test_text_native_windows.py -v -rP
+    uses: ./.github/workflows/native-windows-text.yml
 
   native-windows-copy-files:
     name: Native Windows copy_files CF_HDROP + Explorer paste (windows-latest)
-    runs-on: windows-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - run: uv sync --locked
-      - name: Gated Windows copy_files probe (fails when it cannot verify)
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: uv run --locked pytest tests/test_copy_files_native_windows.py -v -rP
+    uses: ./.github/workflows/native-windows-copy-files.yml
 
   native-windows-clear:
     name: Native Windows clear (windows-latest)
-    runs-on: windows-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - run: uv sync --locked --extra images
-      - name: Gated Windows clear probe (fails on an evidence limit)
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: >
-          uv run --locked --extra images
-          pytest tests/test_clear_native_windows.py -v -rP
+    uses: ./.github/workflows/native-windows-clear.yml
 
   native-windows-wait:
     name: Native Windows wait (windows-latest)
-    runs-on: windows-latest
-    timeout-minutes: 10
+    uses: ./.github/workflows/native-windows-wait.yml
+
+  # Attempt summary for Intent → CI status. Skipped on the release workflow_call.
+  ci-proof:
+    needs: [tests]
+    if: ${{ !cancelled() && inputs.release-tag == '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          version: '0.11.21'
-          python-version: '3.13'
-          enable-cache: true
-      - run: uv sync --locked
-      - name: Gated Windows wait probe (fails on an evidence limit)
-        env:
-          CLIPBOARD_NATIVE_PROBE: '1'
-        run: uv run --locked pytest tests/test_wait_native_windows.py -v -rP
+          node-version: '20.19'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: ci-proof-fragments-*-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-proof-fragments
+      - name: Summarize CI proof
+        run: |
+          mkdir -p -- "${RUNNER_TEMP}/ci-proof-fragments"
+          node scripts/ci-proof-summary.mjs summarize \
+            --fragments "${RUNNER_TEMP}/ci-proof-fragments" \
+            --expect tests=1 \
+            --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
+            --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
+            --out "${RUNNER_TEMP}/ci-proof-summary.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-proof-summary-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-proof-summary.json
+          if-no-files-found: error
+          retention-days: 30
 
   ci-passed:
     name: CI passed
@@ -437,6 +172,7 @@ jobs:
     needs:
       - quality
       - tests
+      - ci-proof
       - native-linux-x11-copy-image
       - native-linux-x11-paste-html
       - native-linux-x11-text
@@ -462,6 +198,7 @@ jobs:
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           TEST_RESULT: ${{ needs.tests.result }}
+          CI_PROOF_RESULT: ${{ needs.ci-proof.result }}
           NATIVE_X11_RESULT: ${{ needs.native-linux-x11-copy-image.result }}
           NATIVE_X11_PASTE_HTML_RESULT: ${{ needs.native-linux-x11-paste-html.result }}
           NATIVE_X11_TEXT_RESULT: ${{ needs.native-linux-x11-text.result }}
@@ -483,6 +220,7 @@ jobs:
         run: >-
           test "$QUALITY_RESULT" = success
           && test "$TEST_RESULT" = success
+          && { test "$CI_PROOF_RESULT" = success || test "$CI_PROOF_RESULT" = skipped; }
           && test "$NATIVE_X11_RESULT" = success
           && test "$NATIVE_X11_PASTE_HTML_RESULT" = success
           && test "$NATIVE_X11_TEXT_RESULT" = success

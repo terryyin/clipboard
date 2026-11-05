@@ -1,0 +1,42 @@
+name: Native X11 clear
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  native-linux-x11-clear:
+    name: Native Linux X11 clear (Xvfb)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.21'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install X11 clipboard helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xclip xvfb
+      - run: uv sync --locked --extra images
+      - name: Early probe of xclip on a fresh unowned CLIPBOARD (records only)
+        # Records the version-dependent no-owner wording; never fails the job.
+        run: |
+          xvfb-run -a sh -c '
+            xclip -version 2>&1 || true
+            xclip -selection clipboard -o -t TARGETS
+            echo "xclip TARGETS exit code: $?"
+          ' 2>&1 || true
+      - name: Gated X11 clear probe under a fresh Xvfb
+        env:
+          CLIPBOARD_NATIVE_PROBE: '1'
+        run: >
+          xvfb-run -a
+          uv run --locked --extra images
+          pytest tests/test_clear_native_linux_x11.py -v -rP
