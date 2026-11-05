@@ -2,6 +2,7 @@
 
 **Identity:** SEED-001#macos-native-wait-evidence
 **Source:** [Verify the clipboard waits natively on macOS Aqua](../../seeds/SEED-001-clipboard-true-to-its-name.md#macos-native-wait-evidence)
+**Source review:** [source-review.md](source-review.md)
 **North Star:** [Rich clipboard content beside text re-exports](../../NORTH-STAR.md#rich-clipboard-content-beside-text-re-exports)
 
 ## Goal and scope
@@ -60,7 +61,7 @@ otherwise.
 
 ### 1. Verify macOS Aqua waits and record Evidence
 Type: Behavior
-Status: planned
+Status: done
 Proof: Immediately before the probe, confirm `session_state()` is unlocked and
 on-console. Run
 `CLIPBOARD_NATIVE_PROBE=1 nix develop -c uv run --locked pytest
@@ -73,6 +74,19 @@ Python) and per-step outcomes/timings, in the same style as the Linux/Windows
 wait Evidence bullet. Exit 2 → stop, leave Evidence unchanged. Exit 1 → fix
 the wait or probe (or stop for a documented limitation decision) before any
 verification claim. Then `nix develop -c make check`.
+
+Accepted proof (2026-11-05, at `abb4de8`): `session_state()` locked false,
+on_console true, login_done true and `IOConsoleLocked` false immediately
+before; the gated probe command exited 0 on two consecutive runs (14:5xZ),
+each `ok` true, `evidence_limit` false, `failed_steps` `[]`, the four steps
+in wrapper order. The second run's report (macOS 26.6.2 / 25G83, Darwin
+25.6.0, arm64, Python 3.13.17, 0.5 s interval; latencies 0.37 s / 0.01 s,
+timeouts 1.0 s / 3.0 s) is recorded in the Evidence bullet. `nix develop -c
+make check`: 770 passed, 33 skipped. Learning: the session gate held this
+time, so no evidence-limit stop was needed; nothing in the wait or probe
+needed fixing. Refactor disposition: fresh post-change refactor pass
+returned `## REFACTOR COMPLETE` with no edits (Evidence bullet matches the
+report and its Linux/Windows neighbor; no other doc contradicts it).
 
 Behavior: unlocked macOS Aqua console with the existing gated wait probe →
 run the probe → every step holds and the Evidence entry records the observed

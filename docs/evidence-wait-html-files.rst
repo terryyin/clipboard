@@ -1,27 +1,31 @@
 Evidence (waits, HTML, and files)
 --------------------------------
 
-* ``wait_for_kind`` / ``wait_for_text_change``: macOS Aqua **not yet
-  verified**. The gated probe
-  ``scripts/probe_macos_native_wait.py`` (wrapper
-  ``tests/test_wait_native_macos.py``; no images extra) clears the
-  pasteboard, has a child Python start ``wait_for_kind("text", timeout=20)``,
-  copies with an independent ``pbcopy`` about 1 s after the child's first
-  empty observation, and requires the returned snapshot to list ``"text"``
-  within one interval plus two observations of the copy; then a child
-  ``wait_for_kind("html", timeout=1)`` with nothing copied must return
-  ``None`` between the timeout and the timeout plus one observation. For
-  the change wait, an independent ``pbcopy`` copies an old text, a child
-  ``wait_for_text_change(timeout=20)`` reads it as its baseline, and a
-  second independent ``pbcopy`` about 1 s later must make it return the new
-  text within the same latency bound; then, after an old-text baseline,
-  ``clear()`` and an independent identical recopy about 1 s later must leave
-  ``wait_for_text_change(timeout=3)`` returning ``None`` at its timeout, with
-  the cleared and the recopied text both observed. Its
-  runs so far on the owner's machine, macOS 26.6.2 (build 25G83) / Darwin
-  25.6.0, arm64, stopped at an evidence limit (exit 2) because the screen
-  was locked (the change steps included); the probe refuses a locked or
-  off-console session.
+* ``wait_for_kind`` / ``wait_for_text_change``: macOS Aqua **verified**
+  on 2026-11-05 (commit ``abb4de8``) on the owner's unlocked console
+  session by the gated probe ``scripts/probe_macos_native_wait.py``
+  (wrapper ``tests/test_wait_native_macos.py``; no images extra), which
+  exited 0 with ``ok`` true, no evidence limit and no failed steps on two
+  consecutive runs. It runs the same four steps as the other desktops
+  (shared ``scripts/native_wait_support.py``) with an independent
+  ``pbcopy`` producer (``LANG=en_US.UTF-8``) on a freshly cleared
+  pasteboard and the library in a child Python. On the recorded run,
+  ``wait_for_kind("text", timeout=20)`` saw no kinds twice, then
+  ``"text"`` and returned that snapshot (``public.utf8-plain-text`` /
+  ``NSStringPboardType``) 0.37 s after the producer finished;
+  ``wait_for_kind("html", timeout=1)`` with nothing copied returned
+  ``None`` after 1.0 s; ``wait_for_text_change(timeout=20)`` returned the
+  second independently copied text 0.01 s after its producer finished; and
+  after ``clear()`` and an identical recopy ``wait_for_text_change(timeout=3)``
+  observed the old text, ``""`` twice, then the old text again and returned
+  ``None`` at 3.0 s. The longest single observation was 0.20 s. Floors:
+  macOS 26.6.2 (build 25G83) / Darwin 25.6.0, arm64, Python 3.13.17, 0.5 s
+  interval. Earlier runs on the same machine stopped at an evidence limit
+  (exit 2) because the screen was locked; the probe refuses a locked or
+  off-console session, and such an exit is not verification. Evidence
+  limits: kinds other than text are not observed for the waits themselves
+  (they rely on ``inspect``'s evidence above), and other macOS versions or
+  producers than ``pbcopy`` are not observed.
 * ``wait_for_kind`` / ``wait_for_text_change``: Linux X11 under Xvfb,
   Linux Wayland under headless Sway and Windows desktop **verified** in
   CI run 41798644132 (commit ``bf48f2c``) by the gated probes
