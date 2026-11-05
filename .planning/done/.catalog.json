@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-004_publish-clipboard-ci-proof.json",
+      "identity": "SEED-004#publish-clipboard-ci-proof",
+      "completedAt": "2026-11-05T12:54:47.004Z",
+      "blob": "ac460504ead753eb2dc33b0effa9a66776d99a27"
+    },
+    {
       "fileName": "SEED-001_split-native-wait-support.json",
       "identity": "SEED-001#split-native-wait-support",
       "completedAt": "2026-11-04T23:28:07.732Z",
