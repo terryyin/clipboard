@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Shunka-chan",
+  "email": "shunka-chan@example.org",
+  "identity": "SEED-004#publish-clipboard-ci-proof",
+  "mode": "story-branch",
+  "branch": "cursor/publish-clipboard-ci-proof-for-intent",
+  "host": "cursor",
+  "model": "auto"
+}
