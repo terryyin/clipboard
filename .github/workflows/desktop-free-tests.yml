@@ -49,6 +49,8 @@ jobs:
       # Other matrix legs and the release workflow_call keep plain pytest.
       - name: Run desktop-free pytest
         id: pytest
+        # Bash on every matrix OS: Windows runners default to PowerShell.
+        shell: bash
         run: |
           if [ "${WRITE_CI_PROOF}" != "true" ]; then
             uv run --locked --extra images pytest
@@ -69,6 +71,7 @@ jobs:
         if: ${{ !cancelled() && env.WRITE_CI_PROOF == 'true' && steps.pytest.outcome != 'skipped' }}
         env:
           PYTEST_STATUS: ${{ steps.pytest.outputs.status }}
+        shell: bash
         run: |
           report="${RUNNER_TEMP}/ci-proof-junit.xml"
           outcomes="${RUNNER_TEMP}/ci-proof-outcomes.txt"

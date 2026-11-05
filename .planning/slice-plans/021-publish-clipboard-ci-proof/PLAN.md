@@ -115,6 +115,12 @@ No slice-specific concern remains outside that slice's hosted check.
   callers, and `desktop-free-tests.yml` for the matrix producer plus Intent
   proof fragments. `ci.yml` is 241 lines; proof semantics unchanged. Hosted
   Intent → CI status confirmation still owes the first published branch run.
+- First branch run `42027483878` on `30f503ec` uploaded
+  `ci-proof-summary-attempt-1` with only `ci-proof-summary.json`
+  (770 passed, 0 failed, 33 other, part 1 present), matching the ubuntu/3.13
+  pytest totals. Windows matrix legs failed because the proof-gate `run` used
+  bash `if` under the Windows PowerShell default; repair sets `shell: bash`
+  on those steps.
 
 ## Accepted proof (slice 1, local; hosted pending)
 
