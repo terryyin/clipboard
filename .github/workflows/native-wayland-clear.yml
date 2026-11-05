@@ -43,13 +43,9 @@ jobs:
           trap 'kill "$SWAY_PID" 2>/dev/null || true' EXIT
           export WAYLAND_DISPLAY=wayland-1
           export XDG_SESSION_TYPE=wayland
-          for _ in $(seq 1 50); do
-            if [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; then
-              break
-            fi
-            sleep 0.1
-          done
-          test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+          # The socket exists before Sway serves clients; wait for a round trip.
+          uv run --locked python scripts/await_wayland_compositor.py \
+            --log /tmp/clipboard-sway.log
           # The probe wrapper skips without these; never let CI pass on a skip.
           command -v wl-copy
           command -v wl-paste
