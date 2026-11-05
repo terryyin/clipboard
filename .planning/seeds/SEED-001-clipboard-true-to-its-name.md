@@ -91,15 +91,16 @@ platform distinctions, reuse candidates, and uncertainty.
 
 **Identity:** SEED-001#macos-native-wait-evidence
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/022-macos-native-wait-evidence/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"4ce8fe6403c49b36f946861f1202c89a0f0d52bad3f1be22d15d163a17d50288","plan":"a2599cf8a4f774d39d00710f8d616c933327139c9d02928679ae66d84e0f6f7d"}}
 ```
 
 **Goal:** Automation developers on macOS can rely on `wait_for_kind` and
 `wait_for_text_change` with the same stated evidence the Linux X11, Linux
-Wayland and Windows desktops already have. Today the README marks the macOS
-wait Evidence entry "not yet verified": the gated probe was written with
-SEED-001#wait-for-content, but every run so far stopped at its evidence
-limit because the screen was locked.
+Wayland and Windows desktops already have. Today
+[docs/evidence-wait-html-files.rst](../../docs/evidence-wait-html-files.rst)
+marks the macOS wait Evidence entry "not yet verified": the gated probe was
+written with SEED-001#wait-for-content, but every run so far stopped at its
+evidence limit because the screen was locked.
 
 **Scope:**
 
@@ -113,21 +114,21 @@ limit because the screen was locked.
   timeout=1)` with nothing copied returns `None` at its timeout;
   `wait_for_text_change` returns the second independently copied text; and
   clear-then-identical-recopy leaves it returning `None`.
-- *Documentation.* Replace the README macOS wait Evidence entry's "not yet
-  verified" with the observed result (macOS version and build, per-step
-  outcome and timing) or, if a step fails, the observed limitation; a failing
-  step is a defect to fix in the wait or the probe before claiming
-  verification.
+- *Documentation.* Replace that Evidence entry's "not yet verified" with the
+  observed result (macOS version and build, per-step outcome and timing) or,
+  if a step fails, the observed limitation; a failing step is a defect to fix
+  in the wait or the probe before claiming verification.
 - *Scope limits.* No change to the wait API or other desktops' evidence.
   The probe is developer-run (it needs the developer's unlocked session); it
-  does not become a CI job.
+  does not become a CI job. Locked-screen / evidence-limit exits leave the
+  Evidence claim unchanged (they are not verification).
 
 **Key examples:**
 
 1. Unlocked macOS Aqua session → the gated probe → exit 0, four steps ok,
-   README macOS wait Evidence entry records the observed version and timings.
-2. Locked screen → the probe exits 2 with `evidence_limit` → no README claim
-   changes.
+   Evidence entry records the observed version and timings.
+2. Locked screen → the probe exits 2 with `evidence_limit` → Evidence claim
+   unchanged.
 
 <a id="primary-selection-polish"></a>
 
