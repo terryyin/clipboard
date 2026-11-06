@@ -39,7 +39,7 @@ from clipboard._text import (
 )
 from clipboard._wait import wait_for_kind, wait_for_text_change
 
-VERSION = "0.0.5"
+VERSION = "1.0.0"
 
 __all__ = [
     "VERSION",
