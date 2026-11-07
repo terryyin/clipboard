@@ -76,12 +76,21 @@ adopted guard and the desktop-free matrix.
   - Observed effect: Two consecutive story-branch CI repair cycles right after slice 3 (about 5 minutes of CI wait each); product code unchanged
   - Inference: Same root as the earlier rows: desktop-free tests encoded a POSIX host (file-name characters, platform faking on the shared `sys`); after the slice 4–6 briefs warned about it, the X11 and Wayland writer tests faked only a module-local `sys` and passed on every matrix OS first time
 
+<a id="dd-025"></a>
+
 ## DD-025 — Plan premise predicted a CI classification without observing the CI environment
 A decisive planning premise stated the CI package job would classify the
 installed X11 clear helper as `display`, but it was observed only on macOS
 (`libx11`). The CI job runs inside the Nix dev shell, whose Python saw no
 libX11, so the story's key example failed after publication and needed a
 developer decision and two more CI cycles.
+
+Responsibility (triage 2026-11-07): mixed — the repository's Nix dev-shell
+`libX11` packaging configuration in CI is local (repaired in `9f5e5ff` and
+`a7c6e5a`, paired with DD-026 below); the shared premise-observation facet
+(observing only on macOS rather than in the consuming `nix develop` Linux
+environment) is cross-referenced in [DearDough.md](DearDough.md#odf-074)
+with this execution counted once. No new local story.
 
 ### Occurrences
 - Execution: SEED-001#x11-clear-packaged-apps
@@ -92,6 +101,8 @@ developer decision and two more CI cycles.
   - Evidence: plan 016 "Decisive premises" 3 (`8ffb85613222db6e76068115adf4bae0bd22fdb0:.planning/slice-plans/016-x11-clear-packaged-apps/PLAN.md`) ("on CI Linux the classification is expected to be `display`"); CI run https://github.com/terryyin/clipboard/actions/runs/41773836492 (e600e48) "Lint and package (Nix)" printed `failure libx11`; obligation O1; developer chose option 1; fixes 9f5e5ff, a7c6e5a; CI run https://github.com/terryyin/clipboard/actions/runs/41776839169 printed `failure display`
   - Observed effect: Execution stopped for a human decision after slice 2 publication; three extra commits and CI waits (about 2–5 minutes each)
   - Inference: A premise about this project's CI environment should be checked against that job's actual shell (here `nix develop` on ubuntu-latest, not the system Python) before it backs a key example; the source-only review's separate E5a commitment is what exposed the mismatch, since the rule R4.8 alone accepted either value
+
+<a id="dd-026"></a>
 
 ## DD-026 — Nix shell variable merged onto the mkShell result, so CI never saw it
 `pkgs.mkShell { … } // optionalAttrs isLinux { VAR = …; }` attaches `VAR` to
@@ -108,3 +119,10 @@ accepted `libx11`, so CI went green without the intended `display` proof.
   - Evidence: 9f5e5ff `flake.nix`; local proof `nix eval … devShells.x86_64-linux.default.CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR` (derivation attribute, not `drvAttrs`); CI run https://github.com/terryyin/clipboard/actions/runs/41776343130 green with `failure libx11`; fix a7c6e5a `mkShell ({ … } // …)` with `drvAttrs ? CLIPBOARD_PACKAGE_CHECK_LIBX11_DIR` true on x86_64-linux
   - Observed effect: One misleading green CI run and one extra fix cycle (about 5 minutes)
   - Inference: Prove a dev-shell variable through `drvAttrs` or by printing it inside that platform's shell; a check whose strictness depends on a variable being present should be paired with proof that the variable arrives
+
+<a id="dd-030"></a>
+
+## DD-030 — Multi-OS matrix bash steps first failed under Windows PowerShell (local facet)
+`.github/workflows/desktop-free-tests.yml` runs across `ubuntu`/`macos`/`windows`, where Windows runners default to PowerShell. Adding POSIX shell conditionals (`if`, `$?`, `RUNNER_TEMP`) to that matrix without `shell: bash` failed the Windows jobs on `30f503ec` (run 42027483878) until `15d276ba` declared `shell: bash` on the pytest and fragment steps (green run 42028715651).
+
+Responsibility (triage 2026-11-07): local workflow facet repaired at `15d276ba`; the shared `ci-proof-summary.md` recipe facet remains in [DearDough.md](DearDough.md#dd-030) with the single `SEED-004#publish-clipboard-ci-proof` execution counted once (recovery `434d72b7d720903c3c488edbb3316b99cd2feeb0:DearDough.md#dd-030`). No new local story.

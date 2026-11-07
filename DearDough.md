@@ -66,6 +66,14 @@ Three distinct executions; DD-003 and DD-004 share one execution, counted once:
   Xvfb floor and Windows holder/consumer probe repairs.
 - SEED-001#copy-files (Claude Code, 0.3.82, 2026-11-03T08:40:19+07:00) — DD-013
   PowerShell FileDropList reader assumption.
+- SEED-001#x11-clear-packaged-apps (Claude Code, claude-opus-5-5, 0.3.82,
+  2026-11-04T04:34:03Z) — shared facet of [DD-025](ProjectFindings.md#dd-025):
+  plan 016 Decisive premise 3 (`8ffb85613222db6e76068115adf4bae0bd22fdb0:.planning/slice-plans/016-x11-clear-packaged-apps/PLAN.md`)
+  predicted CI Linux would classify the installed X11 clear helper as `display`
+  after observing only macOS (`libx11`), without exercising the CI job's `nix develop`
+  shell (where `libX11` was absent until `9f5e5ff` / `a7c6e5a`, costing a human
+  decision stop and three extra commits/CI waits). The repository's Nix dev-shell
+  `libX11` configuration stays once in [ProjectFindings.md](ProjectFindings.md#dd-025).
 
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-074](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-074.md); source recovery remains in this project’s pre-compaction revision.
@@ -559,6 +567,14 @@ POSIX shell conditionals (`if`, `$?`, `RUNNER_TEMP`) were added to a
 runners default to PowerShell, so the first hosted run rejected those steps
 while the Ubuntu Intent proof fragment and summary already matched the named
 leg — one CI repair round-trip to set `shell: bash` on the affected steps.
+
+**Responsibility (2026-11-07):** The shared facet stays here: the
+`ci-proof-summary.md` step 3 recipe gives a POSIX shell snippet without noting
+`shell: bash` when the producer job is a multi-OS matrix including Windows.
+Clipboard's own `.github/workflows/desktop-free-tests.yml` matrix step is the
+local facet, repaired in `15d276ba` and kept in
+[ProjectFindings.md](ProjectFindings.md#dd-030) (recovery
+`434d72b7d720903c3c488edbb3316b99cd2feeb0:DearDough.md#dd-030`).
 
 ### Occurrences
 - Execution: SEED-004#publish-clipboard-ci-proof
