@@ -3,6 +3,7 @@
 ## Retention
 
 - Highest allocated local number: 30
+- Shared-feedback adoption and compaction recovery (2026-11-07): `e314ecd7b16f1c86970d352d9db043da243ac144:DearDough.md`; shared rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
 - Shared-feedback compaction recovery (2026-11-03): `e2b98b77c9d0b467e610bdc27fe513a4061431ef:DearDough.md`; shared rows are retained at the linked Open Dough finding owners.
 - Consolidation (2026-11-03, approved): DD-003, DD-004 and DD-013 are consolidated under ODF-074 with former-code aliases. Recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
@@ -104,23 +105,7 @@ split) after implementation was done.
 
 ### Occurrences
 Distinct executions, original provenance, observations and qualified inferences are
-[retained at ODF-415](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-415.md); source recovery remains in this project’s pre-compaction revision.
-- Execution: SEED-001#primary-selection-polish
-  - Timestamp: 2026-11-04T22:49:00+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.82
-  - Evidence: plan 020 Findings/Settled premises omit the pre-existing `README.rst` oversize; post-change refactor return stopped on 1016 / 250 lines; coordinator DEVELOPER ATTENTION with packaging options; developer authorized option 1 (`1`); PLAN.md Learnings record the split
-  - Observed effect: Slice-1 product proof was already accepted before the size gate surfaced; delivery paused overnight until packaging authorization, then a short README landing plus `docs/*.rst` modules unblocked publish of `90a8e7b`
-  - Inference: Recurrence of the planning-gap pattern — a known-oversize packaging home touched by Evidence wording edits should be named as a premise or Structure concern before the first Behavior refactor stop
-- Execution: SEED-004#publish-clipboard-ci-proof
-  - Timestamp: 2026-11-05T19:23:00+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.86
-  - Evidence: plan 021 Decisive premises omit pre-existing `.github/workflows/ci.yml` 503/250; post-change refactor stopped at 593/250; coordinator DEVELOPER ATTENTION with split vs defer options; developer reply `1` at 2026-11-05T19:23:00+07:00; authorized Wayland-style `native-x11-*` / `native-windows-*` plus `desktop-free-tests.yml` split; `ci.yml` landed at 241 lines in `30f503ec`
-  - Observed effect: Slice-1 Intent proof implementation and local pipeline were ready before the size gate surfaced; delivery paused for packaging authorization, then the multi-seam workflow split unblocked progress publish
-  - Inference: Recurrence of the planning-gap pattern — a known-oversize judged CI workflow that the Behavior slice must extend should be named as a premise or Structure concern before the first Behavior refactor stop
+[retained at ODF-415](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-415.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-008 — Prior native-venue findings reused; every gated CI probe passed first run
 Reusing the project's recorded native venues (Xvfb with an owning xclip,
@@ -243,32 +228,7 @@ found only when the same pattern recurred on the next run.
 
 ### Occurrences
 Distinct executions, original provenance, observations and qualified inferences are
-[retained at ODF-289](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-289.md); source recovery remains in this project’s pre-compaction revision.
-
-- Execution: SEED-001#bounded-x11-text-write
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: run 41653760018 (543911e, "Python 3.14 on macos-latest" cancelled, 0 steps, completedAt 2026-11-03T14:30:44Z = createdAt of superseding run 41654397559 for 4cc60f3); coordinator first named supersession from `ci.yml` `cancel-in-progress` and the newer run alone, and inspected steps/timestamps only during the retrospective
-  - Observed effect: Attribution was right this time (cancel instant equals the superseding run's creation), but it again preceded the step/runner inspection this finding asks for; the job had sat ~4 min with zero steps, so macOS acquisition was also slow
-  - Inference: Recurrence of the order-of-checks practice rather than of a wrong cause; the cancel-time-equals-new-run-time check is a cheap decisive discriminator
-- Execution: SEED-001#clear-clipboard
-  - Timestamp: 2026-11-03T14:43:29Z
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: unknown
-  - Evidence: run 41654014945 attempt 1: `Python 3.10 on macos-latest` cancelled after about 15 minutes with empty `runner_name` and no steps; `ci-github-diagnostic` showed only `CI passed` failing on `TEST_RESULT: abandoned`; `gh run rerun --failed` → attempt 2 green
-  - Observed effect: Classified as runner acquisition on the first report; no wrong cause stated; one rerun for coverage
-  - Inference: The ODF-289 (former DD-014) practice was applied directly; it worked when the classification checked runner and steps before naming a cause
-- Execution: SEED-001#primary-selection-polish
-  - Timestamp: 2026-11-05T05:49:30+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.82
-  - Evidence: Take SHA `95f86ba` run 41856855757 — `Python 3.14/3.10 on macos-latest` cancelled with 0 steps and `runnerName` null (`completedAt` 2026-11-04T15:37Z); progress publish `90a8e7b` at 2026-11-04T22:49Z; coordinator text after listing that run: "Take SHA failure is superseded ancestry"
-  - Observed effect: Claim-only CI was left unrepaired (correct for ancestry), but the cancel times predate the progress SHA by ~7 h, so supersession by `90a8e7b` cannot explain the cancel; runner/steps pattern matches acquisition failure
-  - Inference: Recurrence of naming supersession/ancestry before the cancel-time-equals-newer-run check; that check would have rejected progress-SHA supersession and left runner acquisition as the remaining explanation
+[retained at ODF-289](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-289.md); source recovery remains in this project’s pre-compaction revision.
 
 ## ODF-141 — Fresh refactor agent for small CI repairs returned no change
 
@@ -281,15 +241,6 @@ after reading the same context again.
 ### Occurrences
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-141](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-141.md); source recovery remains in this project’s pre-compaction revision.
-
-- Execution: SEED-001#bounded-x11-text-write
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: slice 3 refactor agent (47.6k subagent tokens, 5 tool uses, ~22 s) returned "none — already clean" for a 7-line test-gate removal and one workflow comment; slice 1's pass made no edits but surfaced a real duplication candidate; slice 2's pass removed a dead fake method
-  - Observed effect: One of three passes in this execution was pure re-reading for no change; the other two produced value
-  - Inference: Supports the proportionality idea for tiny Structure slices without weakening passes on Behavior slices
 
 ## ODF-097 — Source-freshness check chained into delivery ignored a conflict
 
@@ -327,15 +278,7 @@ paste could not be observed.
 
 ### Occurrences
 Distinct executions, original provenance, observations and qualified inferences are
-[retained at ODF-408](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-408.md); source recovery remains in this project’s pre-compaction revision.
-- Execution: SEED-001#wait-for-content
-  - Timestamp: 2026-11-04T14:09+07:00 (last of several lock checks; slices 1–3)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: unknown
-  - Evidence: `3477f8f:.planning/slice-plans/018-wait-for-content/PLAN.md` slice 1 proof required the gated macOS wait probe run on the developer machine; `IOConsoleLocked` was `<true/>` at every check across slices 1–3; the probe exited 2 (`evidence_limit`, locked screen); the developer later said "im not at the mac now" and the proof moved to SEED-001#macos-native-wait-evidence (commit 0120396)
-  - Observed effect: The obligation travelled slice 1 → 2 → 3 and blocked completion until the developer amended the story
-  - Inference: A plan whose slice proof needs the developer's unlocked desktop could check the session at execution start and offer the split before slice 1 instead of carrying it to the end
+[retained at ODF-408](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-408.md); source recovery remains in this project’s pre-compaction revision.
 
 ## ODF-259 — CI observer budget expired while the next slice was still open
 
@@ -400,7 +343,10 @@ one tool call without affecting work or proof. The existing waiting rule
 covers both. Full rows are recoverable from the pre-compaction revision
 above and retained at [ODF-325](https://github.com/terryyin/open-dough/blob/main/docs/maintainer/findings/ODF-325.md#odf-325).
 
-## DD-024 — Refactor pass dropped a step-ok condition the old wrapper asserted
+## ODF-442 — Refactor pass dropped a step-ok condition the old wrapper asserted
+
+Former local code: DD-024.
+
 A post-change refactor agent, briefed that native probe step `ok` "may only
 get stricter", removed the `waited_s <= bound_s` owner-exit check from the
 shared "cleared" rule as redundant with `wait_pids_exit`, although the
@@ -408,14 +354,8 @@ replaced X11 wrapper had asserted it for the `copy_image` step. It also left a
 ruff E501 docstring line while reporting the project formatter had run.
 
 ### Occurrences
-- Execution: SEED-001#shared-native-clear-proof
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: before slice-2 publication f071961 (CI run created 2026-11-03T23:47:15Z); slice-2 refactor return (deleted `owner_exited`, "caller decision" note); `git show 9eb5a3c:tests/test_clear_native_linux_x11.py` line 96 asserts `waited_s <= bound_s`; coordinator restored `_owner_exited` and a late-owner test case and fixed `scripts/linux_native_clear_steps.py:10` before publishing f071961
-  - Observed effect: Coordinator's `make check` caught the lint failure; comparing the dropped check against the old wrapper caught the loosening; no loosened step was published
-  - Inference: A refactor brief for "stricter, never looser" proof should name the base revision's wrapper assertions as the comparison baseline; the refactor agent judged redundancy against the new code instead. Later refactor briefs that stated this explicitly (slices 3–4) produced no loosening
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-442](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-442.md); source recovery remains in this project’s pre-compaction revision.
 
 ## ODF-418 — CI-owned final-slice proof has no named observation step before the done transition
 
@@ -431,53 +371,8 @@ records-only commit), but here the slice was the last one and nothing was
 blocked; the gap is the unnamed observation step. Matching uncertain.
 
 ### Occurrences
-- Execution: SEED-003#host-independent-desktop-free-tests
-  - Timestamp: 2026-11-03T21:45:43+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: slice-2 publish 5380548 with `progress: true`; `await-revision /tmp/dough-ci-501/watch-bS46pD 5380548…` → exact success (run 41656910713); records-only done commit 663dca6; `references/fresh-increment.md` (`progress` row) and `references/ci-completion-wait.md` ("Never invoke it after ordinary slice delivery")
-  - Observed effect: One extra publication and CI run solely to record CI proof and the done status; coordinator spent reads choosing between `await-revision` and `complete-revision`
-  - Inference: Naming the read-only observation command for `progress: true` slices (or letting the completion operation settle a final CI-owned slice) would remove the inference and possibly the extra commit
-- Execution: SEED-001#bounded-helper-owner-write
-  - Timestamp: 2026-11-04T15:55:19+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: after publishing `progress: true` increments 7d55a1b and 1f75f4a, the coordinator observed CI with a background `gh run list --commit … && gh run watch --exit-status` shell command (not the attached observer `/tmp/dough-ci-501/watch-7nRVt0`, which notifies only failures), then wrote records-only done commits 0cd07be and 16e6241
-  - Observed effect: Two extra publications and CI runs solely to flip `Status: done` and record CI observations; the observation step was again inferred, this time as a direct `gh` watch
-  - Inference: Same gap as the first row; a named read-only observation step for `progress: true` slices would avoid a coordinator-invented watch
-- Execution: SEED-001#primary-selection
-  - Timestamp: 2026-11-04T19:06:49+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: slice-2 publish 15252dd with `progress: true` (obligation G3, Wayland native proof CI-owned); coordinator observed CI with `gh run list/view` (run 41803370471) rather than an Open Dough command; records-only done commit 0abf1a4
-  - Observed effect: One extra publication and CI run solely to close G3 and flip slice 2 to done; recurrence of the same path
-  - Inference: Same unnamed observation step as the first occurrence; the coordinator again had to choose its own read-only CI check
-- Execution: SEED-001#primary-selection-polish
-  - Timestamp: 2026-11-05T05:51:41+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.82
-  - Evidence: sole Behavior slice published `90a8e7b` with `progress: true`; coordinator observed with `gh run watch 41928637574 --exit-status` (not an Open Dough observation command; attached observer `/tmp/dough-ci-501/watch-UZnVa9` left running); records-only done `03a223d` recorded run 41928637574; plan 020 Accepted proof
-  - Observed effect: One extra publication and CI run solely to flip `Status: done` and record native CI proof on a single-slice plan; nothing mid-plan was blocked
-  - Inference: Same unnamed observation step as prior ODF-418 rows; the ODF-416-shaped `progress: true` → done pair recurred here as final-slice paperwork rather than a mid-plan block
-- Execution: SEED-001#split-native-wait-support
-  - Timestamp: 2026-11-05T06:14:28+07:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.82
-  - Evidence: sole Structure slice published a50e0f6 with `progress: true` for E2 (branch-push `native-*-wait` jobs); plan Status remains `planned`; retrospective started while observer `/tmp/dough-ci-501/watch-BKyy1N` still pending overall (wait jobs later green on run 41932201965); no named read-only observation command before the expected records-only done flip
-  - Observed effect: Implementation delivered under `progress: true`; slice done transition and E2 source-review cell still deferred to a later records-only commit after CI observation, same unnamed-step gap as prior rows (Structure rather than Behavior)
-  - Inference: Recurrence of the unnamed observation step for a final CI-owned proof slice; Structure vs Behavior does not change the gap
-- Execution: SEED-004#publish-clipboard-ci-proof
-  - Timestamp: 2026-11-05T19:47:13+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.86
-  - Evidence: sole Behavior slice published `30f503ec` then repair `15d276ba` with `progress: true` (hosted Intent → CI status proof); Intent confirmed 770/0/33 on run 42028715651; records-only done `4479368b` flipped Status and recorded Accepted proof (observer later success on run 42030109489); no named read-only observation command before the done flip
-  - Observed effect: One extra publication and CI run solely to flip `Status: done` and record hosted Intent proof on a single-slice plan after the repair already green; nothing mid-plan was blocked
-  - Inference: Same unnamed observation step as prior ODF-418 rows; Intent dashboard read plus records-only done again filled the gap for a final CI/Intent-owned proof slice
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-418](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-418.md); source recovery remains in this project’s pre-compaction revision.
 
 ## ODF-419 — Probe smoke check ran a destructive child helper on the owner desktop
 
@@ -490,24 +385,12 @@ delegation brief had not said that probe child helpers act on the live
 clipboard of whatever host runs them.
 
 ### Occurrences
-- Execution: SEED-001#clear-clipboard
-  - Timestamp: unknown (2026-11-03, during slice 4 before commit 0da29c3)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: unknown
-  - Evidence: slice 4 implementation return: "I ran `linux_native_clear_support.child_clear()` on this Mac (it returned `{"raised": null}`, 0.27 s). That cleared the developer's live macOS clipboard."; slice 5 and 6 briefs then said never to run the real `clear()` or probe child helpers locally, and no recurrence was reported
-  - Observed effect: The developer's clipboard was emptied once without a planned probe; earlier authorized macOS probe runs had already replaced it, so no unique content is known lost
-  - Inference: For destructive or live-state operations, delegation briefs should name which helpers mutate the host's desktop and limit local smoke checks to imports or `evidence_limit` exits
-- Execution: SEED-001#wait-for-content
-  - Timestamp: unknown (2026-11-04, slice 1 before 24938ab and slice 3 before bf48f2c)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: unknown
-  - Evidence: slice 1 return: "I also called the probe's step functions directly while the screen was locked, to check the probe mechanics"; slice 3 return: "I ran `run_steps(MACOS)` directly from `scripts/`, bypassing the lock gate. It replaced the clipboard."; neither brief warned that probe steps mutate the live pasteboard
-  - Observed effect: The developer's macOS clipboard was cleared and overwritten twice by unplanned smoke runs; both returns labelled them "not evidence"
-  - Inference: Recurrence after the earlier occurrence suggests the warning belongs in the delegation guidance or probe briefs by default, not only after a first incident
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-419](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-419.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-027 — Refactor return called a 384-line module fine against the 250-line limit
+## ODF-443 — Refactor return called a 384-line module fine against the 250-line limit
+
+Former local code: DD-027.
 
 A post-change refactor return reported `scripts/native_wait_support.py` at
 "about 385 lines … all fine" although the refactor checks require splitting
@@ -515,16 +398,13 @@ any checked file over 250 lines; the coordinator accepted `## REFACTOR
 COMPLETE` without a size check, and the retrospective found it.
 
 ### Occurrences
-- Execution: SEED-001#wait-for-content
-  - Timestamp: unknown (2026-11-04, slice 3 refactor before bf48f2c)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: unknown
-  - Evidence: slice 3 part 1 refactor return ("The harness is about 385 lines … File sizes: all fine"); `wc -l scripts/native_wait_support.py` = 384 at 0120396; `.claude/skills/dough-post-change-refactor/references/refactor-checks.md` "File size"; correction plan at before-cleanup `6ba24e6:.planning/slice-plans/019-split-native-wait-support/PLAN.md`
-  - Observed effect: The oversized module was committed and published; a correction story and plan were needed
-  - Inference: Proof acceptance of a refactor return could include a mechanical `wc -l` over the diff's files rather than trusting the return's size claim
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-443](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-443.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-028 — Single local premise probe recorded as settled, then contradicted by a rerun
+## ODF-444 — Single local premise probe recorded as settled, then contradicted by a rerun
+
+Former local code: DD-028.
+
 A coordinator's one-off local container probe (headless Sway 1.9, wl-clipboard
 2.2.1, `primary_selection disabled`) concluded that `wl-copy --primary` exits 0
 while the write is dropped, and the plan's Learnings and the slice 2 brief
@@ -534,14 +414,8 @@ shown an unexplained `wl_display_dispatch: Broken pipe` after a compositor
 restart in the same container.
 
 ### Occurrences
-- Execution: SEED-001#primary-selection
-  - Timestamp: 2026-11-04T15:56:08+07:00
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82
-  - Evidence: plan 017 Learnings "Slice 2 early probe" (as first written, then corrected before 15252dd); slice 2 return "Contrary evidence on one premise"; README Evidence records both observations
-  - Observed effect: No rework: either result made that compositor a story evidence limit, and the read-back confirmation stayed as a defensive check; plan and docstring text needed correcting
-  - Inference: A premise from one probe run with an unexplained anomaly (here a second compositor started in the same container) should be stated as a single observation, or rerun in a fresh container, before a brief treats it as settled
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-444](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-444.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-029 — Local Linux containers replaced CI records-only early-probe steps
 The plan scheduled records-only CI steps (branch pushes) for both slices'
@@ -561,7 +435,12 @@ probes on its first runs.
   - Observed effect: No probe-only commits or CI round trips; no native CI repair was needed
   - Inference: Useful practice where a container runtime is available; it does not replace CI evidence (Sway 1.9 locally vs 1.11 in CI), so CI remains the native proof owner
 
-## DD-030 — Multi-OS matrix bash steps first failed under Windows PowerShell
+<a id="dd-030"></a>
+
+## ODF-445 — Multi-OS matrix bash steps first failed under Windows PowerShell
+
+Former local code: DD-030.
+
 POSIX shell conditionals (`if`, `$?`, `RUNNER_TEMP`) were added to a
 `ubuntu`/`macos`/`windows` desktop-free matrix without `shell: bash`. Windows
 runners default to PowerShell, so the first hosted run rejected those steps
@@ -577,11 +456,5 @@ local facet, repaired in `15d276ba` and kept in
 `434d72b7d720903c3c488edbb3316b99cd2feeb0:DearDough.md#dd-030`).
 
 ### Occurrences
-- Execution: SEED-004#publish-clipboard-ci-proof
-  - Timestamp: 2026-11-05T19:37:16+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.86
-  - Evidence: run 42027483878 on `30f503ec` failed Windows desktop-free jobs on bash-shaped proof-gate `run` under PowerShell; `ci-proof-summary-attempt-1` already held 770/0/33; repair `15d276ba` sets `shell: bash` on pytest and fragment steps; green run 42028715651
-  - Observed effect: One hosted CI failure and repair commit solely for matrix shell dialect; Intent proof producer on ubuntu/3.13 had already succeeded
-  - Inference: When extending a multi-OS matrix with POSIX shell, declare `shell: bash` (or write a Windows-safe form) before the first branch push — local macOS/Linux workflow lint will not catch the PowerShell default
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-445](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-445.md); source recovery remains in this project’s pre-compaction revision.
