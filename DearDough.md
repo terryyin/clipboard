@@ -36,7 +36,7 @@ Same execution at 2026-11-02T14:25:25+07:00. Weston lacked wlr-data-control. Hea
 
 `SEED-001#portable-text` (Claude Code, 0.3.82, 2026-11-02T23:37:16+07:00) repaired the Xvfb floor and Windows holder/consumer probes. `SEED-001#copy-files` (same host/release, 2026-11-03T08:40:19+07:00) repaired the PowerShell FileDropList premise. The common cause remains qualified: some checks used stand-ins that did not observe the promise.
 
-`SEED-001#x11-clear-packaged-apps` (Claude Code Opus 5.5, 0.3.82, 2026-11-04T04:34:03Z) predicted CI Linux `display` from macOS `libx11` without observing CI's Nix shell. Three commits and a human decision followed. Keep the [DD-025 local facet](ProjectFindings.md#dd-025) once in the project record. [ODF-074 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-074.md#odf-074)
+`SEED-001#x11-clear-packaged-apps` (Claude Code Opus 5.5, 0.3.82, 2026-11-04T04:34:03Z) predicted CI Linux `display` from macOS `libx11` without observing CI's Nix shell. Three commits and a human decision followed. Its local facet, DD-025, is retired in [ProjectFindings.md](ProjectFindings.md) (recovery `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-025`). [ODF-074 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-074.md#odf-074)
 
 ## DD-006 — Stop for venue decision when mandatory native proof cannot run locally
 
@@ -167,4 +167,4 @@ Local Ubuntu 24.04 Docker replaced two planned probe-only commits in `SEED-001#p
 
 Former local code: DD-030.
 
-The shared CI-proof recipe used POSIX syntax without noting the shell requirement for Windows matrix jobs. The repaired workflow is the [DD-030 local facet](ProjectFindings.md#dd-030). [ODF-445 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-445.md#odf-445)
+The shared CI-proof recipe used POSIX syntax without noting the shell requirement for Windows matrix jobs. The repaired workflow was the DD-030 local facet, now retired in [ProjectFindings.md](ProjectFindings.md) (recovery `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-030`). [ODF-445 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-445.md#odf-445)
