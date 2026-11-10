@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-006_publish-explicit-ci-test-counts.json",
+      "identity": "SEED-006#publish-explicit-ci-test-counts",
+      "completedAt": "2026-11-10T09:19:01.214Z",
+      "blob": "e90a031e4fc00cea053b18e48a1adbd9ac57fb18"
+    },
+    {
       "fileName": "SEED-005_publish-ci-test-execution-times.json",
       "identity": "SEED-005#publish-ci-test-execution-times",
       "completedAt": "2026-11-10T03:52:58.216Z",

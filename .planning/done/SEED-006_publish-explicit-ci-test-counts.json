@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-006#publish-explicit-ci-test-counts",
+  "title": "See Clipboard test case counts in Intent",
+  "completedAt": "2026-11-10T09:19:01.214Z",
+  "developer": "Terry Yin",
+  "agent": "Honoka-chan",
+  "host": "cursor",
+  "model": "auto",
+  "intentCoverage": {
+    "report": "**Caught.**\n\nStory: SEED-006#publish-explicit-ci-test-counts, source `.planning/seeds/SEED-006-publish-explicit-ci-test-counts.md#publish-explicit-ci-test-counts`, completed revision `14b950865ae8a193afba2c94df6d8528f0d268c6`. Promise: publishing mixed JUnit outcomes yields case-unit suite and per-file counts (not a collapsed per-file result).\n\nA clean detached scratch checkout at that revision (`/tmp/clipboard-intent-coverage-aybq2A`, later removed) used its own `nix develop -c make deps` installation. Pre-probe `git status --porcelain` was empty. The same focused command ran for baseline, fault and restoration: `nix develop -c uv run --locked python scripts/check_ci_proof_pipeline.py --out <dir>`.\n\nTemporary fault in `scripts/junit-outcomes.py` `case_rows`: after classifying each case, skip a path already seen so only the first case per repository file is emitted; fixture `CASES` and assertions left intact. Wrong summary kept `unit: \"case\"` but suite counts became 1 passed / 0 failed / 1 other (two outcome lines) instead of 2 / 1 / 1, with file rows matching that collapse. Retained evidence: `/tmp/clipboard-intent-fault-summary-seed006.json`. The run reached and failed `scripts/check_ci_proof_pipeline.py:115`, `assert [evidence[field] for field in (\"passed\", \"failed\", \"other\")] == [2, 1, 1]`.\n\nBaseline exit 0; fault exit 1 at the intended assertion; restored exit 0. Original converter bytes and clean `git status --porcelain` matched before and after the probe. Scratch worktree removed after the restored pass. Execution checkout unchanged at `14b9508`. Run evidence: `/tmp/clipboard-intent-coverage-runs-seed006.json`.\n\n- **Test runtime.** Measured focused-command wall runtimes: baseline 3.53 s, fault 3.35 s, restored 1.16 s, including CLI subprocesses; not runner-internal phase timing.\n- **Human effort.** Unavailable: no separate effort measurement; no developer operation was required for this check.\n- **Agent effort.** Unavailable: no independent agent-effort meter was available.\n\n\n- **Invocation-to-report elapsed.** 167978 ms (measured), from 1794302132316 to 1794302300294 in Unix epoch ms. The end clock was sampled after writing the prepared report body.\n"
+  }
+}
