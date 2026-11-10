@@ -14,7 +14,7 @@ probes and repeated matrix legs keep their existing evidence boundaries.
 Adopt the released schema and collector; do not create file-aggregate outcomes
 from case results or count file paths as test-file results. No new dashboard
 feature or shared protocol development is included. JUnit timing delivery is
-[SEED-005](../../seeds/SEED-005-publish-ci-test-execution-times.md#publish-ci-test-execution-times)'s
+[SEED-005](https://github.com/terryyin/clipboard/blob/203e19d9a05f9ec29af4679ae61f46d9b2884791/.planning/seeds/SEED-005-publish-ci-test-execution-times.md#publish-ci-test-execution-times)'s
 outcome. Preserve its supplied timings and breakdown if present at execution;
 otherwise case counts and explicit untimed evidence suffice for this story.
 

@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-005_publish-ci-test-execution-times.json",
+      "identity": "SEED-005#publish-ci-test-execution-times",
+      "completedAt": "2026-11-10T03:52:58.216Z",
+      "blob": "5279290ea2bc329380ab0a811bf7c90283643b8c"
+    },
+    {
       "fileName": "SEED-001_macos-native-wait-evidence.json",
       "identity": "SEED-001#macos-native-wait-evidence",
       "completedAt": "2026-11-05T15:28:05.627Z",

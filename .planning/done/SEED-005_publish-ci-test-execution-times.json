@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-005#publish-ci-test-execution-times",
+  "title": "Publish Clipboard test execution times in Intent",
+  "completedAt": "2026-11-10T03:52:58.216Z",
+  "developer": "Terry Yin",
+  "agent": "Nana-chan",
+  "host": "codex",
+  "model": "gpt-6.1-sol",
+  "intentCoverage": {
+    "report": "**Caught.**\n\nStory: SEED-005#publish-ci-test-execution-times, source `.planning/seeds/SEED-005-publish-ci-test-execution-times.md#publish-ci-test-execution-times`, completed revision `203e19d9a05f9ec29af4679ae61f46d9b2884791`. Promise: recorded durations of failed cases contribute to the suite and per-file sum.\n\nA clean detached scratch checkout at that revision used its own `nix develop -c make deps` installation. The same focused command ran for baseline, fault and restoration: `nix develop -c uv run --locked python scripts/check_ci_proof_pipeline.py --out /tmp/clipboard-intent-coverage-output`.\n\nTemporary fault in `scripts/junit-outcomes.py:29`: changed the measured-time condition to `if case.get(\"time\") is not None and not failed:`, leaving the fixture and assertions intact. The maintained `CASES` fixture has same-file passed 0.125 s and failed 0.250 s cases. The wrong summary still counted the failed outcome but recorded 125 ms and two untimed results instead of 375 ms and one untimed. That summary is retained at `/tmp/clipboard-intent-fault-summary.json`. The run reached and failed `scripts/check_ci_proof_pipeline.py:114`, `assert evidence[\"durationMs\"] == 375`.\n\nBaseline exit 0; fault exit 1 at the intended assertion; restored exit 0. Original converter bytes and clean `git status --porcelain` matched before and after the probe. Scratch worktree removed after the restored pass. Execution checkout unchanged. Run evidence: `/tmp/clipboard-intent-coverage-runs.json`.\n\n- **Test runtime.** Measured focused-command wall runtimes: baseline 4.113 s, fault 0.999 s, restored 3.231 s, including CLI subprocesses; not runner-internal phase timing.\n- **Human effort.** Unavailable: no separate effort measurement; no developer operation was required for this check.\n- **Agent effort.** Unavailable: no independent agent-effort meter was available.\n\n\n- **Invocation-to-report elapsed.** 118716 ms (measured), from 1794282611000 to 1794282729716 in Unix epoch ms. The end clock was sampled after writing the prepared report body.\n"
+  }
+}

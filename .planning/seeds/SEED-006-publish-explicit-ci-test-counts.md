@@ -36,7 +36,7 @@ one would misrepresent what pytest reported.
 **Scope limits.** This increment adds no file-outcome measurement, extra matrix
 or native-probe coverage, new Intent UI, or cross-build comparison feature.
 Delivering JUnit durations remains with
-[test execution times](SEED-005-publish-ci-test-execution-times.md#publish-ci-test-execution-times);
+[test execution times](https://github.com/terryyin/clipboard/blob/203e19d9a05f9ec29af4679ae61f46d9b2884791/.planning/seeds/SEED-005-publish-ci-test-execution-times.md#publish-ci-test-execution-times);
 this adoption preserves timing if that work has landed, and leaves unavailable
 timing explicit otherwise. Neither story requires the other's delivery.
 
