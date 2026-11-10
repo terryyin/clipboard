@@ -45,6 +45,8 @@ def fragment(directory, cases, *, attempt="1", revision=REVISION):
         "fragment",
         "--outcomes",
         str(outcomes),
+        "--unit",
+        "case",
         "--times",
         str(times),
         "--by-file",
@@ -76,7 +78,7 @@ def summarize(directory, fragments):
         "--fragments",
         str(fragments),
         "--expect",
-        "tests=1",
+        "tests=1:case",
         "--repository",
         "terryyin/clipboard",
         "--run-id",
@@ -96,7 +98,7 @@ def summarize(directory, fragments):
     assert [entry["path"] for entry in summary["entries"]] == ["tests"]
     assert output.stat().st_size < 1024 * 1024
     [evidence] = summary["entries"][0]["evidence"]
-    assert evidence["unit"] == "legacy"
+    assert evidence["unit"] == "case"
     return evidence
 
 

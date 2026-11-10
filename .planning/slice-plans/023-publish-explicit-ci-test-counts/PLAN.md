@@ -2,6 +2,7 @@
 
 **Identity:** SEED-006#publish-explicit-ci-test-counts
 **Source:** [See Clipboard test case counts in Intent](../../seeds/SEED-006-publish-explicit-ci-test-counts.md#publish-explicit-ci-test-counts)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -127,3 +128,38 @@ JUnit case, and one Behavior owns publisher adoption, gaps, preservation and
 end-to-end observation. No independent outcome or preparatory Structure slice
 is needed. No remaining slice-specific concern was identified outside the
 explicit hosted probe. No pre-Take human decision is required.
+
+## Slice 1 local acceptance and progress publication
+
+- Source review retained and linked; local commitments observed against the
+  real converter/collector CLIs, workflow case-unit declarations, and
+  `scripts/check_ci_proof_pipeline.py`. SEED-005's seven collector modules were
+  already byte-identical; only `--unit case` / `--expect tests=1:case` and docs
+  migrated.
+- Mixed disposable pytest (2 passed including parameterization, 1 failure, 1
+  error, 1 skip) produced suite and file evidence `unit: "case"` with 2/2/1 and
+  no file-unit outcome. Empty, stale-attempt, stale-revision, and duplicate
+  fragments stay missing or ambiguous with zero counts. Timed input retains
+  `durationMs`; untimed invents none. Pytest exit 1 is retained; collection
+  exit 2 is skipped by the `0|1` status gate.
+- `nix develop -c make lint-workflows` and
+  `nix develop -c uv run --locked python scripts/check_ci_proof_pipeline.py`
+  passed. Hosted Ubuntu/3.13 producer, artifact download, and Intent display
+  remain G1 and G2.
+- Progress only: retain `Status: planned` through the first authorized
+  publication; settle G1 and G2 from that revision before ordinary done.
+
+## Story obligations
+
+### G1. Hosted attempt case-count comparison
+Reported: slice 1 — "Implementation returned local CLI and workflow case-unit proof; the published candidate's completed CI artifact, JUnit comparison, and Intent case labeling remain unobserved."
+Story clause: "Given a completed representative CI attempt, downloading its summary and opening Intent's CI status shows the same suite and representative-file case counts and outcomes as that attempt's JUnit report, labeled as test cases."
+Disposition: return
+Commitment: 14
+
+
+### G2. Rendered Intent test-case counts
+Reported: slice 1 — "Local publisher emits unit case evidence; no completed candidate attempt has yet been selected and observed in Intent as test cases."
+Story clause: "Clipboard maintainers can tell how many desktop-free pytest cases the selected CI attempt recorded in Intent, with counts explicitly labeled as test cases at suite and file level."
+Disposition: return
+Commitment: 1

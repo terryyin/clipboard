@@ -65,12 +65,15 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop
 session. Judged `ci.yml` publishes one Intent CI-proof summary for the
-desktop-free pytest totals and per-file execution times from the Ubuntu
-Python 3.13 matrix leg (`scripts/ci-proof-*.mjs`, `scripts/junit-outcomes.py`;
-skipped when the release workflow_call sets `release-tag`). Times sum recorded
-JUnit case seconds (including failed cases and pytest’s reported phases) in
-milliseconds; zero is measured, missing timing stays untimed and sums remain
-partial. Missing, invalid or ambiguous reports/parts remain evidence gaps.
+desktop-free pytest test-case counts and per-file execution times from the
+Ubuntu Python 3.13 matrix leg (`scripts/ci-proof-*.mjs`,
+`scripts/junit-outcomes.py`; skipped when the release workflow_call sets
+`release-tag`). Evidence is labeled as test cases (`unit: "case"`), not legacy
+results or test-file outcomes; file breakdowns are per-file case counts.
+Times sum recorded JUnit case seconds (including failed cases and pytest’s
+reported phases) in milliseconds; zero is measured, missing timing stays
+untimed and sums remain partial. Missing, invalid or ambiguous reports/parts
+remain evidence gaps.
 The one-day fragment artifact also retains `ci-proof-junit.xml` for comparison;
 the 30-day attempt summary contains only `ci-proof-summary.json`. The producer
 runs `scripts/check_ci_proof_pipeline.py` after pinned Node setup; default

@@ -91,7 +91,7 @@ jobs:
             exit 0
           fi
           node scripts/ci-proof-summary.mjs fragment \
-            --outcomes "${outcomes}" --times "${times}" --by-file --entry tests \
+            --outcomes "${outcomes}" --unit case --times "${times}" --by-file --entry tests \
             --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
             --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
           cp -- "${report}" "${RUNNER_TEMP}/ci-proof/ci-proof-junit.xml"

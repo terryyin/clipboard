@@ -27,17 +27,20 @@ CI proof in Intent
 The judged ``ci.yml`` publishes one ``ci-proof-summary-attempt-<n>`` artifact
 for the desktop-free pytest suite. Only the Ubuntu Python 3.13 matrix leg
 reports; other matrix legs and release calls do not repeat that proof. Outcome
-counts retain their existing legacy-result meaning.
+counts are explicit test cases (``--unit case`` / ``--expect tests=1:case``),
+not legacy results or measured test-file outcomes. A file breakdown lists
+repository-relative paths with that file's case counts; the path count is not
+a test-file result.
 
 ``scripts/junit-outcomes.py`` converts xunit1 cases to outcome/path rows and
 optional ``--times`` seconds/path rows. The copied ``scripts/ci-proof-*.mjs``
 collector sums recorded case durations in milliseconds, including failed cases
 and pytest's reported phases, and ``--by-file`` retains repository-relative
-file breakdowns. This is summed test execution time, not job wall time. Recorded
-zero is measured; a missing duration stays untimed, and a partial sum is
-incomplete. Missing, malformed or ambiguous evidence stays a proof gap rather
-than a complete zero-time result. Attempt and revision matching keep that proof
-with its selected run.
+per-file case counts. This is summed test execution time, not job wall time.
+Recorded zero is measured; a missing duration stays untimed, and a partial sum
+is incomplete. Missing, malformed or ambiguous evidence stays a proof gap
+rather than a complete zero-time result. Attempt and revision matching keep
+that proof with its selected run.
 
 The representative ``ci-proof-fragments-tests-1-attempt-<n>`` artifact retains
 ``ci-proof-junit.xml`` beside its fragment for one day, so its case sums can be
