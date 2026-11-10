@@ -67,7 +67,7 @@ converter and copied collector through their real command-line boundaries.
 
 ### 1. Inspect desktop-free suite and file execution time from a CI attempt
 Type: Behavior
-Status: planned
+Status: done
 Proof: All rows above, using the real converter and collector CLI plus a
 completed hosted attempt and Intent observations.
 
@@ -185,15 +185,46 @@ the active Intent deployment accepted that exact profile in the scratch replay.
 ### G1. Hosted attempt and source-report comparison
 Reported: slice 1 — "Implementation returned local CLI proof; the published candidate's completed CI artifact and JUnit comparison remain unobserved."
 Story clause: "For an actual completed CI run, downloading its summary and comparing Intent's `tests` and representative-file views with that run's JUnit report gives the same outcomes and summed durations, allowing for display rounding."
-Disposition: return
+Disposition: proved by slice 1: Hosted proof section below; exact CI attempt, downloaded JUnit and summary match all 95 files, outcomes, durations and identity. G2 separately retains actual rendering.
 
 ### G2. Rendered Intent suite and file views
 Reported: slice 1 — "CUA browser access is unavailable and native Chrome selection timed out, so no actual completed attempt has been selected and observed in Intent."
 Story clause: "A Clipboard maintainer can see cumulative test execution time and a per-file breakdown for the desktop-free tests in the selected CI attempt in Intent"
-Disposition: return
+Disposition: proved by slice 1: Rendered Intent observation section below; native Chrome accessibility and screenshot show the exact branch attempt, suite 11.9 s and representative file 356 ms, matching downloaded JUnit and summary.
 
 ## Deployed-reader remainder
 
 Deployed-reader remainder settled: `nix develop -c node --experimental-strip-types /tmp/clipboard-deployed-intent-reader-replay.mjs` passed against active deployment `83fdfec494d8-oDeg04`. Inspected schema, scope figures and displayed wording assertions: 375 ms suite/file, failed case included, legacy counts, zero measured, untimed partial, no invented all-untimed duration, gap states preserved. G2 still owns actual rendering. Pre-delivery freshness again unchanged at 85d7aa8; sibling SEED-006 remains unlanded, no incoming behavior to reconcile.
 
 Guarded preparation completed selective Ruff formatting, `nix develop -c make check` (lint and desktop-free suite) and `nix develop -c make lint-workflows` successfully before its subsequent record-shape guard refused the trailing paragraph attached to G2. The disposition paragraph is now separated by a proper section heading; product proof remains valid. Earlier formatting attempts stopped on long lines before commit; final string wrapping was mechanical.
+
+## Accepted progress revision
+
+Guarded progress delivery accepted `7619b4f636ba13b1cd40f3122dcff90b64c0bdd6` on `origin` `refs/heads/codex/publish-clipboard-test-execution-times-in-intent`, suffix base `85d7aa880d0b92fbca7d1bb6a789bb6b5974da2a`; exact same candidate, no reconciliation. Existing observer `/tmp/dough-ci-501/watch-iyOdnX` reused. Checkout clean immediately after publication. No trunk landing has occurred; supplied landing context remains unused for the first future trunk publication.
+
+Read-only progress observation `nix develop -c node .agents/skills/dough-execute-plan/scripts/ci-mailbox.mjs await-revision /tmp/dough-ci-501/watch-iyOdnX 7619b4f636ba13b1cd40f3122dcff90b64c0bdd6` is owned by the coordinator (session 32870). Developer observation requested once for this exact attempt's `tests` and `tests/test_clipboard.py` displayed times/counts; G2 remains open until the reply supplies evidence.
+
+## Hosted proof
+
+- Read-only progress receipt: requested `7619b4f636ba13b1cd40f3122dcff90b64c0bdd6` on repository `terryyin/clipboard`, branch `codex/publish-clipboard-test-execution-times-in-intent`, exact success checked by run `42748514157`, attempt `1`. Observer remains available; the progress wait (session 32870) ended successfully and did not complete execution or stop observation.
+- Download commands passed: `nix develop -c gh run download 42748514157 --repo terryyin/clipboard --name ci-proof-summary-attempt-1 --dir /tmp/clipboard-hosted-42748514157/summary` and `nix develop -c gh run download 42748514157 --repo terryyin/clipboard --name ci-proof-fragments-tests-1-attempt-1 --dir /tmp/clipboard-hosted-42748514157/fragment`. Artifact inventory has exactly one named summary and representative fragment. Summary directory contains only `ci-proof-summary.json`; fragment holds `tests-legacy-1.json` and `ci-proof-junit.xml`.
+- `nix develop -c python /tmp/clipboard-verify-hosted-timing.py /tmp/clipboard-hosted-42748514157 7619b4f636ba13b1cd40f3122dcff90b64c0bdd6 42748514157 1` passed. Inspected assertions independently map actual XML cases to file outcomes and seconds, verify every file against the summary, and assert exact repository/run/attempt/revision, one present legacy part, no unmeasured time invention and size limit. Result: 95 files, 795 passed / 0 failed / 33 other, 11,910 ms, zero untimed, summary 9,390 bytes. `tests/test_clipboard.py`: 27 passed / 0 failed / 0 other, 356 ms. No failed case was induced in shared CI; deterministic replay proves failed-case contribution.
+- `nix develop -c node --experimental-strip-types /tmp/clipboard-hosted-intent-reader-replay.mjs` passed parsing that exact downloaded summary in deployed Intent `83fdfec494d8-oDeg04`, with suite/file figures and timing cells. Expected display: `tests` = `11.9 s`, representative file = `356 ms`. This is the actual deployed reader, not a rendered UI observation. G2 remains open.
+
+## Incomplete stop for rendered proof
+
+G2 remains the only unfinished slice-1 promise. Developer observation has been requested for run 42748514157/1: `tests` expected 11.9 s and 795/0/33 outcomes; `tests/test_clipboard.py` expected 356 ms and 27/0/0. The browser bridge was unavailable and native Chrome access timed out. No UI success, slice done mark, retrospective, execution-complete record, trunk integration or wrap-up is claimed. Product implementation is accepted on the published story branch; latest hosted proof and source-review updates remain uncommitted in this retained workspace for continuation.
+
+Explicit Codex stop receipt confirmed observer `/tmp/dough-ci-501/watch-iyOdnX` stopped, 0 unread events. Its coverage is ended / future pending CI unobserved; the separately retained exact success receipt for 7619b4f remains valid. Stream key/coordinator and handles are above. On continuation verify identity/setup/source freshness, reuse accepted unchanged local/hosted/reader proof, accept the developer's bounded observation if supplied, and resume at G2 then guarded done delivery. Recover the stopped observer under the host adapter before future publication; never duplicate the accepted progress commit or claim. Supplied landing context remains unused and required for the first trunk landing.
+
+## Rendered Intent observation
+
+Resumed 2026-11-10 under the same execution identity; HEAD still 7619b4f, only retained plan/source-review notes uncommitted, old observer process 90699 absent and terminal receipt stopped. Locked dependencies and product bytes unchanged, so prior local/hosted/reader proof remains applicable.
+
+Native Chrome access recovered through CUA after one stale-state refusal and a reset. Within the original bounded mission, navigated to Clipboard, selected SEED-005's Taken story, opened Intent → CI comparison. The rendered accessibility tree named branch `codex/publish-clipboard-test-execution-times-in-intent`, revision `7619b4f`, run `42748514157`, attempt `1`, Passed; CI proof table showed `795 passed and 33 other legacy test results` and `11.9 s` for `tests`. Opened Changed tests (Selected story only unchecked), selected `tests/test_clipboard.py`, then Proof. Tree and screenshot showed Branch `7619b4f`, file `tests/test_clipboard.py`, `27 legacy test results`, and `356 ms`. These equal the retained JUnit/summary values (zero failures, 27 passed in the file), allowing suite display rounding from 11,910 ms. The UI omits zero-count categories as expected.
+
+Observation locations: this execution's CUA results titled “Reading the uploaded proof table”, “Reading the file’s retained CI proof” and screenshot “Verifying the rendered file timing”. CUA completion summary: “Verified Intent suite and file timing”. No Intent code or data was modified. Manual observation result: Good. G2 is settled; no developer observation reply or scope waiver is needed.
+
+Remaining delivery is records-only (accepted hosted/UI proof and source commitments), within the existing independent refactor disposition. No code or consumer boundary changed.
+
+Resumed checkout readiness: existing locked setup reused for this exact checkout, `nix develop -c make lint` passed (243 Python files). Before done delivery source-freshness again unchanged at trunk/base 85d7aa8; named sibling SEED-006 has no accepted incoming product change. Replacement observer after confirmed old shutdown: same key/coordinator `nana-chan-timing`, directory `/tmp/dough-ci-501/watch-0e2Nev`, PID 82276, stream session 23858, yielded cell `g836:4`, same story-branch target and ci.yml source. This observer owns future publications.
