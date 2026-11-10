@@ -228,3 +228,19 @@ Observation locations: this execution's CUA results titled “Reading the upload
 Remaining delivery is records-only (accepted hosted/UI proof and source commitments), within the existing independent refactor disposition. No code or consumer boundary changed.
 
 Resumed checkout readiness: existing locked setup reused for this exact checkout, `nix develop -c make lint` passed (243 Python files). Before done delivery source-freshness again unchanged at trunk/base 85d7aa8; named sibling SEED-006 has no accepted incoming product change. Replacement observer after confirmed old shutdown: same key/coordinator `nana-chan-timing`, directory `/tmp/dough-ci-501/watch-0e2Nev`, PID 82276, stream session 23858, yielded cell `g836:4`, same story-branch target and ci.yml source. This observer owns future publications.
+
+## Execution retrospective
+
+Reviews: outcome/product and process enabled by `skipProcessRetrospective: false`. Original source and earliest ready plan recovered at 85d7aa8, with no changed promise. Manifest: 85d7aa8 claim/provenance; 7619b4f reporting implementation; 2227fc1 hosted/rendered acceptance and done delivery. Preparation commits 3cfc020 and ee49e04 are baseline provenance, not implementation. Net 85d7aa8..2227fc1 has no unrelated commits. Current implementation unchanged since accepted proof.
+
+Outcome: all 47 reviewed commitments and both gaps are settled by converter/real-CLI proof, exact hosted XML/summary comparison and actual Intent suite/file rendering. No product defect, boundary drift, obsolete behavior, refactoring residue or correction identified. Report conversion owns runner mapping; the seven unchanged recipe modules own schema/aggregation; workflows own representative selection and publication. The public clipboard runtime/API, helpers, extras and VERSION are unchanged. North Star governs content APIs rather than reporting; no project ADR store or applicable Accepted decision was found, and no architectural decision was invented or reversed.
+
+Tests: red converter CLI observations preceded implementation (16 failed/3 passed → 19 passed); the integrated pipeline replay observes published-summary semantics without default pytest depending on Node. Existing full desktop-free matrix and relevant workflow proof passed; converter subprocess tests and parameterized invalid-input variants protect distinct report boundaries, with representative hosted converter-test time 613 ms inside 11,910 ms suite time. No supported whole-suite cleanup or changed native-probe proof is needed. The UI observation complements actual uploaded evidence; fixture replay owns failure/partial/missing/ambiguous examples. No extra test run was performed for this read-only review.
+
+Process: current conversation and implementation/refactor returns available. Recorded DD-446 in DearDough.md as a general execution practice: guarded preparation withheld commits/publication on the three mechanical/record refusals. Existing and candidate line counts were measured within the 1,000-line ceiling, no retention removal. The unavailable UI venue was reported truthfully, then resumed without claiming a developer response; native access eventually supplied the missing observation. No outstanding process action or correction remains.
+
+Product advice: no change. Preserve the existing next priority SEED-006's explicit-unit adoption and its timing-preservation promise; no additional backlog recommendation or scope change is justified by this execution. Final story-branch CI for the accepted completion publication remains with the execution observer; pending CI is not a passed result.
+
+## Execution complete
+
+Product advice: no change. The existing SEED-006 remains next; preserve its timing detail during explicit-unit adoption.

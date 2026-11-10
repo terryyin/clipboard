@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 30
+- Highest allocated local number: 446
 - Shared source compaction recovery: `015b3a2b27ca61671723a0b2e8d274c3e3506447:DearDough.md`. Shared occurrences are at the pinned Open Dough records; practice observations keep their distinct executions below.
 - Shared-feedback adoption and compaction recovery (2026-11-07): `e314ecd7b16f1c86970d352d9db043da243ac144:DearDough.md`; shared rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
@@ -168,3 +168,16 @@ Local Ubuntu 24.04 Docker replaced two planned probe-only commits in `SEED-001#p
 Former local code: DD-030.
 
 The shared CI-proof recipe used POSIX syntax without noting the shell requirement for Windows matrix jobs. The repaired workflow was the DD-030 local facet, now retired in [ProjectFindings.md](ProjectFindings.md) (recovery `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-030`). [ODF-445 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-445.md#odf-445)
+
+## DD-446 — Guarded preparation withheld publication on mechanical and record failures
+
+The fresh-delivery guard kept formatter and obligation-record failures local rather than publishing an older or partially prepared candidate. This is an observed practice; it does not establish a defect in the guidance. Sequence the formatter before lint, and keep execution narrative outside an obligation's field paragraph.
+
+### Occurrences
+- Execution: `SEED-005#publish-ci-test-execution-times`; first implementation `7619b4f636ba13b1cd40f3122dcff90b64c0bdd6`
+  - Timestamp: unknown; observed during 2026-11-10 execution before implementation publication
+  - Tool: Codex
+  - Open Dough release: 0.3.94 (installed before the established start; guidance unchanged during execution)
+  - Evidence: this execution conversation's guarded `fresh` results for `/tmp/clipboard-timing-progress-preparation.json`: first `operation: formatting` refused Ruff E501 before formatting; the next formatted three files but retained one long string; after mechanical wrapping, `operation: story obligations` refused G2's trailing narrative as `no-disposition`. Every refusal reported `commit: null`, `publication: pending`. Corrected preparation subsequently accepted `7619b4f`.
+  - Observed effect: no failed preparation committed or published; local proof remained reusable after mechanical fixes. The three retries arose from coordinator command/record construction, not demonstrated product defects.
+  - Inference: retain the guard and improve caller construction; the record does not measure a general time saving or justify another approval gate.
