@@ -33,7 +33,7 @@ otherwise case counts and explicit untimed evidence suffice for this story.
 
 ### 1. Publish the representative pytest outcomes as test cases in Intent
 Type: Behavior
-Status: planned
+Status: done
 Proof: Replay the local pipeline below, run `nix develop -c make lint-workflows`,
 then observe the first authorized branch CI attempt and Intent display. Retain
 the exact run, attempt, revision, artifact and representative-file observations.
@@ -144,22 +144,35 @@ explicit hosted probe. No pre-Take human decision is required.
   exit 2 is skipped by the `0|1` status gate.
 - `nix develop -c make lint-workflows` and
   `nix develop -c uv run --locked python scripts/check_ci_proof_pipeline.py`
-  passed. Hosted Ubuntu/3.13 producer, artifact download, and Intent display
-  remain G1 and G2.
-- Progress only: retain `Status: planned` through the first authorized
-  publication; settle G1 and G2 from that revision before ordinary done.
+  passed. Progress publication at `efc270ff` supplied the hosted probe below.
+- Progress only through that publication; G1 and G2 are now proved from it.
+
+## Hosted and rendered observation
+
+- Mailbox `await-revision` for
+  `efc270ffd254d0e8da14456d335c496f204c4955` on
+  `cursor/see-clipboard-test-case-counts-in-intent`: success,
+  `runId` 42786550782, `attemptId` 1.
+- Downloaded `ci-proof-summary-attempt-1` and
+  `ci-proof-fragments-tests-1-attempt-1`: schema 2, `unit: "case"`,
+  795 passed / 0 failed / 33 other, `durationMs` 10775; retained JUnit has
+  828 cases with the same statuses; representative file
+  `tests/test_paste_html_contract.py` is 41 cases in JUnit, summary, and
+  Intent.
+- Intent selected-story CI status for that branch/run/revision shows
+  `795 passed and 33 other test cases` (not legacy). File proof for
+  `test_paste_html_contract.py` shows `41 test cases` beside the baseline
+  legacy wording. Installed `checkedSummary` accepted the artifact;
+  `unitNoun("case", 828)` is `test cases`.
 
 ## Story obligations
 
 ### G1. Hosted attempt case-count comparison
 Reported: slice 1 — "Implementation returned local CLI and workflow case-unit proof; the published candidate's completed CI artifact, JUnit comparison, and Intent case labeling remain unobserved."
 Story clause: "Given a completed representative CI attempt, downloading its summary and opening Intent's CI status shows the same suite and representative-file case counts and outcomes as that attempt's JUnit report, labeled as test cases."
-Disposition: return
-Commitment: 14
-
+Disposition: proved by slice 1: PLAN.md hosted probe: gh run 42786550782 attempt 1 at efc270ff; summary unit case 795/0/33 durationMs 10775 matches retained JUnit; Intent story-branch CI status "795 passed and 33 other test cases"; file test_paste_html_contract.py shows 41 test cases matching JUnit/summary
 
 ### G2. Rendered Intent test-case counts
 Reported: slice 1 — "Local publisher emits unit case evidence; no completed candidate attempt has yet been selected and observed in Intent as test cases."
 Story clause: "Clipboard maintainers can tell how many desktop-free pytest cases the selected CI attempt recorded in Intent, with counts explicitly labeled as test cases at suite and file level."
-Disposition: return
-Commitment: 1
+Disposition: proved by slice 1: PLAN.md hosted probe: gh run 42786550782 attempt 1 at efc270ff; summary unit case 795/0/33 durationMs 10775 matches retained JUnit; Intent story-branch CI status "795 passed and 33 other test cases"; file test_paste_html_contract.py shows 41 test cases matching JUnit/summary
