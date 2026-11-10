@@ -176,3 +176,11 @@ Disposition: proved by slice 1: PLAN.md hosted probe: gh run 42786550782 attempt
 Reported: slice 1 — "Local publisher emits unit case evidence; no completed candidate attempt has yet been selected and observed in Intent as test cases."
 Story clause: "Clipboard maintainers can tell how many desktop-free pytest cases the selected CI attempt recorded in Intent, with counts explicitly labeled as test cases at suite and file level."
 Disposition: proved by slice 1: PLAN.md hosted probe: gh run 42786550782 attempt 1 at efc270ff; summary unit case 795/0/33 durationMs 10775 matches retained JUnit; Intent story-branch CI status "795 passed and 33 other test cases"; file test_paste_html_contract.py shows 41 test cases matching JUnit/summary
+
+## Execution complete
+
+Product advice: no change. Explicit case-unit CI proof is delivered and hosted Intent
+matches the selected attempt; no additional backlog recommendation or scope change is
+justified by this execution. Process notes DD-446 and DD-447 stay in DearDough for
+wrap-up disposition. Final story-branch CI for the completion publication remains with
+the execution observer; pending CI is not a passed result.

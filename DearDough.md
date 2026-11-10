@@ -2,7 +2,7 @@
 
 ## Retention
 
-- Highest allocated local number: 446
+- Highest allocated local number: 447
 - Shared source compaction recovery: `015b3a2b27ca61671723a0b2e8d274c3e3506447:DearDough.md`. Shared occurrences are at the pinned Open Dough records; practice observations keep their distinct executions below.
 - Shared-feedback adoption and compaction recovery (2026-11-07): `e314ecd7b16f1c86970d352d9db043da243ac144:DearDough.md`; shared rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
@@ -181,3 +181,25 @@ The fresh-delivery guard kept formatter and obligation-record failures local rat
   - Evidence: this execution conversation's guarded `fresh` results for `/tmp/clipboard-timing-progress-preparation.json`: first `operation: formatting` refused Ruff E501 before formatting; the next formatted three files but retained one long string; after mechanical wrapping, `operation: story obligations` refused G2's trailing narrative as `no-disposition`. Every refusal reported `commit: null`, `publication: pending`. Corrected preparation subsequently accepted `7619b4f`.
   - Observed effect: no failed preparation committed or published; local proof remained reusable after mechanical fixes. The three retries arose from coordinator command/record construction, not demonstrated product defects.
   - Inference: retain the guard and improve caller construction; the record does not measure a general time saving or justify another approval gate.
+- Execution: `SEED-006#publish-explicit-ci-test-counts`; first implementation `efc270ffd254d0e8da14456d335c496f204c4955`
+  - Timestamp: unknown; observed during 2026-11-10 records-only done preparation after hosted proof and before `f7fd1505cff58cc48f63e468a670484401188ecb`
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.94 (installed before the established start; guidance unchanged during execution)
+  - Evidence: coordinator transcript `13972c6a-03d5-4288-a566-1799b5e6712f` after proving G1/G2: `story-obligations` / `execution-increment-delivery.mjs fresh` for `/tmp/seed006-done-prep.json` required removing leftover `Commitment:` lines on proved G entries (SEED-005 accept pattern at `2227fc1`); corrected preparation then published `f7fd1505`
+  - Observed effect: no failed done preparation committed; obligation-link mismatch stayed local until the Commitment fields matched the proved disposition shape
+  - Inference: same guard practice as the SEED-005 row; proved hosted obligations still need the sibling accept field shape before records-only publication
+
+## DD-447 — Story-branch Intent CI display required selecting the Taken story
+
+Default Intent showed master CI status during story-branch hosted display proof. Selecting the Taken story made the branch/run case-count wording visible. This is an observed verification practice; it does not establish an Intent product defect.
+
+### Occurrences
+- Execution: `SEED-006#publish-explicit-ci-test-counts`; first implementation `efc270ffd254d0e8da14456d335c496f204c4955`
+  - Timestamp: unknown; after successful run `42786550782` attempt 1 on `efc270ff` and before records-only `f7fd1505` (2026-11-10)
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.94 (installed before the established start; guidance unchanged during execution)
+  - Evidence: coordinator transcript `13972c6a-03d5-4288-a566-1799b5e6712f` ("Intent is still on master; I'll select the Taken SEED-006 story so CI status follows the execution branch"); subsequent Intent observation recorded suite `795 passed and 33 other test cases` and file `test_paste_html_contract.py` `41 test cases`
+  - Observed effect: hosted Intent proof for the story-branch candidate completed only after the Taken story was selected; the master default view was insufficient for that display check
+  - Inference: for story-branch CI display acceptance, select the Taken story before treating Intent wording as observed; generality beyond Clipboard's Intent layout is unqualified
