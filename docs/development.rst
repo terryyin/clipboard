@@ -21,6 +21,35 @@ and requires its structured failure (``display`` in the Linux Nix shell,
 and the X11, Wayland, and Windows ``paste_html``, ``copy_files``, and text
 probes are separate gated jobs.
 
+CI proof in Intent
+------------------
+
+The judged ``ci.yml`` publishes one ``ci-proof-summary-attempt-<n>`` artifact
+for the desktop-free pytest suite. Only the Ubuntu Python 3.13 matrix leg
+reports; other matrix legs and release calls do not repeat that proof. Outcome
+counts retain their existing legacy-result meaning.
+
+``scripts/junit-outcomes.py`` converts xunit1 cases to outcome/path rows and
+optional ``--times`` seconds/path rows. The copied ``scripts/ci-proof-*.mjs``
+collector sums recorded case durations in milliseconds, including failed cases
+and pytest's reported phases, and ``--by-file`` retains repository-relative
+file breakdowns. This is summed test execution time, not job wall time. Recorded
+zero is measured; a missing duration stays untimed, and a partial sum is
+incomplete. Missing, malformed or ambiguous evidence stays a proof gap rather
+than a complete zero-time result. Attempt and revision matching keep that proof
+with its selected run.
+
+The representative ``ci-proof-fragments-tests-1-attempt-<n>`` artifact retains
+``ci-proof-junit.xml`` beside its fragment for one day, so its case sums can be
+compared with Intent's ``tests`` and file views. The summary artifact contains
+only ``ci-proof-summary.json`` and is retained for 30 days.
+
+Converter regression tests are part of ordinary pytest. The real CLI pipeline
+replay requires Node 20.12 or later and runs in the representative producer after
+its pinned Node setup. Run it locally with::
+
+   nix develop -c uv run --locked python scripts/check_ci_proof_pipeline.py
+
 Publishing
 ----------
 

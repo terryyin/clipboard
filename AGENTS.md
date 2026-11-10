@@ -65,9 +65,16 @@ interpreter and tools in `flake.lock`; uv pins Python dependencies in `uv.lock`.
 Preserve the public API and keep the version in `clipboard.VERSION`.
 Default tests use an in-memory clipboard backend so CI needs no desktop
 session. Judged `ci.yml` publishes one Intent CI-proof summary for the
-desktop-free pytest totals from the Ubuntu Python 3.13 matrix leg
-(`scripts/ci-proof-*.mjs`, `scripts/junit-outcomes.py`; skipped when the
-release workflow_call sets `release-tag`). Optional native text / pasteboard /
+desktop-free pytest totals and per-file execution times from the Ubuntu
+Python 3.13 matrix leg (`scripts/ci-proof-*.mjs`, `scripts/junit-outcomes.py`;
+skipped when the release workflow_call sets `release-tag`). Times sum recorded
+JUnit case seconds (including failed cases and pytest’s reported phases) in
+milliseconds; zero is measured, missing timing stays untimed and sums remain
+partial. Missing, invalid or ambiguous reports/parts remain evidence gaps.
+The one-day fragment artifact also retains `ci-proof-junit.xml` for comparison;
+the 30-day attempt summary contains only `ci-proof-summary.json`. The producer
+runs `scripts/check_ci_proof_pipeline.py` after pinned Node setup; default
+pytest requires no Node. Optional native text / pasteboard /
 file-list probes stay gated via
 `CLIPBOARD_NATIVE_PROBE` (see docs/evidence-text-primary-clear.rst and
 docs/evidence-wait-html-files.rst, e.g.

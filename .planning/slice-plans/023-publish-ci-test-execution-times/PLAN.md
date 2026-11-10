@@ -3,6 +3,8 @@
 **Identity:** SEED-005#publish-ci-test-execution-times
 **Source:** [Refined story](../../seeds/SEED-005-publish-ci-test-execution-times.md#publish-ci-test-execution-times)
 
+**Source review:** [Independent source commitments](source-review.md)
+
 ## Goal and scope
 
 Publish cumulative JUnit case execution time and file breakdowns through the
@@ -157,3 +159,41 @@ by preparation. No paid or developer-only premise probe is needed.
 The installed timing-capable collector also introduces schema 2's unit
 partitioning. Omitting unit declarations preserves legacy count meaning, and
 the active Intent deployment accepted that exact profile in the scratch replay.
+
+## Execution context
+
+- Established story-branch execution: Nana-chan, publisher `dashboard-territory.local-clipboard`, checkout `/Users/terryyin/git/clipboard/.worktrees/publish-clipboard-test-execution-times-in-intent`, branch `codex/publish-clipboard-test-execution-times-in-intent`; integration/default checkout `/Users/terryyin/git/clipboard` is a separate role, not an implementation location.
+- Authorized remote `origin`, trunk `master`; claim/base `85d7aa880d0b92fbca7d1bb6a789bb6b5974da2a`, starting revision `ee49e04b71036b2c86e8f658bd284fa8ef75e688`. Remote trunk and story branch both confirmed at the claim.
+- Setup: `nix develop -c make deps` completed against unchanged `uv.lock`; `nix develop -c make lint` passed (240 formatted Python files). No active Git hooks or selective formatter beyond project Python formatting.
+- CI source GitHub Actions `ci.yml` (verified workflow 403397948, name CI), story-branch target. Trunk claim CI is unobserved. Codex observer key `ci-watch-execution:terryyin/clipboard:codex/publish-clipboard-test-execution-times-in-intent:nana-chan-timing`, coordinator `nana-chan-timing`, directory `/tmp/dough-ci-501/watch-iyOdnX`, PID 90699, stream session 69256, yielded cell `g814:9`, selected checkout above.
+- Replanning: existing planning authority retained; no numeric slice budget supplied, one M slice. Use existing premise evidence; the hosted and rendered observations remain open. Local Python and fixture checks are bounded ordinary proof; no expensive benchmark or competing owned heavy verification is known.
+
+## Slice 1 local acceptance and progress publication
+
+- Source review and actual CLI assertions inspected. `tests/test_junit_outcomes.py` covers outcome/path mapping, failure/error, repeated paths, measured zero, absent time, malformed time/path, missing report and no partial output for a later global error. Pre-change observation: 16 failed / 3 passed; implementation: 19 passed via `nix develop -c uv run --locked pytest tests/test_junit_outcomes.py -q`.
+- `nix develop -c uv run --locked python scripts/check_ci_proof_pipeline.py --out /tmp/clipboard-timing-replay` passed the real XML→converter→fragment→summary chain. Same-file 0.125 passed and 0.250 failed sum to 375 ms; another file carries measured zero and one untimed result. All-untimed has no duration, wrong attempt/revision and missing input stay missing, duplicates stay ambiguous, and retained XML adds no part. Legacy result counts and one representative part remain.
+- `nix develop -c node /tmp/clipboard-timing-reader-replay.mjs` passed installed reader/schema/scope/ranking checks including partial wording, zero and refusal of wrong identities. The deployed reader is being rechecked because port 4173 now uses deployment `83fdfec494d8-oDeg04` rather than preparation's deployment.
+- `nix develop -c make tests`: 795 passed, 33 gated native skips. `nix develop -c make lint-workflows` and `git diff --check` passed. Guarded preparation will perform selective formatting and the required complete `make check`.
+- Consumer trace: `/tmp/clipboard-timing-consumer-trace.md`, generated with `nix develop -c node .agents/skills/dough-execute-plan/scripts/consumer-trace.mjs --checkout /Users/terryyin/git/clipboard/.worktrees/publish-clipboard-test-execution-times-in-intent --base HEAD --term junit-outcomes.py --term durationMs --term ci-proof-summary --term ci-proof-junit.xml --term untimed`. All rows have dispositions. The unchanged production consumer `ci.yml` is exercised by the real collector replay and inspected for one summary, legacy expectation, identity, retention and release gates; hosted acquisition remains G1. Installed read consumers have the reader replay. Guidance/template copies and planning/navigation references do not execute project scripts.
+- Independent `/root/refactor_timing` inspected all touched concepts, callers and proof, returned `none — already clean` and `## REFACTOR COMPLETE`; no edits or invalidated proof. Seven collector files byte-match the recipe, all product files <=250 lines.
+- Early source-freshness settlement: unchanged at base/trunk `85d7aa880d0b92fbca7d1bb6a789bb6b5974da2a`. Named sibling SEED-006 has no incoming accepted product change at that pinned trunk, so no reconciliation hold.
+- Manual mission: up to 15 minutes for exact-attempt suite/file timing/outcomes and artifact comparison, prioritizing suite then representative file, with reserve for evidence gaps. CUA browser discovery returned “browser access host is unavailable”; app inventory succeeded but native Chrome selection timed out after 300 seconds. No rendered observation is claimed. One developer round may be needed once hosted values are known.
+- This is progress only: retain `Status: planned`, hosted G1 and rendered G2 before accepting the slice.
+
+## Story obligations
+
+### G1. Hosted attempt and source-report comparison
+Reported: slice 1 — "Implementation returned local CLI proof; the published candidate's completed CI artifact and JUnit comparison remain unobserved."
+Story clause: "For an actual completed CI run, downloading its summary and comparing Intent's `tests` and representative-file views with that run's JUnit report gives the same outcomes and summed durations, allowing for display rounding."
+Disposition: return
+
+### G2. Rendered Intent suite and file views
+Reported: slice 1 — "CUA browser access is unavailable and native Chrome selection timed out, so no actual completed attempt has been selected and observed in Intent."
+Story clause: "A Clipboard maintainer can see cumulative test execution time and a per-file breakdown for the desktop-free tests in the selected CI attempt in Intent"
+Disposition: return
+
+## Deployed-reader remainder
+
+Deployed-reader remainder settled: `nix develop -c node --experimental-strip-types /tmp/clipboard-deployed-intent-reader-replay.mjs` passed against active deployment `83fdfec494d8-oDeg04`. Inspected schema, scope figures and displayed wording assertions: 375 ms suite/file, failed case included, legacy counts, zero measured, untimed partial, no invented all-untimed duration, gap states preserved. G2 still owns actual rendering. Pre-delivery freshness again unchanged at 85d7aa8; sibling SEED-006 remains unlanded, no incoming behavior to reconcile.
+
+Guarded preparation completed selective Ruff formatting, `nix develop -c make check` (lint and desktop-free suite) and `nix develop -c make lint-workflows` successfully before its subsequent record-shape guard refused the trailing paragraph attached to G2. The disposition paragraph is now separated by a proper section heading; product proof remains valid. Earlier formatting attempts stopped on long lines before commit; final string wrapping was mechanical.

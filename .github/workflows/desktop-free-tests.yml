@@ -67,6 +67,9 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20.19'
+      - name: Check the CI proof pipeline
+        if: ${{ !cancelled() && env.WRITE_CI_PROOF == 'true' && steps.pytest.outcome != 'skipped' }}
+        run: uv run --locked python scripts/check_ci_proof_pipeline.py
       - name: Write the CI proof fragments
         if: ${{ !cancelled() && env.WRITE_CI_PROOF == 'true' && steps.pytest.outcome != 'skipped' }}
         env:
@@ -75,6 +78,7 @@ jobs:
         run: |
           report="${RUNNER_TEMP}/ci-proof-junit.xml"
           outcomes="${RUNNER_TEMP}/ci-proof-outcomes.txt"
+          times="${RUNNER_TEMP}/ci-proof-times.txt"
           case "${PYTEST_STATUS}" in
             0|1) ;;
             *) exit 0 ;;
@@ -82,14 +86,15 @@ jobs:
           if [ ! -f "${report}" ]; then
             exit 0
           fi
-          if ! uv run --locked python scripts/junit-outcomes.py "${report}" > "${outcomes}"; then
-            rm -f -- "${outcomes}"
+          if ! uv run --locked python scripts/junit-outcomes.py "${report}" --times "${times}" > "${outcomes}"; then
+            rm -f -- "${outcomes}" "${times}"
             exit 0
           fi
           node scripts/ci-proof-summary.mjs fragment \
-            --outcomes "${outcomes}" --entry tests \
+            --outcomes "${outcomes}" --times "${times}" --by-file --entry tests \
             --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
             --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
+          cp -- "${report}" "${RUNNER_TEMP}/ci-proof/ci-proof-junit.xml"
       - name: Keep the CI proof fragments
         if: ${{ !cancelled() && env.WRITE_CI_PROOF == 'true' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
