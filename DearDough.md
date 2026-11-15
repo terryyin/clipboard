@@ -3,6 +3,7 @@
 ## Retention
 
 - Highest allocated local number: 447
+- Earlier ODF-074 and DD-446 evidence before compaction: `783c1111196a72035f39e06b0202bebdb3640804:DearDough.md`.
 - Shared source compaction recovery: `015b3a2b27ca61671723a0b2e8d274c3e3506447:DearDough.md`. Shared occurrences are at the pinned Open Dough records; practice observations keep their distinct executions below.
 - Shared-feedback adoption and compaction recovery (2026-11-07): `e314ecd7b16f1c86970d352d9db043da243ac144:DearDough.md`; shared rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback adoption and compaction recovery (2026-11-04): `9e36c067e012371aa207d9b469a3fc0a23e3ccdf:DearDough.md`.
@@ -22,21 +23,13 @@ Former local code: DD-003.
 Former local code: DD-004.
 Former local code: DD-013.
 
-Native helper/compositor/probe premises were first observed through published gated runs, adding repair cycles. Three early executions represent the first three aliases, with two aliases from one execution; the packaging run is a fourth execution.
+<a id="former-dd-003--linux-x11-clipboard-ownership-learned-through-gated-ci-repair-loops"></a>
+<a id="former-dd-004--wayland-ci-compositor-chosen-without-wl-clipboard-protocol-check"></a>
+<a id="former-dd-013--native-probe-scaffolding-assumptions-failed-on-the-first-gated-run"></a>
 
-### Former DD-003 — Linux X11 clipboard ownership learned through gated-CI repair loops
+Four executions exposed native helper or probe premises in gated CI. `write-images` supplied both X11 ownership and Wayland protocol evidence. `portable-text` and `copy-files` supplied Xvfb and Windows probe evidence with a qualified shared cause. `x11-clear-packaged-apps` exposed the installed X11 helper's assumption about the CI Nix shell. [ODF-074 occurrence evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-074.md#odf-074)
 
-`SEED-001#write-images` (Cursor, 0.3.79, 2026-11-02T14:00:07+07:00): X11 image write needed a retained xclip owner, safe stdin lifetime and an image/png TARGETS readiness check.
-
-### Former DD-004 — Wayland CI compositor chosen without wl-clipboard protocol check
-
-Same execution at 2026-11-02T14:25:25+07:00. Weston lacked wlr-data-control. Headless Sway fixed proof after one failed venue choice.
-
-### Former DD-013 — Native probe scaffolding assumptions failed on the first gated run
-
-`SEED-001#portable-text` (Claude Code, 0.3.82, 2026-11-02T23:37:16+07:00) repaired the Xvfb floor and Windows holder/consumer probes. `SEED-001#copy-files` (same host/release, 2026-11-03T08:40:19+07:00) repaired the PowerShell FileDropList premise. The common cause remains qualified: some checks used stand-ins that did not observe the promise.
-
-`SEED-001#x11-clear-packaged-apps` (Claude Code Opus 5.5, 0.3.82, 2026-11-04T04:34:03Z) predicted CI Linux `display` from macOS `libx11` without observing CI's Nix shell. Three commits and a human decision followed. Its local facet, DD-025, is retired in [ProjectFindings.md](ProjectFindings.md) (recovery `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-025`). [ODF-074 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-074.md#odf-074)
+The packaging execution's local facet DD-025 is retired in [ProjectFindings.md](ProjectFindings.md) with recovery at `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-025`.
 
 ## DD-006 — Stop for venue decision when mandatory native proof cannot run locally
 
@@ -171,24 +164,7 @@ The shared CI-proof recipe used POSIX syntax without noting the shell requiremen
 
 ## DD-446 — Guarded preparation withheld publication on mechanical and record failures
 
-The fresh-delivery guard kept formatter and obligation-record failures local rather than publishing an older or partially prepared candidate. This is an observed practice; it does not establish a defect in the guidance. Sequence the formatter before lint, and keep execution narrative outside an obligation's field paragraph.
-
-### Occurrences
-- Execution: `SEED-005#publish-ci-test-execution-times`; first implementation `7619b4f636ba13b1cd40f3122dcff90b64c0bdd6`
-  - Timestamp: unknown; observed during 2026-11-10 execution before implementation publication
-  - Tool: Codex
-  - Open Dough release: 0.3.94 (installed before the established start; guidance unchanged during execution)
-  - Evidence: this execution conversation's guarded `fresh` results for `/tmp/clipboard-timing-progress-preparation.json`: first `operation: formatting` refused Ruff E501 before formatting; the next formatted three files but retained one long string; after mechanical wrapping, `operation: story obligations` refused G2's trailing narrative as `no-disposition`. Every refusal reported `commit: null`, `publication: pending`. Corrected preparation subsequently accepted `7619b4f`.
-  - Observed effect: no failed preparation committed or published; local proof remained reusable after mechanical fixes. The three retries arose from coordinator command/record construction, not demonstrated product defects.
-  - Inference: retain the guard and improve caller construction; the record does not measure a general time saving or justify another approval gate.
-- Execution: `SEED-006#publish-explicit-ci-test-counts`; first implementation `efc270ffd254d0e8da14456d335c496f204c4955`
-  - Timestamp: unknown; observed during 2026-11-10 records-only done preparation after hosted proof and before `f7fd1505cff58cc48f63e468a670484401188ecb`
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.94 (installed before the established start; guidance unchanged during execution)
-  - Evidence: coordinator transcript `13972c6a-03d5-4288-a566-1799b5e6712f` after proving G1/G2: `story-obligations` / `execution-increment-delivery.mjs fresh` for `/tmp/seed006-done-prep.json` required removing leftover `Commitment:` lines on proved G entries (SEED-005 accept pattern at `2227fc1`); corrected preparation then published `f7fd1505`
-  - Observed effect: no failed done preparation committed; obligation-link mismatch stayed local until the Commitment fields matched the proved disposition shape
-  - Inference: same guard practice as the SEED-005 row; proved hosted obligations still need the sibling accept field shape before records-only publication
+Installed 0.3.94 withheld commit and publication after Ruff and obligation-record failures in `SEED-005#publish-ci-test-execution-times` (Codex, corrected progress `7619b4f`) and after a proved-obligation record failure in `SEED-006#publish-explicit-ci-test-counts` (Cursor auto, corrected done `f7fd1505`). Both were observed during 2026-11-10. Place the formatter before lint, keep narrative outside the obligation's field paragraph, and remove leftover `Commitment:` fields when recording proved obligations. [ODF-097 ordinary-use evidence](https://github.com/terryyin/open-dough/blob/5da5acc11ab3aa58fba24425a5d41213d23ad7b1/docs/maintainer/findings/ODF-097.md#clipboard-guarded-fresh-ordinary-use)
 
 ## DD-447 — Story-branch Intent CI display required selecting the Taken story
 
