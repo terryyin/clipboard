@@ -1,17 +1,14 @@
 # Clipboard Project Findings
 
-Project-owned retrospective follow-ups: findings whose cause lies in Clipboard's own code, tests, configuration or CI workflow rather than in published Open Dough guidance. An occurrence in this repository alone does not make its cause project-specific. General execution lessons and defects in published Open Dough skills or their release payload remain in [DearDough.md](DearDough.md). Original finding codes and occurrence evidence are retained; shared local-number allocation (`DD-NNN` codes are numbered across both files) and removed-finding recovery references remain in DearDough.md.
 
-Maintenance assessment, 2026-11-03: DD-001, DD-005 and DD-010 moved here from DearDough.md as project-owned records, with their occurrence rows, responsibility assessments and response links unchanged. Exact source recovery: `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`.
+Clipboard owns findings in its code, tests and CI. [DearDough.md](DearDough.md) owns shared guidance findings and DD numbering across both records. The 2026-11-03 move of DD-001/005/010 is recoverable at `cc46e7d94343869b7a704e20a1dca77723b066aa:DearDough.md`. Original occurrence rows are also available at `6db9e349c080b403ffc88352d61df5ddb3e5945c:ProjectFindings.md`.
 
-Retired findings and recovery (full entries and occurrence rows at the named commit):
+- **DD-005 retired 2026-11-04.** `c5e10c3` corrected the Windows image-write stub. SEED-003 adopted `fake_platform` (`5380548`, recorded at `663dca6)) and CI 41656910713 passed the desktop-free matrix. Recovery: `2c4149d49df4a08fac54932eef1d72ef67a774f4:ProjectFindings.md`.
+- **DD-010 retired 2026-11-10.** Guard `066dae4` and new platform variants including `24938ab` were exercised by CI 41829466322 on Windows Python 3.10/3.14. No host-assumption repair followed through `cf20181`; run 42027483878 was DD-030's distinct shell failure.
+- **DD-025/026 retired 2026-11-10.** `9f5e5ff`/`a7c6e5a` corrected Nix and CI 41776839169 showed the expected failure display. Shared facet: [ODF-074](DearDough.md#odf-074--native-venue-helper-and-probe-premises-entered-gated-ci-unverified).
+- **DD-030 retired 2026-11-10.** `15d276b` declared Bash for the matrix. CI 42028715651 and later desktop-free jobs through `cf20181` passed. Shared facet: [ODF-445](DearDough.md#odf-445--multi-os-matrix-bash-steps-first-failed-under-windows-powershell).
 
-- DD-005 retired on 2026-11-04. The Windows-only image-write stub assertion was corrected by `c5e10c3`; the adopted `SEED-003#host-independent-desktop-free-tests` response (`5380548`, recorded at `663dca6`) exercises that stub on every host through `fake_platform`. [CI run 41656910713](https://github.com/terryyin/clipboard/actions/runs/41656910713) passed all desktop-free matrix jobs. Recovery: `2c4149d49df4a08fac54932eef1d72ef67a774f4:ProjectFindings.md`.
-- DD-010 retired on 2026-11-10: its observation criterion was met. After the `fake_platform` guard adoption (`066dae4`), new platform-branch tests entered the desktop-free matrix, for example the `wait_for_kind` Linux/no-session and `sunos5` cases in `24938ab` and the clear, inspect and file-list fixtures; [CI 41829466322](https://github.com/terryyin/clipboard/actions/runs/41829466322) passed them on Windows Python 3.10/3.14, and no desktop-free host-assumption repair followed through `cf20181` (the only later desktop-free failure, run 42027483878, is DD-030's shell facet). Recovery: `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-010`.
-- DD-025 and DD-026 retired on 2026-11-10 as confirmed resolved: `9f5e5ff`/`a7c6e5a` corrected the local Nix configuration and [CI 41776839169](https://github.com/terryyin/clipboard/actions/runs/41776839169) observed the expected `failure display`. The shared premise facet stays at ODF-074 in DearDough.md. Recovery: `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-025`.
-- DD-030 local facet retired on 2026-11-10 as confirmed resolved: `15d276b` declared `shell: bash` on the matrix steps and run 42028715651 and the later desktop-free matrix jobs through `cf20181` passed. The shared recipe facet stays at ODF-445 in DearDough.md. Recovery: `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md#dd-030`.
-
-Local evidence compaction recovery: `6db9e349c080b403ffc88352d61df5ddb3e5945c:ProjectFindings.md` preserves the original occurrence rows.
+DD-010/025/026/030 recovery: `cf2018106f4338a7a1789e7c5dd1fec2e397a171:ProjectFindings.md`.
 
 ## DD-001 — Optional-extra local proof not mirrored on CI matrix path
 
